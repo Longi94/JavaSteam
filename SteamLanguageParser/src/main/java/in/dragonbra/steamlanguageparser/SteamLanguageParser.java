@@ -1,6 +1,7 @@
 package in.dragonbra.steamlanguageparser;
 
 import in.dragonbra.steamlanguageparser.parser.LanguageParser;
+import in.dragonbra.steamlanguageparser.parser.Node;
 import in.dragonbra.steamlanguageparser.parser.Token;
 import in.dragonbra.steamlanguageparser.parser.TokenAnalyzer;
 import org.apache.commons.io.IOUtils;
@@ -23,6 +24,6 @@ public class SteamLanguageParser {
     public static void parseFile(String filePath) throws IOException {
         File file = new File(filePath);
         Queue<Token> tokens = LanguageParser.tokenizeString(IOUtils.toString(new FileInputStream(file), "utf-8"), filePath);
-        Object root = TokenAnalyzer.analyze(tokens);
+        Node root = TokenAnalyzer.analyze(tokens);
     }
 }

@@ -72,7 +72,7 @@ public class LanguageParser {
                     }
                 }
 
-                if (matchValue == null || "comment".equals(groupName)) {
+                if (matchValue == null || "comment".equals(groupName) || "whitespace".equals(groupName)) {
                     continue;
                 }
 
