@@ -1,7 +1,7 @@
 package in.dragonbra.steamlanguageparser.parser;
 
 public class WeakSymbol implements Symbol {
-    public String identifier;
+    private String identifier;
 
     public WeakSymbol(String ident) {
         this.identifier = ident;
