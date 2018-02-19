@@ -2,10 +2,16 @@ package in.dragonbra.steamlanguageparser.generator;
 
 import in.dragonbra.steamlanguageparser.parser.*;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.Flushable;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author lngtr
@@ -15,6 +21,8 @@ public class JavaGen implements Closeable, Flushable {
 
     private static final String INDENTATION = "    ";
 
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("^-?[0-9].*?");
+
     private static final Map<String, String> WEAK_TYPES;
 
     static {
@@ -22,9 +30,9 @@ public class JavaGen implements Closeable, Flushable {
 
         weakTypes.put("byte", "byte");
         weakTypes.put("short", "short");
-        weakTypes.put("ushort", "short");
+        weakTypes.put("ushort", "int");
         weakTypes.put("int", "int");
-        weakTypes.put("uint", "int");
+        weakTypes.put("uint", "long");
         weakTypes.put("long", "long");
         weakTypes.put("ulong", "long");
 
@@ -91,39 +99,65 @@ public class JavaGen implements Closeable, Flushable {
 
         String newIndent = indent + INDENTATION;
 
+        String type = node.getType() == null ? "int" : getType(node.getType());
+
         for (Node child : node.getChildNodes()) {
             PropNode prop = (PropNode) child;
-            writeProperty(prop, newIndent);
+            writeProperty(prop, newIndent, type);
         }
 
         writer.writeLine();
         writer.writeLine(newIndent + ";");
         writer.writeLine();
 
-        writeEnumCode(newIndent);
+        writeEnumCode(newIndent, type);
 
         writer.writeLine(indent + "}");
     }
 
-    private void writeEnumCode(String indent) throws IOException {
-        writer.writeLine(indent + "private final int code;");
+    private void writeEnumCode(String indent, String type) throws IOException {
+        writer.writeLine(indent + "private final " + type + " code;");
         writer.writeLine();
-        writer.writeLine(indent + this.node.getName() + "(int code) {");
+        writer.writeLine(indent + this.node.getName() + "(" + type + " code) {");
         writer.writeLine(indent + "    this.code = code;");
         writer.writeLine(indent + "}");
         writer.writeLine();
-        writer.writeLine(indent + "public int getCode() {");
+        writer.writeLine(indent + "public " + type + " getCode() {");
         writer.writeLine(indent + "    return this.code;");
         writer.writeLine(indent + "}");
         writer.writeLine();
-        writer.writeLine(indent + "public " + this.node.getName() + " from(int code) {");
+        writer.writeLine(indent + "public " + this.node.getName() + " from(" + type + " code) {");
         writer.writeLine(indent + "    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
         writer.writeLine(indent + "}");
     }
 
-    private void writeProperty(PropNode node, String indent) throws IOException {
+    private void writeProperty(PropNode node, String indent, String type) throws IOException {
         if (node.isEmit()) {
-            String val = getType(node.getDefault().get(0));
+            if (node.getObsolete() != null) {
+                writer.writeLine(indent + "@Deprecated");
+            }
+
+            List<String> types = node.getDefault().stream().map(symbol -> {
+                String temp = getType(symbol);
+
+                if (NUMBER_PATTERN.matcher(temp).matches()) {
+                    switch (type) {
+                        case "long":
+                            return temp + "L";
+                        case "byte":
+                            return "(byte) " + temp;
+                        case "short":
+                            return "(short)" + temp;
+                        default:
+                            return temp;
+                    }
+                }
+
+                return temp + ".code";
+            }).collect(Collectors.toList());
+
+            String val = String.join(" | ", types);
+
             writer.writeLine(indent + node.getName() + "(" + val + "),");
         }
     }
