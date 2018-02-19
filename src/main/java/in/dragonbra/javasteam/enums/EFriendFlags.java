@@ -26,11 +26,11 @@ public enum EFriendFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EFriendFlags from(int code) {
+    public static EFriendFlags from(int code) {
         return Arrays.stream(EFriendFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

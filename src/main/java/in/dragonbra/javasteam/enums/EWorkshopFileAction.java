@@ -15,11 +15,11 @@ public enum EWorkshopFileAction {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EWorkshopFileAction from(int code) {
+    public static EWorkshopFileAction from(int code) {
         return Arrays.stream(EWorkshopFileAction.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

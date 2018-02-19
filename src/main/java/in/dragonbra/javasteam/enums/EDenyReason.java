@@ -28,11 +28,11 @@ public enum EDenyReason {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EDenyReason from(int code) {
+    public static EDenyReason from(int code) {
         return Arrays.stream(EDenyReason.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -18,11 +18,11 @@ public enum ENewsUpdateType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ENewsUpdateType from(int code) {
+    public static ENewsUpdateType from(int code) {
         return Arrays.stream(ENewsUpdateType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

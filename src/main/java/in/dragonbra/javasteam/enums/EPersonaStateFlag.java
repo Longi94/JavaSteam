@@ -20,11 +20,11 @@ public enum EPersonaStateFlag {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPersonaStateFlag from(int code) {
+    public static EPersonaStateFlag from(int code) {
         return Arrays.stream(EPersonaStateFlag.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

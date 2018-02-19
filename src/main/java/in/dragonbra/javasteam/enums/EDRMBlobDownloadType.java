@@ -22,11 +22,11 @@ public enum EDRMBlobDownloadType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EDRMBlobDownloadType from(int code) {
+    public static EDRMBlobDownloadType from(int code) {
         return Arrays.stream(EDRMBlobDownloadType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

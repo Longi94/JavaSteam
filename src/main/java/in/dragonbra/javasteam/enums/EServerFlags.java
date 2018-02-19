@@ -20,11 +20,11 @@ public enum EServerFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EServerFlags from(int code) {
+    public static EServerFlags from(int code) {
         return Arrays.stream(EServerFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

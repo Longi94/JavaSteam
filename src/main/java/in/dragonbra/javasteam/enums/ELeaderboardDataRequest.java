@@ -17,11 +17,11 @@ public enum ELeaderboardDataRequest {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ELeaderboardDataRequest from(int code) {
+    public static ELeaderboardDataRequest from(int code) {
         return Arrays.stream(ELeaderboardDataRequest.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

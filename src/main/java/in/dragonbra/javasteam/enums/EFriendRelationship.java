@@ -22,11 +22,11 @@ public enum EFriendRelationship {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EFriendRelationship from(int code) {
+    public static EFriendRelationship from(int code) {
         return Arrays.stream(EFriendRelationship.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

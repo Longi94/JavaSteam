@@ -26,11 +26,11 @@ public enum EChatEntryType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EChatEntryType from(int code) {
+    public static EChatEntryType from(int code) {
         return Arrays.stream(EChatEntryType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

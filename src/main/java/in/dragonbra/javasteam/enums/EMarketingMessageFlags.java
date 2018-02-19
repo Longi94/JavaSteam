@@ -19,11 +19,11 @@ public enum EMarketingMessageFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EMarketingMessageFlags from(int code) {
+    public static EMarketingMessageFlags from(int code) {
         return Arrays.stream(EMarketingMessageFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

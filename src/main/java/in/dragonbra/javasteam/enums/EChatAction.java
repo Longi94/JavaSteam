@@ -29,11 +29,11 @@ public enum EChatAction {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EChatAction from(int code) {
+    public static EChatAction from(int code) {
         return Arrays.stream(EChatAction.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

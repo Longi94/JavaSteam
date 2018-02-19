@@ -16,11 +16,11 @@ public enum EPublishedFileVisibility {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPublishedFileVisibility from(int code) {
+    public static EPublishedFileVisibility from(int code) {
         return Arrays.stream(EPublishedFileVisibility.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

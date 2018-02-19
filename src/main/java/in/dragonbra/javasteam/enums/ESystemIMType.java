@@ -24,11 +24,11 @@ public enum ESystemIMType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ESystemIMType from(int code) {
+    public static ESystemIMType from(int code) {
         return Arrays.stream(ESystemIMType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

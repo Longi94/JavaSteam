@@ -36,11 +36,11 @@ public enum EDRMBlobDownloadErrorDetail {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EDRMBlobDownloadErrorDetail from(int code) {
+    public static EDRMBlobDownloadErrorDetail from(int code) {
         return Arrays.stream(EDRMBlobDownloadErrorDetail.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

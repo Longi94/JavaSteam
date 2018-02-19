@@ -99,11 +99,11 @@ public enum EPaymentMethod {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPaymentMethod from(int code) {
+    public static EPaymentMethod from(int code) {
         return Arrays.stream(EPaymentMethod.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -21,11 +21,11 @@ public enum ELicenseType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ELicenseType from(int code) {
+    public static ELicenseType from(int code) {
         return Arrays.stream(ELicenseType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

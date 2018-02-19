@@ -21,11 +21,11 @@ public enum EActivationCodeClass {
         this.code = code;
     }
 
-    public long getCode() {
+    public long code() {
         return this.code;
     }
 
-    public EActivationCodeClass from(long code) {
+    public static EActivationCodeClass from(long code) {
         return Arrays.stream(EActivationCodeClass.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

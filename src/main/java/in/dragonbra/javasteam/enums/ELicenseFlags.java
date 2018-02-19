@@ -26,11 +26,11 @@ public enum ELicenseFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ELicenseFlags from(int code) {
+    public static ELicenseFlags from(int code) {
         return Arrays.stream(ELicenseFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

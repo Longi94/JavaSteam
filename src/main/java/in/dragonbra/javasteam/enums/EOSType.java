@@ -61,11 +61,11 @@ public enum EOSType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EOSType from(int code) {
+    public static EOSType from(int code) {
         return Arrays.stream(EOSType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

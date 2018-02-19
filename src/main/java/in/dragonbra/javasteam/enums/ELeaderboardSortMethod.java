@@ -16,11 +16,11 @@ public enum ELeaderboardSortMethod {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ELeaderboardSortMethod from(int code) {
+    public static ELeaderboardSortMethod from(int code) {
         return Arrays.stream(ELeaderboardSortMethod.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -25,11 +25,11 @@ public enum EAccountType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EAccountType from(int code) {
+    public static EAccountType from(int code) {
         return Arrays.stream(EAccountType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

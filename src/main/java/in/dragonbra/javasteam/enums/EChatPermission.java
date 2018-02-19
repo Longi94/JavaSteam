@@ -28,11 +28,11 @@ public enum EChatPermission {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EChatPermission from(int code) {
+    public static EChatPermission from(int code) {
         return Arrays.stream(EChatPermission.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

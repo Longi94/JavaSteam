@@ -107,11 +107,11 @@ public enum EServerType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EServerType from(int code) {
+    public static EServerType from(int code) {
         return Arrays.stream(EServerType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

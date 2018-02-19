@@ -18,11 +18,11 @@ public enum EClanRank {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EClanRank from(int code) {
+    public static EClanRank from(int code) {
         return Arrays.stream(EClanRank.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

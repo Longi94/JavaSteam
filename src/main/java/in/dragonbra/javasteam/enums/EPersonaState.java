@@ -21,11 +21,11 @@ public enum EPersonaState {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPersonaState from(int code) {
+    public static EPersonaState from(int code) {
         return Arrays.stream(EPersonaState.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -22,11 +22,11 @@ public enum ERegionCode {
         this.code = code;
     }
 
-    public byte getCode() {
+    public byte code() {
         return this.code;
     }
 
-    public ERegionCode from(byte code) {
+    public static ERegionCode from(byte code) {
         return Arrays.stream(ERegionCode.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -21,11 +21,11 @@ public enum EPlatformType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPlatformType from(int code) {
+    public static EPlatformType from(int code) {
         return Arrays.stream(EPlatformType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

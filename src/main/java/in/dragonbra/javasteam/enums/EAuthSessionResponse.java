@@ -23,11 +23,11 @@ public enum EAuthSessionResponse {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EAuthSessionResponse from(int code) {
+    public static EAuthSessionResponse from(int code) {
         return Arrays.stream(EAuthSessionResponse.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

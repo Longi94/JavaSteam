@@ -122,11 +122,11 @@ public class JavaGen implements Closeable, Flushable {
         writer.writeLine(indent + "    this.code = code;");
         writer.writeLine(indent + "}");
         writer.writeLine();
-        writer.writeLine(indent + "public " + type + " getCode() {");
+        writer.writeLine(indent + "public " + type + " code() {");
         writer.writeLine(indent + "    return this.code;");
         writer.writeLine(indent + "}");
         writer.writeLine();
-        writer.writeLine(indent + "public " + this.node.getName() + " from(" + type + " code) {");
+        writer.writeLine(indent + "public static " + this.node.getName() + " from(" + type + " code) {");
         writer.writeLine(indent + "    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
         writer.writeLine(indent + "}");
     }

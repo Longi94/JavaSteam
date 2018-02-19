@@ -81,11 +81,11 @@ public enum EPurchaseResultDetail {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EPurchaseResultDetail from(int code) {
+    public static EPurchaseResultDetail from(int code) {
         return Arrays.stream(EPurchaseResultDetail.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

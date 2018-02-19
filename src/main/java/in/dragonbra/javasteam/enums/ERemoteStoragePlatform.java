@@ -20,11 +20,11 @@ public enum ERemoteStoragePlatform {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ERemoteStoragePlatform from(int code) {
+    public static ERemoteStoragePlatform from(int code) {
         return Arrays.stream(ERemoteStoragePlatform.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

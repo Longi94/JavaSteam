@@ -20,11 +20,11 @@ public enum EContentDownloadSourceType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EContentDownloadSourceType from(int code) {
+    public static EContentDownloadSourceType from(int code) {
         return Arrays.stream(EContentDownloadSourceType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

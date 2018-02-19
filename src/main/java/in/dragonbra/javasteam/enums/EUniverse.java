@@ -19,11 +19,11 @@ public enum EUniverse {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EUniverse from(int code) {
+    public static EUniverse from(int code) {
         return Arrays.stream(EUniverse.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

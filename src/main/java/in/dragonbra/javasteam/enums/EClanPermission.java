@@ -28,11 +28,11 @@ public enum EClanPermission {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EClanPermission from(int code) {
+    public static EClanPermission from(int code) {
         return Arrays.stream(EClanPermission.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -45,11 +45,11 @@ public enum EEconTradeResponse {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EEconTradeResponse from(int code) {
+    public static EEconTradeResponse from(int code) {
         return Arrays.stream(EEconTradeResponse.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

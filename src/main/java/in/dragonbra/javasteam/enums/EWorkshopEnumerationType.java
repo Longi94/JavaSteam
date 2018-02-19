@@ -20,11 +20,11 @@ public enum EWorkshopEnumerationType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EWorkshopEnumerationType from(int code) {
+    public static EWorkshopEnumerationType from(int code) {
         return Arrays.stream(EWorkshopEnumerationType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

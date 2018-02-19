@@ -16,11 +16,11 @@ public enum EChatRoomType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EChatRoomType from(int code) {
+    public static EChatRoomType from(int code) {
         return Arrays.stream(EChatRoomType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

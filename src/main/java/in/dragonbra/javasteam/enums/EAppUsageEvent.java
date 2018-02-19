@@ -21,11 +21,11 @@ public enum EAppUsageEvent {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EAppUsageEvent from(int code) {
+    public static EAppUsageEvent from(int code) {
         return Arrays.stream(EAppUsageEvent.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

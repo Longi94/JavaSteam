@@ -45,11 +45,11 @@ public enum EAccountFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EAccountFlags from(int code) {
+    public static EAccountFlags from(int code) {
         return Arrays.stream(EAccountFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

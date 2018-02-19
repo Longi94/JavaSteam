@@ -17,11 +17,11 @@ public enum ELeaderboardDisplayType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public ELeaderboardDisplayType from(int code) {
+    public static ELeaderboardDisplayType from(int code) {
         return Arrays.stream(ELeaderboardDisplayType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

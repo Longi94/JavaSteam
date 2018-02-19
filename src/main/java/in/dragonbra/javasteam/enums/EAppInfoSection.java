@@ -29,11 +29,11 @@ public enum EAppInfoSection {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EAppInfoSection from(int code) {
+    public static EAppInfoSection from(int code) {
         return Arrays.stream(EAppInfoSection.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

@@ -17,11 +17,11 @@ public enum EChatFlags {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EChatFlags from(int code) {
+    public static EChatFlags from(int code) {
         return Arrays.stream(EChatFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

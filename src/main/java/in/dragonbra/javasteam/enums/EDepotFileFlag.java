@@ -23,11 +23,11 @@ public enum EDepotFileFlag {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EDepotFileFlag from(int code) {
+    public static EDepotFileFlag from(int code) {
         return Arrays.stream(EDepotFileFlag.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

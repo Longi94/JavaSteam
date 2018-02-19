@@ -19,11 +19,11 @@ public enum EClanRelationship {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EClanRelationship from(int code) {
+    public static EClanRelationship from(int code) {
         return Arrays.stream(EClanRelationship.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }

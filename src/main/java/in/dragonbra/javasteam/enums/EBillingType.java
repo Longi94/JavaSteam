@@ -30,11 +30,11 @@ public enum EBillingType {
         this.code = code;
     }
 
-    public int getCode() {
+    public int code() {
         return this.code;
     }
 
-    public EBillingType from(int code) {
+    public static EBillingType from(int code) {
         return Arrays.stream(EBillingType.values()).filter(x -> x.code == code).findFirst().orElse(null);
     }
 }
