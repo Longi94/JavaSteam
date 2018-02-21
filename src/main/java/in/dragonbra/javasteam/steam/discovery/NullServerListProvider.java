@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.discovery;
 
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * @author lngtr
@@ -13,7 +14,7 @@ public class NullServerListProvider implements IServerListProvider {
     }
 
     @Override
-    public void updateServerListAsync(Enumeration<ServerRecord> endpoints) {
+    public void updateServerList(List<ServerRecord> endpoints) {
 
     }
 }

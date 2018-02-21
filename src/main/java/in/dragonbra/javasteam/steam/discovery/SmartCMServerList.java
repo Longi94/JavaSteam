@@ -1,16 +1,193 @@
 package in.dragonbra.javasteam.steam.discovery;
 
+import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
+import in.dragonbra.javasteam.steam.webapi.SteamDirectory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * @author lngtr
- * @since 2018-02-20
+ * Smart list of CM servers.
  */
 public class SmartCMServerList {
 
-    public SmartCMServerList(SteamConfiguration steamConfiguration) {
-        if (steamConfiguration == null) {
+    private static final Logger logger = LogManager.getLogger(SmartCMServerList.class);
+
+    private final SteamConfiguration configuration;
+
+    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
+
+    private long badConnectionMemoryTimeSpan;
+
+    public SmartCMServerList(SteamConfiguration configuration) {
+        if (configuration == null) {
             throw new IllegalArgumentException("configuration is null");
         }
+
+        this.configuration = configuration;
+    }
+
+    private void startFetchingServers() throws IOException {
+        if (!servers.isEmpty()) {
+            return;
+        }
+
+        resolveServerList();
+    }
+
+    private void resolveServerList() throws IOException {
+        logger.debug("Resolving server list");
+
+        Enumeration<ServerRecord> serverList = configuration.getServerListProvider().fetchServerListAsync();
+        List<ServerRecord> endPoints = Collections.list(serverList);
+
+        if (endPoints.isEmpty() && configuration.isAllowDirectoryFetch()) {
+            logger.debug("Server list provider had no entries, will query SteamDirectory");
+            endPoints = SteamDirectory.load(configuration);
+        }
+
+        logger.debug("Resolved " + endPoints.size() + " servers");
+        replaceList(endPoints);
+    }
+
+    /**
+     * Resets the scores of all servers which has a last bad connection more than {@link SmartCMServerList#badConnectionMemoryTimeSpan} ago.
+     */
+    public void resetOldScores() {
+        final long cutoff = System.currentTimeMillis() - badConnectionMemoryTimeSpan;
+
+        servers.forEach(serverInfo -> {
+            if (serverInfo.getLastBadConnection() != null && serverInfo.getLastBadConnection().getTime() < cutoff) {
+                serverInfo.setLastBadConnection(null);
+            }
+        });
+    }
+
+    /**
+     * Replace the list with a new list of servers provided to us by the Steam servers.
+     *
+     * @param endPoints The {@link ServerRecord ServerRecords} to use for this {@link SmartCMServerList}.
+     */
+    public void replaceList(List<ServerRecord> endPoints) {
+        if (endPoints == null) {
+            throw new IllegalArgumentException("endPoints is null");
+        }
+
+        servers.clear();
+
+        endPoints.forEach(this::addCore);
+
+        configuration.getServerListProvider().updateServerList(endPoints);
+    }
+
+    private void addCore(ServerRecord endPoint) {
+        servers.add(new ServerInfo(endPoint, endPoint.getProtocolTypes()));
+    }
+
+    /**
+     * Explicitly resets the known state of all servers.
+     */
+    public void resetBadServers() {
+        servers.forEach(serverInfo -> serverInfo.setLastBadConnection(null));
+    }
+
+    public boolean tryMark(InetSocketAddress endPoint, ProtocolTypes protocolTypes, ServerQuality quality) {
+        Stream<ServerInfo> stream = servers.stream().filter(x -> x.getRecord().getEndpoint().equals(endPoint) &&
+                (x.getProtocol().code() & protocolTypes.code()) > 0);
+
+        stream.forEach(serverInfo -> markServerCore(serverInfo, quality));
+
+        return stream.count() > 0;
+    }
+
+    private void markServerCore(ServerInfo serverInfo, ServerQuality quality) {
+        switch (quality) {
+            case GOOD:
+                serverInfo.setLastBadConnection(null);
+                break;
+            case BAD:
+                serverInfo.setLastBadConnection(new Date());
+                break;
+        }
+    }
+
+    /**
+     * Perform the actual score lookup of the server list and return the candidate.
+     *
+     * @param supportedProtocolTypes The minimum supported {@link ProtocolTypes} of the server to return.
+     * @return An {@link ServerRecord}, or null if the list is empty.
+     */
+    private ServerRecord getNextServerCandidateInternal(ProtocolTypes supportedProtocolTypes) {
+        resetOldScores();
+
+        ServerInfo result = servers.stream()
+                .filter(serverInfo -> (serverInfo.getProtocol().code() & supportedProtocolTypes.code()) > 0)
+                .sorted((o1, o2) -> {
+                    if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
+                        return 0;
+                    }
+
+                    if (o1.getLastBadConnection() == null) {
+                        return -1;
+                    }
+
+                    if (o2.getLastBadConnection() == null) {
+                        return 1;
+                    }
+
+                    return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
+                })
+                .findFirst()
+                .orElse(null);
+
+        if (result == null) {
+            return null;
+        }
+
+        return new ServerRecord(result.getRecord().getEndpoint(), result.getProtocol());
+    }
+
+    /**
+     * Get the next server in the list.
+     *
+     * @param supportedProtocolTypes The minimum supported {@link ProtocolTypes} of the server to return.
+     * @return An {@link ServerRecord}, or null if the list is empty.
+     */
+    public ServerRecord getNextServerCandidate(ProtocolTypes supportedProtocolTypes) {
+        try {
+            startFetchingServers();
+        } catch (IOException e) {
+            return null;
+        }
+
+        return getNextServerCandidateInternal(supportedProtocolTypes);
+    }
+
+    /**
+     * Gets the {@link ServerRecord ServerRecords} of all servers in the server list.
+     * @return An {@link List<ServerRecord>} array contains the {@link ServerRecord ServerRecords} of the servers in the list
+     */
+    public List<ServerRecord> getAllEndPoints() {
+        try {
+            startFetchingServers();
+        } catch (IOException e) {
+            return new ArrayList<>();
+        }
+
+        return servers.stream().map(ServerInfo::getRecord).collect(Collectors.toList());
+    }
+
+    public long getBadConnectionMemoryTimeSpan() {
+        return badConnectionMemoryTimeSpan;
+    }
+
+    public void setBadConnectionMemoryTimeSpan(long badConnectionMemoryTimeSpan) {
+        this.badConnectionMemoryTimeSpan = badConnectionMemoryTimeSpan;
     }
 }

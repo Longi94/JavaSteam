@@ -14,7 +14,6 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -32,7 +31,7 @@ public class SteamDirectory {
                 .create();
     }
 
-    public static Collection<ServerRecord> load(SteamConfiguration configuration) throws IOException {
+    public static List<ServerRecord> load(SteamConfiguration configuration) throws IOException {
         if (configuration == null) {
             throw new IllegalArgumentException("configuration null");
         }

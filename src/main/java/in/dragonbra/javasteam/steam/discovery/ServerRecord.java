@@ -13,7 +13,7 @@ public class ServerRecord {
 
     private ProtocolTypes protocolTypes;
 
-    private ServerRecord(InetSocketAddress endpoint, ProtocolTypes protocolTypes) {
+    ServerRecord(InetSocketAddress endpoint, ProtocolTypes protocolTypes) {
         if (endpoint == null) {
             throw new IllegalArgumentException("endpoint is null");
         }
