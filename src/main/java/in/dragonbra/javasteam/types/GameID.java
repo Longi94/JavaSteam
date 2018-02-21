@@ -143,6 +143,26 @@ public class GameID {
         return getAppType() == GameType.APP;
     }
 
+
+
+    /**
+     * Sets the various components of this GameID from a 64bit integer form.
+     *
+     * @param longSteamId The 64bit integer to assign this GameID from.
+     */
+    public void setFromUInt64(long longSteamId) {
+        this.gameId.setData(longSteamId);
+    }
+
+    /**
+     * Converts this GameID into it's 64bit integer form.
+     *
+     * @return A 64bit integer representing this GameID.
+     */
+    public long convertToUInt64() {
+        return this.gameId.getData();
+    }
+
     /**
      * Determines whether the specified {@link Object} is equal to this instance.
      *

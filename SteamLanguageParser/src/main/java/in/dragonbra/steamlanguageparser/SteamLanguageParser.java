@@ -58,5 +58,13 @@ public class SteamLanguageParser {
             javaGen.flush();
             javaGen.close();
         }
+
+        for (Node _class : classes) {
+            JavaGen javaGen = new JavaGen(_class, _package + ".generated", destination + "/generated");
+
+            javaGen.emit();
+            javaGen.flush();
+            javaGen.close();
+        }
     }
 }
