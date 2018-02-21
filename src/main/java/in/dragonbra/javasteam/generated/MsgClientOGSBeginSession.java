@@ -4,8 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
 
@@ -55,10 +54,22 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeByte(accountType);
+        dos.writeLong(accountId);
+        dos.writeLong(appId);
+        dos.writeLong(timeStarted);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        accountType = dis.readByte();
+        accountId = dis.readLong();
+        appId = dis.readLong();
+        timeStarted = dis.readLong();
     }
 }

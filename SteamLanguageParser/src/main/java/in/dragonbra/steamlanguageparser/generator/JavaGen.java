@@ -44,7 +44,7 @@ public class JavaGen implements Closeable, Flushable {
 
     private String destination;
 
-    public JavaGen(Node node, String _package, String destination) throws IOException {
+    public JavaGen(Node node, String _package, String destination) {
         this.node = node;
         this._package = _package;
         this.destination = destination;
@@ -83,8 +83,7 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableMessage");
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
-                imports.add("java.io.InputStream");
-                imports.add("java.io.OutputStream");
+                imports.add("java.io.*");
             } else if (node.getName().contains("Hdr")) {
                 if (node.getName().contains("MsgGC")) {
                     imports.add("in.dragonbra.javasteam.base.IGCSerializableHeader");
@@ -92,29 +91,33 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableHeader");
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
-                imports.add("java.io.InputStream");
-                imports.add("java.io.OutputStream");
+                imports.add("java.io.*");
             }
 
             for (Node child : classNode.getChildNodes()) {
                 PropNode prop = (PropNode) child;
                 String typeStr = getType(prop.getType());
 
-                if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    imports.add("in.dragonbra.javasteam.types.SteamID");
-                } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    imports.add("in.dragonbra.javasteam.types.GameID");
-                } else if (prop.getType() instanceof StrongSymbol) {
+                if (prop.getFlags() != null) {
+                    if ("steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                        imports.add("in.dragonbra.javasteam.types.SteamID");
+                    } else if ("gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                        imports.add("in.dragonbra.javasteam.types.GameID");
+                    } else if (prop.getFlags().equals("proto")) {
+                        imports.add("in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader");
+                    } else if (prop.getFlags().equals("protomask")) {
+                        imports.add("in.dragonbra.javasteam.enums.EMsg");
+                        imports.add("in.dragonbra.javasteam.util.MsgUtil");
+                    }
+                }
+
+                if (prop.getType() instanceof StrongSymbol) {
                     StrongSymbol strongSymbol = (StrongSymbol) prop.getType();
                     if (strongSymbol.getClazz() instanceof EnumNode) {
                         imports.add("in.dragonbra.javasteam.enums." + strongSymbol.getClazz().getName());
                     }
-                } else if (prop.getType() instanceof WeakSymbol) {
-                    // TODO: 2018-02-21 eeeeeehhh
-                    if (((WeakSymbol) prop.getType()).getIdentifier().contains("CMsgProtoBufHeader")) {
-                        imports.add("in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader");
-                    }
                 }
+
             }
 
             List<String> sortedImports = new ArrayList<>(imports);
@@ -261,7 +264,7 @@ public class JavaGen implements Closeable, Flushable {
             String ctor = getType(defSym);
 
             if (prop.getFlags() != null && prop.getFlags().equals("proto")) {
-                ctor = "new " + typeStr + "()";
+                ctor = "CMsgProtoBufHeader.newBuilder().build()";
             } else if (defSym == null) {
                 if (prop.getFlagsOpt() != null && !prop.getFlagsOpt().isEmpty()) {
                     ctor = "new " + typeStr + "[" + getTypeSize(prop) + "]";
@@ -287,12 +290,6 @@ public class JavaGen implements Closeable, Flushable {
                 }
             }
 
-            // TODO: 2018-02-21 eeeeeehhh
-            if (prop.getType() instanceof WeakSymbol &&
-                    ((WeakSymbol) prop.getType()).getIdentifier().contains("CMsgProtoBufHeader")) {
-                ctor = "CMsgProtoBufHeader.newBuilder().build()";
-            }
-
             if (prop.getFlags() != null && "const".equals(prop.getFlags())) {
                 writer.writeln("public static final " + typeStr + " " + propName + " = " + getType(prop.getDefault().get(0)) + ";");
                 writer.writeln();
@@ -300,11 +297,11 @@ public class JavaGen implements Closeable, Flushable {
             }
 
             if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                writer.writeln("private " + typeStr + " " + propName + " = " + ctor + ";");
+                writer.writeln("private long " + propName + " = " + ctor + ";");
             } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
                 writer.writeln("private boolean " + propName + " = false;");
             } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                writer.writeln("private " + typeStr + " " + propName + " = " + ctor + ";");
+                writer.writeln("private long " + propName + " = " + ctor + ";");
             } else {
                 if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
                         NUMBER_PATTERN.matcher(prop.getFlagsOpt()).matches()) {
@@ -393,11 +390,186 @@ public class JavaGen implements Closeable, Flushable {
     private void writeSerializationMethods(ClassNode node) throws IOException {
         if (node.getIdent() != null || node.getName().contains("Hdr")) {
             writer.writeln("@Override");
-            writer.writeln("public void serialize(OutputStream stream) {");
+            writer.writeln("public void serialize(OutputStream stream) throws IOException {");
+            writer.indent();
+
+            writer.writeln("DataOutputStream dos = new DataOutputStream(stream);");
+            writer.writeln();
+
+            for (Node child : node.getChildNodes()) {
+                PropNode prop = (PropNode) child;
+                String typeStr = getType(prop.getType());
+                String propName = prop.getName();
+
+                if (prop.getFlags() != null) {
+                    if (prop.getFlags().equals("protomask")) {
+                        writer.writeln("dos.writeInt(MsgUtil.makeMsg(" + propName + ".code(), true));");
+                        continue;
+                    }
+
+                    if (prop.getFlags().equals("proto")) {
+                        writer.writeln("byte[] " + propName + "Buffer = " + propName + ".toByteArray();");
+                        writer.writeln("dos.writeInt(" + propName + "Buffer.length);");
+                        writer.writeln("dos.write(" + propName + "Buffer);");
+                        continue;
+                    }
+
+                    if (prop.getFlags().equals("const")) {
+                        continue;
+                    }
+                }
+
+                if (prop.getType() instanceof StrongSymbol) {
+                    StrongSymbol strongSymbol = (StrongSymbol) prop.getType();
+                    if (strongSymbol.getClazz() instanceof EnumNode) {
+                        String enumType = getType(((EnumNode) strongSymbol.getClazz()).getType());
+
+                        switch (enumType) {
+                            case "long":
+                                writer.writeln("dos.writeLong(" + propName + ".code());");
+                                break;
+                            case "byte":
+                                writer.writeln("dos.writeByte(" + propName + ".code());");
+                                break;
+                            case "short":
+                                writer.writeln("dos.writeShort(" + propName + ".code());");
+                                break;
+                            default:
+                                writer.writeln("dos.writeInt(" + propName + ".code());");
+                                break;
+                        }
+                        continue;
+                    }
+                }
+
+                if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                    writer.writeln("dos.writeLong(" + propName + ");");
+                } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
+                    writer.writeln("dos.writeBoolean(" + propName + ");");
+                } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                    writer.writeln("dos.writeLong(" + propName + ");");
+                } else {
+                    boolean isArray = false;
+                    if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
+                            NUMBER_PATTERN.matcher(prop.getFlagsOpt()).matches()) {
+                        isArray = true;
+                    }
+
+                    if (isArray) {
+                        writer.writeln("dos.writeInt(" + propName + ".length);");
+                        writer.writeln("dos.write(" + propName + ");");
+                    } else {
+                        switch (typeStr) {
+                            case "long":
+                                writer.writeln("dos.writeLong(" + propName + ");");
+                                break;
+                            case "byte":
+                                writer.writeln("dos.writeByte(" + propName + ");");
+                                break;
+                            case "short":
+                                writer.writeln("dos.writeShort(" + propName + ");");
+                                break;
+                            default:
+                                writer.writeln("dos.writeInt(" + propName + ");");
+                                break;
+                        }
+                    }
+                }
+            }
+
+            writer.unindent();
             writer.writeln("}");
             writer.writeln();
             writer.writeln("@Override");
-            writer.writeln("public void deserialize(InputStream stream) {");
+            writer.writeln("public void deserialize(InputStream stream) throws IOException {");
+            writer.indent();
+
+            writer.writeln("DataInputStream dis = new DataInputStream(stream);");
+            writer.writeln();
+
+            for (Node child : node.getChildNodes()) {
+                PropNode prop = (PropNode) child;
+                String typeStr = getType(prop.getType());
+                String propName = prop.getName();
+
+                if (prop.getFlags() != null) {
+                    if (prop.getFlags().equals("protomask")) {
+                        writer.writeln(propName + " = MsgUtil.getMsg(dis.readInt());");
+                        continue;
+                    }
+
+                    if (prop.getFlags().equals("proto")) {
+                        writer.writeln("byte[] " + propName + "Buffer = new byte[dis.readInt()];");
+                        writer.writeln("dis.readFully(" + propName + "Buffer);");
+                        writer.writeln(propName + " = " + typeStr + ".newBuilder().mergeFrom(" + propName + "Buffer).build();");
+                        continue;
+                    }
+
+                    if (prop.getFlags().equals("const")) {
+                        continue;
+                    }
+                }
+
+                if (prop.getType() instanceof StrongSymbol) {
+                    StrongSymbol strongSymbol = (StrongSymbol) prop.getType();
+                    if (strongSymbol.getClazz() instanceof EnumNode) {
+                        String enumType = getType(((EnumNode) strongSymbol.getClazz()).getType());
+                        String className = strongSymbol.getClazz().getName();
+
+                        switch (enumType) {
+                            case "long":
+                                writer.writeln(propName + " = " + className + ".from(dis.readLong());");
+                                break;
+                            case "byte":
+                                writer.writeln(propName + " = " + className + ".from(dis.readByte());");
+                                break;
+                            case "short":
+                                writer.writeln(propName + " = " + className + ".from(dis.readShort());");
+                                break;
+                            default:
+                                writer.writeln(propName + " = " + className + ".from(dis.readInt());");
+                                break;
+                        }
+                        continue;
+                    }
+                }
+
+                if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                    writer.writeln(propName + " = dis.readLong();");
+                } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
+                    writer.writeln(propName + " = dis.readBoolean();");
+                } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
+                    writer.writeln(propName + " = dis.readLong();");
+                } else {
+                    boolean isArray = false;
+                    if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
+                            NUMBER_PATTERN.matcher(prop.getFlagsOpt()).matches()) {
+                        isArray = true;
+                    }
+
+                    if (isArray) {
+                        writer.writeln(propName + " = new byte[dis.readInt()];");
+                        writer.writeln("dis.readFully(" + propName + ");");
+                    } else {
+                        switch (typeStr) {
+                            case "long":
+                                writer.writeln(propName + " = dis.readLong();");
+                                break;
+                            case "byte":
+                                writer.writeln(propName + " = dis.readByte();");
+                                break;
+                            case "short":
+                                writer.writeln(propName + " = dis.readShort();");
+                                break;
+                            default:
+                                writer.writeln(propName + " = dis.readInt();");
+                                break;
+                        }
+                    }
+                }
+            }
+
+            writer.unindent();
             writer.writeln("}");
         }
     }

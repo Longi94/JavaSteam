@@ -4,8 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableHeader;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
@@ -95,10 +94,30 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(msg.code());
+        dos.writeByte(headerSize);
+        dos.writeInt(headerVersion);
+        dos.writeLong(targetJobID);
+        dos.writeLong(sourceJobID);
+        dos.writeByte(headerCanary);
+        dos.writeLong(steamID);
+        dos.writeInt(sessionID);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        msg = EMsg.from(dis.readInt());
+        headerSize = dis.readByte();
+        headerVersion = dis.readInt();
+        targetJobID = dis.readLong();
+        sourceJobID = dis.readLong();
+        headerCanary = dis.readByte();
+        steamID = dis.readLong();
+        sessionID = dis.readInt();
     }
 }

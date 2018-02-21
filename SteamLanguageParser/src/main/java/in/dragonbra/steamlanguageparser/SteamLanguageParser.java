@@ -37,10 +37,10 @@ public class SteamLanguageParser {
 
     private String destination;
 
-    public SteamLanguageParser(String fileName, String _package, String destionation) {
+    public SteamLanguageParser(String fileName, String _package, String destination) {
         this.fileName = fileName;
         this._package = _package;
-        this.destination = destionation;
+        this.destination = destination;
     }
 
     public void parseFile() throws IOException {

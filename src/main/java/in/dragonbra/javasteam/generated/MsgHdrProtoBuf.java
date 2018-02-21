@@ -3,9 +3,9 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableHeader;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
+import in.dragonbra.javasteam.util.MsgUtil;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgHdrProtoBuf implements ISteamSerializableHeader {
 
@@ -45,10 +45,24 @@ public class MsgHdrProtoBuf implements ISteamSerializableHeader {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(MsgUtil.makeMsg(msg.code(), true));
+        dos.writeInt(headerLength);
+        byte[] protoBuffer = proto.toByteArray();
+        dos.writeInt(protoBuffer.length);
+        dos.write(protoBuffer);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        msg = MsgUtil.getMsg(dis.readInt());
+        headerLength = dis.readInt();
+        byte[] protoBuffer = new byte[dis.readInt()];
+        dis.readFully(protoBuffer);
+        proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer).build();
     }
 }

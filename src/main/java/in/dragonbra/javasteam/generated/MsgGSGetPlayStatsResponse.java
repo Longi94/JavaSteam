@@ -4,8 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
 
@@ -55,10 +54,22 @@ public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(result.code());
+        dos.writeInt(rank);
+        dos.writeLong(lifetimeConnects);
+        dos.writeLong(lifetimeMinutesPlayed);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        result = EResult.from(dis.readInt());
+        rank = dis.readInt();
+        lifetimeConnects = dis.readLong();
+        lifetimeMinutesPlayed = dis.readLong();
     }
 }

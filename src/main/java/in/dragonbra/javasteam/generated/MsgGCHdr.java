@@ -2,8 +2,7 @@ package in.dragonbra.javasteam.generated;
 
 import in.dragonbra.javasteam.base.IGCSerializableHeader;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgGCHdr implements IGCSerializableHeader {
 
@@ -41,10 +40,20 @@ public class MsgGCHdr implements IGCSerializableHeader {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(headerVersion);
+        dos.writeLong(targetJobID);
+        dos.writeLong(sourceJobID);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        headerVersion = dis.readInt();
+        targetJobID = dis.readLong();
+        sourceJobID = dis.readLong();
     }
 }

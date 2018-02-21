@@ -4,8 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientSetIgnoreFriend implements ISteamSerializableMessage {
 
@@ -45,10 +44,20 @@ public class MsgClientSetIgnoreFriend implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeLong(mySteamId);
+        dos.writeLong(steamIdFriend);
+        dos.writeByte(ignore);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        mySteamId = dis.readLong();
+        steamIdFriend = dis.readLong();
+        ignore = dis.readByte();
     }
 }

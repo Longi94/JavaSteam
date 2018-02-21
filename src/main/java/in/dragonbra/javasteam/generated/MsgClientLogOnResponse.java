@@ -5,8 +5,7 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientLogOnResponse implements ISteamSerializableMessage {
 
@@ -76,10 +75,26 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(result.code());
+        dos.writeInt(outOfGameHeartbeatRateSec);
+        dos.writeInt(inGameHeartbeatRateSec);
+        dos.writeLong(clientSuppliedSteamId);
+        dos.writeLong(ipPublic);
+        dos.writeLong(serverRealTime);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        result = EResult.from(dis.readInt());
+        outOfGameHeartbeatRateSec = dis.readInt();
+        inGameHeartbeatRateSec = dis.readInt();
+        clientSuppliedSteamId = dis.readLong();
+        ipPublic = dis.readLong();
+        serverRealTime = dis.readLong();
     }
 }

@@ -5,8 +5,7 @@ import in.dragonbra.javasteam.enums.EIntroducerRouting;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage {
 
@@ -56,10 +55,24 @@ public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage 
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeLong(steamID);
+        dos.writeInt(routingType.code());
+        dos.writeInt(data.length);
+        dos.write(data);
+        dos.writeLong(dataLen);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        steamID = dis.readLong();
+        routingType = EIntroducerRouting.from(dis.readInt());
+        data = new byte[dis.readInt()];
+        dis.readFully(data);
+        dataLen = dis.readLong();
     }
 }

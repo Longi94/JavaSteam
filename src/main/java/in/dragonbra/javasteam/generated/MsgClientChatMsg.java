@@ -5,8 +5,7 @@ import in.dragonbra.javasteam.enums.EChatEntryType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientChatMsg implements ISteamSerializableMessage {
 
@@ -46,10 +45,20 @@ public class MsgClientChatMsg implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeLong(steamIdChatter);
+        dos.writeLong(steamIdChatRoom);
+        dos.writeInt(chatMsgType.code());
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        steamIdChatter = dis.readLong();
+        steamIdChatRoom = dis.readLong();
+        chatMsgType = EChatEntryType.from(dis.readInt());
     }
 }

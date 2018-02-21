@@ -5,8 +5,7 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.types.GameID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializableMessage {
 
@@ -46,10 +45,20 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeInt(result.code());
+        dos.writeLong(gameId);
+        dos.writeLong(countFriends);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        result = EResult.from(dis.readInt());
+        gameId = dis.readLong();
+        countFriends = dis.readLong();
     }
 }

@@ -5,8 +5,7 @@ import in.dragonbra.javasteam.enums.EDenyReason;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MsgGSKick implements ISteamSerializableMessage {
 
@@ -46,10 +45,20 @@ public class MsgGSKick implements ISteamSerializableMessage {
     }
 
     @Override
-    public void serialize(OutputStream stream) {
+    public void serialize(OutputStream stream) throws IOException {
+        DataOutputStream dos = new DataOutputStream(stream);
+
+        dos.writeLong(steamId);
+        dos.writeInt(denyReason.code());
+        dos.writeInt(waitTilMapChange);
     }
 
     @Override
-    public void deserialize(InputStream stream) {
+    public void deserialize(InputStream stream) throws IOException {
+        DataInputStream dis = new DataInputStream(stream);
+
+        steamId = dis.readLong();
+        denyReason = EDenyReason.from(dis.readInt());
+        waitTilMapChange = dis.readInt();
     }
 }
