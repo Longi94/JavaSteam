@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
  */
 public class JavaGen implements Closeable, Flushable {
 
-    private static final String INDENTATION = "    ";
-
     private static final Pattern NUMBER_PATTERN = Pattern.compile("^-?[0-9].*?L?");
 
     private static final String DEFAULT_TYPE = "uint";
@@ -67,10 +65,10 @@ public class JavaGen implements Closeable, Flushable {
 
         this.writer = new JavaFileWriter(file);
         writePackage(_package);
-        writer.writeLine();
+        writer.writeln();
         writeImports();
-        writer.writeLine();
-        writeClass(node, "");
+        writer.writeln();
+        writeClass(node);
     }
 
     private void writeImports() throws IOException {
@@ -127,46 +125,48 @@ public class JavaGen implements Closeable, Flushable {
 
                 if (!group.equals(currentGroup)) {
                     if (currentGroup != null) {
-                        writer.writeLine();
+                        writer.writeln();
                     }
                     currentGroup = group;
                 }
 
-                writer.writeLine("import " + imp + ";");
+                writer.writeln("import " + imp + ";");
             }
 
         } else if (node instanceof EnumNode) {
-            writer.writeLine("import java.util.Arrays;");
+            writer.writeln("import java.util.Arrays;");
         }
     }
 
     private void writePackage(String _package) throws IOException {
-        writer.writeLine("package " + _package + ";");
+        writer.writeln("package " + _package + ";");
     }
 
-    private void writeClass(Node node, String indent) throws IOException {
+    private void writeClass(Node node) throws IOException {
         if (node instanceof ClassNode && ((ClassNode) node).isEmit()) {
-            writeMessageClass((ClassNode) node, indent);
+            writeMessageClass((ClassNode) node);
         } else if (node instanceof EnumNode) {
-            writeEnumClass((EnumNode) node, indent);
+            writeEnumClass((EnumNode) node);
         }
     }
 
-    private void writeMessageClass(ClassNode node, String indent) throws IOException {
-        writeClassDef(node, indent);
+    private void writeMessageClass(ClassNode node) throws IOException {
+        writeClassDef(node);
 
-        String newIndent = indent + INDENTATION;
+        writer.indent();
 
-        writeClassConstructor(node, newIndent);
-        writeClassProperties(node, newIndent);
-        writeClassIdentity(node, newIndent);
-        writeSetterGetter(node, newIndent);
-        writeSerializationMethods(node, newIndent);
+        writeClassConstructor(node);
+        writeClassProperties(node);
+        writeClassIdentity(node);
+        writeSetterGetter(node);
+        writeSerializationMethods(node);
 
-        writer.writeLine(indent + "}");
+        writer.unindent();
+
+        writer.writeln("}");
     }
 
-    private void writeClassDef(ClassNode node, String indent) throws IOException {
+    private void writeClassDef(ClassNode node) throws IOException {
         String parent = null;
 
         if (node.getIdent() != null) {
@@ -184,15 +184,15 @@ public class JavaGen implements Closeable, Flushable {
         }
 
         if (parent != null) {
-            writer.writeLine(indent + "public class " + node.getName() + " implements " + parent + " {");
+            writer.writeln("public class " + node.getName() + " implements " + parent + " {");
         } else {
-            writer.writeLine(indent + "public class " + node.getName() + " {");
+            writer.writeln("public class " + node.getName() + " {");
         }
 
-        writer.writeLine();
+        writer.writeln();
     }
 
-    private void writeClassIdentity(ClassNode node, String indent) throws IOException {
+    private void writeClassIdentity(ClassNode node) throws IOException {
         if (node.getIdent() != null) {
             StrongSymbol sIdent = (StrongSymbol) node.getIdent();
             boolean suppressObselete = false;
@@ -210,46 +210,46 @@ public class JavaGen implements Closeable, Flushable {
             }
 
             if (node.getName().contains("MsgGC")) {
-                writer.writeLine(indent + "@Override");
-                writer.writeLine(indent + "public int getEMsg() {");
-                writer.writeLine(indent + "    return " + getType(node.getIdent()) + ";");
-                writer.writeLine(indent + "}");
+                writer.writeln("@Override");
+                writer.writeln("public int getEMsg() {");
+                writer.writeln("    return " + getType(node.getIdent()) + ";");
+                writer.writeln("}");
             } else {
-                writer.writeLine(indent + "@Override");
-                writer.writeLine(indent + "public EMsg getEMsg() {");
-                writer.writeLine(indent + "    return " + getType(node.getIdent()) + ";");
-                writer.writeLine(indent + "}");
+                writer.writeln("@Override");
+                writer.writeln("public EMsg getEMsg() {");
+                writer.writeln("    return " + getType(node.getIdent()) + ";");
+                writer.writeln("}");
             }
 
-            writer.writeLine();
+            writer.writeln();
         } else if (node.getName().contains("Hdr")) {
             if (node.getName().contains("MsgGC")) {
                 if (node.getChildNodes().stream().anyMatch(childNode -> "msg".equals(childNode.getName()))) {
-                    writer.writeLine(indent + "@Override");
-                    writer.writeLine(indent + "public void setEMsg(int msg) {");
-                    writer.writeLine(indent + "    this.msg = msg;");
-                    writer.writeLine(indent + "}");
+                    writer.writeln("@Override");
+                    writer.writeln("public void setEMsg(int msg) {");
+                    writer.writeln("    this.msg = msg;");
+                    writer.writeln("}");
                 } else {
                     // this is required for a gc header which doesn't have an emsg
-                    writer.writeLine(indent + "@Override");
-                    writer.writeLine(indent + "public void setEMsg(int msg) {}");
+                    writer.writeln("@Override");
+                    writer.writeln("public void setEMsg(int msg) {}");
                 }
             } else {
-                writer.writeLine(indent + "@Override");
-                writer.writeLine(indent + "public void setEMsg(EMsg msg) {");
-                writer.writeLine(indent + "    this.msg = msg;");
-                writer.writeLine(indent + "}");
+                writer.writeln("@Override");
+                writer.writeln("public void setEMsg(EMsg msg) {");
+                writer.writeln("    this.msg = msg;");
+                writer.writeln("}");
             }
-            writer.writeLine();
+            writer.writeln();
         }
     }
 
-    private void writeClassProperties(ClassNode node, String indent) throws IOException {
+    private void writeClassProperties(ClassNode node) throws IOException {
 
         if (node.getParent() != null) {
             String parentType = getType(node.getParent());
-            writer.writeLine(indent + "private " + parentType + " header;");
-            writer.writeLine();
+            writer.writeln("private " + parentType + " header;");
+            writer.writeln();
         }
 
         for (Node child : node.getChildNodes()) {
@@ -294,40 +294,40 @@ public class JavaGen implements Closeable, Flushable {
             }
 
             if (prop.getFlags() != null && "const".equals(prop.getFlags())) {
-                writer.writeLine(indent + "public static final " + typeStr + " " + propName + " = " + getType(prop.getDefault().get(0)) + ";");
-                writer.writeLine();
+                writer.writeln("public static final " + typeStr + " " + propName + " = " + getType(prop.getDefault().get(0)) + ";");
+                writer.writeln();
                 continue;
             }
 
             if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                writer.writeLine(indent + "private " + typeStr + " " + propName + " = " + ctor + ";");
+                writer.writeln("private " + typeStr + " " + propName + " = " + ctor + ";");
             } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
-                writer.writeLine(indent + "private boolean " + propName + " = false;");
+                writer.writeln("private boolean " + propName + " = false;");
             } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                writer.writeLine(indent + "private " + typeStr + " " + propName + " = " + ctor + ";");
+                writer.writeln("private " + typeStr + " " + propName + " = " + ctor + ";");
             } else {
                 if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
                         NUMBER_PATTERN.matcher(prop.getFlagsOpt()).matches()) {
                     typeStr += "[]";
                 }
 
-                writer.writeLine(indent + "private " + typeStr + " " + propName + " = " + ctor + ";");
+                writer.writeln("private " + typeStr + " " + propName + " = " + ctor + ";");
             }
-            writer.writeLine();
+            writer.writeln();
         }
     }
 
-    private void writeSetterGetter(ClassNode node, String indent) throws IOException {
+    private void writeSetterGetter(ClassNode node) throws IOException {
 
         if (node.getParent() != null) {
             String parentType = getType(node.getParent());
-            writer.writeLine(indent + "public " + parentType + " getHeader() {");
-            writer.writeLine(indent + "    return this.header;");
-            writer.writeLine(indent + "}");
-            writer.writeLine();
-            writer.writeLine(indent + "public void getHeader(" + parentType + " header) {");
-            writer.writeLine(indent + "    this.header = header;");
-            writer.writeLine(indent + "}");
+            writer.writeln("public " + parentType + " getHeader() {");
+            writer.writeln("    return this.header;");
+            writer.writeln("}");
+            writer.writeln();
+            writer.writeln("public void getHeader(" + parentType + " header) {");
+            writer.writeln("    this.header = header;");
+            writer.writeln("}");
         }
 
         for (Node child : node.getChildNodes()) {
@@ -340,110 +340,112 @@ public class JavaGen implements Closeable, Flushable {
             }
 
             if (propNode.getFlags() != null && "steamidmarshal".equals(propNode.getFlags()) && "long".equals(typeStr)) {
-                writer.writeLine(indent + "public SteamID get" + capitalize(propName) + "() {");
-                writer.writeLine(indent + "    return new SteamID(this." + propName + ");");
-                writer.writeLine(indent + "}");
-                writer.writeLine();
-                writer.writeLine(indent + "public void set" + capitalize(propName) + "(SteamID steamId) {");
-                writer.writeLine(indent + "    this." + propName + " = steamId.convertToUInt64();");
-                writer.writeLine(indent + "}");
+                writer.writeln("public SteamID get" + capitalize(propName) + "() {");
+                writer.writeln("    return new SteamID(this." + propName + ");");
+                writer.writeln("}");
+                writer.writeln();
+                writer.writeln("public void set" + capitalize(propName) + "(SteamID steamId) {");
+                writer.writeln("    this." + propName + " = steamId.convertToUInt64();");
+                writer.writeln("}");
             } else if (propNode.getFlags() != null && "boolmarshal".equals(propNode.getFlags()) && "byte".equals(typeStr)) {
-                writer.writeLine(indent + "public boolean get" + capitalize(propName) + "() {");
-                writer.writeLine(indent + "    return this." + propName + ";");
-                writer.writeLine(indent + "}");
-                writer.writeLine();
-                writer.writeLine(indent + "public void set" + capitalize(propName) + "(boolean " + propName + ") {");
-                writer.writeLine(indent + "    this." + propName + " = " + propName + ";");
-                writer.writeLine(indent + "}");
+                writer.writeln("public boolean get" + capitalize(propName) + "() {");
+                writer.writeln("    return this." + propName + ";");
+                writer.writeln("}");
+                writer.writeln();
+                writer.writeln("public void set" + capitalize(propName) + "(boolean " + propName + ") {");
+                writer.writeln("    this." + propName + " = " + propName + ";");
+                writer.writeln("}");
             } else if (propNode.getFlags() != null && "gameidmarshal".equals(propNode.getFlags()) && "long".equals(typeStr)) {
-                writer.writeLine(indent + "public GameID get" + capitalize(propName) + "() {");
-                writer.writeLine(indent + "    return new GameID(this." + propName + ");");
-                writer.writeLine(indent + "}");
-                writer.writeLine();
-                writer.writeLine(indent + "public void set" + capitalize(propName) + "(GameID gameId) {");
-                writer.writeLine(indent + "    this." + propName + " = gameId.convertToUInt64();");
-                writer.writeLine(indent + "}");
+                writer.writeln("public GameID get" + capitalize(propName) + "() {");
+                writer.writeln("    return new GameID(this." + propName + ");");
+                writer.writeln("}");
+                writer.writeln();
+                writer.writeln("public void set" + capitalize(propName) + "(GameID gameId) {");
+                writer.writeln("    this." + propName + " = gameId.convertToUInt64();");
+                writer.writeln("}");
             } else {
                 if (!(propNode.getFlagsOpt() == null || propNode.getFlagsOpt().isEmpty()) &&
                         NUMBER_PATTERN.matcher(propNode.getFlagsOpt()).matches()) {
                     typeStr += "[]";
                 }
 
-                writer.writeLine(indent + "public " + typeStr + " get" + capitalize(propName) + "() {");
-                writer.writeLine(indent + "    return this." + propName + ";");
-                writer.writeLine(indent + "}");
-                writer.writeLine();
-                writer.writeLine(indent + "public void set" + capitalize(propName) + "(" + typeStr + " " + propName + ") {");
-                writer.writeLine(indent + "    this." + propName + " = " + propName + ";");
-                writer.writeLine(indent + "}");
+                writer.writeln("public " + typeStr + " get" + capitalize(propName) + "() {");
+                writer.writeln("    return this." + propName + ";");
+                writer.writeln("}");
+                writer.writeln();
+                writer.writeln("public void set" + capitalize(propName) + "(" + typeStr + " " + propName + ") {");
+                writer.writeln("    this." + propName + " = " + propName + ";");
+                writer.writeln("}");
             }
-            writer.writeLine();
+            writer.writeln();
         }
     }
 
-    private void writeClassConstructor(ClassNode node, String indent) throws IOException {
+    private void writeClassConstructor(ClassNode node) throws IOException {
         if (node.getParent() != null) {
-            writer.writeLine(indent + "public " + node.getName() + "() {");
-            writer.writeLine(indent + "    this.header = new " + getType(node.getParent()) + "();");
-            writer.writeLine(indent + "    header.setMsg(getEMsg());");
-            writer.writeLine(indent + "}");
+            writer.writeln("public " + node.getName() + "() {");
+            writer.writeln("    this.header = new " + getType(node.getParent()) + "();");
+            writer.writeln("    header.setMsg(getEMsg());");
+            writer.writeln("}");
         }
     }
 
-    private void writeSerializationMethods(ClassNode node, String indent) throws IOException {
+    private void writeSerializationMethods(ClassNode node) throws IOException {
         if (node.getIdent() != null || node.getName().contains("Hdr")) {
-            writer.writeLine(indent + "@Override");
-            writer.writeLine(indent + "public void serialize(OutputStream stream) {");
-            writer.writeLine(indent + "}");
-            writer.writeLine();
-            writer.writeLine(indent + "@Override");
-            writer.writeLine(indent + "public void deserialize(InputStream stream) {");
-            writer.writeLine(indent + "}");
+            writer.writeln("@Override");
+            writer.writeln("public void serialize(OutputStream stream) {");
+            writer.writeln("}");
+            writer.writeln();
+            writer.writeln("@Override");
+            writer.writeln("public void deserialize(InputStream stream) {");
+            writer.writeln("}");
         }
     }
 
-    private void writeEnumClass(EnumNode node, String indent) throws IOException {
-        writer.writeLine(indent + "public enum " + node.getName() + " {");
-        writer.writeLine();
+    private void writeEnumClass(EnumNode node) throws IOException {
+        writer.writeln("public enum " + node.getName() + " {");
+        writer.writeln();
 
-        String newIndent = indent + INDENTATION;
+        writer.indent();
 
         String type = node.getType() == null ? "int" : getType(node.getType());
 
         for (Node child : node.getChildNodes()) {
             PropNode prop = (PropNode) child;
-            writeProperty(prop, newIndent, type);
+            writeProperty(prop, type);
         }
 
-        writer.writeLine();
-        writer.writeLine(newIndent + ";");
-        writer.writeLine();
+        writer.writeln();
+        writer.writeln(";");
+        writer.writeln();
 
-        writeEnumCode(newIndent, type);
+        writeEnumCode(type);
 
-        writer.writeLine(indent + "}");
+        writer.unindent();
+
+        writer.writeln("}");
     }
 
-    private void writeEnumCode(String indent, String type) throws IOException {
-        writer.writeLine(indent + "private final " + type + " code;");
-        writer.writeLine();
-        writer.writeLine(indent + this.node.getName() + "(" + type + " code) {");
-        writer.writeLine(indent + "    this.code = code;");
-        writer.writeLine(indent + "}");
-        writer.writeLine();
-        writer.writeLine(indent + "public " + type + " code() {");
-        writer.writeLine(indent + "    return this.code;");
-        writer.writeLine(indent + "}");
-        writer.writeLine();
-        writer.writeLine(indent + "public static " + this.node.getName() + " from(" + type + " code) {");
-        writer.writeLine(indent + "    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
-        writer.writeLine(indent + "}");
+    private void writeEnumCode(String type) throws IOException {
+        writer.writeln("private final " + type + " code;");
+        writer.writeln();
+        writer.writeln(this.node.getName() + "(" + type + " code) {");
+        writer.writeln("    this.code = code;");
+        writer.writeln("}");
+        writer.writeln();
+        writer.writeln("public " + type + " code() {");
+        writer.writeln("    return this.code;");
+        writer.writeln("}");
+        writer.writeln();
+        writer.writeln("public static " + this.node.getName() + " from(" + type + " code) {");
+        writer.writeln("    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
+        writer.writeln("}");
     }
 
-    private void writeProperty(PropNode node, String indent, String type) throws IOException {
+    private void writeProperty(PropNode node, String type) throws IOException {
         if (node.isEmit()) {
             if (node.getObsolete() != null) {
-                writer.writeLine(indent + "@Deprecated");
+                writer.writeln("@Deprecated");
             }
 
             List<String> types = node.getDefault().stream().map(symbol -> {
@@ -467,7 +469,7 @@ public class JavaGen implements Closeable, Flushable {
 
             String val = String.join(" | ", types);
 
-            writer.writeLine(indent + node.getName() + "(" + val + "),");
+            writer.writeln(node.getName() + "(" + val + "),");
         }
     }
 

@@ -9,16 +9,30 @@ import java.io.IOException;
  * @since 2018-02-16
  */
 public class JavaFileWriter extends FileWriter {
+
+    private static final String INDENTATION = "    ";
+
+    private String indent = "";
+
     public JavaFileWriter(File file) throws IOException {
         super(file);
     }
 
-    public void writeLine(String line) throws IOException {
-        write(line);
-        write('\n');
+    public void indent() {
+        indent += INDENTATION;
     }
 
-    public void writeLine() throws IOException {
+    public void unindent() {
+        indent = indent.substring(INDENTATION.length());
+    }
+
+    public void writeln(String line) throws IOException {
+        write(indent);
+        write(line);
+        writeln();
+    }
+
+    public void writeln() throws IOException {
         write('\n');
     }
 }
