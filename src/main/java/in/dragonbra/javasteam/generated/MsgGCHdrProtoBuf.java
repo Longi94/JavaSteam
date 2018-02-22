@@ -11,7 +11,7 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
 
     private int headerLength = 0;
 
-    private CMsgProtoBufHeader proto = CMsgProtoBufHeader.newBuilder().build();
+    private CMsgProtoBufHeader.Builder proto = CMsgProtoBufHeader.newBuilder();
 
     @Override
     public void setEMsg(int msg) {
@@ -34,11 +34,11 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
         this.headerLength = headerLength;
     }
 
-    public CMsgProtoBufHeader getProto() {
+    public CMsgProtoBufHeader.Builder getProto() {
         return this.proto;
     }
 
-    public void setProto(CMsgProtoBufHeader proto) {
+    public void setProto(CMsgProtoBufHeader.Builder proto) {
         this.proto = proto;
     }
 
@@ -48,7 +48,7 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
 
         dos.writeLong(msg);
         dos.writeInt(headerLength);
-        byte[] protoBuffer = proto.toByteArray();
+        byte[] protoBuffer = proto.build().toByteArray();
         dos.writeInt(protoBuffer.length);
         dos.write(protoBuffer);
     }
@@ -61,6 +61,6 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
         headerLength = dis.readInt();
         byte[] protoBuffer = new byte[dis.readInt()];
         dis.readFully(protoBuffer);
-        proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer).build();
+        proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer);
     }
 }

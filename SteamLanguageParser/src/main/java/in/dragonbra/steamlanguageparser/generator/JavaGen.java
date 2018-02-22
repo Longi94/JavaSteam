@@ -264,7 +264,8 @@ public class JavaGen implements Closeable, Flushable {
             String ctor = getType(defSym);
 
             if (prop.getFlags() != null && prop.getFlags().equals("proto")) {
-                ctor = "CMsgProtoBufHeader.newBuilder().build()";
+                ctor = "CMsgProtoBufHeader.newBuilder()";
+                typeStr += ".Builder";
             } else if (defSym == null) {
                 if (prop.getFlagsOpt() != null && !prop.getFlagsOpt().isEmpty()) {
                     ctor = "new " + typeStr + "[" + getTypeSize(prop) + "]";
@@ -334,6 +335,10 @@ public class JavaGen implements Closeable, Flushable {
 
             if (propNode.getFlags() != null && "const".equals(propNode.getFlags())) {
                 continue;
+            }
+
+            if (propNode.getFlags() != null && propNode.getFlags().equals("proto")) {
+                typeStr += ".Builder";
             }
 
             if (propNode.getFlags() != null && "steamidmarshal".equals(propNode.getFlags()) && "long".equals(typeStr)) {
@@ -408,7 +413,7 @@ public class JavaGen implements Closeable, Flushable {
                     }
 
                     if (prop.getFlags().equals("proto")) {
-                        writer.writeln("byte[] " + propName + "Buffer = " + propName + ".toByteArray();");
+                        writer.writeln("byte[] " + propName + "Buffer = " + propName + ".build().toByteArray();");
                         writer.writeln("dos.writeInt(" + propName + "Buffer.length);");
                         writer.writeln("dos.write(" + propName + "Buffer);");
                         continue;
@@ -501,7 +506,7 @@ public class JavaGen implements Closeable, Flushable {
                     if (prop.getFlags().equals("proto")) {
                         writer.writeln("byte[] " + propName + "Buffer = new byte[dis.readInt()];");
                         writer.writeln("dis.readFully(" + propName + "Buffer);");
-                        writer.writeln(propName + " = " + typeStr + ".newBuilder().mergeFrom(" + propName + "Buffer).build();");
+                        writer.writeln(propName + " = " + typeStr + ".newBuilder().mergeFrom(" + propName + "Buffer);");
                         continue;
                     }
 

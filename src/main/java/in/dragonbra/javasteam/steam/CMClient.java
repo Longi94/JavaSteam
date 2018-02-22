@@ -1,27 +1,28 @@
 package in.dragonbra.javasteam.steam;
 
-import in.dragonbra.javasteam.base.IClientMsg;
-import in.dragonbra.javasteam.base.IPacketMsg;
+import in.dragonbra.javasteam.base.*;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.enums.EUniverse;
-import in.dragonbra.javasteam.networking.steam3.Connection;
-import in.dragonbra.javasteam.networking.steam3.NetMsgEventArgs;
-import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import in.dragonbra.javasteam.networking.steam3.TcpConnection;
+import in.dragonbra.javasteam.networking.steam3.*;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.steam.discovery.ServerQuality;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.IDebugNetworkListener;
+import in.dragonbra.javasteam.util.MsgUtil;
 import in.dragonbra.javasteam.util.event.EventArgs;
+import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
@@ -34,7 +35,7 @@ public abstract class CMClient {
 
     private SteamConfiguration configuration;
 
-    private boolean connected;
+    private boolean isConnected;
 
     private long sessionToken;
 
@@ -58,6 +59,41 @@ public abstract class CMClient {
     private ScheduledFunction heartBeatFunc;
 
     private Map<EServerType, Set<InetSocketAddress>> serverMap;
+
+    private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> onClientMsgReceived(getPacketMsg(e.getData()));
+
+    private final EventHandler<EventArgs> connected = new EventHandler<EventArgs>() {
+        @Override
+        public void handleEvent(Object sender, EventArgs e) {
+            getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
+
+            isConnected = true;
+            onClientConnected();
+        }
+    };
+
+    private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<DisconnectedEventArgs>() {
+        @Override
+        public void handleEvent(Object sender, DisconnectedEventArgs e) {
+            isConnected = false;
+
+            if (e.isUserInitiated() && expectDisconnection) {
+                getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            }
+
+            sessionID = null;
+            steamID = null;
+
+            connection.getNetMsgReceived().removeEventHandler(netMsgReceived);
+            connection.getConnected().removeEventHandler(connected);
+            connection.getDisconnected().removeEventHandler(this);
+            connection = null;
+
+            heartBeatFunc.stop();
+
+            onClientDisconnected(e.isUserInitiated() || expectDisconnection);
+        }
+    };
 
     public CMClient(SteamConfiguration configuration) {
         if (configuration == null) {
@@ -94,17 +130,25 @@ public abstract class CMClient {
      */
     public void connect(ServerRecord cmServer) {
         synchronized (connectionLock) {
-            disconnect();
+            try {
+                disconnect();
 
-            assert connection != null;
+                assert connection != null;
 
-            expectDisconnection = false;
+                expectDisconnection = false;
 
-            if (cmServer == null) {
-                cmServer = getServers().getNextServerCandidate(configuration.getProtocolTypes());
+                if (cmServer == null) {
+                    cmServer = getServers().getNextServerCandidate(configuration.getProtocolTypes());
+                }
+
+                connection = createConnection(configuration.getProtocolTypes());
+                connection.getNetMsgReceived().addEventHandler(netMsgReceived);
+                connection.getConnected().addEventHandler(connected);
+                connection.getDisconnected().addEventHandler(disconnected);
+                connection.connect(cmServer.getEndpoint(), getConnectionTimeout());
+            } catch (Exception e) {
+                onClientDisconnected(false);
             }
-
-
         }
     }
 
@@ -167,22 +211,22 @@ public abstract class CMClient {
 
         switch (packetMsg.getMsgType()) {
             case Multi:
-                // TODO: 2018-02-21
+                handleMulti(packetMsg);
                 break;
             case ClientLogOnResponse: // we handle this to get the SteamID/SessionID and to setup heartbeating
-                // TODO: 2018-02-21
+                handleLogOnResponse(packetMsg);
                 break;
             case ClientLoggedOff: // to stop heartbeating when we get logged off
-                // TODO: 2018-02-21
+                handleLoggedOff(packetMsg);
                 break;
             case ClientServerList: // Steam server list
-                // TODO: 2018-02-21
+                handleServerList(packetMsg);
                 break;
             case ClientCMList:
-                // TODO: 2018-02-21
+                handleCMList(packetMsg);
                 break;
             case ClientSessionToken: // am session token
-                // TODO: 2018-02-21
+                handleSessionToken(packetMsg);
                 break;
         }
 
@@ -190,9 +234,9 @@ public abstract class CMClient {
     }
 
     /**
-     * Called when the client is securely connected to Steam3.
+     * Called when the client is securely isConnected to Steam3.
      */
-    protected void onClientDConnected() {
+    protected void onClientConnected() {
 
     }
 
@@ -217,15 +261,85 @@ public abstract class CMClient {
         throw new IllegalArgumentException("Protocol bitmask has no supported protocols set.");
     }
 
-    private void netMsgReceived(Object sender, NetMsgEventArgs e) {
-        onClientMsgReceived(getPacketMsg(e.getData()));
+    private static IPacketMsg getPacketMsg(byte[] data) {
+        if (data.length < 4) {
+            logger.debug("PacketMsg too small to contain a message, was only {0} bytes. Message: 0x{1}");
+            return null;
+        }
+
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+
+        int rawEMsg = buffer.getInt(0);
+        EMsg eMsg = MsgUtil.getMsg(rawEMsg);
+
+        switch (eMsg) {
+            case ChannelEncryptRequest:
+            case ChannelEncryptResponse:
+            case ChannelEncryptResult:
+                try {
+                    return new PacketMsg(eMsg, data);
+                } catch (IOException e) {
+                    logger.debug("Exception deserializing emsg " + eMsg + " (" + MsgUtil.isProtoBuf(rawEMsg) + ").", e);
+                }
+        }
+
+        try {
+            if (MsgUtil.isProtoBuf(rawEMsg)) {
+                return new PacketClientMsgProtobuf(eMsg, data);
+            } else {
+                return new PacketClientMsg(eMsg, data);
+            }
+        } catch (IOException e) {
+            logger.debug("Exception deserializing emsg " + eMsg + " (" + MsgUtil.isProtoBuf(rawEMsg) + ").", e);
+            return null;
+        }
     }
 
-    private void connected(Object sender, EventArgs e) {
-        getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
+    private void handleMulti(IPacketMsg packetMsg) {
+        if (!packetMsg.isProto()) {
+            logger.debug("HandleMulti got non-proto MsgMulti!!");
+            return;
+        }
 
-        connected = true;
-        onClientDConnected();
+        // TODO: 2018-02-21
+    }
+
+    private void handleLogOnResponse(IPacketMsg packetMsg) {
+        if (!packetMsg.isProto()) {
+            // a non proto ClientLogonResponse can come in as a result of connecting but never sending a ClientLogon
+            // in this case, it always fails, so we don't need to do anything special here
+            logger.debug("Got non-proto logon response, this is indicative of no logon attempt after connecting.");
+            return;
+        }
+
+        // TODO: 2018-02-21
+    }
+
+    private void handleLoggedOff(IPacketMsg packetMsg) {
+        sessionID = null;
+        steamID = null;
+
+        cellID = null;
+
+        heartBeatFunc.stop();
+
+        if (packetMsg.isProto()) {
+            // TODO: 2018-02-21
+        }
+    }
+
+    private void handleServerList(IPacketMsg packetMsg) {
+        // TODO: 2018-02-21
+    }
+
+    private void handleCMList(IPacketMsg packetMsg) {
+        // TODO: 2018-02-21
+    }
+
+    private void handleSessionToken(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<CMsgClientSessionToken.Builder>(CMsgClientSessionToken.class, packetMsg.getMsgType());
+
+        sessionToken = sessToken.getBody().getToken();
     }
 
     public SteamConfiguration getConfiguration() {
@@ -258,12 +372,12 @@ public abstract class CMClient {
     }
 
     /**
-     * Gets a value indicating whether this instance is connected to the remote CM server.
+     * Gets a value indicating whether this instance is isConnected to the remote CM server.
      *
-     * @return <c>true</c> if this instance is connected; otherwise, <c>false</c>.
+     * @return <c>true</c> if this instance is isConnected; otherwise, <c>false</c>.
      */
     public boolean isConnected() {
-        return connected;
+        return isConnected;
     }
 
     /**

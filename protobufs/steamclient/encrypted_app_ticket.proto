@@ -1,3 +1,5 @@
+option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
+
 option optimize_for = SPEED;
 option cc_generic_services = false;
 

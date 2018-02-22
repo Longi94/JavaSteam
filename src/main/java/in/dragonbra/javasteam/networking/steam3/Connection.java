@@ -95,4 +95,16 @@ public abstract class Connection {
     public ProtocolTypes getProtocolTypes() {
         return protocolTypes;
     }
+
+    public Event<NetMsgEventArgs> getNetMsgReceived() {
+        return netMsgReceived;
+    }
+
+    public Event<EventArgs> getConnected() {
+        return connected;
+    }
+
+    public Event<DisconnectedEventArgs> getDisconnected() {
+        return disconnected;
+    }
 }

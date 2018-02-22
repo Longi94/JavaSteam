@@ -49,9 +49,9 @@ public interface IClientMsg {
     /**
      * Sets the {@link SteamID} for this client message.
      *
-     * @param SteamID The {@link SteamID}.
+     * @param steamID The {@link SteamID}.
      */
-    void setSteamID(SteamID SteamID);
+    void setSteamID(SteamID steamID);
 
     /**
      * Gets the target job id for this client message.
@@ -63,9 +63,9 @@ public interface IClientMsg {
     /**
      * Sets the target job id for this client message.
      *
-     * @param JobID The target job id.
+     * @param jobID The target job id.
      */
-    void setTargetJobID(JobID JobID);
+    void setTargetJobID(JobID jobID);
 
     /**
      * Gets the source job id for this client message.
@@ -77,9 +77,9 @@ public interface IClientMsg {
     /**
      * Sets the source job id for this client message.
      *
-     * @param JobID The source job id.
+     * @param jobID The source job id.
      */
-    void setSourceJobID(JobID JobID);
+    void setSourceJobID(JobID jobID);
 
     /**
      * serializes this client message instance to a byte array.
@@ -94,5 +94,5 @@ public interface IClientMsg {
      *
      * @param data The data representing a client message.
      */
-    void deSerialize(byte[] data) throws IOException;
+    void deserialize(byte[] data) throws IOException;
 }

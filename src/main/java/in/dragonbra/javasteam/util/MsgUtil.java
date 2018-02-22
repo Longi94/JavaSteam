@@ -10,7 +10,6 @@ public class MsgUtil {
 
     private static final int PROTO_MASK = 0x80000000;
     private static final int EMSG_MASK = ~PROTO_MASK;
-
     /**
      * Strips off the protobuf message flag and returns an EMsg.
      *
@@ -34,5 +33,15 @@ public class MsgUtil {
         }
 
         return msg;
+    }
+
+    /**
+     * Determines whether message is protobuf flagged.
+     *
+     * @param msg The message.
+     * @return <b>true</b> if this message is protobuf flagged; otherwise, <b>false</b>.
+     */
+    public static boolean isProtoBuf(int msg) {
+        return (msg & 0xffffffffL & PROTO_MASK) > 0;
     }
 }

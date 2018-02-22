@@ -1,5 +1,7 @@
 import "steammessages_unified_base.steamclient.proto";
 
+option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
+
 option cc_generic_services = true;
 
 message CMsgTest_MessageToClient_Request {
