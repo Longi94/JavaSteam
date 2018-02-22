@@ -2,10 +2,18 @@ package in.dragonbra.javasteam.steam;
 
 import in.dragonbra.javasteam.base.*;
 import in.dragonbra.javasteam.enums.EMsg;
+import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.*;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLoggedOff;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
 import in.dragonbra.javasteam.steam.discovery.ServerQuality;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
@@ -13,17 +21,24 @@ import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.IDebugNetworkListener;
 import in.dragonbra.javasteam.util.MsgUtil;
+import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.zip.GZIPInputStream;
 
 /**
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
@@ -104,7 +119,7 @@ public abstract class CMClient {
         this.serverMap = new HashMap<>();
 
         heartBeatFunc = new ScheduledFunction(() -> {
-            // TODO: 2018-02-21
+            send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.Heartbeat));
         }, 5000);
     }
 
@@ -172,7 +187,34 @@ public abstract class CMClient {
      * @param msg The client message to send.
      */
     public void send(IClientMsg msg) {
-        // TODO: 2018-02-21  
+        if (msg == null) {
+            throw new IllegalArgumentException("A value for 'msg' must be supplied");
+        }
+
+        if (sessionID != null) {
+            msg.setSessionID(sessionID);
+        }
+
+        logger.debug(String.format("Sent -> EMsg: %s (Proto: %s)", msg.getMsgType(), msg.isProto()));
+
+        try {
+            if (debugNetworkListener != null) {
+                debugNetworkListener.onOutgoingNetworkMessage(msg.getMsgType(), msg.serialize());
+            }
+        } catch (Exception e) {
+            logger.debug("DebugNetworkListener threw an exception", e);
+        }
+
+        // we'll swallow any network failures here because they will be thrown later
+        // on the network thread, and that will lead to a disconnect callback
+        // down the line
+
+        try {
+            if (connection != null) {
+                connection.send(msg.serialize());
+            }
+        } catch (IOException ignored) {
+        }
     }
 
     /**
@@ -301,7 +343,43 @@ public abstract class CMClient {
             return;
         }
 
-        // TODO: 2018-02-21
+        ClientMsgProtobuf<CMsgMulti.Builder> msgMulti = new ClientMsgProtobuf<>(CMsgMulti.class, packetMsg);
+
+        byte[] payload = msgMulti.getBody().getMessageBody().toByteArray();
+
+        if (msgMulti.getBody().getSizeUnzipped() > 0) {
+            try {
+                GZIPInputStream gzin = new GZIPInputStream(new ByteArrayInputStream(payload));
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                int res = 0;
+                byte buf[] = new byte[1024];
+                while (res >= 0) {
+                    res = gzin.read(buf, 0, buf.length);
+                    if (res > 0) {
+                        baos.write(buf, 0, res);
+                    }
+                }
+                payload = baos.toByteArray();
+            } catch (IOException e) {
+                logger.debug("HandleMulti encountered an exception when decompressing.", e);
+                return;
+            }
+        }
+
+        try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(payload))) {
+            while (dis.available() > 0) {
+                int subSize = dis.readInt();
+                byte[] subData = new byte[subSize];
+                dis.readFully(subData);
+
+                if (!onClientMsgReceived(getPacketMsg(subData))) {
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void handleLogOnResponse(IPacketMsg packetMsg) {
@@ -312,7 +390,19 @@ public abstract class CMClient {
             return;
         }
 
-        // TODO: 2018-02-21
+        ClientMsgProtobuf<CMsgClientLogonResponse.Builder> logonResp = new ClientMsgProtobuf<>(CMsgClientLogonResponse.class, packetMsg);
+
+        if (logonResp.getBody().getEresult() == EResult.OK.code()) {
+            sessionID = logonResp.getProtoHeader().getClientSessionid();
+            steamID = new SteamID(logonResp.getProtoHeader().getSteamid());
+
+            cellID = logonResp.getBody().getCellId();
+
+            // restart heartbeat
+            heartBeatFunc.stop();
+            heartBeatFunc.setDelay(logonResp.getBody().getOutOfGameHeartbeatSeconds() + 1000);
+            heartBeatFunc.start();
+        }
     }
 
     private void handleLoggedOff(IPacketMsg packetMsg) {
@@ -324,20 +414,56 @@ public abstract class CMClient {
         heartBeatFunc.stop();
 
         if (packetMsg.isProto()) {
-            // TODO: 2018-02-21
+            ClientMsgProtobuf<CMsgClientLoggedOff.Builder> logoffMsg = new ClientMsgProtobuf<>(CMsgClientLoggedOff.class, packetMsg);
+            EResult logoffResult = EResult.from(logoffMsg.getBody().getEresult());
+
+            if (logoffResult == EResult.TryAnotherCM || logoffResult == EResult.ServiceUnavailable) {
+                getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            }
         }
     }
 
     private void handleServerList(IPacketMsg packetMsg) {
-        // TODO: 2018-02-21
+        ClientMsgProtobuf<CMsgClientServerList.Builder> listMsg = new ClientMsgProtobuf<>(CMsgClientServerList.class, packetMsg);
+
+        for (CMsgClientServerList.Server server : listMsg.getBody().getServersList()) {
+            EServerType type = EServerType.from(server.getServerType());
+
+            Set<InetSocketAddress> endPointSet;
+            if (!serverMap.containsKey(type)) {
+                endPointSet = new HashSet<>();
+                serverMap.put(type, endPointSet);
+            } else {
+                endPointSet = serverMap.get(type);
+            }
+
+            endPointSet.add(new InetSocketAddress(NetHelpers.getIPAddress(server.getServerIp()), server.getServerPort()));
+        }
     }
 
     private void handleCMList(IPacketMsg packetMsg) {
-        // TODO: 2018-02-21
+        ClientMsgProtobuf<CMsgClientCMList.Builder> cmMsg = new ClientMsgProtobuf<>(CMsgClientCMList.class, packetMsg);
+
+        if (cmMsg.getBody().getCmPortsCount() != cmMsg.getBody().getCmAddressesCount()) {
+            logger.debug("HandleCMList received malformed message");
+        }
+
+        List<Integer> addresses = cmMsg.getBody().getCmAddressesList();
+        List<Integer> ports = cmMsg.getBody().getCmPortsList();
+        List<ServerRecord> cmList = IntStream.range(0, Math.min(addresses.size(), ports.size()))
+                .mapToObj(i -> ServerRecord.createSocketServer(new InetSocketAddress(NetHelpers.getIPAddress(addresses.get(i)), ports.get(i))))
+                .collect(Collectors.toList());
+
+        List<ServerRecord> webSocketList = cmMsg.getBody().getCmWebsocketAddressesList().stream()
+                .map(addr -> ServerRecord.createWebSocketServer(addr))
+                .collect(Collectors.toList());
+
+        cmList.addAll(webSocketList);
+        getServers().replaceList(cmList);
     }
 
     private void handleSessionToken(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<>(CMsgClientSessionToken.class, packetMsg.getMsgType());
+        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<>(CMsgClientSessionToken.class, packetMsg);
 
         sessionToken = sessToken.getBody().getToken();
     }

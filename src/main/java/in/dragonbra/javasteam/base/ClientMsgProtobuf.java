@@ -31,6 +31,29 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * This is a client send constructor.
      *
      * @param clazz
+     * @param msg   The network message type this client message represents.
+     */
+    public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg) {
+        this(clazz, msg, 64);
+    }
+
+    /**
+     * Initializes a new instance of the {@link ClientMsgProtobuf} class.
+     * This is a client send constructor.
+     *
+     * @param clazz
+     * @param msg   The network message type this client message represents.
+     * @param payloadReserve The number of bytes to initialize the payload capacity to.
+     */
+    public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg, int payloadReserve) {
+        this(clazz, msg.getMsgType(), payloadReserve);
+    }
+
+    /**
+     * Initializes a new instance of the {@link ClientMsgProtobuf} class.
+     * This is a client send constructor.
+     *
+     * @param clazz
      * @param eMsg  The network message type this client message represents.
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, EMsg eMsg) {
@@ -51,7 +74,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
         try {
             final Method m = clazz.getMethod("newBuilder");
             body = (BodyType) m.invoke(null);
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e ) {
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             logger.debug(e);
         }
 
@@ -63,8 +86,8 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * This is a reply constructor.
      *
      * @param clazz
-     * @param eMsg           The network message type this client message represents.
-     * @param msg            The message that this instance is a reply for.
+     * @param eMsg  The network message type this client message represents.
+     * @param msg   The message that this instance is a reply for.
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, EMsg eMsg, MsgBase<MsgHdrProtoBuf> msg) {
         this(clazz, eMsg, msg, 64);
