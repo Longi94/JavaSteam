@@ -337,7 +337,7 @@ public abstract class CMClient {
     }
 
     private void handleSessionToken(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<CMsgClientSessionToken.Builder>(CMsgClientSessionToken.class, packetMsg.getMsgType());
+        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<>(CMsgClientSessionToken.class, packetMsg.getMsgType());
 
         sessionToken = sessToken.getBody().getToken();
     }
