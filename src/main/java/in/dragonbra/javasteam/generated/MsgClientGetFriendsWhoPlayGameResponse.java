@@ -5,8 +5,11 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializableMessage {
 
@@ -47,11 +50,11 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeInt(result.code());
-        dos.writeLong(gameId);
-        dos.writeLong(countFriends);
+        bw.writeInt(result.code());
+        bw.writeLong(gameId);
+        bw.writeLong(countFriends);
     }
 
     @Override

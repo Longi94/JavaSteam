@@ -7,8 +7,11 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientCreateChat implements ISteamSerializableMessage {
 
@@ -119,18 +122,18 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeInt(chatRoomType.code());
-        dos.writeLong(gameId);
-        dos.writeLong(steamIdClan);
-        dos.writeInt(permissionOfficer.code());
-        dos.writeInt(permissionMember.code());
-        dos.writeInt(permissionAll.code());
-        dos.writeLong(membersMax);
-        dos.writeByte(chatFlags);
-        dos.writeLong(steamIdFriendChat);
-        dos.writeLong(steamIdInvited);
+        bw.writeInt(chatRoomType.code());
+        bw.writeLong(gameId);
+        bw.writeLong(steamIdClan);
+        bw.writeInt(permissionOfficer.code());
+        bw.writeInt(permissionMember.code());
+        bw.writeInt(permissionAll.code());
+        bw.writeLong(membersMax);
+        bw.writeByte(chatFlags);
+        bw.writeLong(steamIdFriendChat);
+        bw.writeLong(steamIdInvited);
     }
 
     @Override

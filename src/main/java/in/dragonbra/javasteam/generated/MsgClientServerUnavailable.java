@@ -4,8 +4,11 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientServerUnavailable implements ISteamSerializableMessage {
 
@@ -46,11 +49,11 @@ public class MsgClientServerUnavailable implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeLong(jobidSent);
-        dos.writeLong(eMsgSent);
-        dos.writeInt(eServerTypeUnavailable.code());
+        bw.writeLong(jobidSent);
+        bw.writeLong(eMsgSent);
+        bw.writeInt(eServerTypeUnavailable.code());
     }
 
     @Override

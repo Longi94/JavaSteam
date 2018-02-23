@@ -5,8 +5,11 @@ import in.dragonbra.javasteam.enums.EAppUsageEvent;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
@@ -47,11 +50,11 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeInt(appUsageEvent.code());
-        dos.writeLong(gameID);
-        dos.writeInt(offline);
+        bw.writeInt(appUsageEvent.code());
+        bw.writeLong(gameID);
+        bw.writeInt(offline);
     }
 
     @Override

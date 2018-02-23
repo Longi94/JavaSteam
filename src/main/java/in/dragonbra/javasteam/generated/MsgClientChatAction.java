@@ -5,8 +5,11 @@ import in.dragonbra.javasteam.enums.EChatAction;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientChatAction implements ISteamSerializableMessage {
 
@@ -47,11 +50,11 @@ public class MsgClientChatAction implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeLong(steamIdChat);
-        dos.writeLong(steamIdUserToActOn);
-        dos.writeInt(chatAction.code());
+        bw.writeLong(steamIdChat);
+        bw.writeLong(steamIdUserToActOn);
+        bw.writeInt(chatAction.code());
     }
 
     @Override

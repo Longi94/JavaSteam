@@ -4,13 +4,13 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -118,7 +118,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
     @Override
     public byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-        DataOutputStream dos = new DataOutputStream(baos);
+        BinaryWriter dos = new BinaryWriter(baos);
 
         dos.write(body.build().toByteArray());
 

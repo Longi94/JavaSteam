@@ -83,8 +83,11 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableMessage");
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
-                imports.add("java.io.*");
+                imports.add("java.io.IOException");
+                imports.add("java.io.InputStream");
+                imports.add("java.io.OutputStream");
                 imports.add("in.dragonbra.javasteam.util.stream.BinaryReader");
+                imports.add("in.dragonbra.javasteam.util.stream.BinaryWriter");
             } else if (node.getName().contains("Hdr")) {
                 if (node.getName().contains("MsgGC")) {
                     imports.add("in.dragonbra.javasteam.base.IGCSerializableHeader");
@@ -92,8 +95,11 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableHeader");
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
-                imports.add("java.io.*");
+                imports.add("java.io.IOException");
+                imports.add("java.io.InputStream");
+                imports.add("java.io.OutputStream");
                 imports.add("in.dragonbra.javasteam.util.stream.BinaryReader");
+                imports.add("in.dragonbra.javasteam.util.stream.BinaryWriter");
             }
 
             for (Node child : classNode.getChildNodes()) {
@@ -400,7 +406,7 @@ public class JavaGen implements Closeable, Flushable {
             writer.writeln("public void serialize(OutputStream stream) throws IOException {");
             writer.indent();
 
-            writer.writeln("DataOutputStream dos = new DataOutputStream(stream);");
+            writer.writeln("BinaryWriter bw = new BinaryWriter(stream);");
             writer.writeln();
 
             for (Node child : node.getChildNodes()) {
@@ -410,14 +416,14 @@ public class JavaGen implements Closeable, Flushable {
 
                 if (prop.getFlags() != null) {
                     if (prop.getFlags().equals("protomask")) {
-                        writer.writeln("dos.writeInt(MsgUtil.makeMsg(" + propName + ".code(), true));");
+                        writer.writeln("bw.writeInt(MsgUtil.makeMsg(" + propName + ".code(), true));");
                         continue;
                     }
 
                     if (prop.getFlags().equals("proto")) {
                         writer.writeln("byte[] " + propName + "Buffer = " + propName + ".build().toByteArray();");
-                        writer.writeln("dos.writeInt(" + propName + "Buffer.length);");
-                        writer.writeln("dos.write(" + propName + "Buffer);");
+                        writer.writeln("bw.writeInt(" + propName + "Buffer.length);");
+                        writer.writeln("bw.write(" + propName + "Buffer);");
                         continue;
                     }
 
@@ -433,16 +439,16 @@ public class JavaGen implements Closeable, Flushable {
 
                         switch (enumType) {
                             case "long":
-                                writer.writeln("dos.writeLong(" + propName + ".code());");
+                                writer.writeln("bw.writeLong(" + propName + ".code());");
                                 break;
                             case "byte":
-                                writer.writeln("dos.writeByte(" + propName + ".code());");
+                                writer.writeln("bw.writeByte(" + propName + ".code());");
                                 break;
                             case "short":
-                                writer.writeln("dos.writeShort(" + propName + ".code());");
+                                writer.writeln("bw.writeShort(" + propName + ".code());");
                                 break;
                             default:
-                                writer.writeln("dos.writeInt(" + propName + ".code());");
+                                writer.writeln("bw.writeInt(" + propName + ".code());");
                                 break;
                         }
                         continue;
@@ -450,11 +456,11 @@ public class JavaGen implements Closeable, Flushable {
                 }
 
                 if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    writer.writeln("dos.writeLong(" + propName + ");");
+                    writer.writeln("bw.writeLong(" + propName + ");");
                 } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
-                    writer.writeln("dos.writeBoolean(" + propName + ");");
+                    writer.writeln("bw.writeBoolean(" + propName + ");");
                 } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    writer.writeln("dos.writeLong(" + propName + ");");
+                    writer.writeln("bw.writeLong(" + propName + ");");
                 } else {
                     boolean isArray = false;
                     if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
@@ -463,21 +469,21 @@ public class JavaGen implements Closeable, Flushable {
                     }
 
                     if (isArray) {
-                        writer.writeln("dos.writeInt(" + propName + ".length);");
-                        writer.writeln("dos.write(" + propName + ");");
+                        writer.writeln("bw.writeInt(" + propName + ".length);");
+                        writer.writeln("bw.write(" + propName + ");");
                     } else {
                         switch (typeStr) {
                             case "long":
-                                writer.writeln("dos.writeLong(" + propName + ");");
+                                writer.writeln("bw.writeLong(" + propName + ");");
                                 break;
                             case "byte":
-                                writer.writeln("dos.writeByte(" + propName + ");");
+                                writer.writeln("bw.writeByte(" + propName + ");");
                                 break;
                             case "short":
-                                writer.writeln("dos.writeShort(" + propName + ");");
+                                writer.writeln("bw.writeShort(" + propName + ");");
                                 break;
                             default:
-                                writer.writeln("dos.writeInt(" + propName + ");");
+                                writer.writeln("bw.writeInt(" + propName + ");");
                                 break;
                         }
                     }

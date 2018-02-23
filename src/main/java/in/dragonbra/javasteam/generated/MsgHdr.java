@@ -3,8 +3,11 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableHeader;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgHdr implements ISteamSerializableHeader {
 
@@ -45,11 +48,11 @@ public class MsgHdr implements ISteamSerializableHeader {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeInt(msg.code());
-        dos.writeLong(targetJobID);
-        dos.writeLong(sourceJobID);
+        bw.writeInt(msg.code());
+        bw.writeLong(targetJobID);
+        bw.writeLong(sourceJobID);
     }
 
     @Override

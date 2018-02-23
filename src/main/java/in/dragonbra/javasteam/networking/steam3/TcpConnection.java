@@ -1,10 +1,10 @@
 package in.dragonbra.javasteam.networking.steam3;
 
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -26,7 +26,7 @@ public class TcpConnection extends Connection {
 
     private InetSocketAddress currentEndPoint;
 
-    private DataOutputStream netWriter;
+    private BinaryWriter netWriter;
 
     private BinaryReader netReader;
 
@@ -57,7 +57,7 @@ public class TcpConnection extends Connection {
         try {
             synchronized (netLock) {
                 netReader = new BinaryReader(socket.getInputStream());
-                netWriter = new DataOutputStream(socket.getOutputStream());
+                netWriter = new BinaryWriter(socket.getOutputStream());
 
                 netLoop = new NetLoop();
                 netThread = new Thread(netLoop, "TcpConnection Thread");

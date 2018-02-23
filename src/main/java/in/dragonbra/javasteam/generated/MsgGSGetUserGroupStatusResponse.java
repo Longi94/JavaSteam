@@ -6,8 +6,11 @@ import in.dragonbra.javasteam.enums.EClanRelationship;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgGSGetUserGroupStatusResponse implements ISteamSerializableMessage {
 
@@ -58,12 +61,12 @@ public class MsgGSGetUserGroupStatusResponse implements ISteamSerializableMessag
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeLong(steamIdUser);
-        dos.writeLong(steamIdGroup);
-        dos.writeInt(clanRelationship.code());
-        dos.writeInt(clanRank.code());
+        bw.writeLong(steamIdUser);
+        bw.writeLong(steamIdGroup);
+        bw.writeInt(clanRelationship.code());
+        bw.writeInt(clanRank.code());
     }
 
     @Override

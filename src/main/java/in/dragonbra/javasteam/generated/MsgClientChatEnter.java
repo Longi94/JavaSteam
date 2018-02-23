@@ -6,8 +6,11 @@ import in.dragonbra.javasteam.enums.EChatRoomType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgClientChatEnter implements ISteamSerializableMessage {
 
@@ -98,16 +101,16 @@ public class MsgClientChatEnter implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeLong(steamIdChat);
-        dos.writeLong(steamIdFriend);
-        dos.writeInt(chatRoomType.code());
-        dos.writeLong(steamIdOwner);
-        dos.writeLong(steamIdClan);
-        dos.writeByte(chatFlags);
-        dos.writeInt(enterResponse.code());
-        dos.writeInt(numMembers);
+        bw.writeLong(steamIdChat);
+        bw.writeLong(steamIdFriend);
+        bw.writeInt(chatRoomType.code());
+        bw.writeLong(steamIdOwner);
+        bw.writeLong(steamIdClan);
+        bw.writeByte(chatFlags);
+        bw.writeInt(enterResponse.code());
+        bw.writeInt(numMembers);
     }
 
     @Override

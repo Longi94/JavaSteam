@@ -4,8 +4,11 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.BinaryWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
 
@@ -86,15 +89,15 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
 
     @Override
     public void serialize(OutputStream stream) throws IOException {
-        DataOutputStream dos = new DataOutputStream(stream);
+        BinaryWriter bw = new BinaryWriter(stream);
 
-        dos.writeInt(result.code());
-        dos.writeLong(reputationScore);
-        dos.writeBoolean(banned);
-        dos.writeLong(bannedIp);
-        dos.writeInt(bannedPort);
-        dos.writeLong(bannedGameId);
-        dos.writeLong(timeBanExpires);
+        bw.writeInt(result.code());
+        bw.writeLong(reputationScore);
+        bw.writeBoolean(banned);
+        bw.writeLong(bannedIp);
+        bw.writeInt(bannedPort);
+        bw.writeLong(bannedGameId);
+        bw.writeLong(timeBanExpires);
     }
 
     @Override

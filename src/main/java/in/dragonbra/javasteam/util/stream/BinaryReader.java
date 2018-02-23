@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Basically DataInputStream, but the bytes are parsed in reverse prder
+ * Basically DataInputStream, but the bytes are parsed in reverse order
  */
 public class BinaryReader extends FilterInputStream {
 
