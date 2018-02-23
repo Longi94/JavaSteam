@@ -53,18 +53,8 @@ public abstract class Connection {
      * Connects to the specified end point.
      *
      * @param endPoint The end point to connect to.
-     * @param timeout  Timeout in milliseconds
      */
-    public abstract void connect(InetSocketAddress endPoint, long timeout);
-
-    /**
-     * Connects to the specified end point.
-     *
-     * @param endPoint The end point to connect to.
-     */
-    public void connect(InetSocketAddress endPoint) {
-        this.connect(endPoint, 5000L);
-    }
+    public abstract void connect(InetSocketAddress endPoint);
 
     /**
      * Disconnects this instance.

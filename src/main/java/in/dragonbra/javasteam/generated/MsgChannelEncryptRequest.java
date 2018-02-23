@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EUniverse;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -45,9 +46,9 @@ public class MsgChannelEncryptRequest implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        protocolVersion = dis.readLong();
-        universe = EUniverse.from(dis.readInt());
+        protocolVersion = br.readLong();
+        universe = EUniverse.from(br.readInt());
     }
 }

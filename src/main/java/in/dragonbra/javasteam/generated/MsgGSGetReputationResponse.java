@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -98,14 +99,14 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        result = EResult.from(dis.readInt());
-        reputationScore = dis.readLong();
-        banned = dis.readBoolean();
-        bannedIp = dis.readLong();
-        bannedPort = dis.readInt();
-        bannedGameId = dis.readLong();
-        timeBanExpires = dis.readLong();
+        result = EResult.from(br.readInt());
+        reputationScore = br.readLong();
+        banned = br.readBoolean();
+        bannedIp = br.readLong();
+        bannedPort = br.readInt();
+        bannedGameId = br.readLong();
+        timeBanExpires = br.readLong();
     }
 }

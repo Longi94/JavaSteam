@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -88,13 +89,13 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        result = EResult.from(dis.readInt());
-        outOfGameHeartbeatRateSec = dis.readInt();
-        inGameHeartbeatRateSec = dis.readInt();
-        clientSuppliedSteamId = dis.readLong();
-        ipPublic = dis.readLong();
-        serverRealTime = dis.readLong();
+        result = EResult.from(br.readInt());
+        outOfGameHeartbeatRateSec = br.readInt();
+        inGameHeartbeatRateSec = br.readInt();
+        clientSuppliedSteamId = br.readLong();
+        ipPublic = br.readLong();
+        serverRealTime = br.readLong();
     }
 }

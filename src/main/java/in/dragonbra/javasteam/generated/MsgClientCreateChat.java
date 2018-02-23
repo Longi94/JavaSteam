@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.enums.EChatRoomType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -134,17 +135,17 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        chatRoomType = EChatRoomType.from(dis.readInt());
-        gameId = dis.readLong();
-        steamIdClan = dis.readLong();
-        permissionOfficer = EChatPermission.from(dis.readInt());
-        permissionMember = EChatPermission.from(dis.readInt());
-        permissionAll = EChatPermission.from(dis.readInt());
-        membersMax = dis.readLong();
-        chatFlags = dis.readByte();
-        steamIdFriendChat = dis.readLong();
-        steamIdInvited = dis.readLong();
+        chatRoomType = EChatRoomType.from(br.readInt());
+        gameId = br.readLong();
+        steamIdClan = br.readLong();
+        permissionOfficer = EChatPermission.from(br.readInt());
+        permissionMember = EChatPermission.from(br.readInt());
+        permissionAll = EChatPermission.from(br.readInt());
+        membersMax = br.readLong();
+        chatFlags = br.readByte();
+        steamIdFriendChat = br.readLong();
+        steamIdInvited = br.readLong();
     }
 }

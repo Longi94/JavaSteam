@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.types.GameID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -55,10 +56,10 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        result = EResult.from(dis.readInt());
-        gameId = dis.readLong();
-        countFriends = dis.readLong();
+        result = EResult.from(br.readInt());
+        gameId = br.readLong();
+        countFriends = br.readLong();
     }
 }

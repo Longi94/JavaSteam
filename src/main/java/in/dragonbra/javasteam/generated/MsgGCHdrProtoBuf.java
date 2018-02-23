@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.generated;
 
 import in.dragonbra.javasteam.base.IGCSerializableHeader;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -55,12 +56,11 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        msg = dis.readLong();
-        headerLength = dis.readInt();
-        byte[] protoBuffer = new byte[dis.readInt()];
-        dis.readFully(protoBuffer);
+        msg = br.readLong();
+        headerLength = br.readInt();
+        byte[] protoBuffer = br.readBytes(br.readInt());
         proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer);
     }
 }

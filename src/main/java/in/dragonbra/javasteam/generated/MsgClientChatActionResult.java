@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.enums.EChatAction;
 import in.dragonbra.javasteam.enums.EChatActionResult;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -67,11 +68,11 @@ public class MsgClientChatActionResult implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        steamIdChat = dis.readLong();
-        steamIdUserActedOn = dis.readLong();
-        chatAction = EChatAction.from(dis.readInt());
-        actionResult = EChatActionResult.from(dis.readInt());
+        steamIdChat = br.readLong();
+        steamIdUserActedOn = br.readLong();
+        chatAction = EChatAction.from(br.readInt());
+        actionResult = EChatActionResult.from(br.readInt());
     }
 }

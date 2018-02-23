@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -32,8 +33,8 @@ public class MsgChannelEncryptResult implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        result = EResult.from(dis.readInt());
+        result = EResult.from(br.readInt());
     }
 }

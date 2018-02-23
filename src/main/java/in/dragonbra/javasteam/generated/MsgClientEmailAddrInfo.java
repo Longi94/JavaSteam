@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.generated;
 
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -53,10 +54,10 @@ public class MsgClientEmailAddrInfo implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        passwordStrength = dis.readLong();
-        flagsAccountSecurityPolicy = dis.readLong();
-        validated = dis.readBoolean();
+        passwordStrength = br.readLong();
+        flagsAccountSecurityPolicy = br.readLong();
+        validated = br.readBoolean();
     }
 }

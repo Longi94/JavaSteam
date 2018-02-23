@@ -1,10 +1,10 @@
 package in.dragonbra.javasteam.base;
 
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -16,7 +16,7 @@ public abstract class AbstractMsgBase {
 
     protected MemoryStream payload;
 
-    private final DataInputStream reader;
+    private final BinaryReader reader;
 
     private final DataOutputStream writer;
 
@@ -35,7 +35,7 @@ public abstract class AbstractMsgBase {
     public AbstractMsgBase(int payloadReserve) {
         payload = new MemoryStream(payloadReserve);
 
-        reader = new DataInputStream(payload);
+        reader = new BinaryReader(payload);
         writer = new DataOutputStream(payload.asOutputStream());
     }
 
@@ -108,9 +108,7 @@ public abstract class AbstractMsgBase {
     }
 
     public byte[] readBytes(int numBytes) throws IOException {
-        byte[] buf = new byte[numBytes];
-        reader.readFully(buf);
-        return buf;
+        return reader.readBytes(numBytes);
     }
 
     public short readShort() throws IOException {

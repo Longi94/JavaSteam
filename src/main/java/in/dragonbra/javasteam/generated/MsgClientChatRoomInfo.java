@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EChatInfoType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -44,9 +45,9 @@ public class MsgClientChatRoomInfo implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        steamIdChat = dis.readLong();
-        type = EChatInfoType.from(dis.readInt());
+        steamIdChat = br.readLong();
+        type = EChatInfoType.from(br.readInt());
     }
 }

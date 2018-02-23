@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Smart list of CM servers.
@@ -98,12 +97,12 @@ public class SmartCMServerList {
     }
 
     public boolean tryMark(InetSocketAddress endPoint, ProtocolTypes protocolTypes, ServerQuality quality) {
-        Stream<ServerInfo> stream = servers.stream().filter(x -> x.getRecord().getEndpoint().equals(endPoint) &&
-                (x.getProtocol().code() & protocolTypes.code()) > 0);
+        List<ServerInfo> serverInfos = servers.stream().filter(x -> x.getRecord().getEndpoint().equals(endPoint) &&
+                (x.getProtocol().code() & protocolTypes.code()) > 0).collect(Collectors.toList());
 
-        stream.forEach(serverInfo -> markServerCore(serverInfo, quality));
+        serverInfos.forEach(serverInfo -> markServerCore(serverInfo, quality));
 
-        return stream.count() > 0;
+        return serverInfos.size() > 0;
     }
 
     private void markServerCore(ServerInfo serverInfo, ServerQuality quality) {

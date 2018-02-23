@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.enums.EChatRoomEnterResponse;
 import in.dragonbra.javasteam.enums.EChatRoomType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -111,15 +112,15 @@ public class MsgClientChatEnter implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        steamIdChat = dis.readLong();
-        steamIdFriend = dis.readLong();
-        chatRoomType = EChatRoomType.from(dis.readInt());
-        steamIdOwner = dis.readLong();
-        steamIdClan = dis.readLong();
-        chatFlags = dis.readByte();
-        enterResponse = EChatRoomEnterResponse.from(dis.readInt());
-        numMembers = dis.readInt();
+        steamIdChat = br.readLong();
+        steamIdFriend = br.readLong();
+        chatRoomType = EChatRoomType.from(br.readInt());
+        steamIdOwner = br.readLong();
+        steamIdClan = br.readLong();
+        chatFlags = br.readByte();
+        enterResponse = EChatRoomEnterResponse.from(br.readInt());
+        numMembers = br.readInt();
     }
 }

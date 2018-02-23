@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -65,11 +66,11 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        accountType = dis.readByte();
-        accountId = dis.readLong();
-        appId = dis.readLong();
-        timeStarted = dis.readLong();
+        accountType = br.readByte();
+        accountId = br.readLong();
+        appId = br.readLong();
+        timeStarted = br.readLong();
     }
 }

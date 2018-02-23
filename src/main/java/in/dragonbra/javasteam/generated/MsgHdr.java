@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.generated;
 
 import in.dragonbra.javasteam.base.ISteamSerializableHeader;
 import in.dragonbra.javasteam.enums.EMsg;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -53,10 +54,10 @@ public class MsgHdr implements ISteamSerializableHeader {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        msg = EMsg.from(dis.readInt());
-        targetJobID = dis.readLong();
-        sourceJobID = dis.readLong();
+        msg = EMsg.from(br.readInt());
+        targetJobID = br.readLong();
+        sourceJobID = br.readLong();
     }
 }

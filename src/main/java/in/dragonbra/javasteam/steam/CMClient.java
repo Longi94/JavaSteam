@@ -24,16 +24,15 @@ import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -159,7 +158,7 @@ public abstract class CMClient {
                 connection.getNetMsgReceived().addEventHandler(netMsgReceived);
                 connection.getConnected().addEventHandler(connected);
                 connection.getDisconnected().addEventHandler(disconnected);
-                connection.connect(cmServer.getEndpoint(), getConnectionTimeout());
+                connection.connect(cmServer.getEndpoint());
             } catch (Exception e) {
                 onClientDisconnected(false);
             }
@@ -308,9 +307,14 @@ public abstract class CMClient {
             return null;
         }
 
-        ByteBuffer buffer = ByteBuffer.wrap(data);
+        BinaryReader reader = new BinaryReader(new ByteArrayInputStream(data));
 
-        int rawEMsg = buffer.getInt(0);
+        int rawEMsg = 0;
+        try {
+            rawEMsg = reader.readInt();
+        } catch (IOException e) {
+            logger.debug("Exception while getting EMsg code", e);
+        }
         EMsg eMsg = MsgUtil.getMsg(rawEMsg);
 
         switch (eMsg) {
@@ -366,11 +370,10 @@ public abstract class CMClient {
             }
         }
 
-        try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(payload))) {
-            while (dis.available() > 0) {
-                int subSize = dis.readInt();
-                byte[] subData = new byte[subSize];
-                dis.readFully(subData);
+        try (BinaryReader br = new BinaryReader(new ByteArrayInputStream(payload))) {
+            while (br.available() > 0) {
+                int subSize = br.readInt();
+                byte[] subData = br.readBytes(subSize);
 
                 if (!onClientMsgReceived(getPacketMsg(subData))) {
                     break;

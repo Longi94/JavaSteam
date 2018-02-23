@@ -1,9 +1,9 @@
 package in.dragonbra.javasteam.networking.steam3;
 
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,7 +28,7 @@ public class TcpConnection extends Connection {
 
     private DataOutputStream netWriter;
 
-    private DataInputStream netReader;
+    private BinaryReader netReader;
 
     private Thread netThread;
 
@@ -56,7 +56,7 @@ public class TcpConnection extends Connection {
 
         try {
             synchronized (netLock) {
-                netReader = new DataInputStream(socket.getInputStream());
+                netReader = new BinaryReader(socket.getInputStream());
                 netWriter = new DataOutputStream(socket.getOutputStream());
 
                 netLoop = new NetLoop();
@@ -105,12 +105,11 @@ public class TcpConnection extends Connection {
     }
 
     @Override
-    public void connect(InetSocketAddress endPoint, long timeout) {
+    public void connect(InetSocketAddress endPoint) {
         synchronized (netLock) {
             try {
                 logger.debug("Connecting to " + destination + "...");
                 socket = new Socket(endPoint.getAddress(), endPoint.getPort());
-                socket.setSoTimeout((int) timeout);
 
                 this.destination = endPoint;
 
@@ -145,10 +144,7 @@ public class TcpConnection extends Connection {
             throw new IOException("Got a packet with invalid magic!");
         }
 
-        byte[] packData = new byte[packetLen];
-        netReader.readFully(packData, 0, packData.length);
-
-        return packData;
+        return netReader.readBytes(packetLen);
     }
 
     @Override

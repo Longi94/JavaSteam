@@ -84,6 +84,7 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
                 imports.add("java.io.*");
+                imports.add("in.dragonbra.javasteam.util.stream.BinaryReader");
             } else if (node.getName().contains("Hdr")) {
                 if (node.getName().contains("MsgGC")) {
                     imports.add("in.dragonbra.javasteam.base.IGCSerializableHeader");
@@ -92,6 +93,7 @@ public class JavaGen implements Closeable, Flushable {
                     imports.add("in.dragonbra.javasteam.enums.EMsg");
                 }
                 imports.add("java.io.*");
+                imports.add("in.dragonbra.javasteam.util.stream.BinaryReader");
             }
 
             for (Node child : classNode.getChildNodes()) {
@@ -489,7 +491,7 @@ public class JavaGen implements Closeable, Flushable {
             writer.writeln("public void deserialize(InputStream stream) throws IOException {");
             writer.indent();
 
-            writer.writeln("DataInputStream dis = new DataInputStream(stream);");
+            writer.writeln("BinaryReader br = new BinaryReader(stream);");
             writer.writeln();
 
             for (Node child : node.getChildNodes()) {
@@ -499,13 +501,12 @@ public class JavaGen implements Closeable, Flushable {
 
                 if (prop.getFlags() != null) {
                     if (prop.getFlags().equals("protomask")) {
-                        writer.writeln(propName + " = MsgUtil.getMsg(dis.readInt());");
+                        writer.writeln(propName + " = MsgUtil.getMsg(br.readInt());");
                         continue;
                     }
 
                     if (prop.getFlags().equals("proto")) {
-                        writer.writeln("byte[] " + propName + "Buffer = new byte[dis.readInt()];");
-                        writer.writeln("dis.readFully(" + propName + "Buffer);");
+                        writer.writeln("byte[] " + propName + "Buffer = br.readBytes(br.readInt());");
                         writer.writeln(propName + " = " + typeStr + ".newBuilder().mergeFrom(" + propName + "Buffer);");
                         continue;
                     }
@@ -523,16 +524,16 @@ public class JavaGen implements Closeable, Flushable {
 
                         switch (enumType) {
                             case "long":
-                                writer.writeln(propName + " = " + className + ".from(dis.readLong());");
+                                writer.writeln(propName + " = " + className + ".from(br.readLong());");
                                 break;
                             case "byte":
-                                writer.writeln(propName + " = " + className + ".from(dis.readByte());");
+                                writer.writeln(propName + " = " + className + ".from(br.readByte());");
                                 break;
                             case "short":
-                                writer.writeln(propName + " = " + className + ".from(dis.readShort());");
+                                writer.writeln(propName + " = " + className + ".from(br.readShort());");
                                 break;
                             default:
-                                writer.writeln(propName + " = " + className + ".from(dis.readInt());");
+                                writer.writeln(propName + " = " + className + ".from(br.readInt());");
                                 break;
                         }
                         continue;
@@ -540,11 +541,11 @@ public class JavaGen implements Closeable, Flushable {
                 }
 
                 if (prop.getFlags() != null && "steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    writer.writeln(propName + " = dis.readLong();");
+                    writer.writeln(propName + " = br.readLong();");
                 } else if (prop.getFlags() != null && "boolmarshal".equals(prop.getFlags()) && "byte".equals(typeStr)) {
-                    writer.writeln(propName + " = dis.readBoolean();");
+                    writer.writeln(propName + " = br.readBoolean();");
                 } else if (prop.getFlags() != null && "gameidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
-                    writer.writeln(propName + " = dis.readLong();");
+                    writer.writeln(propName + " = br.readLong();");
                 } else {
                     boolean isArray = false;
                     if (!(prop.getFlagsOpt() == null || prop.getFlagsOpt().isEmpty()) &&
@@ -553,21 +554,20 @@ public class JavaGen implements Closeable, Flushable {
                     }
 
                     if (isArray) {
-                        writer.writeln(propName + " = new byte[dis.readInt()];");
-                        writer.writeln("dis.readFully(" + propName + ");");
+                        writer.writeln(propName + " = br.readBytes(br.readInt());");
                     } else {
                         switch (typeStr) {
                             case "long":
-                                writer.writeln(propName + " = dis.readLong();");
+                                writer.writeln(propName + " = br.readLong();");
                                 break;
                             case "byte":
-                                writer.writeln(propName + " = dis.readByte();");
+                                writer.writeln(propName + " = br.readByte();");
                                 break;
                             case "short":
-                                writer.writeln(propName + " = dis.readShort();");
+                                writer.writeln(propName + " = br.readShort();");
                                 break;
                             default:
-                                writer.writeln(propName + " = dis.readInt();");
+                                writer.writeln(propName + " = br.readInt();");
                                 break;
                         }
                     }

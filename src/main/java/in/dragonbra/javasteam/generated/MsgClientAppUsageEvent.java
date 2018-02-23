@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EAppUsageEvent;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.GameID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -55,10 +56,10 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        appUsageEvent = EAppUsageEvent.from(dis.readInt());
-        gameID = dis.readLong();
-        offline = dis.readInt();
+        appUsageEvent = EAppUsageEvent.from(br.readInt());
+        gameID = br.readLong();
+        offline = br.readInt();
     }
 }

@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.generated;
 
 import in.dragonbra.javasteam.base.IGCSerializableHeader;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -50,10 +51,10 @@ public class MsgGCHdr implements IGCSerializableHeader {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        headerVersion = dis.readInt();
-        targetJobID = dis.readLong();
-        sourceJobID = dis.readLong();
+        headerVersion = br.readInt();
+        targetJobID = br.readLong();
+        sourceJobID = br.readLong();
     }
 }

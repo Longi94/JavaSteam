@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -65,11 +66,11 @@ public class MsgClientOGSBeginSessionResponse implements ISteamSerializableMessa
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        result = EResult.from(dis.readInt());
-        collectingAny = dis.readBoolean();
-        collectingDetails = dis.readBoolean();
-        sessionId = dis.readLong();
+        result = EResult.from(br.readInt());
+        collectingAny = br.readBoolean();
+        collectingDetails = br.readBoolean();
+        sessionId = br.readLong();
     }
 }

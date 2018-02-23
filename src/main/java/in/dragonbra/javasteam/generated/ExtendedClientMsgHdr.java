@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.generated;
 import in.dragonbra.javasteam.base.ISteamSerializableHeader;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.*;
 
@@ -109,15 +110,15 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
-        DataInputStream dis = new DataInputStream(stream);
+        BinaryReader br = new BinaryReader(stream);
 
-        msg = EMsg.from(dis.readInt());
-        headerSize = dis.readByte();
-        headerVersion = dis.readInt();
-        targetJobID = dis.readLong();
-        sourceJobID = dis.readLong();
-        headerCanary = dis.readByte();
-        steamID = dis.readLong();
-        sessionID = dis.readInt();
+        msg = EMsg.from(br.readInt());
+        headerSize = br.readByte();
+        headerVersion = br.readInt();
+        targetJobID = br.readLong();
+        sourceJobID = br.readLong();
+        headerCanary = br.readByte();
+        steamID = br.readLong();
+        sessionID = br.readInt();
     }
 }
