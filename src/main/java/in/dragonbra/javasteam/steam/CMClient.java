@@ -10,7 +10,6 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLoggedOff;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
@@ -42,7 +41,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
- * the {@link SteamClient} class.
+ * the {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} class.
  */
 public abstract class CMClient {
 
@@ -455,7 +454,7 @@ public abstract class CMClient {
                 .collect(Collectors.toList());
 
         List<ServerRecord> webSocketList = cmMsg.getBody().getCmWebsocketAddressesList().stream()
-                .map(addr -> ServerRecord.createWebSocketServer(addr))
+                .map(ServerRecord::createWebSocketServer)
                 .collect(Collectors.toList());
 
         cmList.addAll(webSocketList);
@@ -566,11 +565,11 @@ public abstract class CMClient {
         this.debugNetworkListener = debugNetworkListener;
     }
 
-    boolean isExpectDisconnection() {
+    public boolean isExpectDisconnection() {
         return expectDisconnection;
     }
 
-    void setExpectDisconnection(boolean expectDisconnection) {
+    public void setExpectDisconnection(boolean expectDisconnection) {
         this.expectDisconnection = expectDisconnection;
     }
 }

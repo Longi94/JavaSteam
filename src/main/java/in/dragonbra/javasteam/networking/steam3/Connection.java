@@ -85,16 +85,12 @@ public abstract class Connection {
      */
     public abstract InetAddress getLocalIP();
 
-    public InetSocketAddress getCurrentEndPoint() {
-        return currentEndPoint;
-    }
+    public abstract InetSocketAddress getCurrentEndPoint();
 
     /**
      * @return The type of communication protocol that this connection uses.
      */
-    public ProtocolTypes getProtocolTypes() {
-        return protocolTypes;
-    }
+    public abstract ProtocolTypes getProtocolTypes();
 
     public Event<NetMsgEventArgs> getNetMsgReceived() {
         return netMsgReceived;

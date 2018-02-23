@@ -45,7 +45,7 @@ public class SmartCMServerList {
         logger.debug("Resolving server list");
 
         Enumeration<ServerRecord> serverList = configuration.getServerListProvider().fetchServerListAsync();
-        List<ServerRecord> endPoints = Collections.list(serverList);
+        List<ServerRecord> endPoints = serverList == null ? new ArrayList<>() : Collections.list(serverList);
 
         if (endPoints.isEmpty() && configuration.isAllowDirectoryFetch()) {
             logger.debug("Server list provider had no entries, will query SteamDirectory");

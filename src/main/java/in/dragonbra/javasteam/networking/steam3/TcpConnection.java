@@ -45,11 +45,7 @@ public class TcpConnection extends Connection {
         }
     }
 
-    private void tryConnect(int timeout) throws IOException {
-        socket.connect(new InetSocketAddress(destination.getAddress(), destination.getPort()), timeout);
-    }
-
-    private void connectionCompleted(boolean success) throws IOException {
+    private void connectionCompleted(boolean success) {
         if (!success) {
             logger.debug("Timed out while connecting to " + destination);
             release(false);
@@ -78,20 +74,29 @@ public class TcpConnection extends Connection {
         }
     }
 
-    private void release(boolean userRequestedDisconnect) throws IOException {
+    private void release(boolean userRequestedDisconnect) {
         synchronized (netLock) {
             if (netWriter != null) {
-                netWriter.close();
+                try {
+                    netWriter.close();
+                } catch (IOException ignored) {
+                }
                 netWriter = null;
             }
 
             if (netReader != null) {
-                netReader.close();
+                try {
+                    netReader.close();
+                } catch (IOException ignored) {
+                }
                 netReader = null;
             }
 
             if (socket != null) {
-                socket.close();
+                try {
+                    socket.close();
+                } catch (IOException ignored) {
+                }
                 socket = null;
             }
         }
@@ -103,14 +108,16 @@ public class TcpConnection extends Connection {
     public void connect(InetSocketAddress endPoint, long timeout) {
         synchronized (netLock) {
             try {
+                logger.debug("Connecting to " + destination + "...");
                 socket = new Socket(endPoint.getAddress(), endPoint.getPort());
                 socket.setSoTimeout((int) timeout);
 
                 this.destination = endPoint;
 
-                logger.debug("Connecting to " + destination + "...");
+                connectionCompleted(true);
             } catch (IOException e) {
-                logger.debug(e);
+                logger.debug("Socket exception while completing connection request to " + destination, e);
+                connectionCompleted(false);
             }
         }
     }
@@ -178,6 +185,11 @@ public class TcpConnection extends Connection {
         return currentEndPoint;
     }
 
+    @Override
+    public ProtocolTypes getProtocolTypes() {
+        return ProtocolTypes.TCP;
+    }
+
     // this is now a steamkit meme
 
     /**
@@ -231,12 +243,8 @@ public class TcpConnection extends Connection {
                 }
             }
 
-            try {
-                shutdown();
-                release(false);
-            } catch (IOException e) {
-                logger.debug(e);
-            }
+            shutdown();
+            release(false);
         }
     }
 }

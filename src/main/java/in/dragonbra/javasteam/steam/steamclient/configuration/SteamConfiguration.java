@@ -41,7 +41,7 @@ public class SteamConfiguration {
         return builder.build();
     }
 
-    static SteamConfiguration createDefault() {
+    public static SteamConfiguration createDefault() {
         return new SteamConfiguration(SteamConfigurationBuilder.createDefaultState());
     }
 
