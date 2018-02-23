@@ -123,8 +123,8 @@ public abstract class CMClient {
 
     /**
      * Connects this client to a Steam3 server. This begins the process of connecting and encrypting the data channel
-     * between the client and the server. Results are returned asynchronously in a {@link ConnectedCallback}. If the
-     * server that SteamKit attempts to connect to is down, a {@link DisconnectedCallback} will be posted instead.
+     * between the client and the server. Results are returned asynchronously in a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback ConnectedCallback}. If the
+     * server that SteamKit attempts to connect to is down, a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback DisconnectedCallback} will be posted instead.
      * SteamKit will not attempt to reconnect to Steam, you must handle this callback and call Connect again preferably
      * after a short delay. SteamKit will randomly select a CM server from its internal list.
      */
@@ -134,8 +134,8 @@ public abstract class CMClient {
 
     /**
      * Connects this client to a Steam3 server. This begins the process of connecting and encrypting the data channel
-     * between the client and the server. Results are returned asynchronously in a {@link ConnectedCallback}. If the
-     * server that SteamKit attempts to connect to is down, a {@link DisconnectedCallback} will be posted instead.
+     * between the client and the server. Results are returned asynchronously in a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback ConnectedCallback}. If the
+     * server that SteamKit attempts to connect to is down, a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback DisconnectedCallback} will be posted instead.
      * SteamKit will not attempt to reconnect to Steam, you must handle this callback and call Connect again preferably
      * after a short delay.
      *

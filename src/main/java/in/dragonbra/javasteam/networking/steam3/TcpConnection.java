@@ -108,7 +108,7 @@ public class TcpConnection extends Connection {
     public void connect(InetSocketAddress endPoint) {
         synchronized (netLock) {
             try {
-                logger.debug("Connecting to " + destination + "...");
+                logger.debug("Connecting to " + endPoint + "...");
                 socket = new Socket(endPoint.getAddress(), endPoint.getPort());
 
                 this.destination = endPoint;
