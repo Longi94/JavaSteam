@@ -123,7 +123,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
         dos.write(body.build().toByteArray());
 
         getHeader().serialize(baos);
-        dos.write(payload.getBuffer());
+        dos.write(payload.toByteArray());
         return baos.toByteArray();
     }
 

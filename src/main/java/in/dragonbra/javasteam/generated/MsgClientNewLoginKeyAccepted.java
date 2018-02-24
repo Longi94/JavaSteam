@@ -11,18 +11,18 @@ import java.io.OutputStream;
 
 public class MsgClientNewLoginKeyAccepted implements ISteamSerializableMessage {
 
-    private long uniqueID = 0L;
+    private int uniqueID = 0;
 
     @Override
     public EMsg getEMsg() {
         return EMsg.ClientNewLoginKeyAccepted;
     }
 
-    public long getUniqueID() {
+    public int getUniqueID() {
         return this.uniqueID;
     }
 
-    public void setUniqueID(long uniqueID) {
+    public void setUniqueID(int uniqueID) {
         this.uniqueID = uniqueID;
     }
 
@@ -30,13 +30,13 @@ public class MsgClientNewLoginKeyAccepted implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(uniqueID);
+        bw.writeInt(uniqueID);
     }
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        uniqueID = br.readLong();
+        uniqueID = br.readInt();
     }
 }

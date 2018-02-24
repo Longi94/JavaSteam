@@ -11,28 +11,28 @@ import java.io.OutputStream;
 
 public class MsgChannelEncryptResponse implements ISteamSerializableMessage {
 
-    private long protocolVersion = MsgChannelEncryptRequest.PROTOCOL_VERSION;
+    private int protocolVersion = MsgChannelEncryptRequest.PROTOCOL_VERSION;
 
-    private long keySize = 128L;
+    private int keySize = 128;
 
     @Override
     public EMsg getEMsg() {
         return EMsg.ChannelEncryptResponse;
     }
 
-    public long getProtocolVersion() {
+    public int getProtocolVersion() {
         return this.protocolVersion;
     }
 
-    public void setProtocolVersion(long protocolVersion) {
+    public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
     }
 
-    public long getKeySize() {
+    public int getKeySize() {
         return this.keySize;
     }
 
-    public void setKeySize(long keySize) {
+    public void setKeySize(int keySize) {
         this.keySize = keySize;
     }
 
@@ -40,15 +40,15 @@ public class MsgChannelEncryptResponse implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(protocolVersion);
-        bw.writeLong(keySize);
+        bw.writeInt(protocolVersion);
+        bw.writeInt(keySize);
     }
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        protocolVersion = br.readLong();
-        keySize = br.readLong();
+        protocolVersion = br.readInt();
+        keySize = br.readInt();
     }
 }

@@ -17,7 +17,7 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
 
     private long gameId = 0L;
 
-    private long countFriends = 0L;
+    private int countFriends = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -40,11 +40,11 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
         this.gameId = gameId.convertToUInt64();
     }
 
-    public long getCountFriends() {
+    public int getCountFriends() {
         return this.countFriends;
     }
 
-    public void setCountFriends(long countFriends) {
+    public void setCountFriends(int countFriends) {
         this.countFriends = countFriends;
     }
 
@@ -54,7 +54,7 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
 
         bw.writeInt(result.code());
         bw.writeLong(gameId);
-        bw.writeLong(countFriends);
+        bw.writeInt(countFriends);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class MsgClientGetFriendsWhoPlayGameResponse implements ISteamSerializabl
 
         result = EResult.from(br.readInt());
         gameId = br.readLong();
-        countFriends = br.readLong();
+        countFriends = br.readInt();
     }
 }

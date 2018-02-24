@@ -16,9 +16,9 @@ public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
 
     private int rank = 0;
 
-    private long lifetimeConnects = 0L;
+    private int lifetimeConnects = 0;
 
-    private long lifetimeMinutesPlayed = 0L;
+    private int lifetimeMinutesPlayed = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -41,19 +41,19 @@ public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
         this.rank = rank;
     }
 
-    public long getLifetimeConnects() {
+    public int getLifetimeConnects() {
         return this.lifetimeConnects;
     }
 
-    public void setLifetimeConnects(long lifetimeConnects) {
+    public void setLifetimeConnects(int lifetimeConnects) {
         this.lifetimeConnects = lifetimeConnects;
     }
 
-    public long getLifetimeMinutesPlayed() {
+    public int getLifetimeMinutesPlayed() {
         return this.lifetimeMinutesPlayed;
     }
 
-    public void setLifetimeMinutesPlayed(long lifetimeMinutesPlayed) {
+    public void setLifetimeMinutesPlayed(int lifetimeMinutesPlayed) {
         this.lifetimeMinutesPlayed = lifetimeMinutesPlayed;
     }
 
@@ -63,8 +63,8 @@ public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
 
         bw.writeInt(result.code());
         bw.writeInt(rank);
-        bw.writeLong(lifetimeConnects);
-        bw.writeLong(lifetimeMinutesPlayed);
+        bw.writeInt(lifetimeConnects);
+        bw.writeInt(lifetimeMinutesPlayed);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class MsgGSGetPlayStatsResponse implements ISteamSerializableMessage {
 
         result = EResult.from(br.readInt());
         rank = br.readInt();
-        lifetimeConnects = br.readLong();
-        lifetimeMinutesPlayed = br.readLong();
+        lifetimeConnects = br.readInt();
+        lifetimeMinutesPlayed = br.readInt();
     }
 }

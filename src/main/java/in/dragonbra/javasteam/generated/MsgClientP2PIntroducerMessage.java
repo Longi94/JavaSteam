@@ -19,7 +19,7 @@ public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage 
 
     private byte[] data = new byte[1450];
 
-    private long dataLen = 0L;
+    private int dataLen = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -50,11 +50,11 @@ public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage 
         this.data = data;
     }
 
-    public long getDataLen() {
+    public int getDataLen() {
         return this.dataLen;
     }
 
-    public void setDataLen(long dataLen) {
+    public void setDataLen(int dataLen) {
         this.dataLen = dataLen;
     }
 
@@ -66,7 +66,7 @@ public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage 
         bw.writeInt(routingType.code());
         bw.writeInt(data.length);
         bw.write(data);
-        bw.writeLong(dataLen);
+        bw.writeInt(dataLen);
     }
 
     @Override
@@ -76,6 +76,6 @@ public class MsgClientP2PIntroducerMessage implements ISteamSerializableMessage 
         steamID = br.readLong();
         routingType = EIntroducerRouting.from(br.readInt());
         data = br.readBytes(br.readInt());
-        dataLen = br.readLong();
+        dataLen = br.readInt();
     }
 }

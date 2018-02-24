@@ -12,9 +12,9 @@ import java.io.OutputStream;
 
 public class MsgChannelEncryptRequest implements ISteamSerializableMessage {
 
-    public static final long PROTOCOL_VERSION = 1;
+    public static final int PROTOCOL_VERSION = 1;
 
-    private long protocolVersion = MsgChannelEncryptRequest.PROTOCOL_VERSION;
+    private int protocolVersion = MsgChannelEncryptRequest.PROTOCOL_VERSION;
 
     private EUniverse universe = EUniverse.Invalid;
 
@@ -23,11 +23,11 @@ public class MsgChannelEncryptRequest implements ISteamSerializableMessage {
         return EMsg.ChannelEncryptRequest;
     }
 
-    public long getProtocolVersion() {
+    public int getProtocolVersion() {
         return this.protocolVersion;
     }
 
-    public void setProtocolVersion(long protocolVersion) {
+    public void setProtocolVersion(int protocolVersion) {
         this.protocolVersion = protocolVersion;
     }
 
@@ -43,7 +43,7 @@ public class MsgChannelEncryptRequest implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(protocolVersion);
+        bw.writeInt(protocolVersion);
         bw.writeInt(universe.code());
     }
 
@@ -51,7 +51,7 @@ public class MsgChannelEncryptRequest implements ISteamSerializableMessage {
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        protocolVersion = br.readLong();
+        protocolVersion = br.readInt();
         universe = EUniverse.from(br.readInt());
     }
 }

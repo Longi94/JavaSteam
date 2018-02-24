@@ -27,9 +27,9 @@ public class JavaGen implements Closeable, Flushable {
 
         weakTypes.put("byte", new TypeInfo(1, "byte"));
         weakTypes.put("short", new TypeInfo(2, "short"));
-        weakTypes.put("ushort", new TypeInfo(4, "int"));
+        weakTypes.put("ushort", new TypeInfo(4, "short"));
         weakTypes.put("int", new TypeInfo(4, "int"));
-        weakTypes.put("uint", new TypeInfo(8, "long"));
+        weakTypes.put("uint", new TypeInfo(8, "int"));
         weakTypes.put("long", new TypeInfo(8, "long"));
         weakTypes.put("ulong", new TypeInfo(8, "long"));
 

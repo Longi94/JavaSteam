@@ -16,7 +16,7 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
     private byte headerSize = (byte) 36;
 
-    private int headerVersion = 2;
+    private short headerVersion = (short) 2;
 
     private long targetJobID = Long.MAX_VALUE;
 
@@ -49,11 +49,11 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
         this.headerSize = headerSize;
     }
 
-    public int getHeaderVersion() {
+    public short getHeaderVersion() {
         return this.headerVersion;
     }
 
-    public void setHeaderVersion(int headerVersion) {
+    public void setHeaderVersion(short headerVersion) {
         this.headerVersion = headerVersion;
     }
 
@@ -103,7 +103,7 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
         bw.writeInt(msg.code());
         bw.writeByte(headerSize);
-        bw.writeInt(headerVersion);
+        bw.writeShort(headerVersion);
         bw.writeLong(targetJobID);
         bw.writeLong(sourceJobID);
         bw.writeByte(headerCanary);
@@ -117,7 +117,7 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
         msg = EMsg.from(br.readInt());
         headerSize = br.readByte();
-        headerVersion = br.readInt();
+        headerVersion = br.readShort();
         targetJobID = br.readLong();
         sourceJobID = br.readLong();
         headerCanary = br.readByte();

@@ -14,7 +14,7 @@ public class MsgClientServerUnavailable implements ISteamSerializableMessage {
 
     private long jobidSent = 0L;
 
-    private long eMsgSent = 0L;
+    private int eMsgSent = 0;
 
     private EServerType eServerTypeUnavailable = EServerType.from(0);
 
@@ -31,11 +31,11 @@ public class MsgClientServerUnavailable implements ISteamSerializableMessage {
         this.jobidSent = jobidSent;
     }
 
-    public long getEMsgSent() {
+    public int getEMsgSent() {
         return this.eMsgSent;
     }
 
-    public void setEMsgSent(long eMsgSent) {
+    public void setEMsgSent(int eMsgSent) {
         this.eMsgSent = eMsgSent;
     }
 
@@ -52,7 +52,7 @@ public class MsgClientServerUnavailable implements ISteamSerializableMessage {
         BinaryWriter bw = new BinaryWriter(stream);
 
         bw.writeLong(jobidSent);
-        bw.writeLong(eMsgSent);
+        bw.writeInt(eMsgSent);
         bw.writeInt(eServerTypeUnavailable.code());
     }
 
@@ -61,7 +61,7 @@ public class MsgClientServerUnavailable implements ISteamSerializableMessage {
         BinaryReader br = new BinaryReader(stream);
 
         jobidSent = br.readLong();
-        eMsgSent = br.readLong();
+        eMsgSent = br.readInt();
         eServerTypeUnavailable = EServerType.from(br.readInt());
     }
 }

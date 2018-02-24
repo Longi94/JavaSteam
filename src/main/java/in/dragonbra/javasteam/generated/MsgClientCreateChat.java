@@ -27,7 +27,7 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
 
     private EChatPermission permissionAll = EChatPermission.from(0);
 
-    private long membersMax = 0L;
+    private int membersMax = 0;
 
     private byte chatFlags = (byte) 0;
 
@@ -88,11 +88,11 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
         this.permissionAll = permissionAll;
     }
 
-    public long getMembersMax() {
+    public int getMembersMax() {
         return this.membersMax;
     }
 
-    public void setMembersMax(long membersMax) {
+    public void setMembersMax(int membersMax) {
         this.membersMax = membersMax;
     }
 
@@ -130,7 +130,7 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
         bw.writeInt(permissionOfficer.code());
         bw.writeInt(permissionMember.code());
         bw.writeInt(permissionAll.code());
-        bw.writeLong(membersMax);
+        bw.writeInt(membersMax);
         bw.writeByte(chatFlags);
         bw.writeLong(steamIdFriendChat);
         bw.writeLong(steamIdInvited);
@@ -146,7 +146,7 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
         permissionOfficer = EChatPermission.from(br.readInt());
         permissionMember = EChatPermission.from(br.readInt());
         permissionAll = EChatPermission.from(br.readInt());
-        membersMax = br.readLong();
+        membersMax = br.readInt();
         chatFlags = br.readByte();
         steamIdFriendChat = br.readLong();
         steamIdInvited = br.readLong();

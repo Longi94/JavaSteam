@@ -14,17 +14,17 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
 
     private EResult result = EResult.from(0);
 
-    private long reputationScore = 0L;
+    private int reputationScore = 0;
 
     private boolean banned = false;
 
-    private long bannedIp = 0L;
+    private int bannedIp = 0;
 
-    private int bannedPort = 0;
+    private short bannedPort = (short) 0;
 
     private long bannedGameId = 0L;
 
-    private long timeBanExpires = 0L;
+    private int timeBanExpires = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -39,11 +39,11 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
         this.result = result;
     }
 
-    public long getReputationScore() {
+    public int getReputationScore() {
         return this.reputationScore;
     }
 
-    public void setReputationScore(long reputationScore) {
+    public void setReputationScore(int reputationScore) {
         this.reputationScore = reputationScore;
     }
 
@@ -55,19 +55,19 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
         this.banned = banned;
     }
 
-    public long getBannedIp() {
+    public int getBannedIp() {
         return this.bannedIp;
     }
 
-    public void setBannedIp(long bannedIp) {
+    public void setBannedIp(int bannedIp) {
         this.bannedIp = bannedIp;
     }
 
-    public int getBannedPort() {
+    public short getBannedPort() {
         return this.bannedPort;
     }
 
-    public void setBannedPort(int bannedPort) {
+    public void setBannedPort(short bannedPort) {
         this.bannedPort = bannedPort;
     }
 
@@ -79,11 +79,11 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
         this.bannedGameId = bannedGameId;
     }
 
-    public long getTimeBanExpires() {
+    public int getTimeBanExpires() {
         return this.timeBanExpires;
     }
 
-    public void setTimeBanExpires(long timeBanExpires) {
+    public void setTimeBanExpires(int timeBanExpires) {
         this.timeBanExpires = timeBanExpires;
     }
 
@@ -92,12 +92,12 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
         BinaryWriter bw = new BinaryWriter(stream);
 
         bw.writeInt(result.code());
-        bw.writeLong(reputationScore);
+        bw.writeInt(reputationScore);
         bw.writeBoolean(banned);
-        bw.writeLong(bannedIp);
-        bw.writeInt(bannedPort);
+        bw.writeInt(bannedIp);
+        bw.writeShort(bannedPort);
         bw.writeLong(bannedGameId);
-        bw.writeLong(timeBanExpires);
+        bw.writeInt(timeBanExpires);
     }
 
     @Override
@@ -105,11 +105,11 @@ public class MsgGSGetReputationResponse implements ISteamSerializableMessage {
         BinaryReader br = new BinaryReader(stream);
 
         result = EResult.from(br.readInt());
-        reputationScore = br.readLong();
+        reputationScore = br.readInt();
         banned = br.readBoolean();
-        bannedIp = br.readLong();
-        bannedPort = br.readInt();
+        bannedIp = br.readInt();
+        bannedPort = br.readShort();
         bannedGameId = br.readLong();
-        timeBanExpires = br.readLong();
+        timeBanExpires = br.readInt();
     }
 }

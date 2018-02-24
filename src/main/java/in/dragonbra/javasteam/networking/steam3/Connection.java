@@ -15,17 +15,17 @@ public abstract class Connection {
     /**
      * Occurs when a net message is received over the network.
      */
-    private Event<NetMsgEventArgs> netMsgReceived = new Event<>();
+    Event<NetMsgEventArgs> netMsgReceived = new Event<>();
 
     /**
      * Occurs when the physical connection is established.
      */
-    private Event<EventArgs> connected = new Event<>();
+    Event<EventArgs> connected = new Event<>();
 
     /**
      * Occurs when the physical connection is broken.
      */
-    private Event<DisconnectedEventArgs> disconnected = new Event<>();
+    Event<DisconnectedEventArgs> disconnected = new Event<>();
 
     private InetSocketAddress currentEndPoint;
 

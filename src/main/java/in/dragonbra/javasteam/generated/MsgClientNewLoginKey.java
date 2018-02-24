@@ -11,7 +11,7 @@ import java.io.OutputStream;
 
 public class MsgClientNewLoginKey implements ISteamSerializableMessage {
 
-    private long uniqueID = 0L;
+    private int uniqueID = 0;
 
     private byte[] loginKey = new byte[20];
 
@@ -20,11 +20,11 @@ public class MsgClientNewLoginKey implements ISteamSerializableMessage {
         return EMsg.ClientNewLoginKey;
     }
 
-    public long getUniqueID() {
+    public int getUniqueID() {
         return this.uniqueID;
     }
 
-    public void setUniqueID(long uniqueID) {
+    public void setUniqueID(int uniqueID) {
         this.uniqueID = uniqueID;
     }
 
@@ -40,7 +40,7 @@ public class MsgClientNewLoginKey implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(uniqueID);
+        bw.writeInt(uniqueID);
         bw.writeInt(loginKey.length);
         bw.write(loginKey);
     }
@@ -49,7 +49,7 @@ public class MsgClientNewLoginKey implements ISteamSerializableMessage {
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        uniqueID = br.readLong();
+        uniqueID = br.readInt();
         loginKey = br.readBytes(br.readInt());
     }
 }

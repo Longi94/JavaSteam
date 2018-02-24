@@ -300,7 +300,7 @@ public class SteamUser extends ClientMsgHandler {
     private void handleMarketingMessageUpdate(IPacketMsg packetMsg) {
         ClientMsg<MsgClientMarketingMessageUpdate2> marketingMessage = new ClientMsg<>(MsgClientMarketingMessageUpdate2.class, packetMsg);
 
-        byte[] payload = marketingMessage.getPayload().getBuffer();
+        byte[] payload = marketingMessage.getPayload().toByteArray();
 
         client.postCallback(new MarketingMessageCallback(marketingMessage.getBody(), payload));
     }

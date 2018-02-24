@@ -3,15 +3,15 @@ package in.dragonbra.javasteam.generated;
 
 public class ConnectData {
 
-    public static final long CHALLENGE_MASK = ChallengeData.CHALLENGE_MASK;
+    public static final int CHALLENGE_MASK = ChallengeData.CHALLENGE_MASK;
 
-    private long challengeValue = 0L;
+    private int challengeValue = 0;
 
-    public long getChallengeValue() {
+    public int getChallengeValue() {
         return this.challengeValue;
     }
 
-    public void setChallengeValue(long challengeValue) {
+    public void setChallengeValue(int challengeValue) {
         this.challengeValue = challengeValue;
     }
 

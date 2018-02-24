@@ -3,25 +3,25 @@ package in.dragonbra.javasteam.generated;
 
 public class ChallengeData {
 
-    public static final long CHALLENGE_MASK = 0xA426DF2B;
+    public static final int CHALLENGE_MASK = 0xA426DF2B;
 
-    private long challengeValue = 0L;
+    private int challengeValue = 0;
 
-    private long serverLoad = 0L;
+    private int serverLoad = 0;
 
-    public long getChallengeValue() {
+    public int getChallengeValue() {
         return this.challengeValue;
     }
 
-    public void setChallengeValue(long challengeValue) {
+    public void setChallengeValue(int challengeValue) {
         this.challengeValue = challengeValue;
     }
 
-    public long getServerLoad() {
+    public int getServerLoad() {
         return this.serverLoad;
     }
 
-    public void setServerLoad(long serverLoad) {
+    public void setServerLoad(int serverLoad) {
         this.serverLoad = serverLoad;
     }
 

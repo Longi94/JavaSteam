@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.base;
 
 import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.generated.ExtendedClientMsgHdr;
+import in.dragonbra.javasteam.generated.MsgHdr;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.BinaryWriter;
@@ -14,33 +14,31 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * Represents a struct backed client message.
- *
- * @param <BodyType> The body type of this message.
+ * Represents a struct backed message without session or client info.
  */
-public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBase<ExtendedClientMsgHdr> {
+public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<MsgHdr> {
 
-    private static final Logger logger = LogManager.getLogger(ClientMsg.class);
+    private static final Logger logger = LogManager.getLogger(Msg.class);
 
     private BodyType body;
 
     /**
-     * Initializes a new instance of the {@link ClientMsg} class.
+     * Initializes a new instance of the {@link Msg} class.
      *
      * @param bodyType body type
      */
-    public ClientMsg(Class<? extends BodyType> bodyType) {
-        this(bodyType, 64);
+    public Msg(Class<? extends BodyType> bodyType) {
+        this(bodyType, 0);
     }
 
     /**
-     * Initializes a new instance of the {@link ClientMsg} class.
+     * Initializes a new instance of the {@link Msg} class.
      *
      * @param bodyType       body type
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
-    public ClientMsg(Class<? extends BodyType> bodyType, int payloadReserve) {
-        super(ExtendedClientMsgHdr.class, payloadReserve);
+    public Msg(Class<? extends BodyType> bodyType, int payloadReserve) {
+        super(MsgHdr.class, payloadReserve);
 
         try {
             body = bodyType.newInstance();
@@ -52,25 +50,25 @@ public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBa
     }
 
     /**
-     * Initializes a new instance of the {@link ClientMsg} class.
+     * Initializes a new instance of the {@link Msg} class.
      * This a reply constructor.
      *
      * @param bodyType body type
      * @param msg      The message that this instance is a reply for.
      */
-    public ClientMsg(Class<? extends BodyType> bodyType, MsgBase<ExtendedClientMsgHdr> msg) {
-        this(bodyType, msg, 64);
+    public Msg(Class<? extends BodyType> bodyType, MsgBase<MsgHdr> msg) {
+        this(bodyType, msg, 0);
     }
 
     /**
-     * Initializes a new instance of the {@link ClientMsg} class.
+     * Initializes a new instance of the {@link Msg} class.
      * This a reply constructor.
      *
      * @param bodyType       body type
      * @param msg            The message that this instance is a reply for.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
-    public ClientMsg(Class<? extends BodyType> bodyType, MsgBase<ExtendedClientMsgHdr> msg, int payloadReserve) {
+    public Msg(Class<? extends BodyType> bodyType, MsgBase<MsgHdr> msg, int payloadReserve) {
         this(bodyType, payloadReserve);
 
         if (msg == null) {
@@ -82,21 +80,17 @@ public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBa
     }
 
     /**
-     * Initializes a new instance of the {@link ClientMsg} class.
+     * Initializes a new instance of the {@link Msg} class.
      * This a receive constructor.
      *
      * @param bodyType body type
      * @param msg      The packet message to build this client message from.
      */
-    public ClientMsg(Class<? extends BodyType> bodyType, IPacketMsg msg) {
+    public Msg(Class<? extends BodyType> bodyType, IPacketMsg msg) {
         this(bodyType);
 
         if (msg == null) {
             throw new IllegalArgumentException("msg is null");
-        }
-
-        if (msg.isProto()) {
-            logger.debug("ClientMsg<" + bodyType.getName() + "> used for proto message!");
         }
 
         try {
@@ -118,25 +112,20 @@ public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBa
 
     @Override
     public int getSessionID() {
-        return getHeader().getSessionID();
+        return 0;
     }
 
     @Override
     public void setSessionID(int sessionID) {
-        getHeader().setSessionID(sessionID);
     }
 
     @Override
     public SteamID getSteamID() {
-        return getHeader().getSteamID();
+        return null;
     }
 
     @Override
     public void setSteamID(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-        getHeader().setSteamID(steamID);
     }
 
     @Override
@@ -190,9 +179,6 @@ public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBa
         payload.seek(0, SeekOrigin.BEGIN);
     }
 
-    /**
-     * Gets the body structure of this message.
-     */
     public BodyType getBody() {
         return body;
     }

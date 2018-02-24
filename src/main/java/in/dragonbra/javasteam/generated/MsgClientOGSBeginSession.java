@@ -16,9 +16,9 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
 
     private long accountId = 0L;
 
-    private long appId = 0L;
+    private int appId = 0;
 
-    private long timeStarted = 0L;
+    private int timeStarted = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -41,19 +41,19 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
         this.accountId = steamId.convertToUInt64();
     }
 
-    public long getAppId() {
+    public int getAppId() {
         return this.appId;
     }
 
-    public void setAppId(long appId) {
+    public void setAppId(int appId) {
         this.appId = appId;
     }
 
-    public long getTimeStarted() {
+    public int getTimeStarted() {
         return this.timeStarted;
     }
 
-    public void setTimeStarted(long timeStarted) {
+    public void setTimeStarted(int timeStarted) {
         this.timeStarted = timeStarted;
     }
 
@@ -63,8 +63,8 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
 
         bw.writeByte(accountType);
         bw.writeLong(accountId);
-        bw.writeLong(appId);
-        bw.writeLong(timeStarted);
+        bw.writeInt(appId);
+        bw.writeInt(timeStarted);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class MsgClientOGSBeginSession implements ISteamSerializableMessage {
 
         accountType = br.readByte();
         accountId = br.readLong();
-        appId = br.readLong();
-        timeStarted = br.readLong();
+        appId = br.readInt();
+        timeStarted = br.readInt();
     }
 }

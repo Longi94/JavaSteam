@@ -17,7 +17,7 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
     private long gameID = 0L;
 
-    private int offline = 0;
+    private short offline = (short) 0;
 
     @Override
     public EMsg getEMsg() {
@@ -40,11 +40,11 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
         this.gameID = gameId.convertToUInt64();
     }
 
-    public int getOffline() {
+    public short getOffline() {
         return this.offline;
     }
 
-    public void setOffline(int offline) {
+    public void setOffline(short offline) {
         this.offline = offline;
     }
 
@@ -54,7 +54,7 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
         bw.writeInt(appUsageEvent.code());
         bw.writeLong(gameID);
-        bw.writeInt(offline);
+        bw.writeShort(offline);
     }
 
     @Override
@@ -63,6 +63,6 @@ public class MsgClientAppUsageEvent implements ISteamSerializableMessage {
 
         appUsageEvent = EAppUsageEvent.from(br.readInt());
         gameID = br.readLong();
-        offline = br.readInt();
+        offline = br.readShort();
     }
 }

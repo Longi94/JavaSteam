@@ -21,9 +21,9 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
 
     private long clientSuppliedSteamId = 0L;
 
-    private long ipPublic = 0L;
+    private int ipPublic = 0;
 
-    private long serverRealTime = 0L;
+    private int serverRealTime = 0;
 
     @Override
     public EMsg getEMsg() {
@@ -62,19 +62,19 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
         this.clientSuppliedSteamId = steamId.convertToUInt64();
     }
 
-    public long getIpPublic() {
+    public int getIpPublic() {
         return this.ipPublic;
     }
 
-    public void setIpPublic(long ipPublic) {
+    public void setIpPublic(int ipPublic) {
         this.ipPublic = ipPublic;
     }
 
-    public long getServerRealTime() {
+    public int getServerRealTime() {
         return this.serverRealTime;
     }
 
-    public void setServerRealTime(long serverRealTime) {
+    public void setServerRealTime(int serverRealTime) {
         this.serverRealTime = serverRealTime;
     }
 
@@ -86,8 +86,8 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
         bw.writeInt(outOfGameHeartbeatRateSec);
         bw.writeInt(inGameHeartbeatRateSec);
         bw.writeLong(clientSuppliedSteamId);
-        bw.writeLong(ipPublic);
-        bw.writeLong(serverRealTime);
+        bw.writeInt(ipPublic);
+        bw.writeInt(serverRealTime);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class MsgClientLogOnResponse implements ISteamSerializableMessage {
         outOfGameHeartbeatRateSec = br.readInt();
         inGameHeartbeatRateSec = br.readInt();
         clientSuppliedSteamId = br.readLong();
-        ipPublic = br.readLong();
-        serverRealTime = br.readLong();
+        ipPublic = br.readInt();
+        serverRealTime = br.readInt();
     }
 }

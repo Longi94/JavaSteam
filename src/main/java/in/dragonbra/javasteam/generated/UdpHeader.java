@@ -4,43 +4,43 @@ import in.dragonbra.javasteam.enums.EUdpPacketType;
 
 public class UdpHeader {
 
-    public static final long MAGIC = 0x31305356;
+    public static final int MAGIC = 0x31305356;
 
-    private long magic = UdpHeader.MAGIC;
+    private int magic = UdpHeader.MAGIC;
 
-    private int payloadSize = 0;
+    private short payloadSize = (short) 0;
 
     private EUdpPacketType packetType = EUdpPacketType.Invalid;
 
     private byte flags = (byte) 0;
 
-    private long sourceConnID = 512L;
+    private int sourceConnID = 512;
 
-    private long destConnID = 0L;
+    private int destConnID = 0;
 
-    private long seqThis = 0L;
+    private int seqThis = 0;
 
-    private long seqAck = 0L;
+    private int seqAck = 0;
 
-    private long packetsInMsg = 0L;
+    private int packetsInMsg = 0;
 
-    private long msgStartSeq = 0L;
+    private int msgStartSeq = 0;
 
-    private long msgSize = 0L;
+    private int msgSize = 0;
 
-    public long getMagic() {
+    public int getMagic() {
         return this.magic;
     }
 
-    public void setMagic(long magic) {
+    public void setMagic(int magic) {
         this.magic = magic;
     }
 
-    public int getPayloadSize() {
+    public short getPayloadSize() {
         return this.payloadSize;
     }
 
-    public void setPayloadSize(int payloadSize) {
+    public void setPayloadSize(short payloadSize) {
         this.payloadSize = payloadSize;
     }
 
@@ -60,59 +60,59 @@ public class UdpHeader {
         this.flags = flags;
     }
 
-    public long getSourceConnID() {
+    public int getSourceConnID() {
         return this.sourceConnID;
     }
 
-    public void setSourceConnID(long sourceConnID) {
+    public void setSourceConnID(int sourceConnID) {
         this.sourceConnID = sourceConnID;
     }
 
-    public long getDestConnID() {
+    public int getDestConnID() {
         return this.destConnID;
     }
 
-    public void setDestConnID(long destConnID) {
+    public void setDestConnID(int destConnID) {
         this.destConnID = destConnID;
     }
 
-    public long getSeqThis() {
+    public int getSeqThis() {
         return this.seqThis;
     }
 
-    public void setSeqThis(long seqThis) {
+    public void setSeqThis(int seqThis) {
         this.seqThis = seqThis;
     }
 
-    public long getSeqAck() {
+    public int getSeqAck() {
         return this.seqAck;
     }
 
-    public void setSeqAck(long seqAck) {
+    public void setSeqAck(int seqAck) {
         this.seqAck = seqAck;
     }
 
-    public long getPacketsInMsg() {
+    public int getPacketsInMsg() {
         return this.packetsInMsg;
     }
 
-    public void setPacketsInMsg(long packetsInMsg) {
+    public void setPacketsInMsg(int packetsInMsg) {
         this.packetsInMsg = packetsInMsg;
     }
 
-    public long getMsgStartSeq() {
+    public int getMsgStartSeq() {
         return this.msgStartSeq;
     }
 
-    public void setMsgStartSeq(long msgStartSeq) {
+    public void setMsgStartSeq(int msgStartSeq) {
         this.msgStartSeq = msgStartSeq;
     }
 
-    public long getMsgSize() {
+    public int getMsgSize() {
         return this.msgSize;
     }
 
-    public void setMsgSize(long msgSize) {
+    public void setMsgSize(int msgSize) {
         this.msgSize = msgSize;
     }
 

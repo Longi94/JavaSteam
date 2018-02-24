@@ -11,28 +11,28 @@ import java.io.OutputStream;
 
 public class MsgClientMarketingMessageUpdate2 implements ISteamSerializableMessage {
 
-    private long marketingMessageUpdateTime = 0L;
+    private int marketingMessageUpdateTime = 0;
 
-    private long count = 0L;
+    private int count = 0;
 
     @Override
     public EMsg getEMsg() {
         return EMsg.ClientMarketingMessageUpdate2;
     }
 
-    public long getMarketingMessageUpdateTime() {
+    public int getMarketingMessageUpdateTime() {
         return this.marketingMessageUpdateTime;
     }
 
-    public void setMarketingMessageUpdateTime(long marketingMessageUpdateTime) {
+    public void setMarketingMessageUpdateTime(int marketingMessageUpdateTime) {
         this.marketingMessageUpdateTime = marketingMessageUpdateTime;
     }
 
-    public long getCount() {
+    public int getCount() {
         return this.count;
     }
 
-    public void setCount(long count) {
+    public void setCount(int count) {
         this.count = count;
     }
 
@@ -40,15 +40,15 @@ public class MsgClientMarketingMessageUpdate2 implements ISteamSerializableMessa
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(marketingMessageUpdateTime);
-        bw.writeLong(count);
+        bw.writeInt(marketingMessageUpdateTime);
+        bw.writeInt(count);
     }
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        marketingMessageUpdateTime = br.readLong();
-        count = br.readLong();
+        marketingMessageUpdateTime = br.readInt();
+        count = br.readInt();
     }
 }

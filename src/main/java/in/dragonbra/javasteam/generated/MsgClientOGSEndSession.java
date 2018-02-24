@@ -13,7 +13,7 @@ public class MsgClientOGSEndSession implements ISteamSerializableMessage {
 
     private long sessionId = 0L;
 
-    private long timeEnded = 0L;
+    private int timeEnded = 0;
 
     private int reasonCode = 0;
 
@@ -32,11 +32,11 @@ public class MsgClientOGSEndSession implements ISteamSerializableMessage {
         this.sessionId = sessionId;
     }
 
-    public long getTimeEnded() {
+    public int getTimeEnded() {
         return this.timeEnded;
     }
 
-    public void setTimeEnded(long timeEnded) {
+    public void setTimeEnded(int timeEnded) {
         this.timeEnded = timeEnded;
     }
 
@@ -61,7 +61,7 @@ public class MsgClientOGSEndSession implements ISteamSerializableMessage {
         BinaryWriter bw = new BinaryWriter(stream);
 
         bw.writeLong(sessionId);
-        bw.writeLong(timeEnded);
+        bw.writeInt(timeEnded);
         bw.writeInt(reasonCode);
         bw.writeInt(countAttributes);
     }
@@ -71,7 +71,7 @@ public class MsgClientOGSEndSession implements ISteamSerializableMessage {
         BinaryReader br = new BinaryReader(stream);
 
         sessionId = br.readLong();
-        timeEnded = br.readLong();
+        timeEnded = br.readInt();
         reasonCode = br.readInt();
         countAttributes = br.readInt();
     }

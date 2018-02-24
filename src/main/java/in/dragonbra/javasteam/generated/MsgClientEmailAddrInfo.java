@@ -11,9 +11,9 @@ import java.io.OutputStream;
 
 public class MsgClientEmailAddrInfo implements ISteamSerializableMessage {
 
-    private long passwordStrength = 0L;
+    private int passwordStrength = 0;
 
-    private long flagsAccountSecurityPolicy = 0L;
+    private int flagsAccountSecurityPolicy = 0;
 
     private boolean validated = false;
 
@@ -22,19 +22,19 @@ public class MsgClientEmailAddrInfo implements ISteamSerializableMessage {
         return EMsg.ClientEmailAddrInfo;
     }
 
-    public long getPasswordStrength() {
+    public int getPasswordStrength() {
         return this.passwordStrength;
     }
 
-    public void setPasswordStrength(long passwordStrength) {
+    public void setPasswordStrength(int passwordStrength) {
         this.passwordStrength = passwordStrength;
     }
 
-    public long getFlagsAccountSecurityPolicy() {
+    public int getFlagsAccountSecurityPolicy() {
         return this.flagsAccountSecurityPolicy;
     }
 
-    public void setFlagsAccountSecurityPolicy(long flagsAccountSecurityPolicy) {
+    public void setFlagsAccountSecurityPolicy(int flagsAccountSecurityPolicy) {
         this.flagsAccountSecurityPolicy = flagsAccountSecurityPolicy;
     }
 
@@ -50,8 +50,8 @@ public class MsgClientEmailAddrInfo implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(passwordStrength);
-        bw.writeLong(flagsAccountSecurityPolicy);
+        bw.writeInt(passwordStrength);
+        bw.writeInt(flagsAccountSecurityPolicy);
         bw.writeBoolean(validated);
     }
 
@@ -59,8 +59,8 @@ public class MsgClientEmailAddrInfo implements ISteamSerializableMessage {
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        passwordStrength = br.readLong();
-        flagsAccountSecurityPolicy = br.readLong();
+        passwordStrength = br.readInt();
+        flagsAccountSecurityPolicy = br.readInt();
         validated = br.readBoolean();
     }
 }

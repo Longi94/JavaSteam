@@ -10,7 +10,7 @@ import java.io.OutputStream;
 
 public class MsgGCHdr implements IGCSerializableHeader {
 
-    private int headerVersion = 1;
+    private short headerVersion = (short) 1;
 
     private long targetJobID = Long.MAX_VALUE;
 
@@ -19,11 +19,11 @@ public class MsgGCHdr implements IGCSerializableHeader {
     @Override
     public void setEMsg(int msg) {}
 
-    public int getHeaderVersion() {
+    public short getHeaderVersion() {
         return this.headerVersion;
     }
 
-    public void setHeaderVersion(int headerVersion) {
+    public void setHeaderVersion(short headerVersion) {
         this.headerVersion = headerVersion;
     }
 
@@ -47,7 +47,7 @@ public class MsgGCHdr implements IGCSerializableHeader {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeInt(headerVersion);
+        bw.writeShort(headerVersion);
         bw.writeLong(targetJobID);
         bw.writeLong(sourceJobID);
     }
@@ -56,7 +56,7 @@ public class MsgGCHdr implements IGCSerializableHeader {
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        headerVersion = br.readInt();
+        headerVersion = br.readShort();
         targetJobID = br.readLong();
         sourceJobID = br.readLong();
     }

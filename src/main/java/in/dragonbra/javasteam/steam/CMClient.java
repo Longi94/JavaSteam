@@ -292,7 +292,7 @@ public abstract class CMClient {
             // TODO: 2018-02-21  
             //return new WebSocketConnection();
         } else if ((protocol.code() & ProtocolTypes.TCP.code()) > 0) {
-            return new TcpConnection();
+            return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
         } else if ((protocol.code() & ProtocolTypes.UDP.code()) > 0) {
             // TODO: 2018-02-21  
             //return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());
@@ -301,7 +301,7 @@ public abstract class CMClient {
         throw new IllegalArgumentException("Protocol bitmask has no supported protocols set.");
     }
 
-    private static IPacketMsg getPacketMsg(byte[] data) {
+    public static IPacketMsg getPacketMsg(byte[] data) {
         if (data.length < 4) {
             logger.debug("PacketMsg too small to contain a message, was only {0} bytes. Message: 0x{1}");
             return null;

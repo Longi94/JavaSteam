@@ -11,7 +11,7 @@ import java.io.OutputStream;
 
 public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
 
-    private long msg = 0L;
+    private int msg = 0;
 
     private int headerLength = 0;
 
@@ -22,11 +22,11 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
         this.msg = msg;
     }
 
-    public long getMsg() {
+    public int getMsg() {
         return this.msg;
     }
 
-    public void setMsg(long msg) {
+    public void setMsg(int msg) {
         this.msg = msg;
     }
 
@@ -50,7 +50,7 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(msg);
+        bw.writeInt(msg);
         bw.writeInt(headerLength);
         byte[] protoBuffer = proto.build().toByteArray();
         bw.writeInt(protoBuffer.length);
@@ -61,7 +61,7 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        msg = br.readLong();
+        msg = br.readInt();
         headerLength = br.readInt();
         byte[] protoBuffer = br.readBytes(br.readInt());
         proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer);

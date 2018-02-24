@@ -11,18 +11,18 @@ import java.io.OutputStream;
 
 public class MsgGSPerformHardwareSurvey implements ISteamSerializableMessage {
 
-    private long flags = 0L;
+    private int flags = 0;
 
     @Override
     public EMsg getEMsg() {
         return EMsg.GSPerformHardwareSurvey;
     }
 
-    public long getFlags() {
+    public int getFlags() {
         return this.flags;
     }
 
-    public void setFlags(long flags) {
+    public void setFlags(int flags) {
         this.flags = flags;
     }
 
@@ -30,13 +30,13 @@ public class MsgGSPerformHardwareSurvey implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(flags);
+        bw.writeInt(flags);
     }
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        flags = br.readLong();
+        flags = br.readInt();
     }
 }

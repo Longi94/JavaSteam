@@ -11,18 +11,18 @@ import java.io.OutputStream;
 
 public class MsgClientVACBanStatus implements ISteamSerializableMessage {
 
-    private long numBans = 0L;
+    private int numBans = 0;
 
     @Override
     public EMsg getEMsg() {
         return EMsg.ClientVACBanStatus;
     }
 
-    public long getNumBans() {
+    public int getNumBans() {
         return this.numBans;
     }
 
-    public void setNumBans(long numBans) {
+    public void setNumBans(int numBans) {
         this.numBans = numBans;
     }
 
@@ -30,13 +30,13 @@ public class MsgClientVACBanStatus implements ISteamSerializableMessage {
     public void serialize(OutputStream stream) throws IOException {
         BinaryWriter bw = new BinaryWriter(stream);
 
-        bw.writeLong(numBans);
+        bw.writeInt(numBans);
     }
 
     @Override
     public void deserialize(InputStream stream) throws IOException {
         BinaryReader br = new BinaryReader(stream);
 
-        numBans = br.readLong();
+        numBans = br.readInt();
     }
 }

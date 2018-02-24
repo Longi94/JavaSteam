@@ -360,6 +360,12 @@ public class MemoryStream extends InputStream implements Closeable {
         return false;
     }
 
+    public byte[] toByteArray() {
+        byte[] ret = new byte[buffer.length];
+        System.arraycopy(buffer, 0, ret, 0, buffer.length);
+        return ret;
+    }
+
     /**
      * Get an OutputStream that will write to this MemoryStream, at the current position.
      *
