@@ -81,6 +81,8 @@ public class SteamLogon implements Runnable {
         LogOnDetails details = new LogOnDetails();
         details.setUsername(user);
         details.setPassword(pass);
+
+        steamUser.logOn(details);
     }
 
     private void onDisconnected(DisconnectedCallback callback) {

@@ -1,9 +1,7 @@
 package in.dragonbra.javasteam.util.stream;
 
-import java.io.EOFException;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 
 /**
  * Basically DataInputStream, but the bytes are parsed in reverse order
@@ -89,5 +87,29 @@ public class BinaryReader extends FilterInputStream {
             throw new EOFException();
         }
         return ch != 0;
+    }
+    public String readNullTermString() throws IOException {
+        return readNullTermString(Charset.defaultCharset());
+    }
+
+    public String readNullTermString(Charset charset) throws IOException {
+        if (charset == null) {
+            throw new IllegalArgumentException("charset is null");
+        }
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(0);
+        BinaryWriter bw = new BinaryWriter(buffer);
+
+        while (true) {
+            char ch = readChar();
+
+            if (ch == 0) {
+                break;
+            }
+
+            bw.writeChar(ch);
+        }
+
+        return new String(buffer.toByteArray(), charset);
     }
 }

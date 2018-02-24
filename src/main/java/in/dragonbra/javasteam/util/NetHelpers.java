@@ -26,4 +26,9 @@ public class NetHelpers {
             return null;
         }
     }
+
+    public static long getIPAddress(InetAddress ip) {
+        final ByteBuffer buff = ByteBuffer.wrap(ip.getAddress());
+        return buff.getInt() & 0xFFFFFFFFL;
+    }
 }

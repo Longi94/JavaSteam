@@ -5,7 +5,6 @@ import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
@@ -136,23 +135,10 @@ public abstract class AbstractMsgBase {
     }
 
     public String readNullTermString(Charset charset) throws IOException {
-        if (charset == null) {
-            throw new IllegalArgumentException("charset is null");
-        }
+        return reader.readNullTermString(charset);
+    }
 
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(0);
-        BinaryWriter bw = new BinaryWriter(buffer);
-
-        while (true) {
-            char ch = reader.readChar();
-
-            if (ch == 0) {
-                break;
-            }
-
-            bw.writeChar(ch);
-        }
-
-        return new String(buffer.toByteArray(), charset);
+    public MemoryStream getPayload() {
+        return payload;
     }
 }

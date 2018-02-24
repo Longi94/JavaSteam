@@ -129,6 +129,9 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
 
     @Override
     public void deserialize(byte[] data) throws IOException {
+        if (data == null) {
+            throw new IllegalArgumentException("data is null");
+        }
         MemoryStream ms = new MemoryStream(data);
 
         getHeader().deserialize(ms);

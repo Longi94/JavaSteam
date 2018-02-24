@@ -8,19 +8,19 @@ import in.dragonbra.javasteam.util.Utils;
  * Represents the details required to log into Steam3 as a user.
  */
 public class LogOnDetails {
-    private String username;
+    private String username = "";
 
-    private String password;
+    private String password = "";
 
     private int cellID;
 
     private Integer loginID;
 
-    private String authCode;
+    private String authCode = "";
 
-    private String twoFactorCode;
+    private String twoFactorCode = "";
 
-    private String loginKey;
+    private String loginKey = "";
 
     private boolean shouldRememberPassword;
 
@@ -34,7 +34,7 @@ public class LogOnDetails {
 
     private EOSType clientOSType;
 
-    private String clientLanguage;
+    private String clientLanguage = "";
 
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
