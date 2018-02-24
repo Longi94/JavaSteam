@@ -637,13 +637,19 @@ public class JavaGen implements Closeable, Flushable {
                 if (NUMBER_PATTERN.matcher(temp).matches()) {
                     switch (type) {
                         case "long":
-                            return temp + "L";
+                            if (temp.startsWith("-")) {
+                                return temp + "L";
+                            }
+                            return Long.parseUnsignedLong(temp) + "L";
                         case "byte":
                             return "(byte) " + temp;
                         case "short":
                             return "(short)" + temp;
                         default:
-                            return temp;
+                            if (temp.startsWith("-") || temp.contains("x")) {
+                                return temp;
+                            }
+                            return String.valueOf(Integer.parseUnsignedInt(temp));
                     }
                 }
 

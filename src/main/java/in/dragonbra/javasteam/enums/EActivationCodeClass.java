@@ -11,7 +11,8 @@ public enum EActivationCodeClass {
     Steam2010Key(4),
     Max(5),
     Test(2147483647),
-    Invalid((int)4294967295L), //TODO FIX ME
+    Invalid(-1),
+
     ;
 
     private final int code;
