@@ -12,9 +12,9 @@ public class MsgGCHdr implements IGCSerializableHeader {
 
     private short headerVersion = (short) 1;
 
-    private long targetJobID = Long.MAX_VALUE;
+    private long targetJobID = 0xFFFFFFFFFFFFFFFFL;
 
-    private long sourceJobID = Long.MAX_VALUE;
+    private long sourceJobID = 0xFFFFFFFFFFFFFFFFL;
 
     @Override
     public void setEMsg(int msg) {}

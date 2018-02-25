@@ -193,6 +193,10 @@ public abstract class CMClient {
             msg.setSessionID(sessionID);
         }
 
+        if (steamID != null) {
+            msg.setSteamID(steamID);
+        }
+
         logger.debug(String.format("Sent -> EMsg: %s (Proto: %s)", msg.getMsgType(), msg.isProto()));
 
         try {

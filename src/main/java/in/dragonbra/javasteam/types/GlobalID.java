@@ -14,7 +14,7 @@ public class GlobalID {
      * Initializes a new instance of the {@link GlobalID} class.
      */
     public GlobalID() {
-        this(Long.MAX_VALUE);
+        this(0xFFFFFFFFFFFFFFFFL);
     }
 
     /**

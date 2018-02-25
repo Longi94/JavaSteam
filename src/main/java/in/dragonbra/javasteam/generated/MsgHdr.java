@@ -13,9 +13,9 @@ public class MsgHdr implements ISteamSerializableHeader {
 
     private EMsg msg = EMsg.Invalid;
 
-    private long targetJobID = Long.MAX_VALUE;
+    private long targetJobID = 0xFFFFFFFFFFFFFFFFL;
 
-    private long sourceJobID = Long.MAX_VALUE;
+    private long sourceJobID = 0xFFFFFFFFFFFFFFFFL;
 
     @Override
     public void setEMsg(EMsg msg) {

@@ -46,6 +46,17 @@ public class SymbolLocator {
 
             String val;
 
+            if (split[0].equals("ulong")) {
+                switch (split[1]) {
+                    case "MaxValue":
+                        return new WeakSymbol("0xFFFFFFFFFFFFFFFF");
+                    case "MinValue":
+                        return new WeakSymbol("0x0000000000000000");
+                    default:
+                        return new WeakSymbol(identifier);
+                }
+            }
+
             switch (split[1]) {
                 case "MaxValue":
                     val = "MAX_VALUE";

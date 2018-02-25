@@ -38,8 +38,10 @@ public class TcpConnection extends Connection {
 
     private void shutdown() {
         try {
-            socket.shutdownInput();
-            socket.shutdownOutput();
+            if (socket.isConnected()) {
+                socket.shutdownInput();
+                socket.shutdownOutput();
+            }
         } catch (IOException e) {
             logger.debug(e);
         }
@@ -125,14 +127,6 @@ public class TcpConnection extends Connection {
     public void disconnect() {
         synchronized (netLock) {
             netLoop.stop();
-
-            try {
-                netThread.join();
-            } catch (InterruptedException e) {
-                logger.debug(e);
-            }
-
-            onDisconnected(true);
         }
     }
 
@@ -202,7 +196,7 @@ public class TcpConnection extends Connection {
 
         @Override
         public void run() {
-            while (true) {
+            while (!cancelRequested) {
                 try {
                     Thread.sleep(POLL_MS);
                 } catch (InterruptedException e) {
@@ -239,8 +233,10 @@ public class TcpConnection extends Connection {
                 }
             }
 
-            shutdown();
-            release(false);
+            if (cancelRequested) {
+                shutdown();
+            }
+            release(cancelRequested);
         }
     }
 }

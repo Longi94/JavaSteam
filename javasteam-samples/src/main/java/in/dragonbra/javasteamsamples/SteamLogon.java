@@ -79,8 +79,6 @@ public class SteamLogon implements Runnable {
             // in order for the callbacks to get routed, they need to be handled by the manager
             manager.runWaitCallbacks(1000L);
         }
-
-        steamClient.disconnect();
     }
 
     private void onConnected(ConnectedCallback callback) {

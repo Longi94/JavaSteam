@@ -18,9 +18,9 @@ public class ExtendedClientMsgHdr implements ISteamSerializableHeader {
 
     private short headerVersion = (short) 2;
 
-    private long targetJobID = Long.MAX_VALUE;
+    private long targetJobID = 0xFFFFFFFFFFFFFFFFL;
 
-    private long sourceJobID = Long.MAX_VALUE;
+    private long sourceJobID = 0xFFFFFFFFFFFFFFFFL;
 
     private byte headerCanary = (byte) 239;
 
