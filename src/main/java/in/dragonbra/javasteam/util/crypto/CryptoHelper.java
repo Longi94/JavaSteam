@@ -12,6 +12,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.*;
 import java.util.Arrays;
@@ -111,7 +112,7 @@ public class CryptoHelper {
     /**
      * Performs an encryption using AES/CBC/PKCS7 with an input byte array and key, with a random IV prepended using AES/ECB/None
      */
-    private static byte[] symmetricEncryptWithIV(byte[] input, byte[] key, byte[] iv) throws CryptoException {
+    public static byte[] symmetricEncryptWithIV(byte[] input, byte[] key, byte[] iv) throws CryptoException {
         if (input == null) {
             throw new IllegalArgumentException("input is null");
         }
@@ -199,6 +200,7 @@ public class CryptoHelper {
 
         try {
             Mac mac = Mac.getInstance("HmacSHA1");
+            mac.init(new SecretKeySpec(hmacSecret, "HmacSHA1"));
             hmacBytes = mac.doFinal(ms.toByteArray());
 
             for (int i = 0; i < iv.getValue().length - 3; i++) {
@@ -206,7 +208,7 @@ public class CryptoHelper {
                     throw new CryptoException("NetFilterEncryption was unable to decrypt packet: HMAC from server did not match computed HMAC.");
                 }
             }
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new CryptoException("NetFilterEncryption was unable to decrypt packet", e);
         }
 
@@ -235,19 +237,19 @@ public class CryptoHelper {
         byte[] random = generateRandomBlock(3);
         System.arraycopy(random, 0, iv, iv.length - random.length, random.length);
 
-        MemoryStream ms = new MemoryStream();
-        ms.write(random, 0, random.length);
-        ms.write(iv, 0, iv.length);
-        ms.seek(0, SeekOrigin.BEGIN);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(random, 0, random.length);
+        baos.write(input, 0, input.length);
 
         try {
             Mac mac = Mac.getInstance("HmacSHA1");
-            byte[] hash = mac.doFinal(ms.toByteArray());
+            mac.init(new SecretKeySpec(hmacSecret, "HmacSHA1"));
+            byte[] hash = mac.doFinal(baos.toByteArray());
 
             System.arraycopy(hash, 0, iv, 0, iv.length - random.length);
 
             return symmetricEncryptWithIV(input, key, iv);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new CryptoException("NetFilterEncryption was unable to decrypt packet", e);
         }
     }

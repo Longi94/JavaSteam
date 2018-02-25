@@ -401,6 +401,15 @@ public class JavaGen implements Closeable, Flushable {
     }
 
     private void writeSerializationMethods(ClassNode node) throws IOException {
+        Set<String> skip = new HashSet<>();
+
+        for (Node child : node.getChildNodes()) {
+            PropNode prop = (PropNode) child;
+            if (prop.getFlags() != null && prop.getFlags().equals("proto") && prop.getFlagsOpt() != null) {
+                skip.add(prop.getFlagsOpt());
+            }
+        }
+
         if (node.getIdent() != null || node.getName().contains("Hdr")) {
             writer.writeln("@Override");
             writer.writeln("public void serialize(OutputStream stream) throws IOException {");
@@ -414,6 +423,10 @@ public class JavaGen implements Closeable, Flushable {
                 String typeStr = getType(prop.getType());
                 String propName = prop.getName();
 
+                if (skip.contains(propName)) {
+                    continue;
+                }
+
                 if (prop.getFlags() != null) {
                     if (prop.getFlags().equals("protomask")) {
                         writer.writeln("bw.writeInt(MsgUtil.makeMsg(" + propName + ".code(), true));");
@@ -422,7 +435,12 @@ public class JavaGen implements Closeable, Flushable {
 
                     if (prop.getFlags().equals("proto")) {
                         writer.writeln("byte[] " + propName + "Buffer = " + propName + ".build().toByteArray();");
-                        writer.writeln("bw.writeInt(" + propName + "Buffer.length);");
+                        if (prop.getFlagsOpt() != null) {
+                            writer.writeln(prop.getFlagsOpt() + " = " + propName + "Buffer.length;");
+                            writer.writeln("bw.writeInt(" + prop.getFlagsOpt() + ");");
+                        } else {
+                            writer.writeln("bw.writeInt(" + propName + "Buffer.length);");
+                        }
                         writer.writeln("bw.write(" + propName + "Buffer);");
                         continue;
                     }
@@ -505,6 +523,10 @@ public class JavaGen implements Closeable, Flushable {
                 String typeStr = getType(prop.getType());
                 String propName = prop.getName();
 
+                if (skip.contains(propName)) {
+                    continue;
+                }
+
                 if (prop.getFlags() != null) {
                     if (prop.getFlags().equals("protomask")) {
                         writer.writeln(propName + " = MsgUtil.getMsg(br.readInt());");
@@ -512,7 +534,12 @@ public class JavaGen implements Closeable, Flushable {
                     }
 
                     if (prop.getFlags().equals("proto")) {
-                        writer.writeln("byte[] " + propName + "Buffer = br.readBytes(br.readInt());");
+                        if (prop.getFlagsOpt() != null) {
+                            writer.writeln(prop.getFlagsOpt() + " = br.readInt();");
+                            writer.writeln("byte[] " + propName + "Buffer = br.readBytes(" + prop.getFlagsOpt() + ");");
+                        } else {
+                            writer.writeln("byte[] " + propName + "Buffer = br.readBytes(br.readInt());");
+                        }
                         writer.writeln(propName + " = " + typeStr + ".newBuilder().mergeFrom(" + propName + "Buffer);");
                         continue;
                     }

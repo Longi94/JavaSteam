@@ -4,7 +4,6 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdr;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
-import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.logging.log4j.LogManager;
@@ -157,11 +156,10 @@ public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<Msg
     @Override
     public byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-        BinaryWriter dos = new BinaryWriter(baos);
 
         getHeader().serialize(baos);
         body.serialize(baos);
-        dos.write(payload.toByteArray());
+        baos.write(payload.toByteArray());
         return baos.toByteArray();
     }
 
@@ -173,7 +171,7 @@ public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<Msg
         MemoryStream ms = new MemoryStream(data);
 
         getHeader().deserialize(ms);
-        getBody().deserialize(ms);
+        body.deserialize(ms);
 
         payload.write(data, (int) ms.getPosition(), ms.available());
         payload.seek(0, SeekOrigin.BEGIN);

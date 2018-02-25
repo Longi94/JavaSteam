@@ -51,9 +51,9 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
         BinaryWriter bw = new BinaryWriter(stream);
 
         bw.writeInt(msg);
-        bw.writeInt(headerLength);
         byte[] protoBuffer = proto.build().toByteArray();
-        bw.writeInt(protoBuffer.length);
+        headerLength = protoBuffer.length;
+        bw.writeInt(headerLength);
         bw.write(protoBuffer);
     }
 
@@ -63,7 +63,7 @@ public class MsgGCHdrProtoBuf implements IGCSerializableHeader {
 
         msg = br.readInt();
         headerLength = br.readInt();
-        byte[] protoBuffer = br.readBytes(br.readInt());
+        byte[] protoBuffer = br.readBytes(headerLength);
         proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer);
     }
 }

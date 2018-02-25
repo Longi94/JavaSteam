@@ -361,8 +361,8 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     public byte[] toByteArray() {
-        byte[] ret = new byte[buffer.length];
-        System.arraycopy(buffer, 0, ret, 0, buffer.length);
+        byte[] ret = new byte[length];
+        System.arraycopy(buffer, 0, ret, 0, length);
         return ret;
     }
 

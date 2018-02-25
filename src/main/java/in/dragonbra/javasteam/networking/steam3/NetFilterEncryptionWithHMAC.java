@@ -28,7 +28,7 @@ public class NetFilterEncryptionWithHMAC implements INetFilterEncryption {
     @Override
     public byte[] processIncoming(byte[] data) {
         try {
-            return CryptoHelper.symmetricDecryptHMACIV( data, sessionKey, hmacSecret );
+            return CryptoHelper.symmetricDecryptHMACIV(data, sessionKey, hmacSecret);
         } catch (CryptoException e) {
             throw new IllegalStateException("Unable to decrypt incoming packet", e);
         }
@@ -37,7 +37,7 @@ public class NetFilterEncryptionWithHMAC implements INetFilterEncryption {
     @Override
     public byte[] processOutgoing(byte[] data) {
         try {
-            return CryptoHelper.symmetricEncryptWithHMACIV( data, sessionKey, hmacSecret );
+            return CryptoHelper.symmetricEncryptWithHMACIV(data, sessionKey, hmacSecret);
         } catch (CryptoException e) {
             throw new IllegalStateException("Unable to encrypt outgoing packet", e);
         }

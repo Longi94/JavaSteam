@@ -4,7 +4,6 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
-import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +24,8 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
     private static final Logger logger = LogManager.getLogger(ClientMsgProtobuf.class);
 
     private BodyType body;
+
+    private final Class<? extends AbstractMessage> clazz;
 
     /**
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
@@ -70,6 +71,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, EMsg eMsg, int payloadReserve) {
         super(payloadReserve);
+        this.clazz = clazz;
 
         try {
             final Method m = clazz.getMethod("newBuilder");
@@ -118,12 +120,10 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
     @Override
     public byte[] serialize() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-        BinaryWriter dos = new BinaryWriter(baos);
-
-        dos.write(body.build().toByteArray());
 
         getHeader().serialize(baos);
-        dos.write(payload.toByteArray());
+        baos.write(body.build().toByteArray());
+        baos.write(payload.toByteArray());
         return baos.toByteArray();
     }
 
@@ -135,6 +135,14 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
         MemoryStream ms = new MemoryStream(data);
 
         getHeader().deserialize(ms);
+
+        try {
+            final Method m = clazz.getMethod("newBuilder");
+            body = (BodyType) m.invoke(null);
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            logger.debug(e);
+        }
+        body.mergeFrom(ms);
 
         payload.write(data, (int) ms.getPosition(), ms.available());
         payload.seek(0, SeekOrigin.BEGIN);

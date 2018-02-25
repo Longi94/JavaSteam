@@ -53,9 +53,9 @@ public class MsgHdrProtoBuf implements ISteamSerializableHeader {
         BinaryWriter bw = new BinaryWriter(stream);
 
         bw.writeInt(MsgUtil.makeMsg(msg.code(), true));
-        bw.writeInt(headerLength);
         byte[] protoBuffer = proto.build().toByteArray();
-        bw.writeInt(protoBuffer.length);
+        headerLength = protoBuffer.length;
+        bw.writeInt(headerLength);
         bw.write(protoBuffer);
     }
 
@@ -65,7 +65,7 @@ public class MsgHdrProtoBuf implements ISteamSerializableHeader {
 
         msg = MsgUtil.getMsg(br.readInt());
         headerLength = br.readInt();
-        byte[] protoBuffer = br.readBytes(br.readInt());
+        byte[] protoBuffer = br.readBytes(headerLength);
         proto = CMsgProtoBufHeader.newBuilder().mergeFrom(protoBuffer);
     }
 }
