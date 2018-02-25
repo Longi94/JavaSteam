@@ -64,4 +64,20 @@ public class ServerRecord {
 
         return new ServerRecord(endpoint, ProtocolTypes.WEB_SOCKET);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !(obj instanceof ServerRecord)) {
+            return false;
+        }
+
+        ServerRecord o = (ServerRecord) obj;
+
+        return endpoint.equals(o.endpoint) && protocolTypes == o.protocolTypes;
+    }
+
+    @Override
+    public int hashCode() {
+        return endpoint.hashCode() ^ protocolTypes.hashCode();
+    }
 }
