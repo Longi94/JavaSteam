@@ -68,7 +68,7 @@ public class CryptoHelper {
     /**
      * Decrypts using AES/CBC/PKCS7 with an input byte array and key, using the random IV prepended using AES/ECB/None
      */
-    private static byte[] symmetricDecrypt(byte[] input, byte[] key, Passable<byte[]> iv) throws CryptoException {
+    public static byte[] symmetricDecrypt(byte[] input, byte[] key, Passable<byte[]> iv) throws CryptoException {
         if (input == null) {
             throw new IllegalArgumentException("input is null");
         }
