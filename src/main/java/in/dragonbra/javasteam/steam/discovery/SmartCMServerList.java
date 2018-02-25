@@ -43,7 +43,7 @@ public class SmartCMServerList {
     private void resolveServerList() throws IOException {
         logger.debug("Resolving server list");
 
-        Enumeration<ServerRecord> serverList = configuration.getServerListProvider().fetchServerListAsync();
+        Enumeration<ServerRecord> serverList = configuration.getServerListProvider().fetchServerList();
         List<ServerRecord> endPoints = serverList == null ? new ArrayList<>() : Collections.list(serverList);
 
         if (endPoints.isEmpty() && configuration.isAllowDirectoryFetch()) {
@@ -86,7 +86,12 @@ public class SmartCMServerList {
     }
 
     private void addCore(ServerRecord endPoint) {
-        servers.add(new ServerInfo(endPoint, endPoint.getProtocolTypes()));
+        if (endPoint.getProtocolTypes() == ProtocolTypes.TCP_UDP) {
+            servers.add(new ServerInfo(endPoint, ProtocolTypes.TCP));
+            servers.add(new ServerInfo(endPoint, ProtocolTypes.UDP));
+        } else {
+            servers.add(new ServerInfo(endPoint, endPoint.getProtocolTypes()));
+        }
     }
 
     /**
@@ -149,7 +154,17 @@ public class SmartCMServerList {
             return null;
         }
 
-        return new ServerRecord(result.getRecord().getEndpoint(), result.getProtocol());
+        ProtocolTypes protocolType = ProtocolTypes.from(
+                result.getProtocol().code() & supportedProtocolTypes.code()
+        );;
+
+        if ((ProtocolTypes.TCP.code() & protocolType.code()) > 0) {
+            protocolType = ProtocolTypes.TCP;
+        } else if ((ProtocolTypes.UDP.code() & protocolType.code()) > 0) {
+            protocolType = ProtocolTypes.UDP;
+        }
+
+        return new ServerRecord(result.getRecord().getEndpoint(), protocolType);
     }
 
     /**
@@ -179,7 +194,7 @@ public class SmartCMServerList {
             return new ArrayList<>();
         }
 
-        return servers.stream().map(ServerInfo::getRecord).collect(Collectors.toList());
+        return servers.stream().map(ServerInfo::getRecord).distinct().collect(Collectors.toList());
     }
 
     public long getBadConnectionMemoryTimeSpan() {

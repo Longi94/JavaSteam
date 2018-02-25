@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.types.JobID;
 
 import java.io.Closeable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -70,6 +71,19 @@ public class CallbackManager implements ICallbackMgrInternals {
     }
 
     /**
+     * Blocks the current thread to run all queued callbacks.
+     * If no callback is queued, the method will block for the given timeout.
+     *
+     * @param timeout The length of time to block.
+     */
+    public void runWaitAllCallbacks(int timeout) {
+        List<ICallbackMsg> calls = steamClient.getAllCallbacks(true, timeout);
+        for (ICallbackMsg call : calls) {
+            handle(call);
+        }
+    }
+
+    /**
      * REgisters the provided {@link Consumer} to receive callbacks of type {@link TCallback}
      *
      * @param callbackType type of the callback
@@ -118,4 +132,5 @@ public class CallbackManager implements ICallbackMgrInternals {
                 .filter(callback -> callback.getCallbackType().isAssignableFrom(call.getClass()))
                 .forEach(callback -> callback.run(call));
     }
+
 }

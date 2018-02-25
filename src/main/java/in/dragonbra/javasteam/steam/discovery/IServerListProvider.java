@@ -13,7 +13,7 @@ public interface IServerListProvider {
      *
      * @return A list of IPEndPoints representing servers
      */
-    Enumeration<ServerRecord> fetchServerListAsync();
+    Enumeration<ServerRecord> fetchServerList();
 
     /**
      * Update the persistent list of endpoints

@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class NullServerListProvider implements IServerListProvider {
     @Override
-    public Enumeration<ServerRecord> fetchServerListAsync() {
+    public Enumeration<ServerRecord> fetchServerList() {
         return null;
     }
 
