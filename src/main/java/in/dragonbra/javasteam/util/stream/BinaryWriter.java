@@ -56,7 +56,6 @@ public class BinaryWriter extends FilterOutputStream {
     }
 
     public void writeChar(char v) throws IOException {
-        out.write(v & 0xFF);
-        out.write((v >>> 8) & 0xFF);
+        out.write((int) v);
     }
 }

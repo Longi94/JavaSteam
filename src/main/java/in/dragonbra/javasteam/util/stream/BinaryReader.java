@@ -73,12 +73,11 @@ public class BinaryReader extends FilterInputStream {
 
     public char readChar() throws IOException {
         int ch1 = in.read();
-        int ch2 = in.read();
-        if ((ch1 | ch2) < 0) {
+        if (ch1 < 0) {
             throw new EOFException();
         }
-        position += 2;
-        return (char) ((ch2 << 8) + ch1);
+        position += 1;
+        return (char) ch1;
     }
 
     public float readFloat() throws IOException {
