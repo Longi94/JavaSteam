@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.types;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import org.junit.Test;
@@ -10,7 +11,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-19
  */
-public class SteamIDTests {
+public class SteamIDTests extends TestBase {
 
     @Test
     public void testEmptyConstructorValid() {

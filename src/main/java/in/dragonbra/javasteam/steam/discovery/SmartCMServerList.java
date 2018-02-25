@@ -22,7 +22,7 @@ public class SmartCMServerList {
 
     private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
 
-    private long badConnectionMemoryTimeSpan;
+    private Long badConnectionMemoryTimeSpan;
 
     public SmartCMServerList(SteamConfiguration configuration) {
         if (configuration == null) {
@@ -59,6 +59,10 @@ public class SmartCMServerList {
      * Resets the scores of all servers which has a last bad connection more than {@link SmartCMServerList#badConnectionMemoryTimeSpan} ago.
      */
     public void resetOldScores() {
+        if (badConnectionMemoryTimeSpan == null) {
+            return;
+        }
+
         final long cutoff = System.currentTimeMillis() - badConnectionMemoryTimeSpan;
 
         servers.forEach(serverInfo -> {
@@ -134,7 +138,7 @@ public class SmartCMServerList {
                 .filter(serverInfo -> (serverInfo.getProtocol().code() & supportedProtocolTypes.code()) > 0)
                 .sorted((o1, o2) -> {
                     if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
-                        return 0;
+                        return 1;
                     }
 
                     if (o1.getLastBadConnection() == null) {

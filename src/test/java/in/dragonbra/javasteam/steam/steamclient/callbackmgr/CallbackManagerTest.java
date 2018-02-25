@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.types.JobID;
 import org.junit.Before;
@@ -16,7 +17,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-25
  */
-public class CallbackManagerTest {
+public class CallbackManagerTest extends TestBase {
 
     private SteamClient client;
     private CallbackManager mgr;

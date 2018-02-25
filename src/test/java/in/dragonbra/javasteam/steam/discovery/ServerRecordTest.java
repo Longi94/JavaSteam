@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam.discovery;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import org.junit.Test;
 
@@ -9,7 +10,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-25
  */
-public class ServerRecordTest {
+public class ServerRecordTest extends TestBase {
 
     @Test
     public void nullIsNotEqual() {

@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam.discovery;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import org.junit.Before;
@@ -16,7 +17,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-25
  */
-public class SmartCMServerListTest {
+public class SmartCMServerListTest extends TestBase {
 
     private SmartCMServerList serverList;
 
@@ -212,8 +213,8 @@ public class SmartCMServerListTest {
 
         serverList.tryMark(record1.getEndpoint(), ProtocolTypes.UDP, ServerQuality.BAD);
 
-        nextTcp = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-        nextUdp = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        nextTcp = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        nextUdp = serverList.getNextServerCandidate(ProtocolTypes.UDP);
 
         assertEquals(record2.getEndpoint(), nextTcp.getEndpoint());
         assertEquals(record2.getEndpoint(), nextUdp.getEndpoint());

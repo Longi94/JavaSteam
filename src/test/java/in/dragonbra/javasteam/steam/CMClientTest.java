@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.base.*;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EServerType;
@@ -18,7 +19,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-25
  */
-public class CMClientTest {
+public class CMClientTest extends TestBase {
     @Test
     public void getPacketMsgReturnsPacketMsgForCryptoHandshake() throws IOException {
         EMsg[] messages = new EMsg[]{
