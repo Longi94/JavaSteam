@@ -4,11 +4,12 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
-import in.dragonbra.javasteam.util.stream.MemoryStream;
+import in.dragonbra.javasteam.util.stream.BinaryReader;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -36,6 +37,10 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg) {
         this(clazz, msg, 64);
+        if (!msg.isProto()) {
+            logger.debug("ClientMsgProtobuf<" + clazz.getSimpleName() + "> used for non-proto message!");
+        }
+        deserialize(msg.getData());
     }
 
     /**
@@ -118,33 +123,36 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
     }
 
     @Override
-    public byte[] serialize() throws IOException {
+    public byte[] serialize() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
 
-        getHeader().serialize(baos);
-        baos.write(body.build().toByteArray());
-        baos.write(payload.toByteArray());
+        try {
+            getHeader().serialize(baos);
+            baos.write(body.build().toByteArray());
+            baos.write(payload.toByteArray());
+        } catch (IOException e) {
+            logger.debug(e);
+        }
         return baos.toByteArray();
     }
 
     @Override
-    public void deserialize(byte[] data) throws IOException {
+    public void deserialize(byte[] data) {
         if (data == null) {
             throw new IllegalArgumentException("data is null");
         }
-        MemoryStream ms = new MemoryStream(data);
-
-        getHeader().deserialize(ms);
+        BinaryReader ms = new BinaryReader(new ByteArrayInputStream(data));
 
         try {
+            getHeader().deserialize(ms);
             final Method m = clazz.getMethod("newBuilder");
             body = (BodyType) m.invoke(null);
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            body.mergeFrom(ms);
+            payload.write(data, ms.getPosition(), ms.available());
+            payload.seek(0, SeekOrigin.BEGIN);
+        } catch (IOException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             logger.debug(e);
         }
-        body.mergeFrom(ms);
 
-        payload.write(data, (int) ms.getPosition(), ms.available());
-        payload.seek(0, SeekOrigin.BEGIN);
     }
 }

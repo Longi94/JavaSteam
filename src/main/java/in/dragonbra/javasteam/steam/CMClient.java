@@ -207,11 +207,8 @@ public abstract class CMClient {
         // on the network thread, and that will lead to a disconnect callback
         // down the line
 
-        try {
-            if (connection != null) {
-                connection.send(msg.serialize());
-            }
-        } catch (IOException ignored) {
+        if (connection != null) {
+            connection.send(msg.serialize());
         }
     }
 

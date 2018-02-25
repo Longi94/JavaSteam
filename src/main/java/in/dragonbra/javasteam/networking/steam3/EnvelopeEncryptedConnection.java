@@ -154,11 +154,7 @@ public class EnvelopeEncryptedConnection extends Connection {
 
         state = EncryptionState.CHALLENGED;
 
-        try {
-            send(response.serialize());
-        } catch (IOException e) {
-            logger.debug(e);
-        }
+        send(response.serialize());
     }
 
     private void handleEncryptResult(IPacketMsg packetMsg) {

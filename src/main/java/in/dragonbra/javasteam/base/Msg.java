@@ -92,11 +92,7 @@ public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<Msg
             throw new IllegalArgumentException("msg is null");
         }
 
-        try {
-            deserialize(msg.getData());
-        } catch (IOException e) {
-            logger.debug(e);
-        }
+        deserialize(msg.getData());
     }
 
     @Override
@@ -154,24 +150,31 @@ public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<Msg
     }
 
     @Override
-    public byte[] serialize() throws IOException {
+    public byte[] serialize() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-
-        getHeader().serialize(baos);
-        body.serialize(baos);
-        baos.write(payload.toByteArray());
+        try {
+            getHeader().serialize(baos);
+            body.serialize(baos);
+            baos.write(payload.toByteArray());
+        } catch (IOException e) {
+            logger.debug(e);
+        }
         return baos.toByteArray();
     }
 
     @Override
-    public void deserialize(byte[] data) throws IOException {
+    public void deserialize(byte[] data) {
         if (data == null) {
             throw new IllegalArgumentException("data is null");
         }
         MemoryStream ms = new MemoryStream(data);
 
-        getHeader().deserialize(ms);
-        body.deserialize(ms);
+        try {
+            getHeader().deserialize(ms);
+            body.deserialize(ms);
+        } catch (IOException e) {
+            logger.debug(e);
+        }
 
         payload.write(data, (int) ms.getPosition(), ms.available());
         payload.seek(0, SeekOrigin.BEGIN);

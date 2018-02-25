@@ -87,12 +87,12 @@ public interface IClientMsg {
      * @return Data representing a client message.
      * @throws IOException
      */
-    byte[] serialize() throws IOException;
+    byte[] serialize();
 
     /**
      * Initializes this client message by deserializing the specified data.
      *
      * @param data The data representing a client message.
      */
-    void deserialize(byte[] data) throws IOException;
+    void deserialize(byte[] data);
 }

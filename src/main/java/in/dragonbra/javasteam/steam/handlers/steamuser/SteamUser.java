@@ -98,7 +98,7 @@ public class SteamUser extends ClientMsgHandler {
         logon.getBody().setPassword(details.getPassword());
         logon.getBody().setShouldRememberPassword(details.isShouldRememberPassword());
 
-        logon.getBody().setProtocolVersion((int) MsgClientLogon.CurrentProtocol);
+        logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
         logon.getBody().setClientOsType(details.getClientOSType().code());
         logon.getBody().setCellId(details.getCellID());
 
@@ -108,7 +108,9 @@ public class SteamUser extends ClientMsgHandler {
         logon.getBody().setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()));
 
         // steam guard
-        logon.getBody().setAuthCode(details.getAuthCode());
+        if (!Strings.isNullOrEmpty(details.getAuthCode())) {
+            logon.getBody().setAuthCode(details.getAuthCode());
+        }
         logon.getBody().setTwoFactorCode(details.getTwoFactorCode());
 
         logon.getBody().setLoginKey(details.getLoginKey());

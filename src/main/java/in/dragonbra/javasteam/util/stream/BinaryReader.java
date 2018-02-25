@@ -10,6 +10,8 @@ public class BinaryReader extends FilterInputStream {
 
     private byte readBuffer[] = new byte[8];
 
+    private int position = 0;
+
     public BinaryReader(InputStream in) {
         super(in);
     }
@@ -19,6 +21,7 @@ public class BinaryReader extends FilterInputStream {
         int ch2 = in.read();
         int ch3 = in.read();
         int ch4 = in.read();
+        position += 4;
         if ((ch1 | ch2 | ch3 | ch4) < 0) {
             throw new EOFException();
         }
@@ -32,6 +35,7 @@ public class BinaryReader extends FilterInputStream {
 
         byte[] bytes = new byte[len];
         in.read(bytes);
+        position += len;
         return bytes;
     }
 
@@ -40,6 +44,7 @@ public class BinaryReader extends FilterInputStream {
         if (ch < 0) {
             throw new EOFException();
         }
+        position += 1;
         return (byte) ch;
     }
 
@@ -49,11 +54,13 @@ public class BinaryReader extends FilterInputStream {
         if ((ch1 | ch2) < 0) {
             throw new EOFException();
         }
+        position += 2;
         return (short) ((ch2 << 8) + ch1);
     }
 
     public long readLong() throws IOException {
         in.read(readBuffer, 0, 8);
+        position += 8;
         return (((long) readBuffer[7] << 56) +
                 ((long) (readBuffer[6] & 255) << 48) +
                 ((long) (readBuffer[5] & 255) << 40) +
@@ -70,6 +77,7 @@ public class BinaryReader extends FilterInputStream {
         if ((ch1 | ch2) < 0) {
             throw new EOFException();
         }
+        position += 2;
         return (char) ((ch2 << 8) + ch1);
     }
 
@@ -86,6 +94,7 @@ public class BinaryReader extends FilterInputStream {
         if (ch < 0) {
             throw new EOFException();
         }
+        position += 1;
         return ch != 0;
     }
     public String readNullTermString() throws IOException {
@@ -110,6 +119,12 @@ public class BinaryReader extends FilterInputStream {
             bw.writeChar(ch);
         }
 
-        return new String(buffer.toByteArray(), charset);
+        byte[] bytes = buffer.toByteArray();
+        position += bytes.length;
+        return new String(bytes, charset);
+    }
+
+    public int getPosition() {
+        return position;
     }
 }

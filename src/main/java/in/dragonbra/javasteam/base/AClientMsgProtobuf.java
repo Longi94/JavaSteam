@@ -31,11 +31,7 @@ public class AClientMsgProtobuf extends MsgBase<MsgHdrProtoBuf> {
             logger.debug("ClientMsgProtobuf used for non-proto message!");
         }
 
-        try {
-            deserialize(msg.getData());
-        } catch (IOException e) {
-            logger.debug(e);
-        }
+        deserialize(msg.getData());
     }
 
     private AClientMsgProtobuf() {
@@ -120,12 +116,16 @@ public class AClientMsgProtobuf extends MsgBase<MsgHdrProtoBuf> {
     }
 
     @Override
-    public byte[] serialize() throws IOException {
+    public byte[] serialize() {
         throw new UnsupportedOperationException("ClientMsgProtobuf is for reading only. Use ClientMsgProtobuf<T> for serializing messages.");
     }
 
     @Override
-    public void deserialize(byte[] data) throws IOException {
-        getHeader().deserialize(new ByteArrayInputStream(data));
+    public void deserialize(byte[] data) {
+        try {
+            getHeader().deserialize(new ByteArrayInputStream(data));
+        } catch (IOException e) {
+            logger.debug(e);
+        }
     }
 }
