@@ -12,6 +12,7 @@ version '2.0.0-SNAPSHOT1'
 
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
+apply plugin: "jacoco"
 
 sourceCompatibility = 1.8
 
@@ -34,3 +35,16 @@ protobuf {
         artifact = 'com.google.protobuf:protoc:3.0.0'
     }
 }
+
+jacoco {
+    toolVersion = "0.8.0"
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
+check.dependsOn jacocoTestReport

@@ -1,4 +1,5 @@
 # JavaSteam
+[![Build Status](https://travis-ci.org/Longi94/JavaSteam.svg?branch=master)](https://travis-ci.org/Longi94/JavaSteam) [![codecov](https://codecov.io/gh/Longi94/JavaSteam/branch/master/graph/badge.svg)](https://codecov.io/gh/Longi94/JavaSteam)
 
 Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit).
 
