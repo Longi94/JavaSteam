@@ -3,8 +3,6 @@ package in.dragonbra.javasteam.types;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import static org.junit.Assert.*;
 
@@ -12,7 +10,6 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-19
  */
-@RunWith(JUnit4.class)
 public class SteamIDTests {
 
     @Test

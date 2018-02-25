@@ -30,7 +30,7 @@ public class BinaryReader extends FilterInputStream {
 
     public byte[] readBytes(int len) throws IOException {
         if (len < 0) {
-            throw new IndexOutOfBoundsException();
+            throw new IOException("negative length");
         }
 
         byte[] bytes = new byte[len];
@@ -103,7 +103,7 @@ public class BinaryReader extends FilterInputStream {
 
     public String readNullTermString(Charset charset) throws IOException {
         if (charset == null) {
-            throw new IllegalArgumentException("charset is null");
+            throw new IOException("charset is null");
         }
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(0);
