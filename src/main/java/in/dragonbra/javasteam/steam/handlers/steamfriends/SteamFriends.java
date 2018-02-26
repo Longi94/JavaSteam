@@ -402,15 +402,9 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamID is null");
         }
 
-        SteamID chatID = new SteamID(steamID.convertToUInt64()); // copy the steamid so we don't modify it
+        SteamID chatID = fixChatID(steamID); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientJoinChat> joinChat = new ClientMsg<>(MsgClientJoinChat.class);
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
 
         joinChat.getBody().setSteamIdChat(chatID);
 
@@ -427,15 +421,9 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamID is null");
         }
 
-        SteamID chatID = new SteamID(steamID.convertToUInt64()); // copy the steamid so we don't modify it
+        SteamID chatID = fixChatID(steamID); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientChatMemberInfo> leaveChat = new ClientMsg<>(MsgClientChatMemberInfo.class);
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
 
         leaveChat.getBody().setSteamIdChat(chatID);
         leaveChat.getBody().setType(EChatInfoType.StateChange);
@@ -471,13 +459,7 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("message is null");
         }
 
-        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
+        SteamID chatID = fixChatID(steamIdChat); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientChatMsg> chatMsg = new ClientMsg<>(MsgClientChatMsg.class);
 
@@ -510,13 +492,7 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamIdUser is null");
         }
 
-        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
+        SteamID chatID = fixChatID(steamIdChat); // copy the steamid so we don't modify it
 
         ClientMsgProtobuf<CMsgClientChatInvite.Builder> inviteMsg = new ClientMsgProtobuf<>(CMsgClientChatInvite.class, EMsg.ClientChatInvite);
 
@@ -545,15 +521,9 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamIdMember is null");
         }
 
-        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
+        SteamID chatID = fixChatID(steamIdChat); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientChatAction> kickMember = new ClientMsg<>(MsgClientChatAction.class);
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
 
         kickMember.getBody().setSteamIdChat(chatID);
         kickMember.getBody().setSteamIdUserToActOn(steamIdMember);
@@ -578,15 +548,9 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamIdMember is null");
         }
 
-        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
+        SteamID chatID = fixChatID(steamIdChat); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientChatAction> kickMember = new ClientMsg<>(MsgClientChatAction.class);
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
 
         kickMember.getBody().setSteamIdChat(chatID);
         kickMember.getBody().setSteamIdUserToActOn(steamIdMember);
@@ -611,15 +575,9 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("steamIdMember is null");
         }
 
-        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
+        SteamID chatID = fixChatID(steamIdChat); // copy the steamid so we don't modify it
 
         ClientMsg<MsgClientChatAction> kickMember = new ClientMsg<>(MsgClientChatAction.class);
-
-        if (chatID.isClanAccount()) {
-            // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
-        }
 
         kickMember.getBody().setSteamIdChat(chatID);
         kickMember.getBody().setSteamIdUserToActOn(steamIdMember);
@@ -741,6 +699,18 @@ public class SteamFriends extends ClientMsgHandler {
         if (dispatchMap.containsKey(packetMsg.getMsgType())) {
             dispatchMap.get(packetMsg.getMsgType()).accept(packetMsg);
         }
+    }
+
+    private SteamID fixChatID(SteamID steamIdChat) {
+        SteamID chatID = new SteamID(steamIdChat.convertToUInt64()); // copy the steamid so we don't modify it
+
+        if (chatID.isClanAccount()) {
+            // this steamid is incorrect, so we'll fix it up
+            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            chatID.setAccountType(EAccountType.Chat);
+        }
+
+        return chatID;
     }
 
     private void handleAccountInfo(IPacketMsg packetMsg) {
