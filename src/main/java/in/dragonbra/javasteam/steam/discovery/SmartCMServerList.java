@@ -90,11 +90,8 @@ public class SmartCMServerList {
     }
 
     private void addCore(ServerRecord endPoint) {
-        if (endPoint.getProtocolTypes() == ProtocolTypes.TCP_UDP) {
-            servers.add(new ServerInfo(endPoint, ProtocolTypes.TCP));
-            servers.add(new ServerInfo(endPoint, ProtocolTypes.UDP));
-        } else {
-            servers.add(new ServerInfo(endPoint, endPoint.getProtocolTypes()));
+        for (ProtocolTypes protocol : endPoint.getProtocolTypes()) {
+            servers.add(new ServerInfo(endPoint, protocol));
         }
     }
 
@@ -106,8 +103,12 @@ public class SmartCMServerList {
     }
 
     public boolean tryMark(InetSocketAddress endPoint, ProtocolTypes protocolTypes, ServerQuality quality) {
+        return tryMark(endPoint, EnumSet.of(protocolTypes), quality);
+    }
+
+    public boolean tryMark(InetSocketAddress endPoint, EnumSet<ProtocolTypes> protocolTypes, ServerQuality quality) {
         List<ServerInfo> serverInfos = servers.stream().filter(x -> x.getRecord().getEndpoint().equals(endPoint) &&
-                (x.getProtocol().code() & protocolTypes.code()) > 0).collect(Collectors.toList());
+                protocolTypes.contains(x.getProtocol())).collect(Collectors.toList());
 
         serverInfos.forEach(serverInfo -> markServerCore(serverInfo, quality));
 
@@ -131,11 +132,11 @@ public class SmartCMServerList {
      * @param supportedProtocolTypes The minimum supported {@link ProtocolTypes} of the server to return.
      * @return An {@link ServerRecord}, or null if the list is empty.
      */
-    private ServerRecord getNextServerCandidateInternal(ProtocolTypes supportedProtocolTypes) {
+    private ServerRecord getNextServerCandidateInternal(EnumSet<ProtocolTypes> supportedProtocolTypes) {
         resetOldScores();
 
         ServerInfo result = servers.stream()
-                .filter(serverInfo -> (serverInfo.getProtocol().code() & supportedProtocolTypes.code()) > 0)
+                .filter(serverInfo -> supportedProtocolTypes.contains(serverInfo.getProtocol()))
                 .sorted((o1, o2) -> {
                     if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
                         return 1;
@@ -158,17 +159,23 @@ public class SmartCMServerList {
             return null;
         }
 
-        ProtocolTypes protocolType = ProtocolTypes.from(
-                result.getProtocol().code() & supportedProtocolTypes.code()
-        );;
+        return new ServerRecord(result.getRecord().getEndpoint(), result.getProtocol());
+    }
 
-        if ((ProtocolTypes.TCP.code() & protocolType.code()) > 0) {
-            protocolType = ProtocolTypes.TCP;
-        } else if ((ProtocolTypes.UDP.code() & protocolType.code()) > 0) {
-            protocolType = ProtocolTypes.UDP;
+    /**
+     * Get the next server in the list.
+     *
+     * @param supportedProtocolTypes The minimum supported {@link ProtocolTypes} of the server to return.
+     * @return An {@link ServerRecord}, or null if the list is empty.
+     */
+    public ServerRecord getNextServerCandidate(EnumSet<ProtocolTypes> supportedProtocolTypes) {
+        try {
+            startFetchingServers();
+        } catch (IOException e) {
+            return null;
         }
 
-        return new ServerRecord(result.getRecord().getEndpoint(), protocolType);
+        return getNextServerCandidateInternal(supportedProtocolTypes);
     }
 
     /**
@@ -178,13 +185,7 @@ public class SmartCMServerList {
      * @return An {@link ServerRecord}, or null if the list is empty.
      */
     public ServerRecord getNextServerCandidate(ProtocolTypes supportedProtocolTypes) {
-        try {
-            startFetchingServers();
-        } catch (IOException e) {
-            return null;
-        }
-
-        return getNextServerCandidateInternal(supportedProtocolTypes);
+        return getNextServerCandidate(EnumSet.of(supportedProtocolTypes));
     }
 
     /**

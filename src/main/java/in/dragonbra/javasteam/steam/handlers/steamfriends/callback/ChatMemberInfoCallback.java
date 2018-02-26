@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.EnumSet;
 
 /**
  * This callback is fired in response to chat member info being recieved.
@@ -55,7 +56,7 @@ public class ChatMemberInfoCallback extends CallbackMsg {
     public static class StateChangeDetails {
         private SteamID chatterActedOn;
 
-        private EChatMemberStateChange stateChange;
+        private EnumSet<EChatMemberStateChange> stateChange;
 
         private SteamID chatterActedBy;
 
@@ -67,12 +68,28 @@ public class ChatMemberInfoCallback extends CallbackMsg {
                 stateChange = EChatMemberStateChange.from(br.readInt());
                 chatterActedBy = new SteamID(br.readLong());
 
-                if (stateChange == EChatMemberStateChange.Entered) {
+                if (stateChange.contains(EChatMemberStateChange.Entered)) {
                     memberInfo = new ChatMemberInfo();
                     memberInfo.readFromStream(br);
                 }
             } catch (IOException ignored) {
             }
+        }
+
+        public SteamID getChatterActedOn() {
+            return chatterActedOn;
+        }
+
+        public EnumSet<EChatMemberStateChange> getStateChange() {
+            return stateChange;
+        }
+
+        public SteamID getChatterActedBy() {
+            return chatterActedBy;
+        }
+
+        public ChatMemberInfo getMemberInfo() {
+            return memberInfo;
         }
     }
 }

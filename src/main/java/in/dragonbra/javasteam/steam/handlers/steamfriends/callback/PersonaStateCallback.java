@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
 
+import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EPersonaState;
+import in.dragonbra.javasteam.enums.EPersonaStateFlag;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientPersonaState;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.GameID;
@@ -9,18 +11,19 @@ import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.EnumSet;
 
 /**
  * This callback is fired in response to someone changing their friend details over the network.
  */
 public class PersonaStateCallback extends CallbackMsg {
-    private int statusFlags;
+    private EnumSet<EClientPersonaStateFlag> statusFlags;
 
     private SteamID friendID;
 
     private EPersonaState state;
 
-    private int stateFlags;
+    private EnumSet<EPersonaStateFlag> stateFlags;
 
     private int gameAppID;
 
@@ -55,11 +58,11 @@ public class PersonaStateCallback extends CallbackMsg {
     private int publishedSessionID;
 
     public PersonaStateCallback(CMsgClientPersonaState.Friend friend) {
-        statusFlags = friend.getPersonaStateFlags();
+        statusFlags = EClientPersonaStateFlag.from(friend.getPersonaStateFlags());
 
         friendID = new SteamID(friend.getFriendid());
         state = EPersonaState.from(friend.getPersonaState());
-        stateFlags = friend.getPersonaStateFlags();
+        stateFlags = EPersonaStateFlag.from(friend.getPersonaStateFlags());
 
         gameAppID = friend.getGamePlayedAppId();
         gameID = new GameID(friend.getGameid());
@@ -87,7 +90,7 @@ public class PersonaStateCallback extends CallbackMsg {
         publishedSessionID = friend.getPublishedInstanceId();
     }
 
-    public int getStatusFlags() {
+    public EnumSet<EClientPersonaStateFlag> getStatusFlags() {
         return statusFlags;
     }
 
@@ -99,7 +102,7 @@ public class PersonaStateCallback extends CallbackMsg {
         return state;
     }
 
-    public int getStateFlags() {
+    public EnumSet<EPersonaStateFlag> getStateFlags() {
         return stateFlags;
     }
 

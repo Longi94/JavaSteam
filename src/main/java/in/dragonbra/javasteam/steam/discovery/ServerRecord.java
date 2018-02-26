@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.steam.discovery;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 
 import java.net.InetSocketAddress;
+import java.util.EnumSet;
 
 /**
  * Represents the information needed to connect to a CM server
@@ -11,9 +12,13 @@ public class ServerRecord {
 
     private InetSocketAddress endpoint;
 
-    private ProtocolTypes protocolTypes;
+    private EnumSet<ProtocolTypes> protocolTypes;
 
     ServerRecord(InetSocketAddress endpoint, ProtocolTypes protocolTypes) {
+        this(endpoint, EnumSet.of(protocolTypes));
+    }
+
+    private ServerRecord(InetSocketAddress endpoint, EnumSet<ProtocolTypes> protocolTypes) {
         if (endpoint == null) {
             throw new IllegalArgumentException("endpoint is null");
         }
@@ -34,16 +39,20 @@ public class ServerRecord {
         return endpoint;
     }
 
-    public ProtocolTypes getProtocolTypes() {
+    public EnumSet<ProtocolTypes> getProtocolTypes() {
         return protocolTypes;
     }
 
     public static ServerRecord createServer(String host, int port, ProtocolTypes protocolTypes) {
+        return createServer(host, port, EnumSet.of(protocolTypes));
+    }
+
+    public static ServerRecord createServer(String host, int port, EnumSet<ProtocolTypes> protocolTypes) {
         return new ServerRecord(new InetSocketAddress(host, port), protocolTypes);
     }
 
     public static ServerRecord createSocketServer(InetSocketAddress endpoint) {
-        return new ServerRecord(endpoint, ProtocolTypes.TCP_UDP);
+        return new ServerRecord(endpoint, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
     }
 
     public static ServerRecord createWebSocketServer(String address) {
@@ -73,7 +82,7 @@ public class ServerRecord {
 
         ServerRecord o = (ServerRecord) obj;
 
-        return endpoint.equals(o.endpoint) && protocolTypes == o.protocolTypes;
+        return endpoint.equals(o.endpoint) && protocolTypes.equals(o.protocolTypes);
     }
 
     @Override

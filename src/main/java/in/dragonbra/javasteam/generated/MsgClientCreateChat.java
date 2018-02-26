@@ -12,6 +12,7 @@ import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.EnumSet;
 
 public class MsgClientCreateChat implements ISteamSerializableMessage {
 
@@ -21,11 +22,11 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
 
     private long steamIdClan = 0L;
 
-    private EChatPermission permissionOfficer = EChatPermission.from(0);
+    private EnumSet<EChatPermission> permissionOfficer = EChatPermission.from(0);
 
-    private EChatPermission permissionMember = EChatPermission.from(0);
+    private EnumSet<EChatPermission> permissionMember = EChatPermission.from(0);
 
-    private EChatPermission permissionAll = EChatPermission.from(0);
+    private EnumSet<EChatPermission> permissionAll = EChatPermission.from(0);
 
     private int membersMax = 0;
 
@@ -64,27 +65,27 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
         this.steamIdClan = steamId.convertToUInt64();
     }
 
-    public EChatPermission getPermissionOfficer() {
+    public EnumSet<EChatPermission> getPermissionOfficer() {
         return this.permissionOfficer;
     }
 
-    public void setPermissionOfficer(EChatPermission permissionOfficer) {
+    public void setPermissionOfficer(EnumSet<EChatPermission> permissionOfficer) {
         this.permissionOfficer = permissionOfficer;
     }
 
-    public EChatPermission getPermissionMember() {
+    public EnumSet<EChatPermission> getPermissionMember() {
         return this.permissionMember;
     }
 
-    public void setPermissionMember(EChatPermission permissionMember) {
+    public void setPermissionMember(EnumSet<EChatPermission> permissionMember) {
         this.permissionMember = permissionMember;
     }
 
-    public EChatPermission getPermissionAll() {
+    public EnumSet<EChatPermission> getPermissionAll() {
         return this.permissionAll;
     }
 
-    public void setPermissionAll(EChatPermission permissionAll) {
+    public void setPermissionAll(EnumSet<EChatPermission> permissionAll) {
         this.permissionAll = permissionAll;
     }
 
@@ -127,9 +128,9 @@ public class MsgClientCreateChat implements ISteamSerializableMessage {
         bw.writeInt(chatRoomType.code());
         bw.writeLong(gameId);
         bw.writeLong(steamIdClan);
-        bw.writeInt(permissionOfficer.code());
-        bw.writeInt(permissionMember.code());
-        bw.writeInt(permissionAll.code());
+        bw.writeInt(EChatPermission.code(permissionOfficer));
+        bw.writeInt(EChatPermission.code(permissionMember));
+        bw.writeInt(EChatPermission.code(permissionAll));
         bw.writeInt(membersMax);
         bw.writeByte(chatFlags);
         bw.writeLong(steamIdFriendChat);

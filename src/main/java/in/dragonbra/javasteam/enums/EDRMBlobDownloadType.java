@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.enums;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public enum EDRMBlobDownloadType {
 
@@ -26,7 +28,12 @@ public enum EDRMBlobDownloadType {
         return this.code;
     }
 
-    public static EDRMBlobDownloadType from(int code) {
-        return Arrays.stream(EDRMBlobDownloadType.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<EDRMBlobDownloadType> from(int code) {
+        return Arrays.stream(EDRMBlobDownloadType.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EDRMBlobDownloadType.class)));
+    }
+
+    public static int code(EnumSet<EDRMBlobDownloadType> flags) {
+        return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

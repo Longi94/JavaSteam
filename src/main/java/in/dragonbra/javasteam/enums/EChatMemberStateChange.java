@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.enums;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public enum EChatMemberStateChange {
 
@@ -24,7 +26,12 @@ public enum EChatMemberStateChange {
         return this.code;
     }
 
-    public static EChatMemberStateChange from(int code) {
-        return Arrays.stream(EChatMemberStateChange.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<EChatMemberStateChange> from(int code) {
+        return Arrays.stream(EChatMemberStateChange.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EChatMemberStateChange.class)));
+    }
+
+    public static int code(EnumSet<EChatMemberStateChange> flags) {
+        return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

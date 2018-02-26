@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.enums;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public enum EAccountFlags {
 
@@ -49,7 +51,12 @@ public enum EAccountFlags {
         return this.code;
     }
 
-    public static EAccountFlags from(int code) {
-        return Arrays.stream(EAccountFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<EAccountFlags> from(int code) {
+        return Arrays.stream(EAccountFlags.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EAccountFlags.class)));
+    }
+
+    public static int code(EnumSet<EAccountFlags> flags) {
+        return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

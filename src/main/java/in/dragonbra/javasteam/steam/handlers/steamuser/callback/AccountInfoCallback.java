@@ -4,6 +4,8 @@ import in.dragonbra.javasteam.enums.EAccountFlags;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientAccountInfo;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
+import java.util.EnumSet;
+
 /**
  * This callback is received when account information is recieved from the network.
  * This generally happens after logon.
@@ -15,7 +17,7 @@ public class AccountInfoCallback extends CallbackMsg {
 
     private int countAuthedComputers;
 
-    private EAccountFlags accountFlags;
+    private EnumSet<EAccountFlags> accountFlags;
 
     private long facebookID;
 
@@ -45,7 +47,7 @@ public class AccountInfoCallback extends CallbackMsg {
         return countAuthedComputers;
     }
 
-    public EAccountFlags getAccountFlags() {
+    public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 

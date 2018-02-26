@@ -1,11 +1,14 @@
 package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
 
+import in.dragonbra.javasteam.enums.EAccountFlags;
+import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.Event;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,9 +19,9 @@ public class ClanStateCallback extends CallbackMsg {
 
     private SteamID clanID;
 
-    private int statusFlags;
+    private EnumSet<EClientPersonaStateFlag> statusFlags;
 
-    private int accountFlags;
+    private EnumSet<EAccountFlags> accountFlags;
 
     private String clanName;
 
@@ -39,8 +42,8 @@ public class ClanStateCallback extends CallbackMsg {
     public ClanStateCallback(CMsgClientClanState.Builder msg) {
         clanID = new SteamID(msg.getSteamidClan());
 
-        statusFlags = msg.getMUnStatusFlags();
-        accountFlags = msg.getClanAccountFlags();
+        statusFlags = EClientPersonaStateFlag.from(msg.getMUnStatusFlags());
+        accountFlags = EAccountFlags.from(msg.getClanAccountFlags());
 
         if (msg.hasNameInfo()) {
             clanName = msg.getNameInfo().getClanName();
@@ -65,11 +68,11 @@ public class ClanStateCallback extends CallbackMsg {
         return clanID;
     }
 
-    public int getStatusFlags() {
+    public EnumSet<EClientPersonaStateFlag> getStatusFlags() {
         return statusFlags;
     }
 
-    public int getAccountFlags() {
+    public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 

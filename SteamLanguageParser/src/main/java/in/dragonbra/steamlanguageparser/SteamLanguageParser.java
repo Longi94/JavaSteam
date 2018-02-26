@@ -7,8 +7,10 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,8 +53,10 @@ public class SteamLanguageParser {
         List<Node> enums = root.getChildNodes().stream().filter(child -> child instanceof EnumNode).collect(Collectors.toList());
         List<Node> classes = root.getChildNodes().stream().filter(child -> child instanceof ClassNode).collect(Collectors.toList());
 
+        Set<String> flagEnums = new HashSet<>();
+
         for (Node _enum : enums) {
-            JavaGen javaGen = new JavaGen(_enum, _package + ".enums", destination + "/enums");
+            JavaGen javaGen = new JavaGen(_enum, _package + ".enums", destination + "/enums", flagEnums);
 
             javaGen.emit();
             javaGen.flush();
@@ -60,7 +64,7 @@ public class SteamLanguageParser {
         }
 
         for (Node _class : classes) {
-            JavaGen javaGen = new JavaGen(_class, _package + ".generated", destination + "/generated");
+            JavaGen javaGen = new JavaGen(_class, _package + ".generated", destination + "/generated", flagEnums);
 
             javaGen.emit();
             javaGen.flush();

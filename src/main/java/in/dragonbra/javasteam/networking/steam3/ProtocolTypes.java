@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.networking.steam3;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 /**
  * @author lngtr
@@ -12,11 +14,9 @@ public enum ProtocolTypes {
 
     UDP(1 << 1),
 
-    WEB_SOCKET(1 << 2),
+    WEB_SOCKET(1 << 2);
 
-    TCP_UDP(TCP.code | UDP.code),
-
-    ALL(TCP.code | UDP.code | WEB_SOCKET.code);
+    public static final EnumSet<ProtocolTypes> ALL = EnumSet.of(TCP, UDP, WEB_SOCKET);
 
     private final int code;
 
@@ -28,7 +28,12 @@ public enum ProtocolTypes {
         return this.code;
     }
 
-    public static ProtocolTypes from(int code) {
-        return Arrays.stream(ProtocolTypes.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<ProtocolTypes> from(int code) {
+        return Arrays.stream(ProtocolTypes.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(ProtocolTypes.class)));
+    }
+
+    public static int code(EnumSet<ProtocolTypes> flags) {
+        return flags.stream().mapToInt(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

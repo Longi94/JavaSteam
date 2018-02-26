@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.enums;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public enum EChatPermission {
 
@@ -32,7 +34,12 @@ public enum EChatPermission {
         return this.code;
     }
 
-    public static EChatPermission from(int code) {
-        return Arrays.stream(EChatPermission.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<EChatPermission> from(int code) {
+        return Arrays.stream(EChatPermission.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(EChatPermission.class)));
+    }
+
+    public static int code(EnumSet<EChatPermission> flags) {
+        return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

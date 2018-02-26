@@ -11,6 +11,7 @@ import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.EnumSet;
 
 /**
  * This callback is returned in response to an attempt to log on to the Steam3 network through {@link SteamUser}.
@@ -29,7 +30,7 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private Date serverTime;
 
-    private EAccountFlags accountFlags;
+    private EnumSet<EAccountFlags> accountFlags;
 
     private SteamID clientSteamID;
 
@@ -127,7 +128,7 @@ public class LoggedOnCallback extends CallbackMsg {
         return serverTime;
     }
 
-    public EAccountFlags getAccountFlags() {
+    public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 

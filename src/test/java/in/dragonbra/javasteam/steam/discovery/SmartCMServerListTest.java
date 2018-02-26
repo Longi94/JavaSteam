@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -73,7 +74,8 @@ public class SmartCMServerListTest extends TestBase {
 
         ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
         assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, nextRecord.getProtocolTypes());
+        assertEquals(1, nextRecord.getProtocolTypes().size());
+        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
     }
 
     @Test
@@ -88,7 +90,8 @@ public class SmartCMServerListTest extends TestBase {
 
         ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
         assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, nextRecord.getProtocolTypes());
+        assertEquals(1, nextRecord.getProtocolTypes().size());
+        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
     }
 
     @Test
@@ -110,13 +113,15 @@ public class SmartCMServerListTest extends TestBase {
 
         ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
         assertEquals(neutralRecord.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, nextRecord.getProtocolTypes());
+        assertEquals(1, nextRecord.getProtocolTypes().size());
+        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
 
         serverList.tryMark(badRecord.getEndpoint(), badRecord.getProtocolTypes(), ServerQuality.GOOD);
 
         nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
         assertEquals(badRecord.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, nextRecord.getProtocolTypes());
+        assertEquals(1, nextRecord.getProtocolTypes().size());
+        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
     }
 
     @Test
@@ -130,16 +135,18 @@ public class SmartCMServerListTest extends TestBase {
         assertNull(endPoint);
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.UDP);
         assertNull(endPoint);
-        endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP_UDP);
+        endPoint = serverList.getNextServerCandidate(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
         assertNull(endPoint);
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.WEB_SOCKET);
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.WEB_SOCKET, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.ALL);
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.WEB_SOCKET, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
 
         record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
         serverRecords = new ArrayList<>();
@@ -151,19 +158,23 @@ public class SmartCMServerListTest extends TestBase {
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.UDP);
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.UDP, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.UDP));
 
-        endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP_UDP);
+        endPoint = serverList.getNextServerCandidate(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.ALL);
         assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(ProtocolTypes.TCP, endPoint.getProtocolTypes());
+        assertEquals(1, endPoint.getProtocolTypes().size());
+        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
     }
 
     @Test
@@ -190,8 +201,8 @@ public class SmartCMServerListTest extends TestBase {
 
     @Test
     public void treatsProtocolsForSameServerIndividiually() {
-        ServerRecord record1 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27015, ProtocolTypes.TCP_UDP);
-        ServerRecord record2 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27016, ProtocolTypes.TCP_UDP);
+        ServerRecord record1 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27015, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
+        ServerRecord record2 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27016, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
         List<ServerRecord> serverRecords = new ArrayList<>();
         serverRecords.add(record1);
         serverRecords.add(record2);

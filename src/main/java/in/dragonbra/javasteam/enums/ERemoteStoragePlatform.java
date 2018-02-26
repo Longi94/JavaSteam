@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.enums;
 
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 public enum ERemoteStoragePlatform {
 
@@ -24,7 +26,12 @@ public enum ERemoteStoragePlatform {
         return this.code;
     }
 
-    public static ERemoteStoragePlatform from(int code) {
-        return Arrays.stream(ERemoteStoragePlatform.values()).filter(x -> x.code == code).findFirst().orElse(null);
+    public static EnumSet<ERemoteStoragePlatform> from(int code) {
+        return Arrays.stream(ERemoteStoragePlatform.values()).filter(x -> (x.code & code) == x.code)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(ERemoteStoragePlatform.class)));
+    }
+
+    public static int code(EnumSet<ERemoteStoragePlatform> flags) {
+        return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);
     }
 }

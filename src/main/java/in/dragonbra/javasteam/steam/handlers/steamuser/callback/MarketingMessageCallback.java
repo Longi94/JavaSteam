@@ -59,7 +59,7 @@ public class MarketingMessageCallback extends CallbackMsg {
 
         private String url;
 
-        private EMarketingMessageFlags flags;
+        private EnumSet<EMarketingMessageFlags> flags;
 
         Message(byte[] data) {
             try (BinaryReader br = new BinaryReader(new ByteArrayInputStream(data))) {
@@ -69,6 +69,18 @@ public class MarketingMessageCallback extends CallbackMsg {
             } catch (IOException e) {
                 logger.debug(e);
             }
+        }
+
+        public GlobalID getId() {
+            return id;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public EnumSet<EMarketingMessageFlags> getFlags() {
+            return flags;
         }
     }
 }

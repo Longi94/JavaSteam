@@ -44,10 +44,13 @@ public class JavaGen implements Closeable, Flushable {
 
     private String destination;
 
-    public JavaGen(Node node, String _package, String destination) {
+    private Set<String> flagEnums;
+
+    public JavaGen(Node node, String _package, String destination, Set<String> flagEnums) {
         this.node = node;
         this._package = _package;
         this.destination = destination;
+        this.flagEnums = flagEnums;
     }
 
     public void emit() throws IOException {
@@ -106,6 +109,10 @@ public class JavaGen implements Closeable, Flushable {
                 PropNode prop = (PropNode) child;
                 String typeStr = getType(prop.getType());
 
+                if (flagEnums.contains(typeStr)) {
+                    imports.add("java.util.EnumSet");
+                }
+
                 if (prop.getFlags() != null) {
                     if ("steamidmarshal".equals(prop.getFlags()) && "long".equals(typeStr)) {
                         imports.add("in.dragonbra.javasteam.types.SteamID");
@@ -146,6 +153,10 @@ public class JavaGen implements Closeable, Flushable {
 
         } else if (node instanceof EnumNode) {
             writer.writeln("import java.util.Arrays;");
+            if ("flags".equals(((EnumNode) node).getFlags())) {
+                writer.writeln("import java.util.EnumSet;");
+                writer.writeln("import java.util.stream.Collectors;");
+            }
         }
     }
 
@@ -282,6 +293,10 @@ public class JavaGen implements Closeable, Flushable {
                 }
             }
 
+            if (flagEnums.contains(typeStr)) {
+                typeStr = "EnumSet<" + typeStr + ">";
+            }
+
             if (NUMBER_PATTERN.matcher(ctor).matches()) {
                 if ("long".equals(typeStr)) {
                     ctor += "L";
@@ -340,6 +355,10 @@ public class JavaGen implements Closeable, Flushable {
             PropNode propNode = (PropNode) child;
             String typeStr = getType(propNode.getType());
             String propName = propNode.getName();
+
+            if (flagEnums.contains(typeStr)) {
+                typeStr = "EnumSet<" + typeStr + ">";
+            }
 
             if (propNode.getFlags() != null && "const".equals(propNode.getFlags())) {
                 continue;
@@ -455,20 +474,38 @@ public class JavaGen implements Closeable, Flushable {
                     if (strongSymbol.getClazz() instanceof EnumNode) {
                         String enumType = getType(((EnumNode) strongSymbol.getClazz()).getType());
 
-                        switch (enumType) {
-                            case "long":
-                                writer.writeln("bw.writeLong(" + propName + ".code());");
-                                break;
-                            case "byte":
-                                writer.writeln("bw.writeByte(" + propName + ".code());");
-                                break;
-                            case "short":
-                                writer.writeln("bw.writeShort(" + propName + ".code());");
-                                break;
-                            default:
-                                writer.writeln("bw.writeInt(" + propName + ".code());");
-                                break;
+                        if (flagEnums.contains(typeStr)) {
+                            switch (enumType) {
+                                case "long":
+                                    writer.writeln("bw.writeLong(" + typeStr + ".code(" + propName + "));");
+                                    break;
+                                case "byte":
+                                    writer.writeln("bw.writeByte(" + typeStr + ".code(" + propName + "));");
+                                    break;
+                                case "short":
+                                    writer.writeln("bw.writeShort(" + typeStr + ".code(" + propName + "));");
+                                    break;
+                                default:
+                                    writer.writeln("bw.writeInt(" + typeStr + ".code(" + propName + "));");
+                                    break;
+                            }
+                        } else {
+                            switch (enumType) {
+                                case "long":
+                                    writer.writeln("bw.writeLong(" + propName + ".code());");
+                                    break;
+                                case "byte":
+                                    writer.writeln("bw.writeByte(" + propName + ".code());");
+                                    break;
+                                case "short":
+                                    writer.writeln("bw.writeShort(" + propName + ".code());");
+                                    break;
+                                default:
+                                    writer.writeln("bw.writeInt(" + propName + ".code());");
+                                    break;
+                            }
                         }
+
                         continue;
                     }
                 }
@@ -613,6 +650,12 @@ public class JavaGen implements Closeable, Flushable {
     }
 
     private void writeEnumClass(EnumNode node) throws IOException {
+        boolean flags = "flags".equals(node.getFlags());
+
+        if (flags) {
+            flagEnums.add(node.getName());
+        }
+
         writer.writeln("public enum " + node.getName() + " {");
         writer.writeln();
 
@@ -629,14 +672,14 @@ public class JavaGen implements Closeable, Flushable {
         writer.writeln(";");
         writer.writeln();
 
-        writeEnumCode(type);
+        writeEnumCode(type, flags);
 
         writer.unindent();
 
         writer.writeln("}");
     }
 
-    private void writeEnumCode(String type) throws IOException {
+    private void writeEnumCode(String type, boolean flags) throws IOException {
         writer.writeln("private final " + type + " code;");
         writer.writeln();
         writer.writeln(this.node.getName() + "(" + type + " code) {");
@@ -647,9 +690,20 @@ public class JavaGen implements Closeable, Flushable {
         writer.writeln("    return this.code;");
         writer.writeln("}");
         writer.writeln();
-        writer.writeln("public static " + this.node.getName() + " from(" + type + " code) {");
-        writer.writeln("    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
-        writer.writeln("}");
+        if (flags) {
+            writer.writeln("public static EnumSet<" + this.node.getName() + "> from(" + type + " code) {");
+            writer.writeln("    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> (x.code & code) == x.code)");
+            writer.writeln("            .collect(Collectors.toCollection(() -> EnumSet.noneOf(" + this.node.getName() + ".class)));");
+            writer.writeln("}");
+            writer.writeln();
+            writer.writeln("public static " + type + " code(EnumSet<" + this.node.getName() + "> flags) {");
+            writer.writeln("    return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);");
+            writer.writeln("}");
+        } else {
+            writer.writeln("public static " + this.node.getName() + " from(" + type + " code) {");
+            writer.writeln("    return Arrays.stream(" + this.node.getName() + ".values()).filter(x -> x.code == code).findFirst().orElse(null);");
+            writer.writeln("}");
+        }
     }
 
     private void writeProperty(PropNode node, String type) throws IOException {
