@@ -11,9 +11,10 @@ public enum EMarketingMessageFlags {
     PlatformWindows(2),
     PlatformMac(4),
     PlatformLinux(8),
-    PlatformRestrictions(PlatformWindows.code | PlatformMac.code | PlatformLinux.code),
 
     ;
+
+    public static final EnumSet<EMarketingMessageFlags> PlatformRestrictions = EnumSet.of(PlatformWindows, PlatformMac, PlatformLinux);
 
     private final int code;
 

@@ -10,9 +10,10 @@ public enum EUCMFilePrivacyState {
     Private(2),
     FriendsOnly(4),
     Public(8),
-    All(Public.code | FriendsOnly.code | Private.code),
 
     ;
+
+    public static final EnumSet<EUCMFilePrivacyState> All = EnumSet.of(Public, FriendsOnly, Private);
 
     private final int code;
 

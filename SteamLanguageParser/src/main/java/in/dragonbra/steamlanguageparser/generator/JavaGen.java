@@ -663,14 +663,7 @@ public class JavaGen implements Closeable, Flushable {
 
         String type = node.getType() == null ? "int" : getType(node.getType());
 
-        for (Node child : node.getChildNodes()) {
-            PropNode prop = (PropNode) child;
-            writeProperty(prop, type);
-        }
-
-        writer.writeln();
-        writer.writeln(";");
-        writer.writeln();
+        writeEnumProperties(node, type, flags);
 
         writeEnumCode(type, flags);
 
@@ -706,40 +699,60 @@ public class JavaGen implements Closeable, Flushable {
         }
     }
 
-    private void writeProperty(PropNode node, String type) throws IOException {
-        if (node.isEmit()) {
-            if (node.getObsolete() != null) {
-                writer.writeln("@Deprecated");
-            }
+    private void writeEnumProperties(EnumNode node, String type, boolean flags) throws IOException {
 
-            List<String> types = node.getDefault().stream().map(symbol -> {
-                String temp = getType(symbol);
+        List<PropNode> statics = new ArrayList<>();
+        for (Node child : node.getChildNodes()) {
+            PropNode prop = (PropNode) child;
 
-                if (NUMBER_PATTERN.matcher(temp).matches()) {
-                    switch (type) {
-                        case "long":
-                            if (temp.startsWith("-")) {
-                                return temp + "L";
-                            }
-                            return Long.parseUnsignedLong(temp) + "L";
-                        case "byte":
-                            return "(byte) " + temp;
-                        case "short":
-                            return "(short)" + temp;
-                        default:
-                            if (temp.startsWith("-") || temp.contains("x")) {
-                                return temp;
-                            }
-                            return String.valueOf(Integer.parseUnsignedInt(temp));
-                    }
+            if (prop.isEmit()) {
+                if (prop.getObsolete() != null) {
+                    writer.writeln("@Deprecated");
                 }
 
-                return temp + ".code";
-            }).collect(Collectors.toList());
+                if (flags && !NUMBER_PATTERN.matcher(getType(prop.getDefault().get(0))).matches()) {
+                    statics.add(prop);
+                } else {
+                    List<String> types = prop.getDefault().stream().map(symbol -> {
+                        String temp = getType(symbol);
 
-            String val = String.join(" | ", types);
+                        if (NUMBER_PATTERN.matcher(temp).matches()) {
+                            switch (type) {
+                                case "long":
+                                    if (temp.startsWith("-")) {
+                                        return temp + "L";
+                                    }
+                                    return Long.parseUnsignedLong(temp) + "L";
+                                case "byte":
+                                    return "(byte) " + temp;
+                                case "short":
+                                    return "(short)" + temp;
+                                default:
+                                    if (temp.startsWith("-") || temp.contains("x")) {
+                                        return temp;
+                                    }
+                                    return String.valueOf(Integer.parseUnsignedInt(temp));
+                            }
+                        }
 
-            writer.writeln(node.getName() + "(" + val + "),");
+                        return temp + ".code";
+                    }).collect(Collectors.toList());
+
+                    String val = String.join(" | ", types);
+
+                    writer.writeln(prop.getName() + "(" + val + "),");
+                }
+            }
+        }
+
+        writer.writeln();
+        writer.writeln(";");
+        writer.writeln();
+
+        for (PropNode p : statics) {
+            List<String> defaults = p.getDefault().stream().map(JavaGen::getType).collect(Collectors.toList());
+            writer.writeln("public static final EnumSet<" + this.node.getName() + "> " + p.getName() + " = EnumSet.of(" + String.join(", ", defaults) + ");");
+            writer.writeln();
         }
     }
 

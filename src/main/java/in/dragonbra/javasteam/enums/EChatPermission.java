@@ -15,14 +15,19 @@ public enum EChatPermission {
     ChangePermissions(128),
     Ban(256),
     ChangeAccess(512),
-    EveryoneNotInClanDefault(Talk.code),
-    EveryoneDefault(Talk.code | Invite.code),
-    MemberDefault(Ban.code | Kick.code | Talk.code | Invite.code),
-    OfficerDefault(Ban.code | Kick.code | Talk.code | Invite.code),
-    OwnerDefault(ChangeAccess.code | Ban.code | SetMetadata.code | Mute.code | Kick.code | Talk.code | Invite.code | Close.code),
     Mask(1019),
 
     ;
+
+    public static final EnumSet<EChatPermission> EveryoneNotInClanDefault = EnumSet.of(Talk);
+
+    public static final EnumSet<EChatPermission> EveryoneDefault = EnumSet.of(Talk, Invite);
+
+    public static final EnumSet<EChatPermission> MemberDefault = EnumSet.of(Ban, Kick, Talk, Invite);
+
+    public static final EnumSet<EChatPermission> OfficerDefault = EnumSet.of(Ban, Kick, Talk, Invite);
+
+    public static final EnumSet<EChatPermission> OwnerDefault = EnumSet.of(ChangeAccess, Ban, SetMetadata, Mute, Kick, Talk, Invite, Close);
 
     private final int code;
 

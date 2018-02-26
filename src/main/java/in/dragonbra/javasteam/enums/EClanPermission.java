@@ -12,17 +12,24 @@ public enum EClanPermission {
     OwnerAndOfficer(3),
     Member(4),
     Moderator(8),
-    OwnerOfficerModerator(Owner.code | Officer.code | Moderator.code),
-    AllMembers(Owner.code | Officer.code | Moderator.code | Member.code),
     OGGGameOwner(16),
     NonMember(128),
-    MemberAllowed(NonMember.code | Member.code),
-    ModeratorAllowed(NonMember.code | Member.code | Moderator.code),
-    OfficerAllowed(NonMember.code | Member.code | Moderator.code | Officer.code),
-    OwnerAllowed(NonMember.code | Member.code | Moderator.code | Officer.code | Owner.code),
-    Anybody(NonMember.code | Member.code | Moderator.code | Officer.code | Owner.code),
 
     ;
+
+    public static final EnumSet<EClanPermission> OwnerOfficerModerator = EnumSet.of(Owner, Officer, Moderator);
+
+    public static final EnumSet<EClanPermission> AllMembers = EnumSet.of(Owner, Officer, Moderator, Member);
+
+    public static final EnumSet<EClanPermission> MemberAllowed = EnumSet.of(NonMember, Member);
+
+    public static final EnumSet<EClanPermission> ModeratorAllowed = EnumSet.of(NonMember, Member, Moderator);
+
+    public static final EnumSet<EClanPermission> OfficerAllowed = EnumSet.of(NonMember, Member, Moderator, Officer);
+
+    public static final EnumSet<EClanPermission> OwnerAllowed = EnumSet.of(NonMember, Member, Moderator, Officer, Owner);
+
+    public static final EnumSet<EClanPermission> Anybody = EnumSet.of(NonMember, Member, Moderator, Officer, Owner);
 
     private final int code;
 
