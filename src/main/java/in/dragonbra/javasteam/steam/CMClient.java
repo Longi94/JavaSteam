@@ -65,8 +65,6 @@ public abstract class CMClient {
     // connection lock around the setup and tear down of the connection task
     private final Object connectionLock = new Object();
 
-    private Object connectionSetupTask;
-
     private Connection connection;
 
     private ScheduledFunction heartBeatFunc;
@@ -90,7 +88,7 @@ public abstract class CMClient {
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
             isConnected = false;
 
-            if (e.isUserInitiated() && expectDisconnection) {
+            if (!e.isUserInitiated() && !expectDisconnection) {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
 
@@ -116,9 +114,8 @@ public abstract class CMClient {
         this.configuration = configuration;
         this.serverMap = new HashMap<>();
 
-        heartBeatFunc = new ScheduledFunction(() -> {
-            send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.Heartbeat));
-        }, 5000);
+        heartBeatFunc = new ScheduledFunction(() ->
+                send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.Heartbeat)), 5000);
     }
 
     /**
@@ -403,7 +400,7 @@ public abstract class CMClient {
 
             // restart heartbeat
             heartBeatFunc.stop();
-            heartBeatFunc.setDelay(logonResp.getBody().getOutOfGameHeartbeatSeconds() + 1000);
+            heartBeatFunc.setDelay(logonResp.getBody().getOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
         }
     }
