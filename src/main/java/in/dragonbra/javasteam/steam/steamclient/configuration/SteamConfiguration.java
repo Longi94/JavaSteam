@@ -4,8 +4,8 @@ import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
+import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 
-import java.net.URI;
 import java.util.function.Consumer;
 
 /**
