@@ -1,7 +1,12 @@
 package in.dragonbra.javasteam.steam.handlers.steamfriends;
 
+import in.dragonbra.javasteam.enums.EChatPermission;
+import in.dragonbra.javasteam.enums.EClanPermission;
 import in.dragonbra.javasteam.types.KeyValue;
 import in.dragonbra.javasteam.types.MessageObject;
+import in.dragonbra.javasteam.types.SteamID;
+
+import java.util.EnumSet;
 
 /**
  * Represents the details of a user which is a member of a chatroom.
@@ -15,5 +20,15 @@ public class ChatMemberInfo extends MessageObject {
         super();
     }
 
-    // TODO: 2018-02-26
+    public EnumSet<EClanPermission> getDetails() {
+        return keyValues.get("Details").asEnum(EClanPermission.class, EnumSet.of(EClanPermission.Nobody));
+    }
+
+    public EnumSet<EChatPermission> getPermissions() {
+        return keyValues.get("Details").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault);
+    }
+
+    public SteamID steamID() {
+        return new SteamID(keyValues.get("SteamID").asLong());
+    }
 }

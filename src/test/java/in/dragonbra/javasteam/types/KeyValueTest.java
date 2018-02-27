@@ -1,6 +1,8 @@
 package in.dragonbra.javasteam.types;
 
 import in.dragonbra.javasteam.TestBase;
+import in.dragonbra.javasteam.enums.EChatPermission;
+import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.commons.codec.DecoderException;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import static org.junit.Assert.*;
@@ -329,7 +332,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesReadsBinaryWithMultipleChildren() throws IOException, DecoderException {
+    public void keyValuesReadsBinaryWithMultipleChildren() throws IOException, DecoderException {
         String hex = "00546573744f626a65637400016b6579310076616c75653100016b6579320076616c756532000808";
         byte[] binary = Hex.decodeHex(hex);
         KeyValue kv = new KeyValue();
@@ -348,7 +351,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesSavesTextToFile() throws IOException {
+    public void keyValuesSavesTextToFile() throws IOException {
         String expected = "\"RootNode\"\n{\n\t\"key1\"\t\t\"value1\"\n\t\"key2\"\n\t{\n\t\t\"ChildKey\"\t\t\"ChildValue\"\n\t}\n}\n";
 
         KeyValue kv = new KeyValue("RootNode");
@@ -367,7 +370,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesSavesTextToStream() throws IOException {
+    public void keyValuesSavesTextToStream() throws IOException {
         String expected = "\"RootNode\"\n{\n\t\"key1\"\t\t\"value1\"\n\t\"key2\"\n\t{\n\t\t\"ChildKey\"\t\t\"ChildValue\"\n\t}\n}\n";
 
         KeyValue kv = new KeyValue("RootNode");
@@ -388,7 +391,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesUnsignedByteConversion() {
+    public void keyValuesUnsignedByteConversion() {
         byte expectedValue = 37;
 
         KeyValue kv = new KeyValue("key", "37");
@@ -400,7 +403,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesUnsignedShortConversion() {
+    public void keyValuesUnsignedShortConversion() {
         short expectedValue = 1337;
 
         KeyValue kv = new KeyValue("key", "1337");
@@ -412,7 +415,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void KeyValuesEscapesTextWhenSerializing() throws IOException {
+    public void keyValuesEscapesTextWhenSerializing() throws IOException {
         KeyValue kv = new KeyValue("key");
         kv.getChildren().add(new KeyValue("slashes", "\\o/"));
         kv.getChildren().add(new KeyValue("newline", "\r\n"));
@@ -438,5 +441,29 @@ public class KeyValueTest extends TestBase {
         assertTrue(read);
 
         assertEquals(0x0807060504030201L, kv.get("key").asLong());
+    }
+
+    @Test
+    public void keyValuesHandlesEnum() {
+        KeyValue kv = KeyValue.loadFromString("" +
+                "\"root\"" +
+                "{" +
+                "    \"name\" \"Talk\"" +
+                "}");
+
+        assertEquals(EnumSet.of(EChatPermission.Talk), kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
+
+        kv.get("name").setValue("8");
+
+        assertEquals(EnumSet.of(EChatPermission.Talk), kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
+
+        kv.get("name").setValue("10");
+
+        assertEquals(EnumSet.of(EChatPermission.Talk, EChatPermission.Invite), kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
+        assertEquals(EnumSet.of(EResult.Busy), kv.get("name").asEnum(EResult.class, EResult.Invalid));
+
+        kv.get("name").setValue("OwnerDefault");
+
+        assertEquals(EChatPermission.OwnerDefault, kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
     }
 }

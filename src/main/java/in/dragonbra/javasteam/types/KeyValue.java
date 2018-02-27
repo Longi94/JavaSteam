@@ -7,11 +7,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a recursive string key to arbitrary value container.
@@ -256,12 +257,55 @@ public class KeyValue {
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
-    public <T extends Enum<T>> Enum<T> asEnum(Class<T> enumClass, T defaultValue) {
+    public <T extends Enum<T>> EnumSet<T> asEnum(Class<T> enumClass, T defaultValue) {
+        return asEnum(enumClass, EnumSet.of(defaultValue));
+    }
+
+    /**
+     * Attempts to convert and return the value of this instance as an enum.
+     * If the conversion is invalid, the default value is returned.
+     *
+     * @param defaultValue The default value to return if the conversion is invalid.
+     * @return The value of this instance as an unsigned byte.
+     */
+    public <T extends Enum<T>> EnumSet<T> asEnum(Class<T> enumClass, EnumSet<T> defaultValue) {
+        // this is ugly af, but it comes with handling bit flags as enumsets
         try {
-            return T.valueOf(enumClass, value);
-        } catch (NullPointerException | IllegalArgumentException e) {
-            return defaultValue;
+            // see if its a number first
+            int code = Integer.parseInt(value);
+
+            Field codeField = enumClass.getDeclaredField("code");
+            Method from = enumClass.getMethod("from", codeField.getType());
+            Object res = from.invoke(null, code);
+
+            if (res instanceof EnumSet) {
+                return (EnumSet<T>) res;
+            } else {
+                return EnumSet.of(enumClass.cast(res));
+            }
+        } catch (NullPointerException | NumberFormatException ignored) {
+        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            return null;
         }
+
+        try {
+            // see if it exists as an enum
+            return EnumSet.of(T.valueOf(enumClass, value));
+        } catch (NullPointerException | IllegalArgumentException ignored) {
+        }
+
+        // check for static enumset fields
+        try {
+            for (Field field : enumClass.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && field.getName().equals(value) && field.getType().isAssignableFrom(EnumSet.class)) {
+                    return (EnumSet<T>) field.get(null);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return defaultValue;
     }
 
     public String getName() {
