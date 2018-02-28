@@ -54,7 +54,7 @@ jacocoTestReport {
 sourceSets {
     main {
         java {
-            srcDirs += new File(buildDir, 'generated/source/steamd/main/java/in/dragonbra/javasteam')
+            srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
         }
     }
 }
