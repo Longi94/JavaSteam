@@ -1,5 +1,3 @@
 rootProject.name = 'javasteam'
-include 'SteamLanguageParser'
-findProject(':SteamLanguageParser')?.name = 'steamlanguageparser'
 include 'javasteam-samples'
 
