@@ -112,7 +112,7 @@ public class AClientMsgProtobuf extends MsgBase<MsgHdrProtoBuf> {
         if (jobID == null) {
             throw new IllegalArgumentException("jobID is null");
         }
-        getProtoHeader().setJobidTarget(jobID.getValue());
+        getProtoHeader().setJobidSource(jobID.getValue());
     }
 
     @Override
