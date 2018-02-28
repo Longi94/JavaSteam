@@ -21,6 +21,7 @@ import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.IDebugNetworkListener;
 import in.dragonbra.javasteam.util.MsgUtil;
 import in.dragonbra.javasteam.util.NetHelpers;
+import in.dragonbra.javasteam.util.NetHookNetworkListener;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
