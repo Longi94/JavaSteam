@@ -116,7 +116,7 @@ public abstract class CMClient {
         this.serverMap = new HashMap<>();
 
         heartBeatFunc = new ScheduledFunction(() ->
-                send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.Heartbeat)), 5000);
+                send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.ClientHeartBeat)), 5000);
     }
 
     /**
