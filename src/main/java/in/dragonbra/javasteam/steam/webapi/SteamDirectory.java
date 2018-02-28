@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.enums.deserializer.EResultDeserializer;
+import in.dragonbra.javasteam.util.EResultDeserializer;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import okhttp3.OkHttpClient;

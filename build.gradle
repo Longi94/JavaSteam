@@ -1,3 +1,5 @@
+import in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin
+
 buildscript {
     repositories {
         mavenCentral()
@@ -12,7 +14,8 @@ version '2.0.0-SNAPSHOT1'
 
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
-apply plugin: "jacoco"
+apply plugin: 'jacoco'
+apply plugin: SteamLanguageGenPlugin
 
 sourceCompatibility = 1.8
 
@@ -48,4 +51,13 @@ jacocoTestReport {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs += new File(buildDir, 'generated/source/steamd/main/java/in/dragonbra/javasteam')
+        }
+    }
+}
+
+build.dependsOn generateSteamLanguage
 check.dependsOn jacocoTestReport
