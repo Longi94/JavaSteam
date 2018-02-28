@@ -100,6 +100,7 @@ public class SteamUser extends ClientMsgHandler {
 
         logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
         logon.getBody().setClientOsType(details.getClientOSType().code());
+        logon.getBody().setClientLanguage(details.getClientLanguage());
         logon.getBody().setCellId(details.getCellID());
 
         // we're now using the latest steamclient package version, this is required to get a proper sentry file for steam guard
@@ -111,14 +112,19 @@ public class SteamUser extends ClientMsgHandler {
         if (!Strings.isNullOrEmpty(details.getAuthCode())) {
             logon.getBody().setAuthCode(details.getAuthCode());
         }
-        logon.getBody().setTwoFactorCode(details.getTwoFactorCode());
 
-        logon.getBody().setLoginKey(details.getLoginKey());
+        if (!Strings.isNullOrEmpty(details.getTwoFactorCode())) {
+            logon.getBody().setTwoFactorCode(details.getTwoFactorCode());
+        }
+
+        if (!Strings.isNullOrEmpty(details.getLoginKey())) {
+            logon.getBody().setLoginKey(details.getLoginKey());
+        }
 
         if (details.getSentryFileHash() != null) {
             logon.getBody().setShaSentryfile(ByteString.copyFrom(details.getSentryFileHash()));
         }
-        logon.getBody().setEresultSentryfile(details.getSentryFileHash() == null ? EResult.OK.code() : EResult.FileNotFound.code());
+        logon.getBody().setEresultSentryfile(details.getSentryFileHash() != null ? EResult.OK.code() : EResult.FileNotFound.code());
 
         client.send(logon);
     }
