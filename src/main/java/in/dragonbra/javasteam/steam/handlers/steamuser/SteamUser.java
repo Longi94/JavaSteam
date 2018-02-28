@@ -182,6 +182,9 @@ public class SteamUser extends ClientMsgHandler {
 
         ClientMsgProtobuf<CMsgClientLogOff.Builder> logOff = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
         client.send(logOff);
+
+        // TODO: 2018-02-28 it seems like the socket is not closed after getting logged of or I am doing something horribly wrong, let's disconnect here
+        client.disconnect();
     }
 
     /**
@@ -273,6 +276,9 @@ public class SteamUser extends ClientMsgHandler {
         }
 
         client.postCallback(new LoggedOffCallback(result));
+
+        // TODO: 2018-02-28 it seems like the socket is not closed after getting logged of or I am doing something horribly wrong, let's disconnect here
+        client.disconnect();
     }
 
     private void handleLoginKey(IPacketMsg packetMsg) {
