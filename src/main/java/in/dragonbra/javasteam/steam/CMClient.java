@@ -293,8 +293,7 @@ public abstract class CMClient {
         } else if ((protocol.code() & ProtocolTypes.TCP.code()) > 0) {
             return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
         } else if ((protocol.code() & ProtocolTypes.UDP.code()) > 0) {
-            // TODO: 2018-02-21  
-            //return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());
+            return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());
         }
 
         throw new IllegalArgumentException("Protocol bitmask has no supported protocols set.");

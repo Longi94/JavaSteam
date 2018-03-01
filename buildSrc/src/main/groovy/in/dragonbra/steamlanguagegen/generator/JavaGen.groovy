@@ -68,22 +68,22 @@ class JavaGen implements Closeable, Flushable {
             def classNode = (ClassNode) node
             def imports = new HashSet<String>()
 
+            imports << 'java.io.IOException' << 'java.io.InputStream' << 'java.io.OutputStream'
+            imports << 'in.dragonbra.javasteam.util.stream.BinaryReader' << 'in.dragonbra.javasteam.util.stream.BinaryWriter'
             if (classNode.ident != null) {
                 if (node.name.contains('MsgGC')) {
                     imports << 'in.dragonbra.javasteam.base.IGCSerializableMessage'
                 } else {
                     imports << 'in.dragonbra.javasteam.base.ISteamSerializableMessage' << 'in.dragonbra.javasteam.enums.EMsg'
                 }
-                imports << 'java.io.IOException' << 'java.io.InputStream' << 'java.io.OutputStream'
-                imports << 'in.dragonbra.javasteam.util.stream.BinaryReader' << 'in.dragonbra.javasteam.util.stream.BinaryWriter'
             } else if (node.name.contains('Hdr')) {
                 if (node.name.contains('MsgGC')) {
                     imports << 'in.dragonbra.javasteam.base.IGCSerializableHeader'
                 } else {
                     imports << 'in.dragonbra.javasteam.base.ISteamSerializableHeader' << 'in.dragonbra.javasteam.enums.EMsg'
                 }
-                imports << 'java.io.IOException' << 'java.io.InputStream' << 'java.io.OutputStream'
-                imports << 'in.dragonbra.javasteam.util.stream.BinaryReader' << 'in.dragonbra.javasteam.util.stream.BinaryWriter'
+            } else {
+                imports << 'in.dragonbra.javasteam.base.ISteamSerializable'
             }
 
             for (Node child : (classNode.childNodes)) {
@@ -114,7 +114,7 @@ class JavaGen implements Closeable, Flushable {
 
             }
 
-            def sortedImports = imports.stream().map({s -> s.toString()}).collect(Collectors.toList())
+            def sortedImports = imports.stream().map({ s -> s.toString() }).collect(Collectors.toList())
             Collections.sort(sortedImports)
             String currentGroup = null
             for (String imp : sortedImports) {
@@ -182,6 +182,8 @@ class JavaGen implements Closeable, Flushable {
             } else {
                 parent = 'ISteamSerializableHeader'
             }
+        } else {
+            parent = 'ISteamSerializable'
         }
 
         if (parent != null) {
@@ -408,222 +410,220 @@ class JavaGen implements Closeable, Flushable {
             }
         }
 
-        if (node.ident != null || node.name.contains('Hdr')) {
-            writer.writeln('@Override')
-            writer.writeln('public void serialize(OutputStream stream) throws IOException {')
-            writer.indent()
+        writer.writeln('@Override')
+        writer.writeln('public void serialize(OutputStream stream) throws IOException {')
+        writer.indent()
 
-            writer.writeln('BinaryWriter bw = new BinaryWriter(stream);')
-            writer.writeln()
+        writer.writeln('BinaryWriter bw = new BinaryWriter(stream);')
+        writer.writeln()
 
-            for (Node child : (node.childNodes)) {
-                def prop = (PropNode) child
-                def typeStr = getType(prop.type)
-                def propName = prop.name
+        for (Node child : (node.childNodes)) {
+            def prop = (PropNode) child
+            def typeStr = getType(prop.type)
+            def propName = prop.name
 
-                if (skip.contains(propName)) {
-                    continue
-                }
-
-                if (prop.flags == 'protomask') {
-                    writer.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
-                    continue
-                }
-
-                if (prop.flags == "proto") {
-                    writer.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
-                    if (prop.flagsOpt != null) {
-                        writer.writeln("$prop.flagsOpt = ${propName}Buffer.length;")
-                        writer.writeln("bw.writeInt($prop.flagsOpt);")
-                    } else {
-                        writer.writeln("bw.writeInt(${propName}Buffer.length);")
-                    }
-                    writer.writeln("bw.write(${propName}Buffer);")
-                    continue
-                }
-
-                if (prop.flags == "const") {
-                    continue
-                }
-
-                if (prop.type instanceof StrongSymbol) {
-                    def strongSymbol = (StrongSymbol) prop.type
-                    if (strongSymbol.clazz instanceof EnumNode) {
-                        def enumType = getType(((EnumNode) strongSymbol.clazz).type)
-
-                        if (flagEnums.contains(typeStr)) {
-                            switch (enumType) {
-                                case 'long':
-                                    writer.writeln "bw.writeLong(${typeStr}.code($propName));"
-                                    break
-                                case 'byte':
-                                    writer.writeln "bw.writeByte(${typeStr}.code($propName));"
-                                    break
-                                case 'short':
-                                    writer.writeln "bw.writeShort(${typeStr}.code($propName));"
-                                    break
-                                default:
-                                    writer.writeln "bw.writeInt(${typeStr}.code($propName));"
-                                    break
-                            }
-                        } else {
-                            switch (enumType) {
-                                case 'long':
-                                    writer.writeln "bw.writeLong(${propName}.code());"
-                                    break
-                                case 'byte':
-                                    writer.writeln "bw.writeByte(${propName}.code());"
-                                    break
-                                case 'short':
-                                    writer.writeln "bw.writeShort(${propName}.code());"
-                                    break
-                                default:
-                                    writer.writeln "bw.writeInt(${propName}.code());"
-                                    break
-                            }
-                        }
-
-                        continue
-                    }
-                }
-
-                if ('steamidmarshal' == prop.flags && 'long' == typeStr) {
-                    writer.writeln "bw.writeLong($propName);"
-                } else if ('boolmarshal' == prop.flags && 'byte' == typeStr) {
-                    writer.writeln "bw.writeBoolean($propName);"
-                } else if ('gameidmarshal' == prop.flags && 'long' == typeStr) {
-                    writer.writeln "bw.writeLong($propName);"
-                } else {
-                    def isArray = false
-                    if (!(prop.flagsOpt == null || prop.flagsOpt.isEmpty()) &&
-                            NUMBER_PATTERN.matcher(prop.flagsOpt).matches()) {
-                        isArray = true
-                    }
-
-                    if (isArray) {
-                        writer.writeln "bw.writeInt(${propName}.length);"
-                        writer.writeln "bw.write($propName);"
-                    } else {
-                        switch (typeStr) {
-                            case 'long':
-                                writer.writeln "bw.writeLong($propName);"
-                                break
-                            case 'byte':
-                                writer.writeln "bw.writeByte($propName);"
-                                break
-                            case 'short':
-                                writer.writeln "bw.writeShort($propName);"
-                                break
-                            default:
-                                writer.writeln "bw.writeInt($propName);"
-                                break
-                        }
-                    }
-                }
+            if (skip.contains(propName)) {
+                continue
             }
 
-            writer.unindent()
-            writer.writeln "}"
-            writer.writeln()
-            writer.writeln "@Override"
-            writer.writeln "public void deserialize(InputStream stream) throws IOException {"
-            writer.indent()
+            if (prop.flags == 'protomask') {
+                writer.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
+                continue
+            }
 
-            writer.writeln "BinaryReader br = new BinaryReader(stream);"
-            writer.writeln()
-
-            for (Node child : (node.childNodes)) {
-                def prop = (PropNode) child
-                def typeStr = getType(prop.type)
-                def propName = prop.name
-
-                if (skip.contains(propName)) {
-                    continue
+            if (prop.flags == "proto") {
+                writer.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
+                if (prop.flagsOpt != null) {
+                    writer.writeln("$prop.flagsOpt = ${propName}Buffer.length;")
+                    writer.writeln("bw.writeInt($prop.flagsOpt);")
+                } else {
+                    writer.writeln("bw.writeInt(${propName}Buffer.length);")
                 }
+                writer.writeln("bw.write(${propName}Buffer);")
+                continue
+            }
 
-                if (prop.flags != null) {
-                    if (prop.flags == 'protomask') {
-                        writer.writeln "$propName = MsgUtil.getMsg(br.readInt());"
-                        continue
-                    }
+            if (prop.flags == "const") {
+                continue
+            }
 
-                    if (prop.flags == 'proto') {
-                        if (prop.flagsOpt != null) {
-                            writer.writeln "$prop.flagsOpt = br.readInt();"
-                            writer.writeln "byte[] ${propName}Buffer = br.readBytes($prop.flagsOpt);"
-                        } else {
-                            writer.writeln "byte[] ${propName}Buffer = br.readBytes(br.readInt());"
-                        }
-                        writer.writeln "$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);"
-                        continue
-                    }
+            if (prop.type instanceof StrongSymbol) {
+                def strongSymbol = (StrongSymbol) prop.type
+                if (strongSymbol.clazz instanceof EnumNode) {
+                    def enumType = getType(((EnumNode) strongSymbol.clazz).type)
 
-                    if (prop.flags == 'const') {
-                        continue
-                    }
-                }
-
-                if (prop.type instanceof StrongSymbol) {
-                    def strongSymbol = (StrongSymbol) prop.type
-                    if (strongSymbol.clazz instanceof EnumNode) {
-                        String enumType = getType(((EnumNode) strongSymbol.clazz).type)
-                        String className = strongSymbol.clazz.name
-
+                    if (flagEnums.contains(typeStr)) {
                         switch (enumType) {
                             case 'long':
-                                writer.writeln "$propName = ${className}.from(br.readLong());"
+                                writer.writeln "bw.writeLong(${typeStr}.code($propName));"
                                 break
                             case 'byte':
-                                writer.writeln "$propName = ${className}.from(br.readByte());"
+                                writer.writeln "bw.writeByte(${typeStr}.code($propName));"
                                 break
                             case 'short':
-                                writer.writeln "$propName = ${className}.from(br.readShort());"
+                                writer.writeln "bw.writeShort(${typeStr}.code($propName));"
                                 break
                             default:
-                                writer.writeln "$propName = ${className}.from(br.readInt());"
+                                writer.writeln "bw.writeInt(${typeStr}.code($propName));"
                                 break
                         }
-                        continue
-                    }
-                }
-
-                if ('steamidmarshal' == prop.flags && 'long' == typeStr) {
-                    writer.writeln "$propName = br.readLong();"
-                } else if ('boolmarshal' == prop.flags && 'byte' == typeStr) {
-                    writer.writeln "$propName = br.readBoolean();"
-                } else if ('gameidmarshal' == prop.flags && 'long' == typeStr) {
-                    writer.writeln "$propName = br.readLong();"
-                } else {
-                    def isArray = false
-                    if (!(prop.flagsOpt == null || prop.flagsOpt.isEmpty()) &&
-                            NUMBER_PATTERN.matcher(prop.flagsOpt).matches()) {
-                        isArray = true
-                    }
-
-                    if (isArray) {
-                        writer.writeln "$propName = br.readBytes(br.readInt());"
                     } else {
-                        switch (typeStr) {
+                        switch (enumType) {
                             case 'long':
-                                writer.writeln "$propName = br.readLong();"
+                                writer.writeln "bw.writeLong(${propName}.code());"
                                 break
                             case 'byte':
-                                writer.writeln "$propName = br.readByte();"
+                                writer.writeln "bw.writeByte(${propName}.code());"
                                 break
                             case 'short':
-                                writer.writeln "$propName = br.readShort();"
+                                writer.writeln "bw.writeShort(${propName}.code());"
                                 break
                             default:
-                                writer.writeln "$propName = br.readInt();"
+                                writer.writeln "bw.writeInt(${propName}.code());"
                                 break
                         }
                     }
+
+                    continue
                 }
             }
 
-            writer.unindent()
-            writer.writeln '}'
+            if ('steamidmarshal' == prop.flags && 'long' == typeStr) {
+                writer.writeln "bw.writeLong($propName);"
+            } else if ('boolmarshal' == prop.flags && 'byte' == typeStr) {
+                writer.writeln "bw.writeBoolean($propName);"
+            } else if ('gameidmarshal' == prop.flags && 'long' == typeStr) {
+                writer.writeln "bw.writeLong($propName);"
+            } else {
+                def isArray = false
+                if (!(prop.flagsOpt == null || prop.flagsOpt.isEmpty()) &&
+                        NUMBER_PATTERN.matcher(prop.flagsOpt).matches()) {
+                    isArray = true
+                }
+
+                if (isArray) {
+                    writer.writeln "bw.writeInt(${propName}.length);"
+                    writer.writeln "bw.write($propName);"
+                } else {
+                    switch (typeStr) {
+                        case 'long':
+                            writer.writeln "bw.writeLong($propName);"
+                            break
+                        case 'byte':
+                            writer.writeln "bw.writeByte($propName);"
+                            break
+                        case 'short':
+                            writer.writeln "bw.writeShort($propName);"
+                            break
+                        default:
+                            writer.writeln "bw.writeInt($propName);"
+                            break
+                    }
+                }
+            }
         }
+
+        writer.unindent()
+        writer.writeln "}"
+        writer.writeln()
+        writer.writeln "@Override"
+        writer.writeln "public void deserialize(InputStream stream) throws IOException {"
+        writer.indent()
+
+        writer.writeln "BinaryReader br = new BinaryReader(stream);"
+        writer.writeln()
+
+        for (Node child : (node.childNodes)) {
+            def prop = (PropNode) child
+            def typeStr = getType(prop.type)
+            def propName = prop.name
+
+            if (skip.contains(propName)) {
+                continue
+            }
+
+            if (prop.flags != null) {
+                if (prop.flags == 'protomask') {
+                    writer.writeln "$propName = MsgUtil.getMsg(br.readInt());"
+                    continue
+                }
+
+                if (prop.flags == 'proto') {
+                    if (prop.flagsOpt != null) {
+                        writer.writeln "$prop.flagsOpt = br.readInt();"
+                        writer.writeln "byte[] ${propName}Buffer = br.readBytes($prop.flagsOpt);"
+                    } else {
+                        writer.writeln "byte[] ${propName}Buffer = br.readBytes(br.readInt());"
+                    }
+                    writer.writeln "$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);"
+                    continue
+                }
+
+                if (prop.flags == 'const') {
+                    continue
+                }
+            }
+
+            if (prop.type instanceof StrongSymbol) {
+                def strongSymbol = (StrongSymbol) prop.type
+                if (strongSymbol.clazz instanceof EnumNode) {
+                    String enumType = getType(((EnumNode) strongSymbol.clazz).type)
+                    String className = strongSymbol.clazz.name
+
+                    switch (enumType) {
+                        case 'long':
+                            writer.writeln "$propName = ${className}.from(br.readLong());"
+                            break
+                        case 'byte':
+                            writer.writeln "$propName = ${className}.from(br.readByte());"
+                            break
+                        case 'short':
+                            writer.writeln "$propName = ${className}.from(br.readShort());"
+                            break
+                        default:
+                            writer.writeln "$propName = ${className}.from(br.readInt());"
+                            break
+                    }
+                    continue
+                }
+            }
+
+            if ('steamidmarshal' == prop.flags && 'long' == typeStr) {
+                writer.writeln "$propName = br.readLong();"
+            } else if ('boolmarshal' == prop.flags && 'byte' == typeStr) {
+                writer.writeln "$propName = br.readBoolean();"
+            } else if ('gameidmarshal' == prop.flags && 'long' == typeStr) {
+                writer.writeln "$propName = br.readLong();"
+            } else {
+                def isArray = false
+                if (!(prop.flagsOpt == null || prop.flagsOpt.isEmpty()) &&
+                        NUMBER_PATTERN.matcher(prop.flagsOpt).matches()) {
+                    isArray = true
+                }
+
+                if (isArray) {
+                    writer.writeln "$propName = br.readBytes(br.readInt());"
+                } else {
+                    switch (typeStr) {
+                        case 'long':
+                            writer.writeln "$propName = br.readLong();"
+                            break
+                        case 'byte':
+                            writer.writeln "$propName = br.readByte();"
+                            break
+                        case 'short':
+                            writer.writeln "$propName = br.readShort();"
+                            break
+                        default:
+                            writer.writeln "$propName = br.readInt();"
+                            break
+                    }
+                }
+            }
+        }
+
+        writer.unindent()
+        writer.writeln '}'
     }
 
     private void writeEnumClass(EnumNode node) throws IOException {
