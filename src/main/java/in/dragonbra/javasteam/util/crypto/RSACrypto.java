@@ -2,7 +2,6 @@ package in.dragonbra.javasteam.util.crypto;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -50,9 +49,7 @@ public class RSACrypto {
             final KeyFactory factory = KeyFactory.getInstance("RSA");
             RSAPublicKey rsaKey = (RSAPublicKey) factory.generatePublic(publicKeySpec);
 
-            Security.addProvider(new BouncyCastleProvider());
-
-            cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", "BC");
+            cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", CryptoHelper.SEC_PROV);
             cipher.init(Cipher.ENCRYPT_MODE, rsaKey);
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidKeySpecException
                 | NoSuchProviderException e) {

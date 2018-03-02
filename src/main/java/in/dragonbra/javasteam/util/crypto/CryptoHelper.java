@@ -1,13 +1,13 @@
 package in.dragonbra.javasteam.util.crypto;
 
+import in.dragonbra.javasteam.enums.EOSType;
 import in.dragonbra.javasteam.util.Passable;
+import in.dragonbra.javasteam.util.Utils;
 import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.crypto.CryptoException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
@@ -25,6 +25,26 @@ import java.util.zip.CRC32;
 public class CryptoHelper {
 
     private static final Logger logger = LogManager.getLogger(CryptoHelper.class);
+
+    public static final String SEC_PROV;
+
+    static {
+        try {
+            if (Utils.getOSType() == EOSType.AndroidUnknown) {
+                Class<? extends Provider> provider =
+                        (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
+                Security.insertProviderAt(provider.newInstance(), 1);
+                SEC_PROV = "SC";
+            } else {
+                Class<? extends Provider> provider =
+                        (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
+                Security.addProvider(provider.newInstance());
+                SEC_PROV = "BC";
+            }
+        } catch (Exception e) {
+            throw new SecurityException("Couldn't create security provider", e);
+        }
+    }
 
     /**
      * Generate an array of random bytes given the input length
@@ -78,13 +98,12 @@ public class CryptoHelper {
         }
 
         try {
-            Security.addProvider(new BouncyCastleProvider());
 
             if (key.length != 32) {
                 logger.debug("SymmetricDecrypt used with non 32 byte key!");
             }
 
-            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding", "BC");
+            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding", SEC_PROV);
 
             // first 16 bytes of input is the ECB encrypted IV
             iv.setValue(new byte[16]);
@@ -98,7 +117,7 @@ public class CryptoHelper {
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
             iv.setValue(cipher.doFinal(cryptedIv));
 
-            cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", "BC");
+            cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", SEC_PROV);
 
             // decrypt the remaining ciphertext in cbc with the decrypted IV
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv.getValue()));
@@ -126,20 +145,19 @@ public class CryptoHelper {
         }
 
         try {
-            Security.addProvider(new BouncyCastleProvider());
 
             if (key.length != 32) {
                 logger.debug("SymmetricEncrypt used with non 32 byte key!");
             }
 
             // encrypt iv using ECB and provided key
-            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding", "BC");
+            Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding", SEC_PROV);
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
 
             final byte[] cryptedIv = cipher.doFinal(iv);
 
             // encrypt input plaintext with CBC using the generated (plaintext) IV and the provided key
-            cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", "BC");
+            cipher = Cipher.getInstance("AES/CBC/PKCS7Padding", SEC_PROV);
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
 
             final byte[] cipherText = cipher.doFinal(input);

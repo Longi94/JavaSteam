@@ -1,9 +1,9 @@
 package in.dragonbra.javasteam.networking.steam3;
 
+import in.dragonbra.javasteam.util.crypto.CryptoException;
 import in.dragonbra.javasteam.util.crypto.CryptoHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.crypto.CryptoException;
 
 /**
  * @author lngtr
