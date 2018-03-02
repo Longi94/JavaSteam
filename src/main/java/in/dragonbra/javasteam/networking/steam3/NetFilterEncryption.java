@@ -2,8 +2,8 @@ package in.dragonbra.javasteam.networking.steam3;
 
 import in.dragonbra.javasteam.util.crypto.CryptoException;
 import in.dragonbra.javasteam.util.crypto.CryptoHelper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 /**
  * @author lngtr

@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.base;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 /**
  * This is the abstract base class for all available client messages.

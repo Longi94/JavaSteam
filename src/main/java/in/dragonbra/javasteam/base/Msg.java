@@ -4,10 +4,10 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdr;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

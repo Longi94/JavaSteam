@@ -14,8 +14,8 @@ import in.dragonbra.javasteam.util.crypto.CryptoHelper;
 import in.dragonbra.javasteam.util.crypto.RSACrypto;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.IOException;
 import java.net.InetAddress;

@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.handlers;
 
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
+import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 
 /**
  * This class implements the base requirements every message handler should inherit from.
@@ -18,8 +19,8 @@ public abstract class ClientMsgHandler {
 
     /**
      * Gets whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
-     * If this is true when the connection is closed, the {@link SteamClient#DisconnectedCallback}'s
-     * {@link SteamClient#DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
+     * If this is true when the connection is closed, the {@link DisconnectedCallback}'s
+     * {@link DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
      */
     public boolean isExpectDisconnection() {
         return client.isExpectDisconnection();
@@ -27,8 +28,8 @@ public abstract class ClientMsgHandler {
 
     /**
      * Sets whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
-     * If this is true when the connection is closed, the {@link SteamClient#DisconnectedCallback}'s
-     * {@link SteamClient#DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
+     * If this is true when the connection is closed, the {@link DisconnectedCallback}'s
+     * {@link DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
      */
     public void setExpectDisconnection(boolean expectDisconnection) {
         client.setExpectDisconnection(expectDisconnection);

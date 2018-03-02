@@ -9,8 +9,8 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
+import in.dragonbra.javasteam.util.log.DefaultLogListener;
+import in.dragonbra.javasteam.util.log.LogManager;
 
 /**
  * @author lngtr
@@ -42,7 +42,7 @@ public class SampleLogon implements Runnable {
             return;
         }
 
-        Configurator.setRootLevel(Level.DEBUG);
+        LogManager.addListener(new DefaultLogListener());
 
         new SampleLogon(args[0], args[1]).run();
     }

@@ -500,7 +500,7 @@ public class SteamID {
     }
 
     private String renderSteam3() {
-        char accountTypeChar = ACCOUNT_TYPE_CHARS.getOrDefault(getAccountType(), UNKNOWN_ACCOUNT_TYPE_CHAR);
+        char accountTypeChar = ACCOUNT_TYPE_CHARS.containsKey(getAccountType()) ? ACCOUNT_TYPE_CHARS.get(getAccountType()) : UNKNOWN_ACCOUNT_TYPE_CHAR;
 
         if (getAccountType() == EAccountType.Chat) {
             if ((getAccountInstance() & ChatInstanceFlags.CLAN.code()) > 0) {

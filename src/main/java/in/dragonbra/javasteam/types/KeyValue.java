@@ -2,9 +2,9 @@ package in.dragonbra.javasteam.types;
 
 import in.dragonbra.javasteam.util.Passable;
 import in.dragonbra.javasteam.util.Strings;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -631,7 +631,7 @@ public class KeyValue {
                 case INT32:
                 case COLOR:
                 case POINTER:
-                    current.setValue(Long.toUnsignedString(br.readInt()));
+                    current.setValue(String.valueOf(br.readInt()));
                     break;
                 case UINT64:
                     current.setValue(String.valueOf(br.readLong()));

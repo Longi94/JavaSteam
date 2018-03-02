@@ -4,9 +4,9 @@ import in.dragonbra.javasteam.enums.EMarketingMessageFlags;
 import in.dragonbra.javasteam.generated.MsgClientMarketingMessageUpdate2;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.GlobalID;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

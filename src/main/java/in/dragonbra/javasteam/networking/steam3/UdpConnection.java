@@ -4,10 +4,10 @@ import in.dragonbra.javasteam.enums.EUdpPacketType;
 import in.dragonbra.javasteam.generated.ChallengeData;
 import in.dragonbra.javasteam.generated.ConnectData;
 import in.dragonbra.javasteam.util.event.EventArgs;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -7,7 +7,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This callback is fired when the client receives a list of friends.

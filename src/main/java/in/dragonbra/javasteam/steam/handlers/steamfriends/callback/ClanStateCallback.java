@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This callback is posted when a clan's state has been changed.

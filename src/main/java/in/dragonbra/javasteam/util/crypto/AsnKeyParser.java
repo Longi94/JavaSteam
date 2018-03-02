@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.util.crypto;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.math.BigInteger;
 import java.util.List;

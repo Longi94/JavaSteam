@@ -1,8 +1,8 @@
 package in.dragonbra.javasteam.util;
 
 import in.dragonbra.javasteam.enums.EMsg;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.File;
 import java.io.IOException;

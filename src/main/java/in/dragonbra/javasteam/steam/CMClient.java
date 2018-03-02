@@ -25,9 +25,9 @@ import in.dragonbra.javasteam.util.NetHookNetworkListener;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,8 +35,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 
 /**

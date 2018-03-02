@@ -18,8 +18,8 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.ServerListCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;

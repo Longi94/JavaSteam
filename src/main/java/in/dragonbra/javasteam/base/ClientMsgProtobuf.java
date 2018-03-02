@@ -4,10 +4,10 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

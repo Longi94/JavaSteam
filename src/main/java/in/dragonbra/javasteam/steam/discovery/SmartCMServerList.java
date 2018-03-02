@@ -3,13 +3,12 @@ package in.dragonbra.javasteam.steam.discovery;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.steam.webapi.SteamDirectory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Smart list of CM servers.

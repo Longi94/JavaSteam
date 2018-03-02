@@ -23,13 +23,12 @@ import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.compat.Consumer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This handler handles all interaction with other users on the Steam3 network.

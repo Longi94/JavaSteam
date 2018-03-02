@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
+import in.dragonbra.javasteam.util.log.DefaultLogListener;
+import in.dragonbra.javasteam.util.log.LogManager;
 import org.junit.BeforeClass;
 
 /**
@@ -11,6 +11,6 @@ import org.junit.BeforeClass;
 public class TestBase {
     @BeforeClass
     public static void beforeClass() {
-        Configurator.setRootLevel(Level.DEBUG);
+        LogManager.addListener(new DefaultLogListener());
     }
 }

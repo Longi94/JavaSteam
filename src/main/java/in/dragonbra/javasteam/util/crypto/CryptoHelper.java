@@ -3,11 +3,11 @@ package in.dragonbra.javasteam.util.crypto;
 import in.dragonbra.javasteam.enums.EOSType;
 import in.dragonbra.javasteam.util.Passable;
 import in.dragonbra.javasteam.util.Utils;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
