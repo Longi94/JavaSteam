@@ -165,6 +165,7 @@ public abstract class CMClient {
                 connection.getDisconnected().addEventHandler(disconnected);
                 connection.connect(cmServer.getEndpoint());
             } catch (Exception e) {
+                logger.debug("Failed to connect to Steam network", e);
                 onClientDisconnected(false);
             }
         }
