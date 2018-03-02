@@ -9,6 +9,8 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public class Utils {
 
+    private static final String JAVA_RUNTIME = getSystemProperty("java.runtime.name");
+
     public static EOSType getOSType() {
         if (SystemUtils.IS_OS_WINDOWS_7) {
             return EOSType.Windows7;
@@ -82,6 +84,9 @@ public class Utils {
         if (SystemUtils.IS_OS_MAC) {
             return EOSType.MacOSUnknown;
         }
+        if (JAVA_RUNTIME != null && JAVA_RUNTIME.startsWith("Android")) {
+            return EOSType.AndroidUnknown;
+        }
         if (SystemUtils.IS_OS_LINUX) {
             return EOSType.LinuxUnknown;
         }
@@ -90,5 +95,14 @@ public class Utils {
 
     private static boolean checkOS(String namePrefix, String versionPrefix) {
         return SystemUtils.OS_NAME.startsWith(namePrefix) && SystemUtils.OS_VERSION.startsWith(versionPrefix);
+    }
+
+    private static String getSystemProperty(final String property) {
+        try {
+            return System.getProperty(property);
+        } catch (final SecurityException ex) {
+            // we are not allowed to look at this property
+            return null;
+        }
     }
 }
