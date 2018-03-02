@@ -66,7 +66,7 @@ public class SteamConfiguration {
     }
 
     /**
-     * @return The default persona state flags used when requesting information for a new friend, or when calling <c>SteamFriends.RequestFriendInfo</c> without specifying flags.
+     * @return The default persona state flags used when requesting information for a new friend, or when calling <b>SteamFriends.RequestFriendInfo</b> without specifying flags.
      */
     public int getDefaultPersonaStateFlags() {
         return state.getDefaultPersonaStateFlags();

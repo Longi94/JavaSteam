@@ -4,8 +4,6 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.io.IOException;
-
 /**
  * Represents a unified interface into client messages.
  */
@@ -14,7 +12,7 @@ public interface IClientMsg {
     /**
      * Gets a value indicating whether this client message is protobuf backed.
      *
-     * @return <c>true</c> if this instance is protobuf backed; otherwise, <c>false</c>.
+     * @return <b>true</b> if this instance is protobuf backed; otherwise, <b>false</b>.
      */
     boolean isProto();
 
@@ -85,7 +83,6 @@ public interface IClientMsg {
      * serializes this client message instance to a byte array.
      *
      * @return Data representing a client message.
-     * @throws IOException
      */
     byte[] serialize();
 

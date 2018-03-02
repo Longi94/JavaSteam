@@ -510,7 +510,7 @@ public abstract class CMClient {
     /**
      * Gets a value indicating whether this instance is isConnected to the remote CM server.
      *
-     * @return <c>true</c> if this instance is isConnected; otherwise, <c>false</c>.
+     * @return <b>true</b> if this instance is isConnected; otherwise, <b>false</b>.
      */
     public boolean isConnected() {
         return isConnected;
@@ -525,7 +525,7 @@ public abstract class CMClient {
 
     /**
      * Gets the Steam recommended Cell ID of this client. This value is assigned after a logon attempt has succeeded.
-     * This value will be <c>null</c> if the client is logged off of Steam.
+     * This value will be <b>null</b> if the client is logged off of Steam.
      */
     public Integer getCellID() {
         return cellID;
@@ -533,7 +533,7 @@ public abstract class CMClient {
 
     /**
      * Gets the session ID of this client. This value is assigned after a logon attempt has succeeded.
-     * This value will be <c>null</c> if the client is logged off of Steam.
+     * This value will be <b>null</b> if the client is logged off of Steam.
      *
      * @return The session ID.
      */
@@ -543,7 +543,7 @@ public abstract class CMClient {
 
     /**
      * Gets the SteamID of this client. This value is assigned after a logon attempt has succeeded.
-     * This value will be <c>null</c> if the client is logged off of Steam.
+     * This value will be <b>null</b> if the client is logged off of Steam.
      *
      * @return The SteamID.
      */

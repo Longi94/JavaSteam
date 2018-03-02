@@ -10,8 +10,10 @@ buildscript {
 }
 
 group 'in.dragonbra'
-version '2.0.0-SNAPSHOT1'
+version '1.0.0-SNAPSHOT'
 
+apply plugin: 'maven'
+apply plugin: 'signing'
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'jacoco'
@@ -53,9 +55,72 @@ sourceSets {
     main {
         java {
             srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
+            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
         }
     }
 }
 
 compileJava.dependsOn generateSteamLanguage
 check.dependsOn jacocoTestReport
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+            pom.project {
+                name 'JavaSteam'
+                packaging 'jar'
+                description 'Java library to interact with Valve\'s Steam network.'
+                url 'https://github.com/Longi94/JavaSteam'
+                inceptionYear '2018'
+
+                scm {
+                    connection 'scm:git:git://github.com/Longi94/JavaSteam.git'
+                    developerConnection 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
+                    url 'http://github.com/Longi94/JavaSteam/tree/master'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT License'
+                        url 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'Longi'
+                        name 'Long Tran'
+                        email 'lngtrn94@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}

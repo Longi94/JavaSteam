@@ -67,3 +67,4 @@ crashlytics-build.properties
 fabric.properties
 
 /netlogs/
+/gradle.properties

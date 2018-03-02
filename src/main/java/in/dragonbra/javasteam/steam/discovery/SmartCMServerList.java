@@ -208,7 +208,7 @@ public class SmartCMServerList {
     /**
      * Gets the {@link ServerRecord ServerRecords} of all servers in the server list.
      *
-     * @return An {@link List<ServerRecord>} array contains the {@link ServerRecord ServerRecords} of the servers in the list
+     * @return An {@link List} array contains the {@link ServerRecord ServerRecords} of the servers in the list
      */
     public List<ServerRecord> getAllEndPoints() {
         try {
