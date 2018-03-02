@@ -598,7 +598,12 @@ public class SteamID {
         }
 
         public static ChatInstanceFlags from(long code) {
-            return Arrays.stream(ChatInstanceFlags.values()).filter(x -> x.code == code).findFirst().orElse(null);
+            for (ChatInstanceFlags e : ChatInstanceFlags.values()) {
+                if (e.code == code) {
+                    return e;
+                }
+            }
+            return null;
         }
     }
 }

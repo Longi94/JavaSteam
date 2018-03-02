@@ -2,12 +2,12 @@ package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.io.Closeable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * This class is a utility for routing callbacks to function calls.
@@ -128,9 +128,11 @@ public class CallbackManager implements ICallbackMgrInternals {
     }
 
     private void handle(ICallbackMsg call) {
-        registeredCallbacks.stream()
-                .filter(callback -> callback.getCallbackType().isAssignableFrom(call.getClass()))
-                .forEach(callback -> callback.run(call));
+        for (CallbackBase callback : registeredCallbacks) {
+            if (callback.getCallbackType().isAssignableFrom(call.getClass())) {
+                callback.run(call);
+            }
+        }
     }
 
 }

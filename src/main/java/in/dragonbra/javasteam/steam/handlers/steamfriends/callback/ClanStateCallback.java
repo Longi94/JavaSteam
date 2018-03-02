@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.Event;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -57,10 +58,16 @@ public class ClanStateCallback extends CallbackMsg {
             memberInGameCount = msg.getUserCounts().getInGame();
         }
 
-        List<Event> events = msg.getEventsList().stream().map(Event::new).collect(Collectors.toList());
+        events = new ArrayList<>();
+        for (CMsgClientClanState.Event event : msg.getEventsList()) {
+            events.add(new Event(event));
+        }
         this.events = Collections.unmodifiableList(events);
 
-        List<Event> announcements = msg.getAnnouncementsList().stream().map(Event::new).collect(Collectors.toList());
+        announcements = new ArrayList<>();
+        for (CMsgClientClanState.Event event : msg.getAnnouncementsList()) {
+            announcements.add(new Event(event));
+        }
         this.announcements = Collections.unmodifiableList(announcements);
     }
 

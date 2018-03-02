@@ -388,7 +388,12 @@ public class UdpConnection extends Connection {
                 outSeqSent = outSeqAcked;
             }
 
-            outPackets.removeIf(p -> p.getHeader().getSeqThis() <= outSeqAcked);
+            Iterator<UdpPacket> iter = outPackets.iterator();
+            while (iter.hasNext()) {
+                if (iter.next().getHeader().getSeqThis() <= outSeqAcked) {
+                    iter.remove();
+                }
+            }
             nextResend = System.currentTimeMillis() + RESEND_DELAY;
         }
 

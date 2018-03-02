@@ -20,7 +20,7 @@ public class SmartCMServerList {
 
     private final SteamConfiguration configuration;
 
-    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
+    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<ServerInfo>());
 
     private Long badConnectionMemoryTimeSpan;
 
@@ -44,7 +44,7 @@ public class SmartCMServerList {
         logger.debug("Resolving server list");
 
         Enumeration<ServerRecord> serverList = configuration.getServerListProvider().fetchServerList();
-        List<ServerRecord> endPoints = serverList == null ? new ArrayList<>() : Collections.list(serverList);
+        List<ServerRecord> endPoints = serverList == null ? new ArrayList<ServerRecord>() : Collections.list(serverList);
 
         if (endPoints.isEmpty() && configuration.isAllowDirectoryFetch()) {
             logger.debug("Server list provider had no entries, will query SteamDirectory");
@@ -65,11 +65,11 @@ public class SmartCMServerList {
 
         final long cutoff = System.currentTimeMillis() - badConnectionMemoryTimeSpan;
 
-        servers.forEach(serverInfo -> {
+        for (ServerInfo serverInfo : servers) {
             if (serverInfo.getLastBadConnection() != null && serverInfo.getLastBadConnection().getTime() < cutoff) {
                 serverInfo.setLastBadConnection(null);
             }
-        });
+        }
     }
 
     /**
@@ -84,7 +84,9 @@ public class SmartCMServerList {
 
         servers.clear();
 
-        endPoints.forEach(this::addCore);
+        for (ServerRecord endPoint : endPoints) {
+            addCore(endPoint);
+        }
 
         configuration.getServerListProvider().updateServerList(endPoints);
     }
@@ -99,7 +101,9 @@ public class SmartCMServerList {
      * Explicitly resets the known state of all servers.
      */
     public void resetBadServers() {
-        servers.forEach(serverInfo -> serverInfo.setLastBadConnection(null));
+        for (ServerInfo serverInfo : servers) {
+            serverInfo.setLastBadConnection(null);
+        }
     }
 
     public boolean tryMark(InetSocketAddress endPoint, ProtocolTypes protocolTypes, ServerQuality quality) {
@@ -107,10 +111,16 @@ public class SmartCMServerList {
     }
 
     public boolean tryMark(InetSocketAddress endPoint, EnumSet<ProtocolTypes> protocolTypes, ServerQuality quality) {
-        List<ServerInfo> serverInfos = servers.stream().filter(x -> x.getRecord().getEndpoint().equals(endPoint) &&
-                protocolTypes.contains(x.getProtocol())).collect(Collectors.toList());
+        List<ServerInfo> serverInfos = new ArrayList<>();
+        for (ServerInfo x : servers) {
+            if (x.getRecord().getEndpoint().equals(endPoint) && protocolTypes.contains(x.getProtocol())) {
+                serverInfos.add(x);
+            }
+        }
 
-        serverInfos.forEach(serverInfo -> markServerCore(serverInfo, quality));
+        for (ServerInfo serverInfo : serverInfos) {
+            markServerCore(serverInfo, quality);
+        }
 
         return serverInfos.size() > 0;
     }
@@ -135,29 +145,37 @@ public class SmartCMServerList {
     private ServerRecord getNextServerCandidateInternal(EnumSet<ProtocolTypes> supportedProtocolTypes) {
         resetOldScores();
 
-        ServerInfo result = servers.stream()
-                .filter(serverInfo -> supportedProtocolTypes.contains(serverInfo.getProtocol()))
-                .sorted((o1, o2) -> {
-                    if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
-                        return 1;
-                    }
+        List<ServerInfo> serverInfos = new ArrayList<>();
+        for (ServerInfo serverInfo : servers) {
+            if (supportedProtocolTypes.contains(serverInfo.getProtocol())) {
+                serverInfos.add(serverInfo);
+            }
+        }
 
-                    if (o1.getLastBadConnection() == null) {
-                        return -1;
-                    }
+        Collections.sort(serverInfos, new Comparator<ServerInfo>() {
+            @Override
+            public int compare(ServerInfo o1, ServerInfo o2) {
+                if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
+                    return 1;
+                }
 
-                    if (o2.getLastBadConnection() == null) {
-                        return 1;
-                    }
+                if (o1.getLastBadConnection() == null) {
+                    return -1;
+                }
 
-                    return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
-                })
-                .findFirst()
-                .orElse(null);
+                if (o2.getLastBadConnection() == null) {
+                    return 1;
+                }
 
-        if (result == null) {
+                return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
+            }
+        });
+
+        if (serverInfos.isEmpty()) {
             return null;
         }
+
+        ServerInfo result = serverInfos.get(0);
 
         return new ServerRecord(result.getRecord().getEndpoint(), result.getProtocol());
     }
@@ -190,6 +208,7 @@ public class SmartCMServerList {
 
     /**
      * Gets the {@link ServerRecord ServerRecords} of all servers in the server list.
+     *
      * @return An {@link List<ServerRecord>} array contains the {@link ServerRecord ServerRecords} of the servers in the list
      */
     public List<ServerRecord> getAllEndPoints() {
@@ -199,7 +218,16 @@ public class SmartCMServerList {
             return new ArrayList<>();
         }
 
-        return servers.stream().map(ServerInfo::getRecord).distinct().collect(Collectors.toList());
+        List<ServerRecord> serverRecords = new ArrayList<>();
+
+        for (ServerInfo server : servers) {
+            ServerRecord record = server.getRecord();
+            if (!serverRecords.contains(record)) {
+                serverRecords.add(record);
+            }
+        }
+
+        return serverRecords;
     }
 
     public long getBadConnectionMemoryTimeSpan() {

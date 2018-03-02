@@ -23,11 +23,11 @@ import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.HardwareUtils;
 import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.Strings;
+import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * This handler handles all user log on/log off related actions and callbacks.
@@ -39,15 +39,60 @@ public class SteamUser extends ClientMsgHandler {
     public SteamUser() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientLogOnResponse, this::handleLogOnResponse);
-        dispatchMap.put(EMsg.ClientLoggedOff, this::handleLoggedOff);
-        dispatchMap.put(EMsg.ClientNewLoginKey, this::handleLoginKey);
-        dispatchMap.put(EMsg.ClientSessionToken, this::handleSessionToken);
-        dispatchMap.put(EMsg.ClientUpdateMachineAuth, this::handleUpdateMachineAuth);
-        dispatchMap.put(EMsg.ClientAccountInfo, this::handleAccountInfo);
-        dispatchMap.put(EMsg.ClientWalletInfoUpdate, this::handleWalletInfo);
-        dispatchMap.put(EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse, this::handleWebAPIUserNonce);
-        dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, this::handleMarketingMessageUpdate);
+        dispatchMap.put(EMsg.ClientLogOnResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleLogOnResponse(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientLoggedOff, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleLoggedOff(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientNewLoginKey, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleLoginKey(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientSessionToken, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleSessionToken(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientUpdateMachineAuth, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleUpdateMachineAuth(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientAccountInfo, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleAccountInfo(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientWalletInfoUpdate, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleWalletInfo(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleWebAPIUserNonce(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleMarketingMessageUpdate(packetMsg);
+            }
+        });
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

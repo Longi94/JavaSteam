@@ -60,14 +60,14 @@ public class SteamDirectory {
 
         List<ServerRecord> records = new ArrayList<>();
 
-        socketList.forEach(socket -> {
+        for (String socket : socketList) {
             String[] split = socket.split(":");
             records.add(ServerRecord.createSocketServer(new InetSocketAddress(split[0], Integer.parseInt(split[1]))));
-        });
+        }
 
-        webSocketList.forEach(socket -> {
+        for (String socket : webSocketList) {
             records.add(ServerRecord.createWebSocketServer(socket));
-        });
+        }
 
         return records;
     }

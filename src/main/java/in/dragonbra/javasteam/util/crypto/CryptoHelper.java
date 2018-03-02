@@ -82,7 +82,7 @@ public class CryptoHelper {
      * Decrypts using AES/CBC/PKCS7 with an input byte array and key, using the random IV prepended using AES/ECB/None
      */
     public static byte[] symmetricDecrypt(byte[] input, byte[] key) throws CryptoException {
-        return symmetricDecrypt(input, key, new Passable<>());
+        return symmetricDecrypt(input, key, new Passable<byte[]>());
     }
 
     /**

@@ -17,12 +17,12 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ServerListCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.util.compat.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 /**
  * Represents a single client that connects to the Steam3 network.
@@ -64,10 +64,30 @@ public class SteamClient extends CMClient {
 
         processStartTime = new Date();
 
-        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
-        dispatchMap.put(EMsg.ClientServerList, this::handleServerList);
-        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
-        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
+        dispatchMap.put(EMsg.ClientCMList, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleCMList(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientServerList, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleServerList(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.JobHeartbeat, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleJobHeartbeat(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.DestJobFailed, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleJobFailed(packetMsg);
+            }
+        });
     }
 
     /**

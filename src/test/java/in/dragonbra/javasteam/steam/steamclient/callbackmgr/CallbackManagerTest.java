@@ -3,13 +3,13 @@ package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.util.compat.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static org.junit.Assert.*;
 
@@ -34,7 +34,12 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                didCall[0] = true;
+            }
+        };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
             postAndRunCallback(callback);
@@ -47,15 +52,18 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbackTriggersAction_CatchAll() {
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackMsg> action = cb -> {
-            assertTrue(cb instanceof CallbackForTest);
-            CallbackForTest cft = (CallbackForTest) cb;
-            assertEquals(callback.getUuid(), cft.getUuid());
-            didCall[0] = true;
+        Consumer<CallbackMsg> action = new Consumer<CallbackMsg>() {
+            @Override
+            public void accept(CallbackMsg cb) {
+                assertTrue(cb instanceof CallbackForTest);
+                CallbackForTest cft = (CallbackForTest) cb;
+                assertEquals(callback.getUuid(), cft.getUuid());
+                didCall[0] = true;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
@@ -69,16 +77,19 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbackTriggersActionForExplicitJobIDInvalid() {
-        JobID jobID = new JobID(123456);
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final JobID jobID = new JobID(123456);
+        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
         callback.setJobID(jobID);
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                assertEquals(jobID, cb.getJobID());
+                assertEquals(callback.getUuid(), cb.getUuid());
+                didCall[0] = true;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, JobID.INVALID, action)) {
@@ -92,16 +103,19 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbackWithJobIDTriggersActionWhenNoJobIDSpecified() {
-        JobID jobID = new JobID(123456);
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final JobID jobID = new JobID(123456);
+        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
         callback.setJobID(jobID);
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                assertEquals(jobID, cb.getJobID());
+                assertEquals(callback.getUuid(), cb.getUuid());
+                didCall[0] = true;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
@@ -121,7 +135,12 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                didCall[0] = true;
+            }
+        };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), action)) {
             postAndRunCallback(callback);
@@ -134,16 +153,19 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbackWithJobIDTriggersCallbackForJobID() {
-        JobID jobID = new JobID(123456);
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final JobID jobID = new JobID(123456);
+        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
         callback.setJobID(jobID);
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                assertEquals(jobID, cb.getJobID());
+                assertEquals(callback.getUuid(), cb.getUuid());
+                didCall[0] = true;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123456), action)) {
@@ -161,8 +183,11 @@ public class CallbackManagerTest extends TestBase {
 
         final int[] callCount = {0};
 
-        Consumer<CallbackForTest> action = cb -> {
-            callCount[0]++;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                callCount[0]++;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
@@ -177,13 +202,16 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbacksTriggerActions() {
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
 
         final int[] numCallbacksRun = {0};
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(callback.getUuid(), cb.getUuid());
-            numCallbacksRun[0]++;
+        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
+            @Override
+            public void accept(CallbackForTest cb) {
+                assertEquals(callback.getUuid(), cb.getUuid());
+                numCallbacksRun[0]++;
+            }
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {

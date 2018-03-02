@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFri
 import in.dragonbra.javasteam.steam.handlers.steamfriends.Friend;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +20,10 @@ public class FriendsListCallback extends CallbackMsg {
     public FriendsListCallback(CMsgClientFriendsList.Builder msg) {
         incremental = msg.getBincremental();
 
-        List<Friend> list = msg.getFriendsList().stream().map(Friend::new).collect(Collectors.toList());
+        List<Friend> list = new ArrayList<>();
+        for (CMsgClientFriendsList.Friend friend : msg.getFriendsList()) {
+            list.add(new Friend(friend));
+        }
 
         friendList = Collections.unmodifiableList(list);
     }

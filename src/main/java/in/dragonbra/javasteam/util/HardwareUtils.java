@@ -167,7 +167,7 @@ public class HardwareUtils {
                 return null;
             }
             while ((line = br.readLine()) != null) {
-                if (line.indexOf(marker) != -1) {
+                if (line.contains(marker)) {
                     sn = line.split(marker)[1].replaceAll("\\(string\\)|(\\')", "").trim();
                     break;
                 }

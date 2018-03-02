@@ -1,9 +1,9 @@
 package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 
 import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.io.Closeable;
-import java.util.function.Consumer;
 
 public class Callback<TCall extends ICallbackMsg> extends CallbackBase implements Closeable {
 

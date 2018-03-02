@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -22,15 +23,15 @@ public class CMListCallback extends CallbackMsg {
     public CMListCallback(CMsgClientCMList.Builder cmMsg) {
         List<Integer> addresses = cmMsg.getCmAddressesList();
         List<Integer> ports = cmMsg.getCmPortsList();
-        List<ServerRecord> cmList = IntStream.range(0, Math.min(addresses.size(), ports.size()))
-                .mapToObj(i -> ServerRecord.createSocketServer(new InetSocketAddress(NetHelpers.getIPAddress(addresses.get(i)), ports.get(i))))
-                .collect(Collectors.toList());
 
-        List<ServerRecord> webSocketList = cmMsg.getCmWebsocketAddressesList().stream()
-                .map(ServerRecord::createWebSocketServer)
-                .collect(Collectors.toList());
+        List<ServerRecord> cmList = new ArrayList<>();
+        for (int i = 0; i < Math.min(addresses.size(), ports.size()); i++) {
+            cmList.add(ServerRecord.createSocketServer(new InetSocketAddress(NetHelpers.getIPAddress(addresses.get(i)), ports.get(i))));
+        }
 
-        cmList.addAll(webSocketList);
+        for (String s : cmMsg.getCmWebsocketAddressesList()) {
+            cmList.add(ServerRecord.createWebSocketServer(s));
+        }
 
         servers = Collections.unmodifiableCollection(cmList);
     }

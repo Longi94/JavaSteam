@@ -1,6 +1,5 @@
 package in.dragonbra.javasteam.types;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -238,7 +237,12 @@ public class GameID {
         }
 
         public static GameType from(int code) {
-            return Arrays.stream(values()).filter(value -> code == value.code()).findFirst().orElse(null);
+            for (GameType e : GameType.values()) {
+                if (e.code == code) {
+                    return e;
+                }
+            }
+            return null;
         }
     }
 }

@@ -17,7 +17,7 @@ apply plugin: 'com.google.protobuf'
 apply plugin: 'jacoco'
 apply plugin: SteamLanguageGenPlugin
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.7
 
 repositories {
     mavenCentral()

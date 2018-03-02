@@ -18,17 +18,16 @@ public class ServerListCallback extends CallbackMsg {
     private final Map<EServerType, Collection<InetSocketAddress>> servers = new HashMap<>();
 
     public ServerListCallback(CMsgClientServerList.Builder serverList) {
-        Map<Integer, List<CMsgClientServerList.Server>> collect = serverList.getServersList().stream()
-                .collect(Collectors.groupingBy(CMsgClientServerList.Server::getServerType));
+        for (CMsgClientServerList.Server s : serverList.getServersList()) {
+            EServerType type = EServerType.from(s.getServerType());
+            if (!servers.containsKey(type)) {
+                servers.put(type, new ArrayList<InetSocketAddress>());
+            }
 
-        collect.forEach((code, servers1) -> {
-            EServerType type = EServerType.from(code);
-
-            List<InetSocketAddress> collect1 = servers1.stream().map(s -> new InetSocketAddress(NetHelpers.getIPAddress(s.getServerIp()), s.getServerPort()))
-                    .collect(Collectors.toList());
-
-            servers.put(type, Collections.unmodifiableCollection(collect1));
-        });
+            servers.get(type).add(new InetSocketAddress(
+                    NetHelpers.getIPAddress(s.getServerIp()), s.getServerPort()
+            ));
+        }
     }
 
     public Map<EServerType, Collection<InetSocketAddress>> getServers() {

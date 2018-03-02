@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -30,14 +31,13 @@ public class FriendMsgHistoryCallback extends CallbackMsg {
 
         steamID = new SteamID(msg.getSteamid());
 
-        List<FriendMessage> messages = msg.getMessagesList().stream()
-                .map(m -> {
-                    SteamID senderID = new SteamID(m.getAccountid(), universe, EAccountType.Individual);
-                    Date timestamp = new Date(m.getTimestamp() * 1000L);
+        List<FriendMessage> messages = new ArrayList<>();
+        for (CMsgClientChatGetFriendMessageHistoryResponse.FriendMessage m : msg.getMessagesList()) {
+            SteamID senderID = new SteamID(m.getAccountid(), universe, EAccountType.Individual);
+            Date timestamp = new Date(m.getTimestamp() * 1000L);
 
-                    return new FriendMessage(senderID, m.getUnread(), m.getMessage(), timestamp);
-                })
-                .collect(Collectors.toList());
+            messages.add(new FriendMessage(senderID, m.getUnread(), m.getMessage(), timestamp));
+        }
 
         this.messages = Collections.unmodifiableList(messages);
     }

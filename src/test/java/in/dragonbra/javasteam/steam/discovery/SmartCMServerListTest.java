@@ -2,7 +2,9 @@ package in.dragonbra.javasteam.steam.discovery;
 
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
+import in.dragonbra.javasteam.steam.steamclient.configuration.ISteamConfigurationBuilder;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
+import in.dragonbra.javasteam.util.compat.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +26,12 @@ public class SmartCMServerListTest extends TestBase {
 
     @Before
     public void setUp() {
-        SteamConfiguration configuration = SteamConfiguration.create(b -> b.withDirectoryFetch(false));
+        SteamConfiguration configuration = SteamConfiguration.create(new Consumer<ISteamConfigurationBuilder>() {
+            @Override
+            public void accept(ISteamConfigurationBuilder b) {
+                b.withDirectoryFetch(false);
+            }
+        });
         serverList = new SmartCMServerList(configuration);
     }
 

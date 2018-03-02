@@ -68,7 +68,12 @@ public class KeyValue {
             throw new IllegalArgumentException("key is null");
         }
 
-        return children.stream().filter(c -> key.equalsIgnoreCase(c.name)).findFirst().orElse(INVALID);
+        for (KeyValue c : children) {
+            if (key.equalsIgnoreCase(c.name)) {
+                return c;
+            }
+        }
+        return INVALID;
     }
 
 
@@ -80,8 +85,12 @@ public class KeyValue {
             throw new IllegalArgumentException("key is null");
         }
 
-        children.stream().filter(c -> key.equalsIgnoreCase(c.name)).findFirst()
-                .ifPresent(existingChild -> children.remove(existingChild));
+        Iterator<KeyValue> iter = children.iterator();
+        while (iter.hasNext()) {
+            if (key.equalsIgnoreCase(iter.next().name)) {
+                iter.remove();
+            }
+        }
 
         value.setName(key);
         children.add(value);
@@ -674,7 +683,12 @@ public class KeyValue {
         }
 
         public static Type from(byte code) {
-            return Arrays.stream(Type.values()).filter(x -> x.code == code).findFirst().orElse(null);
+            for (Type e : Type.values()) {
+                if (e.code == code) {
+                    return e;
+                }
+            }
+            return null;
         }
     }
 }

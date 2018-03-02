@@ -662,16 +662,30 @@ class JavaGen implements Closeable, Flushable {
         writer.writeln()
         if (flags) {
             writer.writeln "public static EnumSet<${this.node.name}> from($type code) {"
-            writer.writeln "    return Arrays.stream(${this.node.name}.values()).filter(x -> (x.code & code) == x.code)"
-            writer.writeln "            .collect(Collectors.toCollection(() -> EnumSet.noneOf(${this.node.name}.class)));"
+            writer.writeln "    EnumSet<${this.node.name}> set = EnumSet.noneOf(${this.node.name}.class);"
+            writer.writeln "    for (${this.node.name} e : ${this.node.name}.values()) {"
+            writer.writeln '        if ((e.code & code) == e.code) {'
+            writer.writeln '            set.add(e);'
+            writer.writeln '        }'
+            writer.writeln '    }'
+            writer.writeln '    return set;'
             writer.writeln '}'
             writer.writeln()
             writer.writeln "public static $type code(EnumSet<${this.node.name}> flags) {"
-            writer.writeln '    return flags.stream().map(flag -> flag.code).reduce(0, (a, b) -> a | b);'
+            writer.writeln "    $type code = 0;"
+            writer.writeln "    for (${this.node.name} flag : flags) {"
+            writer.writeln '        code |= flag.code;'
+            writer.writeln '    }'
+            writer.writeln '    return code;'
             writer.writeln '}'
         } else {
             writer.writeln "public static ${this.node.name} from($type code) {"
-            writer.writeln "    return Arrays.stream(${this.node.name}.values()).filter(x -> x.code == code).findFirst().orElse(null);"
+            writer.writeln "    for (${this.node.name} e : ${this.node.name}.values()) {"
+            writer.writeln '        if (e.code == code) {'
+            writer.writeln '            return e;'
+            writer.writeln '        }'
+            writer.writeln '    }'
+            writer.writeln '    return null;'
             writer.writeln '}'
         }
     }

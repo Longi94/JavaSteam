@@ -13,9 +13,9 @@ import java.util.Map;
 public class AccountCache {
     private User localUser = new User();
 
-    private Map<SteamID, User> users = Collections.synchronizedMap(new HashMap<>());
+    private Map<SteamID, User> users = Collections.synchronizedMap(new HashMap<SteamID, User>());
 
-    private Map<SteamID, Clan> clans = Collections.synchronizedMap(new HashMap<>());
+    private Map<SteamID, Clan> clans = Collections.synchronizedMap(new HashMap<SteamID, Clan>());
 
     public User getUser(SteamID steamID) {
         if (isLocalUser(steamID)) {
