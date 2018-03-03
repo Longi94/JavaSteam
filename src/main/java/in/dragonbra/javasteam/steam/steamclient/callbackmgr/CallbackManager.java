@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.io.Closeable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +19,7 @@ public class CallbackManager implements ICallbackMgrInternals {
 
     private SteamClient steamClient;
 
-    private Set<CallbackBase> registeredCallbacks = new HashSet<>();
+    private Set<CallbackBase> registeredCallbacks = Collections.synchronizedSet(new HashSet<CallbackBase>());
 
     /**
      * Initializes a new instance of the {@link CallbackManager} class.
