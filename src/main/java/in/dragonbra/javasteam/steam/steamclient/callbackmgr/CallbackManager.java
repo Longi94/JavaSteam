@@ -6,9 +6,9 @@ import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.io.Closeable;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is a utility for routing callbacks to function calls.
@@ -19,7 +19,7 @@ public class CallbackManager implements ICallbackMgrInternals {
 
     private SteamClient steamClient;
 
-    private Set<CallbackBase> registeredCallbacks = Collections.synchronizedSet(new HashSet<CallbackBase>());
+    private Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<CallbackBase, Boolean>());
 
     /**
      * Initializes a new instance of the {@link CallbackManager} class.
