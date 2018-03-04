@@ -4,10 +4,11 @@ import in.dragonbra.javasteam.enums.EFriendRelationship;
 import in.dragonbra.javasteam.enums.EPersonaState;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.Friend;
+import in.dragonbra.javasteam.steam.handlers.steamfriends.PersonaState;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendAddedCallback;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendsListCallback;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStateCallback;
+import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStatesCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback;
@@ -81,7 +82,7 @@ public class SampleFriends implements Runnable {
 
         manager.subscribe(AccountInfoCallback.class, this::anAccountInfo);
         manager.subscribe(FriendsListCallback.class, this::onFriendList);
-        manager.subscribe(PersonaStateCallback.class, this::onPersonaState);
+        manager.subscribe(PersonaStatesCallback.class, this::onPersonaStates);
         manager.subscribe(FriendAddedCallback.class, this::onFriendAdded);
 
         isRunning = true;
@@ -178,10 +179,12 @@ public class SampleFriends implements Runnable {
         System.out.println(callback.getPersonaName() + " is now a friend");
     }
 
-    private void onPersonaState(PersonaStateCallback callback) {
+    private void onPersonaStates(PersonaStatesCallback callback) {
         // this callback is received when the persona state (friend information) of a friend changes
 
         // for this sample we'll simply display the names of the friends
-        System.out.println("State change: " + callback.getName() + " " + callback.getState());
+        for (PersonaState state : callback.getPersonaStates()) {
+            System.out.println("State change: " + state.getName() + " " + state.getState());
+        }
     }
 }

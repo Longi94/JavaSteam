@@ -673,7 +673,7 @@ public class SteamFriends extends ClientMsgHandler {
 
     /**
      * Requests persona state for a list of specified SteamID.
-     * Results are returned in {@link PersonaStateCallback}.
+     * Results are returned in {@link PersonaState}.
      *
      * @param steamIdList   A list of SteamIDs to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses {@link SteamConfiguration#getDefaultPersonaStateFlags()}.
@@ -699,7 +699,7 @@ public class SteamFriends extends ClientMsgHandler {
 
     /**
      * Requests persona state for a specified SteamID.
-     * Results are returned in {@link PersonaStateCallback}.
+     * Results are returned in {@link PersonaState}.
      *
      * @param steamID       A SteamID to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses {@link SteamConfiguration#getDefaultPersonaStateFlags()}.
@@ -938,9 +938,7 @@ public class SteamFriends extends ClientMsgHandler {
             // TODO: 2018-02-26 cache other details/account types?
         }
 
-        for (CMsgClientPersonaState.Friend friend : persState.getBody().getFriendsList()) {
-            client.postCallback(new PersonaStateCallback(friend));
-        }
+        client.postCallback(new PersonaStatesCallback(persState.getBody()));
     }
 
     private void handleClanState(IPacketMsg packetMsg) {

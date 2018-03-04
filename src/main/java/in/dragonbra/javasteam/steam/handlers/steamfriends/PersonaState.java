@@ -1,10 +1,9 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package in.dragonbra.javasteam.steam.handlers.steamfriends;
 
 import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EPersonaState;
 import in.dragonbra.javasteam.enums.EPersonaStateFlag;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientPersonaState;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.NetHelpers;
@@ -14,9 +13,9 @@ import java.util.Date;
 import java.util.EnumSet;
 
 /**
- * This callback is fired in response to someone changing their friend details over the network.
+ * Represents the persone state of a friend.
  */
-public class PersonaStateCallback extends CallbackMsg {
+public class PersonaState {
     private EnumSet<EClientPersonaStateFlag> statusFlags;
 
     private SteamID friendID;
@@ -57,7 +56,7 @@ public class PersonaStateCallback extends CallbackMsg {
 
     private int publishedSessionID;
 
-    public PersonaStateCallback(CMsgClientPersonaState.Friend friend) {
+    public PersonaState(CMsgClientPersonaState.Friend friend) {
         statusFlags = EClientPersonaStateFlag.from(friend.getPersonaStateFlags());
 
         friendID = new SteamID(friend.getFriendid());
