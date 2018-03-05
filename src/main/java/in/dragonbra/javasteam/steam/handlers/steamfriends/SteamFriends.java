@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.generated.*;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistory;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryForOfflineMessages;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
@@ -33,6 +34,7 @@ import java.util.*;
 /**
  * This handler handles all interaction with other users on the Steam3 network.
  */
+@SuppressWarnings("unused")
 public class SteamFriends extends ClientMsgHandler {
 
     private static final Logger logger = LogManager.getLogger(SteamFriends.class);
@@ -747,10 +749,10 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     /**
-     * Requests the last few chat messages with a friend.
-     * Results are returned in a {@link FriendMsgHistoryCallback}
+     * Requests profile information for the given {@link SteamID}
+     * Results are returned in a {@link ProfileInfoCallback}
      *
-     * @param steamID
+     * @param steamID The SteamID of the friend to request the details of.
      */
     public void requestProfileInfo(SteamID steamID) {
         if (steamID == null) {
@@ -761,6 +763,25 @@ public class SteamFriends extends ClientMsgHandler {
         request.setSourceJobID(client.getNextJobID());
 
         request.getBody().setSteamidFriend(steamID.convertToUInt64());
+
+        client.send(request);
+    }
+
+    /**
+     * Requests the last few chat messages with a friend.
+     * Results are returned in a {@link FriendMsgHistoryCallback}
+     *
+     * @param steamID SteamID of the friend
+     */
+    public void requestMessageHistory(SteamID steamID) {
+        if (steamID == null) {
+            throw new IllegalArgumentException("steamID is null");
+        }
+
+        ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistory.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistory.class, EMsg.ClientFSGetFriendMessageHistory);
+
+        request.getBody().setSteamid(steamID.convertToUInt64());
 
         client.send(request);
     }

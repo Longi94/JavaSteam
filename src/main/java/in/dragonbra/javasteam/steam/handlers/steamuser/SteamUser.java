@@ -32,6 +32,7 @@ import java.util.Map;
 /**
  * This handler handles all user log on/log off related actions and callbacks.
  */
+@SuppressWarnings("unused")
 public class SteamUser extends ClientMsgHandler {
 
     private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
@@ -133,7 +134,7 @@ public class SteamUser extends ClientMsgHandler {
             logon.getBody().setObfustucatedPrivateIp(details.getLoginID());
         } else {
             int localIp = (int) NetHelpers.getIPAddress(client.getLocalIP());
-            logon.getBody().setObfustucatedPrivateIp((int) (localIp ^ MsgClientLogon.ObfuscationMask));
+            logon.getBody().setObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask);
         }
 
         logon.getProtoHeader().setClientSessionid(0);
@@ -211,7 +212,7 @@ public class SteamUser extends ClientMsgHandler {
         logon.getProtoHeader().setClientSessionid(0);
         logon.getProtoHeader().setSteamid(auId.convertToUInt64());
 
-        logon.getBody().setProtocolVersion((int) MsgClientLogon.CurrentProtocol);
+        logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
         logon.getBody().setClientOsType(details.getClientOSType().code());
         logon.getBody().setClientLanguage(details.getClientLanguage());
         logon.getBody().setCellId(details.getCellID());
