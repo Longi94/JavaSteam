@@ -298,8 +298,7 @@ public abstract class CMClient {
 
     private Connection createConnection(ProtocolTypes protocol) {
         if ((protocol.code() & ProtocolTypes.WEB_SOCKET.code()) > 0) {
-            // TODO: 2018-02-21  
-            //return new WebSocketConnection();
+            return new WebSocketConnection();
         } else if ((protocol.code() & ProtocolTypes.TCP.code()) > 0) {
             return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
         } else if ((protocol.code() & ProtocolTypes.UDP.code()) > 0) {

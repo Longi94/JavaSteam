@@ -3,7 +3,6 @@ package in.dragonbra.javasteam.networking.steam3;
 import in.dragonbra.javasteam.enums.EUdpPacketType;
 import in.dragonbra.javasteam.generated.ChallengeData;
 import in.dragonbra.javasteam.generated.ConnectData;
-import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
@@ -145,9 +144,7 @@ public class UdpConnection extends Connection {
         // Advance this the same way that steam does, when a socket gets reused.
         SOURCE_CONN_ID += 256;
 
-        if (disconnected != null) {
-            disconnected.handleEvent(this, new DisconnectedEventArgs(true));
-        }
+        onDisconnected(true);
     }
 
     @Override
@@ -345,9 +342,7 @@ public class UdpConnection extends Connection {
 
         logger.debug("Dispatchin message: " + data.length + " bytes");
 
-        if (netMsgReceived != null) {
-            netMsgReceived.handleEvent(this, new NetMsgEventArgs(data, currentEndPoint));
-        }
+        onNetMsgReceived(new NetMsgEventArgs(data, currentEndPoint));
 
         return true;
     }
@@ -463,9 +458,7 @@ public class UdpConnection extends Connection {
         remoteConnId = packet.getHeader().getSourceConnID();
         inSeqHandled = packet.getHeader().getSeqThis();
 
-        if (connected != null) {
-            connected.handleEvent(this, EventArgs.EMPTY);
-        }
+        onConnected();
     }
 
     private void receiveData(UdpPacket packet) {
@@ -589,9 +582,7 @@ public class UdpConnection extends Connection {
             }
 
             logger.debug("Celling onDisconnected");
-            if (disconnected != null) {
-                disconnected.handleEvent(this, new DisconnectedEventArgs(userRequestDisconnect));
-            }
+            onDisconnected(userRequestDisconnect);
         }
     }
 
