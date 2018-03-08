@@ -17,9 +17,9 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
     private volatile boolean userInitiated = false;
 
     @Override
-    public void connect(InetSocketAddress endPoint) {
+    public void connect(InetSocketAddress endPoint, int timeout) {
         logger.debug("Connecting to " + endPoint + "...");
-        WebSocketCMClient newClient = new WebSocketCMClient(getUri(endPoint), this);
+        WebSocketCMClient newClient = new WebSocketCMClient(getUri(endPoint), timeout, this);
         WebSocketCMClient oldClient = client.getAndSet(newClient);
         if (oldClient != null) {
             logger.debug("Attempted to connect while already connected. Closing old connection...");

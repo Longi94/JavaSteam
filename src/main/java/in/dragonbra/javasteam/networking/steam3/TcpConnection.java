@@ -107,11 +107,12 @@ public class TcpConnection extends Connection {
     }
 
     @Override
-    public void connect(InetSocketAddress endPoint) {
+    public void connect(InetSocketAddress endPoint, int timeout) {
         synchronized (netLock) {
             try {
                 logger.debug("Connecting to " + endPoint + "...");
-                socket = new Socket(endPoint.getAddress(), endPoint.getPort());
+                socket = new Socket();
+                socket.connect(endPoint, timeout);
 
                 this.destination = endPoint;
 

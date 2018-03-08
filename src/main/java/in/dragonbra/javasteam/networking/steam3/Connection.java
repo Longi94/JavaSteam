@@ -27,23 +27,19 @@ public abstract class Connection {
      */
     Event<DisconnectedEventArgs> disconnected = new Event<>();
 
-    private InetSocketAddress currentEndPoint;
-
-    private ProtocolTypes protocolTypes;
-
-    protected void onNetMsgReceived(NetMsgEventArgs e) {
+    void onNetMsgReceived(NetMsgEventArgs e) {
         if (netMsgReceived != null) {
             netMsgReceived.handleEvent(this, e);
         }
     }
 
-    protected void onConnected() {
+    void onConnected() {
         if (connected != null) {
             connected.handleEvent(this, null);
         }
     }
 
-    protected void onDisconnected(boolean e) {
+    void onDisconnected(boolean e) {
         if (disconnected != null) {
             disconnected.handleEvent(this, new DisconnectedEventArgs(e));
         }
@@ -53,8 +49,18 @@ public abstract class Connection {
      * Connects to the specified end point.
      *
      * @param endPoint The end point to connect to.
+     * @param timeout  Timeout in milliseconds
      */
-    public abstract void connect(InetSocketAddress endPoint);
+    public abstract void connect(InetSocketAddress endPoint, int timeout);
+
+    /**
+     * Connects to the specified end point.
+     *
+     * @param endPoint The end point to connect to.
+     */
+    public final void connect(InetSocketAddress endPoint) {
+        connect(endPoint, 5000);
+    }
 
     /**
      * Disconnects this instance.

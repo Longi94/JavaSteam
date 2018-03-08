@@ -189,8 +189,8 @@ public class EnvelopeEncryptedConnection extends Connection {
     }
 
     @Override
-    public void connect(InetSocketAddress endPoint) {
-        inner.connect(endPoint);
+    public void connect(InetSocketAddress endPoint, int timeout) {
+        inner.connect(endPoint, timeout);
     }
 
     @Override

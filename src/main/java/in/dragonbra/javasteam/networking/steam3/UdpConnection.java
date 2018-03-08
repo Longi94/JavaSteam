@@ -102,7 +102,7 @@ public class UdpConnection extends Connection {
     }
 
     @Override
-    public void connect(InetSocketAddress endPoint) {
+    public void connect(InetSocketAddress endPoint, int timeout) {
         outPackets = new ArrayList<>();
         inPackets = new HashMap<>();
 
@@ -483,7 +483,7 @@ public class UdpConnection extends Connection {
      */
     private class NetLoop implements Runnable {
 
-        public NetLoop(InetSocketAddress endPoint) {
+        NetLoop(InetSocketAddress endPoint) {
             currentEndPoint = endPoint;
         }
 

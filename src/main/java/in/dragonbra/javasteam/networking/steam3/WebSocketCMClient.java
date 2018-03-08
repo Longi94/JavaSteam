@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.networking.steam3;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
@@ -14,8 +15,8 @@ class WebSocketCMClient extends WebSocketClient {
 
     private final WSListener listener;
 
-    WebSocketCMClient(URI serverUri, WSListener listener) {
-        super(serverUri);
+    WebSocketCMClient(URI serverUri, int timeout, WSListener listener) {
+        super(serverUri, new Draft_6455(), null, timeout);
         this.listener = listener;
     }
 
