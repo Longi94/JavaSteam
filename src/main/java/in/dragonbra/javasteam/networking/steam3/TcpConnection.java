@@ -20,8 +20,6 @@ public class TcpConnection extends Connection {
 
     private static final int MAGIC = 0x31305456; // "VT01"
 
-    private InetSocketAddress destination;
-
     private Socket socket;
 
     private InetSocketAddress currentEndPoint;
@@ -49,12 +47,12 @@ public class TcpConnection extends Connection {
 
     private void connectionCompleted(boolean success) {
         if (!success) {
-            logger.debug("Timed out while connecting to " + destination);
+            logger.debug("Timed out while connecting to " + currentEndPoint);
             release(false);
             return;
         }
 
-        logger.debug("Connected to " + destination);
+        logger.debug("Connected to " + currentEndPoint);
 
         try {
             synchronized (netLock) {
@@ -71,7 +69,7 @@ public class TcpConnection extends Connection {
 
             onConnected();
         } catch (IOException e) {
-            logger.debug("Exception while setting up connection to " + destination, e);
+            logger.debug("Exception while setting up connection to " + currentEndPoint, e);
             release(false);
         }
     }
@@ -109,16 +107,15 @@ public class TcpConnection extends Connection {
     @Override
     public void connect(InetSocketAddress endPoint, int timeout) {
         synchronized (netLock) {
+            currentEndPoint = endPoint;
             try {
-                logger.debug("Connecting to " + endPoint + "...");
+                logger.debug("Connecting to " + currentEndPoint + "...");
                 socket = new Socket();
                 socket.connect(endPoint, timeout);
 
-                this.destination = endPoint;
-
                 connectionCompleted(true);
             } catch (IOException e) {
-                logger.debug("Socket exception while completing connection request to " + destination, e);
+                logger.debug("Socket exception while completing connection request to " + currentEndPoint, e);
                 connectionCompleted(false);
             }
         }
@@ -127,7 +124,9 @@ public class TcpConnection extends Connection {
     @Override
     public void disconnect() {
         synchronized (netLock) {
-            netLoop.stop();
+            if (netLoop != null) {
+                netLoop.stop();
+            }
         }
     }
 
@@ -227,7 +226,7 @@ public class TcpConnection extends Connection {
                 try {
                     packData = readPacket();
 
-                    onNetMsgReceived(new NetMsgEventArgs(packData, destination));
+                    onNetMsgReceived(new NetMsgEventArgs(packData, currentEndPoint));
                 } catch (IOException e) {
                     logger.debug("Socket exception occurred while reading packet", e);
                     break;
