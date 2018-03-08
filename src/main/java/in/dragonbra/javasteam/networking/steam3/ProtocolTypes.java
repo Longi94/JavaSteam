@@ -29,7 +29,7 @@ public enum ProtocolTypes {
     public static EnumSet<ProtocolTypes> from(int code) {
         EnumSet<ProtocolTypes> set = EnumSet.noneOf(ProtocolTypes.class);
         for (ProtocolTypes e : ProtocolTypes.values()) {
-            if (e.code == code) {
+            if ((e.code & code) == e.code) {
                 set.add(e);
             }
         }

@@ -1,0 +1,16 @@
+syntax = "proto2";
+
+option java_package = "in.dragonbra.javasteam.protobufs.steam.discovery";
+option java_outer_classname = "BasicServerListProtos";
+
+option optimize_for = SPEED;
+
+message BasicServerList {
+    repeated BasicServer servers = 1;
+}
+
+message BasicServer {
+    required string address = 1;
+    required int32 port = 2;
+    required int32 protocol = 3;
+}

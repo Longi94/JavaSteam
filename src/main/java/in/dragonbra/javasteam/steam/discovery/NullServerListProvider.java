@@ -1,6 +1,5 @@
 package in.dragonbra.javasteam.steam.discovery;
 
-import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -9,7 +8,7 @@ import java.util.List;
  */
 public class NullServerListProvider implements IServerListProvider {
     @Override
-    public Enumeration<ServerRecord> fetchServerList() {
+    public List<ServerRecord> fetchServerList() {
         return null;
     }
 

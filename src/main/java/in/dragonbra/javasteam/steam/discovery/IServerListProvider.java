@@ -1,6 +1,5 @@
 package in.dragonbra.javasteam.steam.discovery;
 
-import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -13,7 +12,7 @@ public interface IServerListProvider {
      *
      * @return A list of IPEndPoints representing servers
      */
-    Enumeration<ServerRecord> fetchServerList();
+    List<ServerRecord> fetchServerList();
 
     /**
      * Update the persistent list of endpoints
