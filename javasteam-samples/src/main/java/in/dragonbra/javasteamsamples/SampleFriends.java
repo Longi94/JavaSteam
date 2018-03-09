@@ -19,6 +19,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.types.SteamID;
+import in.dragonbra.javasteam.util.NetHookNetworkListener;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
@@ -63,6 +64,8 @@ public class SampleFriends implements Runnable {
     public void run() {
         // create our steamclient instance
         steamClient = new SteamClient();
+
+        steamClient.setDebugNetworkListener(new NetHookNetworkListener());
 
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);

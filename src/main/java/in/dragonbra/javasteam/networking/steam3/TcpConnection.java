@@ -125,7 +125,7 @@ public class TcpConnection extends Connection {
     public void disconnect() {
         synchronized (netLock) {
             if (netLoop != null) {
-                netLoop.stop();
+                netLoop.stop(true);
             }
         }
     }
@@ -155,6 +155,12 @@ public class TcpConnection extends Connection {
                 netWriter.write(data);
             } catch (IOException e) {
                 logger.debug("Socket exception while writing data.", e);
+
+                // looks like the only the only way to detect a closed connection is to try and write to it
+                // afaik read also throws an exception if the connection is open but there is nothing to read
+                if (netLoop != null) {
+                    netLoop.stop(false);
+                }
             }
         }
     }
@@ -190,7 +196,10 @@ public class TcpConnection extends Connection {
 
         private volatile boolean cancelRequested = false;
 
-        void stop() {
+        private volatile boolean userRequested = false;
+
+        void stop(boolean userRequested) {
+            this.userRequested = userRequested;
             cancelRequested = true;
         }
 
@@ -236,7 +245,7 @@ public class TcpConnection extends Connection {
             if (cancelRequested) {
                 shutdown();
             }
-            release(cancelRequested);
+            release(cancelRequested && userRequested);
         }
     }
 }
