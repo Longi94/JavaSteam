@@ -131,10 +131,8 @@ class JavaGen implements Closeable, Flushable {
             }
 
         } else if (node instanceof EnumNode) {
-            writer.writeln 'import java.util.Arrays;'
             if ('flags' == ((EnumNode) node).flags) {
                 writer.writeln 'import java.util.EnumSet;'
-                writer.writeln 'import java.util.stream.Collectors;'
             }
         }
     }
