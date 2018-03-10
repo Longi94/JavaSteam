@@ -57,7 +57,7 @@ public class GameID {
      *
      * @param value The app ID.
      */
-    public void setAppID(long value) {
+    public void setAppID(int value) {
         gameId.setMask((short) 0, 0xFFFFFFL, value);
     }
 
@@ -66,8 +66,8 @@ public class GameID {
      *
      * @return The app ID.
      */
-    public long getAppID() {
-        return gameId.getMask((short) 0, 0xFFFFFFL);
+    public int getAppID() {
+        return (int) gameId.getMask((short) 0, 0xFFFFFFL);
     }
 
     /**
