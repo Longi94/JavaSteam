@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamapps;
 
 /**
- * Represents a PICS request used for <see cref="SteamApps.PICSGetProductInfo"/>
+ * Represents a PICS request used for {@link SteamApps#picsGetProductInfo(Iterable, Iterable, boolean)}
  */
 public class PICSRequest {
 
