@@ -14,6 +14,7 @@ import in.dragonbra.javasteam.steam.handlers.steamtrading.callback.TradeResultCa
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +46,8 @@ public class SteamTrading extends ClientMsgHandler {
                 handleStartSession(packetMsg);
             }
         });
+
+        dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }
 
     /**
