@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CM
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
+import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.ICallbackMsg;
@@ -61,6 +62,7 @@ public class SteamClient extends CMClient {
 
         addHandler(new SteamUser());
         addHandler(new SteamFriends());
+        addHandler(new SteamTrading());
 
         processStartTime = new Date();
 
