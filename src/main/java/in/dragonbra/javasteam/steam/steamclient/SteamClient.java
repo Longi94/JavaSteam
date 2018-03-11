@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
+import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator;
 import in.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
@@ -79,6 +80,7 @@ public class SteamClient extends CMClient {
         addHandler(new SteamWorkshop());
         addHandler(new SteamMasterServer());
         addHandler(new SteamGameServer());
+        addHandler(new SteamGameCoordinator());
 
         processStartTime = new Date();
 
@@ -387,7 +389,7 @@ public class SteamClient extends CMClient {
 
     private void handleServerList(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientServerList.Builder> listMsg = new ClientMsgProtobuf<>(CMsgClientServerList.class, packetMsg);
-        
+
         postCallback(new ServerListCallback(listMsg.getBody()));
     }
 

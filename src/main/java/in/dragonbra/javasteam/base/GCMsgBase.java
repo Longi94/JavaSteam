@@ -4,31 +4,33 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
 /**
- * This is the abstract base class for all available client messages.
- * It's used to maintain packet payloads and provide a header for all client messages.
+ * This is the abstract base class for all available game coordinator messages.
+ * It's used to maintain packet payloads and provide a header for all gc messages.
+ *
+ * @param <HdrType> The header type for this gc message.
  */
-public abstract class MsgBase<HdrType extends ISteamSerializable> extends AbstractMsgBase implements IClientMsg {
+public abstract class GCMsgBase<HdrType extends IGCSerializableHeader> extends AbstractMsgBase implements IClientGCMsg {
 
     private static final Logger logger = LogManager.getLogger(MsgBase.class);
 
     private HdrType header;
 
     /**
-     * Initializes a new instance of the {@link MsgBase} class.
+     * Initializes a new instance of the {@link GCMsgBase} class.
      *
      * @param clazz the type of the header
      */
-    public MsgBase(Class<HdrType> clazz) {
+    public GCMsgBase(Class<HdrType> clazz) {
         this(clazz, 0);
     }
 
     /**
-     * Initializes a new instance of the {@link MsgBase} class.
+     * Initializes a new instance of the {@link GCMsgBase} class.
      *
      * @param clazz          the type of the header
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
-    public MsgBase(Class<HdrType> clazz, int payloadReserve) {
+    public GCMsgBase(Class<HdrType> clazz, int payloadReserve) {
         super(payloadReserve);
         try {
             header = clazz.newInstance();
