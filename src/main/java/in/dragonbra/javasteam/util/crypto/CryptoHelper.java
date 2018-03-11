@@ -48,6 +48,9 @@ public class CryptoHelper {
 
     /**
      * Generate an array of random bytes given the input length
+     *
+     * @param size the size of the block to generate
+     * @return the generated block
      */
     public static byte[] generateRandomBlock(int size) {
         SecureRandom random = new SecureRandom();
@@ -58,6 +61,9 @@ public class CryptoHelper {
 
     /**
      * Performs CRC32 on an input byte array using the CrcStandard.Crc32Bit parameters
+     *
+     * @param input array to hash
+     * @return the hashed result
      */
     public static byte[] crcHash(byte[] input) {
         if (input == null) {
@@ -80,6 +86,11 @@ public class CryptoHelper {
 
     /**
      * Decrypts using AES/CBC/PKCS7 with an input byte array and key, using the random IV prepended using AES/ECB/None
+     *
+     * @param input array to decrypt
+     * @param key   encryption key
+     * @return decrypted message
+     * @throws CryptoException deception while encrypting
      */
     public static byte[] symmetricDecrypt(byte[] input, byte[] key) throws CryptoException {
         return symmetricDecrypt(input, key, new Passable<byte[]>());
@@ -87,6 +98,12 @@ public class CryptoHelper {
 
     /**
      * Decrypts using AES/CBC/PKCS7 with an input byte array and key, using the random IV prepended using AES/ECB/None
+     *
+     * @param input array to decrypt
+     * @param key   encryption key
+     * @param iv    the random IV
+     * @return decrypted message
+     * @throws CryptoException deception while encrypting
      */
     public static byte[] symmetricDecrypt(byte[] input, byte[] key, Passable<byte[]> iv) throws CryptoException {
         if (input == null) {
@@ -130,6 +147,12 @@ public class CryptoHelper {
 
     /**
      * Performs an encryption using AES/CBC/PKCS7 with an input byte array and key, with a random IV prepended using AES/ECB/None
+     *
+     * @param input array to encrypt
+     * @param key   encryption key
+     * @param iv    the random IV
+     * @return encrypted message
+     * @throws CryptoException exception while encrypting
      */
     public static byte[] symmetricEncryptWithIV(byte[] input, byte[] key, byte[] iv) throws CryptoException {
         if (input == null) {
@@ -176,6 +199,11 @@ public class CryptoHelper {
 
     /**
      * Performs an encryption using AES/CBC/PKCS7 with an input byte array and key, with a random IV prepended using AES/ECB/None
+     *
+     * @param input array to encrypt
+     * @param key   encryption key
+     * @return encrypted message
+     * @throws CryptoException exception while encrypting
      */
     public static byte[] symmetricEncrypt(byte[] input, byte[] key) throws CryptoException {
         return symmetricEncryptWithIV(input, key, generateRandomBlock(16));
@@ -184,6 +212,12 @@ public class CryptoHelper {
     /**
      * Decrypts using AES/CBC/PKCS7 with an input byte array and key, using the IV (comprised of random bytes and the
      * HMAC-SHA1 of the random bytes and plaintext) prepended using AES/ECB/None
+     *
+     * @param input      array to decrypt
+     * @param key        encryption key
+     * @param hmacSecret the IV
+     * @return decrypted message
+     * @throws CryptoException exception while decrypting
      */
     public static byte[] symmetricDecryptHMACIV(byte[] input, byte[] key, byte[] hmacSecret) throws CryptoException {
         if (input == null) {
@@ -236,6 +270,12 @@ public class CryptoHelper {
     /**
      * Performs an encryption using AES/CBC/PKCS7 with an input byte array and key, with a IV (comprised of random bytes
      * and the HMAC-SHA1 of the random bytes and plaintext) prepended using AES/ECB/None
+     *
+     * @param input      array to encrypt
+     * @param key        encryption key
+     * @param hmacSecret the IV
+     * @return encrypted message
+     * @throws CryptoException exception while encrypting
      */
     public static byte[] symmetricEncryptWithHMACIV(byte[] input, byte[] key, byte[] hmacSecret) throws CryptoException {
         if (input == null) {

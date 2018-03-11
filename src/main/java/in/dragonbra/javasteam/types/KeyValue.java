@@ -62,6 +62,9 @@ public class KeyValue {
     /**
      * Gets the child {@link KeyValue} with the specified key.
      * If no child with the given key exists, {@link KeyValue#INVALID} is returned.
+     *
+     * @param key key
+     * @return the child {@link KeyValue}
      */
     public KeyValue get(String key) {
         if (key == null) {
@@ -79,6 +82,9 @@ public class KeyValue {
 
     /**
      * Sets the child {@link KeyValue} with the specified key.
+     *
+     * @param key   key
+     * @param value the child {@link KeyValue}
      */
     public void set(String key, KeyValue value) {
         if (key == null) {
@@ -263,6 +269,8 @@ public class KeyValue {
      * Attempts to convert and return the value of this instance as an enum.
      * If the conversion is invalid, the default value is returned.
      *
+     * @param <T>          the type of the enum to convert to
+     * @param enumClass    the type of the enum to convert to
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
@@ -274,6 +282,8 @@ public class KeyValue {
      * Attempts to convert and return the value of this instance as an enum.
      * If the conversion is invalid, the default value is returned.
      *
+     * @param <T>          the type of the enum to convert to
+     * @param enumClass    the type of the enum to convert to
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
@@ -354,7 +364,7 @@ public class KeyValue {
      *
      * @param filename The file to open and read.
      * @return <b>true</b> if the read was successful; otherwise, <b>false</b>.
-     * @throws IOException
+     * @throws IOException exception while reading from the file
      */
     public boolean readFileAsText(String filename) throws IOException {
         try (FileInputStream fis = new FileInputStream(filename)) {
@@ -424,7 +434,7 @@ public class KeyValue {
         return loadFromFile(path, true);
     }
 
-    static KeyValue loadFromFile(String path, boolean asBinary) {
+    private static KeyValue loadFromFile(String path, boolean asBinary) {
         File file = new File(path);
 
         if (!file.exists() || file.isDirectory()) {
@@ -481,7 +491,7 @@ public class KeyValue {
      *
      * @param path   The file path to save to.
      * @param binary If set to <b>true</b>, saves this instance as binary.
-     * @throws IOException
+     * @throws IOException exception while writing to the file
      */
     public void saveToFile(File path, boolean binary) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(path, false)) {
@@ -501,12 +511,12 @@ public class KeyValue {
         }
     }
 
-    void recursiveSaveBinaryToStream(OutputStream os) throws IOException {
+    private void recursiveSaveBinaryToStream(OutputStream os) throws IOException {
         recursiveSaveBinaryToStreamCore(os);
         os.write(Type.END.code());
     }
 
-    void recursiveSaveBinaryToStreamCore(OutputStream os) throws IOException {
+    private void recursiveSaveBinaryToStreamCore(OutputStream os) throws IOException {
         // Only supported types ATM:
         // 1. KeyValue with children (no value itself)
         // 2. String KeyValue
@@ -592,6 +602,7 @@ public class KeyValue {
      *
      * @param is The input {@link InputStream} to read from.
      * @return <b>true</b> if the read was successful; otherwise, <b>false</b>.
+     * @throws IOException exception while reading from the stream
      */
     public boolean tryReadAsBinary(InputStream is) throws IOException {
         if (is == null) {

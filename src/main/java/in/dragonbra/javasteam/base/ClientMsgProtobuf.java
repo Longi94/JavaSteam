@@ -32,7 +32,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a client send constructor.
      *
-     * @param clazz
+     * @param clazz the type of the body
      * @param msg   The network message type this client message represents.
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg) {
@@ -47,8 +47,8 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a client send constructor.
      *
-     * @param clazz
-     * @param msg   The network message type this client message represents.
+     * @param clazz          the type of the body
+     * @param msg            The network message type this client message represents.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg, int payloadReserve) {
@@ -59,7 +59,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a client send constructor.
      *
-     * @param clazz
+     * @param clazz the type of the body
      * @param eMsg  The network message type this client message represents.
      */
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, EMsg eMsg) {
@@ -70,7 +70,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a client send constructor.
      *
-     * @param clazz
+     * @param clazz          the type of the body
      * @param eMsg           The network message type this client message represents.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
@@ -92,7 +92,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a reply constructor.
      *
-     * @param clazz
+     * @param clazz the type of the body
      * @param eMsg  The network message type this client message represents.
      * @param msg   The message that this instance is a reply for.
      */
@@ -104,7 +104,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.
      * This is a reply constructor.
      *
-     * @param clazz
+     * @param clazz          the type of the body
      * @param eMsg           The network message type this client message represents.
      * @param msg            The message that this instance is a reply for.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
@@ -116,7 +116,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
     }
 
     /**
-     * Gets the body structure of this message.
+     * @return the body structure of this message.
      */
     public BodyType getBody() {
         return body;

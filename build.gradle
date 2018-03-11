@@ -74,6 +74,10 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
+javadoc {
+    exclude "**/in/dragonbra/javasteam/protobufs/**"
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar

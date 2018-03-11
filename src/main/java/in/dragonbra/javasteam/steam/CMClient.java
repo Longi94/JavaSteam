@@ -289,6 +289,8 @@ public abstract class CMClient {
 
     /**
      * Called when the client is physically disconnected from Steam3.
+     *
+     * @param userInitiated whether the disconnect was initialized by the client
      */
     protected void onClientDisconnected(boolean userInitiated) {
         for (Set<InetSocketAddress> set : serverMap.values()) {
@@ -517,14 +519,14 @@ public abstract class CMClient {
     }
 
     /**
-     * Gets the session token assigned to this client from the AM.
+     * @return the session token assigned to this client from the AM.
      */
     public long getSessionToken() {
         return sessionToken;
     }
 
     /**
-     * Gets the Steam recommended Cell ID of this client. This value is assigned after a logon attempt has succeeded.
+     * @return the Steam recommended Cell ID of this client. This value is assigned after a logon attempt has succeeded.
      * This value will be <b>null</b> if the client is logged off of Steam.
      */
     public Integer getCellID() {
@@ -561,7 +563,7 @@ public abstract class CMClient {
     }
 
     /**
-     * Gets the network listening interface. Use this for debugging only.
+     * @return the network listening interface. Use this for debugging only.
      * For your convenience, you can use {@link NetHookNetworkListener} class.
      */
     public IDebugNetworkListener getDebugNetworkListener() {
@@ -571,6 +573,8 @@ public abstract class CMClient {
     /**
      * Sets the network listening interface. Use this for debugging only.
      * For your convenience, you can use {@link NetHookNetworkListener} class.
+     *
+     * @param debugNetworkListener the listener
      */
     public void setDebugNetworkListener(IDebugNetworkListener debugNetworkListener) {
         this.debugNetworkListener = debugNetworkListener;

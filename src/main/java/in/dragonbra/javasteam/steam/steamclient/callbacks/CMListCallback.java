@@ -35,7 +35,7 @@ public class CMListCallback extends CallbackMsg {
     }
 
     /**
-     * Gets the CM server list.
+     * @return the CM server list.
      */
     public Collection<ServerRecord> getServers() {
         return servers;

@@ -21,6 +21,8 @@ public abstract class ClientMsgHandler {
      * Gets whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      * If this is true when the connection is closed, the {@link DisconnectedCallback}'s
      * {@link DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
+     *
+     * @return whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      */
     public boolean isExpectDisconnection() {
         return client.isExpectDisconnection();
@@ -30,13 +32,15 @@ public abstract class ClientMsgHandler {
      * Sets whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      * If this is true when the connection is closed, the {@link DisconnectedCallback}'s
      * {@link DisconnectedCallback#userInitiated} property will be set to <b>true</b>.
+     *
+     * @param expectDisconnection whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      */
     public void setExpectDisconnection(boolean expectDisconnection) {
         client.setExpectDisconnection(expectDisconnection);
     }
 
     /**
-     * Gets the underlying {@link SteamClient} for use in sending replies.
+     * @return the underlying {@link SteamClient} for use in sending replies.
      */
     public SteamClient getClient() {
         return client;

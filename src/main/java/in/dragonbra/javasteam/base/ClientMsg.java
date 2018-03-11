@@ -194,7 +194,7 @@ public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBa
     }
 
     /**
-     * Gets the body structure of this message.
+     * @return the body structure of this message.
      */
     public BodyType getBody() {
         return body;

@@ -24,7 +24,7 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
      *
      * @param eMsg The network message type for this packet message.
      * @param data The data.
-     * @throws IOException
+     * @throws IOException exception while deserializing the data
      */
     public PacketClientMsgProtobuf(EMsg eMsg, byte[] data) throws IOException {
         this.msgType = eMsg;

@@ -24,7 +24,7 @@ public class PacketMsg implements IPacketMsg {
      *
      * @param eMsg The network message type for this packet message.
      * @param data The data.
-     * @throws IOException
+     * @throws IOException exception while deserializing the data
      */
     public PacketMsg(EMsg eMsg, byte[] data) throws IOException {
         this.msgType = eMsg;

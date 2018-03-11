@@ -36,7 +36,7 @@ public class MessageObject {
      *
      * @param stream The stream to load data from.
      * @return <b>true</b> on success; otherwise, <b>false</b>.
-     * @throws IOException
+     * @throws IOException IO exception during reading from the stream
      */
     public boolean readFromStream(InputStream stream) throws IOException {
         if (stream == null) {
@@ -50,7 +50,7 @@ public class MessageObject {
      * Writes this MessageObject instance to the given stream.
      *
      * @param stream The stream to write to.
-     * @throws IOException
+     * @throws IOException IO exception during writing to the stream
      */
     public void writeToStream(OutputStream stream) throws IOException {
         if (stream == null) {

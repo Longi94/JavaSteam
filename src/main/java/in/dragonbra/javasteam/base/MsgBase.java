@@ -15,6 +15,8 @@ public abstract class MsgBase<HdrType extends ISteamSerializable> extends Abstra
 
     /**
      * Initializes a new instance of the {@link MsgBase} class.
+     *
+     * @param clazz the type of the body
      */
     public MsgBase(Class<HdrType> clazz) {
         this(clazz, 0);
@@ -23,6 +25,7 @@ public abstract class MsgBase<HdrType extends ISteamSerializable> extends Abstra
     /**
      * Initializes a new instance of the {@link MsgBase} class.
      *
+     * @param clazz          the type of the body
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
     public MsgBase(Class<HdrType> clazz, int payloadReserve) {
@@ -35,7 +38,7 @@ public abstract class MsgBase<HdrType extends ISteamSerializable> extends Abstra
     }
 
     /**
-     * Gets the header for this message type.
+     * @return the header for this message type.
      */
     public HdrType getHeader() {
         return header;
