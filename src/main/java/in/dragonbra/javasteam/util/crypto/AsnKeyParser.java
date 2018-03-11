@@ -15,7 +15,7 @@ public class AsnKeyParser {
 
     private final AsnParser _parser;
 
-    public AsnKeyParser(List<Byte> contents) {
+    AsnKeyParser(List<Byte> contents) {
         _parser = new AsnParser(contents);
     }
 
