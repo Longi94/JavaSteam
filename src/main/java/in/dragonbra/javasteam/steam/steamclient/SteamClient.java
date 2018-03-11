@@ -65,8 +65,10 @@ public class SteamClient extends CMClient {
     public SteamClient(SteamConfiguration configuration) {
         super(configuration);
 
-        addHandler(new SteamUser());
+        // add this library's handlers
+        // notice: SteamFriends should be added before SteamUser due to AccountInfoCallback
         addHandler(new SteamFriends());
+        addHandler(new SteamUser());
         addHandler(new SteamTrading());
         addHandler(new SteamApps());
         addHandler(new SteamCloud());
