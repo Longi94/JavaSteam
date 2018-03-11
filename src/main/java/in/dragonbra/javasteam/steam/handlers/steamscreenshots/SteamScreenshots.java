@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMAddScreenshot;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMAddScreenshotResponse;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.callback.ScreenshotAddedCallback;
+import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.util.Collections;
@@ -43,15 +44,17 @@ public class SteamScreenshots extends ClientMsgHandler {
      * Results are returned in a {@link ScreenshotAddedCallback}.
      *
      * @param details The details of the screenshot.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link ScreenshotAddedCallback}.
      */
-    public void addScreenshot(ScreenshotDetails details) {
+    public JobID addScreenshot(ScreenshotDetails details) {
         if (details == null) {
             throw new IllegalArgumentException("details is null");
         }
 
         ClientMsgProtobuf<CMsgClientUCMAddScreenshot.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientUCMAddScreenshot.class, EMsg.ClientUCMAddScreenshot);
-        msg.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        msg.setSourceJobID(jobID);
 
         if (details.getGameID() != null) {
             msg.getBody().setAppid(details.getGameID().getAppID());
@@ -66,6 +69,8 @@ public class SteamScreenshots extends ClientMsgHandler {
         msg.getBody().setRtime32Created((int) (details.getCreationTime().getTime() / 1000L));
 
         client.send(msg);
+
+        return jobID;
     }
 
     @Override

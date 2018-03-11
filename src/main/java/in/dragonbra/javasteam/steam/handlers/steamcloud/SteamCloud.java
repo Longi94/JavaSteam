@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.*;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback;
+import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.UGCHandle;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
@@ -52,19 +53,23 @@ public class SteamCloud extends ClientMsgHandler {
      * Results are returned in a {@link UGCDetailsCallback}.
      *
      * @param ugcId The unique user generated content id.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link UGCDetailsCallback}.
      */
-    public void requestUGCDetails(UGCHandle ugcId) {
+    public JobID requestUGCDetails(UGCHandle ugcId) {
         if (ugcId == null) {
             throw new IllegalArgumentException("ugcId is null");
         }
 
         ClientMsgProtobuf<CMsgClientUFSGetUGCDetails.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientUFSGetUGCDetails.class, EMsg.ClientUFSGetUGCDetails);
-        request.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
 
         request.getBody().setHcontent(ugcId.getValue());
 
         client.send(request);
+
+        return jobID;
     }
 
     /**
@@ -73,16 +78,20 @@ public class SteamCloud extends ClientMsgHandler {
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link SingleFileInfoCallback}.
      */
-    public void getSingleFileInfo(int appId, String filename) {
+    public JobID getSingleFileInfo(int appId, String filename) {
         ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfo.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientUFSGetSingleFileInfo.class, EMsg.ClientUFSGetSingleFileInfo);
-        request.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
 
         request.getBody().setAppId(appId);
         request.getBody().setFileName(filename);
 
         client.send(request);
+
+        return jobID;
     }
 
     /**
@@ -91,16 +100,20 @@ public class SteamCloud extends ClientMsgHandler {
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link ShareFileCallback}.
      */
-    public void shareFile(int appId, String filename) {
+    public JobID shareFile(int appId, String filename) {
         ClientMsgProtobuf<CMsgClientUFSShareFile.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientUFSShareFile.class, EMsg.ClientUFSShareFile);
-        request.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
 
         request.getBody().setAppId(appId);
         request.getBody().setFileName(filename);
 
         client.send(request);
+
+        return jobID;
     }
 
 

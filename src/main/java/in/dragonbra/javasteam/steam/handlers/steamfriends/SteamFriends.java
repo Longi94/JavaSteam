@@ -180,7 +180,6 @@ public class SteamFriends extends ClientMsgHandler {
         cache.getLocalUser().setName(name);
 
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
-        stateMsg.setSourceJobID(client.getNextJobID());
 
         stateMsg.getBody().setPersonaState(cache.getLocalUser().getPersonaState().code());
         stateMsg.getBody().setPlayerName(name);
@@ -211,7 +210,6 @@ public class SteamFriends extends ClientMsgHandler {
         cache.getLocalUser().setPersonaState(state);
 
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
-        stateMsg.setSourceJobID(client.getNextJobID());
 
         stateMsg.getBody().setPersonaState(state.code());
 
@@ -721,9 +719,10 @@ public class SteamFriends extends ClientMsgHandler {
      * Results are returned in a {@link IgnoreFriendCallback}.
      *
      * @param steamID The SteamID of the friend to ignore or unignore.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link IgnoreFriendCallback}.
      */
-    public void ignoreFriend(SteamID steamID) {
-        ignoreFriend(steamID, true);
+    public JobID ignoreFriend(SteamID steamID) {
+        return ignoreFriend(steamID, true);
     }
 
     /**
@@ -732,20 +731,24 @@ public class SteamFriends extends ClientMsgHandler {
      *
      * @param steamID   The SteamID of the friend to ignore or unignore.
      * @param setIgnore if set to <b>true</b>, the friend will be ignored; otherwise, they will be unignored.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link IgnoreFriendCallback}.
      */
-    public void ignoreFriend(SteamID steamID, boolean setIgnore) {
+    public JobID ignoreFriend(SteamID steamID, boolean setIgnore) {
         if (steamID == null) {
             throw new IllegalArgumentException("steamID is null");
         }
 
         ClientMsg<MsgClientSetIgnoreFriend> ignore = new ClientMsg<>(MsgClientSetIgnoreFriend.class);
-        ignore.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        ignore.setSourceJobID(jobID);
 
         ignore.getBody().setMySteamId(client.getSteamID());
         ignore.getBody().setIgnore(setIgnore ? (byte) 1 : (byte) 0);
         ignore.getBody().setSteamIdFriend(steamID);
 
         client.send(ignore);
+
+        return jobID;
     }
 
     /**
@@ -753,18 +756,23 @@ public class SteamFriends extends ClientMsgHandler {
      * Results are returned in a {@link ProfileInfoCallback}
      *
      * @param steamID The SteamID of the friend to request the details of.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link ProfileInfoCallback}.
      */
-    public void requestProfileInfo(SteamID steamID) {
+    public JobID requestProfileInfo(SteamID steamID) {
         if (steamID == null) {
             throw new IllegalArgumentException("steamID is null");
         }
 
-        ClientMsgProtobuf<CMsgClientFriendProfileInfo.Builder> request = new ClientMsgProtobuf<>(CMsgClientFriendProfileInfo.class, EMsg.ClientFriendProfileInfo);
-        request.setSourceJobID(client.getNextJobID());
+        ClientMsgProtobuf<CMsgClientFriendProfileInfo.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientFriendProfileInfo.class, EMsg.ClientFriendProfileInfo);
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
 
         request.getBody().setSteamidFriend(steamID.convertToUInt64());
 
         client.send(request);
+
+        return jobID;
     }
 
     /**

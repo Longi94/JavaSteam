@@ -272,6 +272,23 @@ public class SteamUser extends ClientMsgHandler {
     }
 
     /**
+     * Requests a new WebAPI authentication user nonce.
+     * Results are returned in a {@link WebAPIUserNonceCallback}.
+     *
+     * @return The Job ID of the request. This can be used to find the appropriate {@link WebAPIUserNonceCallback}.
+     */
+    public JobID requestWebAPIUserNonce() {
+        ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> reqMsg =
+                new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonce.class, EMsg.ClientRequestWebAPIAuthenticateUserNonce);
+        JobID jobID = client.getNextJobID();
+        reqMsg.setSourceJobID(jobID);
+
+        client.send(reqMsg);
+
+        return jobID;
+    }
+
+    /**
      * Accepts the new Login Key provided by a {@link LoginKeyCallback}.
      *
      * @param callback The callback containing the new Login Key.

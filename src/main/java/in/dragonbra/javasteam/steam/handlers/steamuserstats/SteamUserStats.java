@@ -16,6 +16,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback;
+import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.util.Collections;
@@ -59,15 +60,19 @@ public class SteamUserStats extends ClientMsgHandler {
      * Results are returned in a {@link NumberOfPlayersCallback}.
      *
      * @param appId The app id to request the number of players for.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link NumberOfPlayersCallback}.
      */
-    public void getNumberOfCurrentPlayers(int appId) {
+    public JobID getNumberOfCurrentPlayers(int appId) {
         ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayers.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgDPGetNumberOfCurrentPlayers.class, EMsg.ClientGetNumberOfCurrentPlayersDP);
-        msg.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        msg.setSourceJobID(jobID);
 
         msg.getBody().setAppid(appId);
 
         client.send(msg);
+
+        return jobID;
     }
 
     /**
@@ -76,11 +81,13 @@ public class SteamUserStats extends ClientMsgHandler {
      *
      * @param appId The AppID to request a leaderboard for.
      * @param name  Name of the leaderboard to request.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
      */
-    public void findLeaderBoard(int appId, String name) {
+    public JobID findLeaderBoard(int appId, String name) {
         ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
-        msg.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        msg.setSourceJobID(jobID);
 
         // routing_appid has to be set correctly to receive a response
         msg.getProtoHeader().setRoutingAppid(appId);
@@ -90,6 +97,8 @@ public class SteamUserStats extends ClientMsgHandler {
         msg.getBody().setCreateIfNotFound(false);
 
         client.send(msg);
+
+        return jobID;
     }
 
     /**
@@ -100,11 +109,13 @@ public class SteamUserStats extends ClientMsgHandler {
      * @param name        Name of the leaderboard to create.
      * @param sortMethod  Sort method to use for this leaderboard
      * @param displayType Display type for this leaderboard.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
      */
-    public void createLeaderboard(int appId, String name, ELeaderboardSortMethod sortMethod, ELeaderboardDisplayType displayType) {
+    public JobID createLeaderboard(int appId, String name, ELeaderboardSortMethod sortMethod, ELeaderboardDisplayType displayType) {
         ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
-        msg.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        msg.setSourceJobID(jobID);
 
         // routing_appid has to be set correctly to receive a response
         msg.getProtoHeader().setRoutingAppid(appId);
@@ -116,6 +127,8 @@ public class SteamUserStats extends ClientMsgHandler {
         msg.getBody().setCreateIfNotFound(true);
 
         client.send(msg);
+
+        return jobID;
     }
 
     /**
@@ -127,18 +140,23 @@ public class SteamUserStats extends ClientMsgHandler {
      * @param rangeStart  Range start or 0.
      * @param rangeEnd    Range end or max leaderboard entries.
      * @param dataRequest Type of request.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link LeaderboardEntriesCallback}.
      */
-    public void getLeaderboardEntries(int appId, int id, int rangeStart, int rangeEnd, ELeaderboardDataRequest dataRequest) {
+    public JobID getLeaderboardEntries(int appId, int id, int rangeStart, int rangeEnd, ELeaderboardDataRequest dataRequest) {
         ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSGetLBEntries.class, EMsg.ClientLBSGetLBEntries);
-        msg.setSourceJobID(client.getNextJobID());
+        JobID jobID = client.getNextJobID();
+        msg.setSourceJobID(jobID);
 
         msg.getBody().setAppId(appId);
         msg.getBody().setLeaderboardId(id);
+        msg.getBody().setLeaderboardDataRequest(dataRequest.code());
         msg.getBody().setRangeStart(rangeStart);
         msg.getBody().setRangeEnd(rangeEnd);
 
         client.send(msg);
+
+        return jobID;
     }
 
     @Override
