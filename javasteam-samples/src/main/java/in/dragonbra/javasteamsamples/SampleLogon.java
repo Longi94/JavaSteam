@@ -1,7 +1,6 @@
 package in.dragonbra.javasteamsamples;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.discovery.FileServerListProvider;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -10,11 +9,8 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
-
-import java.io.File;
 
 /**
  * @author lngtr
@@ -54,12 +50,8 @@ public class SampleLogon implements Runnable {
     @Override
     public void run() {
 
-        SteamConfiguration config = SteamConfiguration.create(b -> {
-            b.withServerListProvider(new FileServerListProvider(new File("servers.bin")));
-        });
-
         // create our steamclient instance
-        steamClient = new SteamClient(config);
+        steamClient = new SteamClient();
 
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);
