@@ -133,7 +133,7 @@ public class SteamUser extends ClientMsgHandler {
         if (details.getLoginID() != null) {
             logon.getBody().setObfustucatedPrivateIp(details.getLoginID());
         } else {
-            int localIp = (int) NetHelpers.getIPAddress(client.getLocalIP());
+            int localIp = NetHelpers.getIPAddress(client.getLocalIP());
             logon.getBody().setObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask);
         }
 
