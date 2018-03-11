@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
+import in.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
 import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
@@ -77,6 +78,7 @@ public class SteamClient extends CMClient {
         addHandler(new SteamUserStats());
         addHandler(new SteamWorkshop());
         addHandler(new SteamMasterServer());
+        addHandler(new SteamGameServer());
 
         processStartTime = new Date();
 
