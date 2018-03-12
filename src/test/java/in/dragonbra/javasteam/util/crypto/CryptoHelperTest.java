@@ -1,10 +1,11 @@
 package in.dragonbra.javasteam.util.crypto;
 
+import in.dragonbra.javasteam.TestBase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 
-public class CryptoHelperTest {
+public class CryptoHelperTest extends TestBase {
 
     @Test
     public void crcHash() {

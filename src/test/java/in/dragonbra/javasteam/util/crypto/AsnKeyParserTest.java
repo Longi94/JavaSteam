@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.util.crypto;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.util.KeyDictionary;
 import org.junit.Test;
@@ -10,7 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
 
-public class AsnKeyParserTest {
+public class AsnKeyParserTest extends TestBase {
 
     private static final byte[] KEY = KeyDictionary.getPublicKey(EUniverse.Public);
 
