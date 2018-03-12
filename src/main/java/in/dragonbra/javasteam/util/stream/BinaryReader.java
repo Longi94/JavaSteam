@@ -34,8 +34,11 @@ public class BinaryReader extends FilterInputStream {
         }
 
         byte[] bytes = new byte[len];
-        in.read(bytes);
-        position += len;
+
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = readByte();
+        }
+
         return bytes;
     }
 
