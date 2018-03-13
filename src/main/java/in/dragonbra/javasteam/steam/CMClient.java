@@ -298,12 +298,12 @@ public abstract class CMClient {
         }
     }
 
-    private Connection createConnection(ProtocolTypes protocol) {
-        if ((protocol.code() & ProtocolTypes.WEB_SOCKET.code()) > 0) {
+    private Connection createConnection(EnumSet<ProtocolTypes> protocol) {
+        if (protocol.contains(ProtocolTypes.WEB_SOCKET)) {
             return new WebSocketConnection();
-        } else if ((protocol.code() & ProtocolTypes.TCP.code()) > 0) {
+        } else if (protocol.contains(ProtocolTypes.TCP)) {
             return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
-        } else if ((protocol.code() & ProtocolTypes.UDP.code()) > 0) {
+        } else if (protocol.contains(ProtocolTypes.UDP)) {
             return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());
         }
 

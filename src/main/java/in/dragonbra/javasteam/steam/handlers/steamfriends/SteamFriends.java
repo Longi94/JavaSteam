@@ -684,7 +684,7 @@ public class SteamFriends extends ClientMsgHandler {
         }
 
         if (requestedInfo == 0) {
-            requestedInfo = client.getConfiguration().getDefaultPersonaStateFlags();
+            requestedInfo = EClientPersonaStateFlag.code(client.getConfiguration().getDefaultPersonaStateFlags());
         }
 
         ClientMsgProtobuf<CMsgClientRequestFriendData.Builder> request = new ClientMsgProtobuf<>(CMsgClientRequestFriendData.class, EMsg.ClientRequestFriendData);
@@ -865,7 +865,7 @@ public class SteamFriends extends ClientMsgHandler {
         // we have to request information for all of our friends because steam only sends persona information for online friends
         ClientMsgProtobuf<CMsgClientRequestFriendData.Builder> reqInfo = new ClientMsgProtobuf<>(CMsgClientRequestFriendData.class, EMsg.ClientRequestFriendData);
 
-        reqInfo.getBody().setPersonaStateRequested(client.getConfiguration().getDefaultPersonaStateFlags());
+        reqInfo.getBody().setPersonaStateRequested(EClientPersonaStateFlag.code(client.getConfiguration().getDefaultPersonaStateFlags()));
 
         synchronized (listLock) {
             List<SteamID> friendsToRemove = new ArrayList<>();

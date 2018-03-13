@@ -7,6 +7,8 @@ import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.NullServerListProvider;
 import in.dragonbra.javasteam.steam.webapi.WebAPI;
 
+import java.util.EnumSet;
+
 /**
  * @author lngtr
  * @since 2018-02-20
@@ -24,9 +26,8 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
 
         state.setAllowDirectoryFetch(true);
         state.setConnectionTimeout(5000L);
-        state.setDefaultPersonaStateFlags(EClientPersonaStateFlag.PlayerName.code() | EClientPersonaStateFlag.Presence.code() |
-                EClientPersonaStateFlag.SourceID.code() | EClientPersonaStateFlag.GameExtraInfo.code() |
-                EClientPersonaStateFlag.LastSeen.code());
+        state.setDefaultPersonaStateFlags(EnumSet.of(EClientPersonaStateFlag.PlayerName, EClientPersonaStateFlag.Presence,
+                EClientPersonaStateFlag.SourceID, EClientPersonaStateFlag.GameExtraInfo, EClientPersonaStateFlag.LastSeen));
         state.setProtocolTypes(ProtocolTypes.TCP);
         state.setServerListProvider(new NullServerListProvider());
         state.setUniverse(EUniverse.Public);
@@ -52,7 +53,13 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
     }
 
     @Override
-    public ISteamConfigurationBuilder withDefaultPersonaStateFlags(int personaStateFlags) {
+    public ISteamConfigurationBuilder withDefaultPersonaStateFlags(EnumSet<EClientPersonaStateFlag> personaStateFlags) {
+        state.setDefaultPersonaStateFlags(personaStateFlags);
+        return this;
+    }
+
+    @Override
+    public ISteamConfigurationBuilder withDefaultPersonaStateFlags(EClientPersonaStateFlag personaStateFlags) {
         state.setDefaultPersonaStateFlags(personaStateFlags);
         return this;
     }
@@ -60,6 +67,12 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
     @Override
     public ISteamConfigurationBuilder withDirectoryFetch(boolean allowDirectoryFetch) {
         state.setAllowDirectoryFetch(allowDirectoryFetch);
+        return this;
+    }
+
+    @Override
+    public ISteamConfigurationBuilder withProtocolTypes(EnumSet<ProtocolTypes> protocolTypes) {
+        state.setProtocolTypes(protocolTypes);
         return this;
     }
 

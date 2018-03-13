@@ -5,6 +5,8 @@ import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 
+import java.util.EnumSet;
+
 /**
  * Interface to configure a {@link SteamConfiguration} before it is created.
  * A reference to the underlying object should not be live beyond the configurator function's scope.
@@ -33,7 +35,15 @@ public interface ISteamConfigurationBuilder {
      * @param personaStateFlags The default persona state flags used when requesting information for a new friend, or when calling <b>SteamFriends.RequestFriendInfo</b> without specifying flags.
      * @return A builder with modified configuration.
      */
-    ISteamConfigurationBuilder withDefaultPersonaStateFlags(int personaStateFlags);
+    ISteamConfigurationBuilder withDefaultPersonaStateFlags(EnumSet<EClientPersonaStateFlag> personaStateFlags);
+
+    /**
+     * Configures this {@link SteamConfiguration} with the default {@link EClientPersonaStateFlag}s to request from Steam.
+     *
+     * @param personaStateFlags The default persona state flags used when requesting information for a new friend, or when calling <b>SteamFriends.RequestFriendInfo</b> without specifying flags.
+     * @return A builder with modified configuration.
+     */
+    ISteamConfigurationBuilder withDefaultPersonaStateFlags(EClientPersonaStateFlag personaStateFlags);
 
     /**
      * Configures this {@link SteamConfiguration} to discover available servers.
@@ -42,6 +52,14 @@ public interface ISteamConfigurationBuilder {
      * @return A builder with modified configuration.
      */
     ISteamConfigurationBuilder withDirectoryFetch(boolean allowDirectoryFetch);
+
+    /**
+     * Configures how this {@link SteamConfiguration} will be used to connect to Steam.
+     *
+     * @param protocolTypes The supported protocol types to use when attempting to connect to Steam.
+     * @return A builder with modified configuration.
+     */
+    ISteamConfigurationBuilder withProtocolTypes(EnumSet<ProtocolTypes> protocolTypes);
 
     /**
      * Configures how this {@link SteamConfiguration} will be used to connect to Steam.

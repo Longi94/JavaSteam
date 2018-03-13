@@ -1,11 +1,14 @@
 package in.dragonbra.javasteam.steam.steamclient.configuration;
 
+import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.util.compat.Consumer;
+
+import java.util.EnumSet;
 
 /**
  * Configuration object to use.
@@ -68,14 +71,14 @@ public class SteamConfiguration {
     /**
      * @return The default persona state flags used when requesting information for a new friend, or when calling <b>SteamFriends.RequestFriendInfo</b> without specifying flags.
      */
-    public int getDefaultPersonaStateFlags() {
+    public EnumSet<EClientPersonaStateFlag> getDefaultPersonaStateFlags() {
         return state.getDefaultPersonaStateFlags();
     }
 
     /**
      * @return The supported protocol types to use when attempting to connect to Steam.
      */
-    public ProtocolTypes getProtocolTypes() {
+    public EnumSet<ProtocolTypes> getProtocolTypes() {
         return state.getProtocolTypes();
     }
 

@@ -1,8 +1,11 @@
 package in.dragonbra.javasteam.steam.steamclient.configuration;
 
+import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
+
+import java.util.EnumSet;
 
 /**
  * @author lngtr
@@ -13,8 +16,8 @@ public class SteamConfigurationState {
     private boolean allowDirectoryFetch;
     private int cellID;
     private long connectionTimeout;
-    private int defaultPersonaStateFlags;
-    private ProtocolTypes protocolTypes;
+    private EnumSet<EClientPersonaStateFlag> defaultPersonaStateFlags;
+    private EnumSet<ProtocolTypes> protocolTypes;
     private IServerListProvider serverListProvider;
     private EUniverse universe;
     private String webAPIBaseAddress;
@@ -44,19 +47,27 @@ public class SteamConfigurationState {
         this.connectionTimeout = connectionTimeout;
     }
 
-    public int getDefaultPersonaStateFlags() {
+    public EnumSet<EClientPersonaStateFlag> getDefaultPersonaStateFlags() {
         return defaultPersonaStateFlags;
     }
 
-    public void setDefaultPersonaStateFlags(int defaultPersonaStateFlags) {
+    public void setDefaultPersonaStateFlags(EnumSet<EClientPersonaStateFlag> defaultPersonaStateFlags) {
         this.defaultPersonaStateFlags = defaultPersonaStateFlags;
     }
 
-    public ProtocolTypes getProtocolTypes() {
+    public void setDefaultPersonaStateFlags(EClientPersonaStateFlag defaultPersonaStateFlags) {
+        setDefaultPersonaStateFlags(EnumSet.of(defaultPersonaStateFlags));
+    }
+
+    public EnumSet<ProtocolTypes> getProtocolTypes() {
         return protocolTypes;
     }
 
     public void setProtocolTypes(ProtocolTypes protocolTypes) {
+        setProtocolTypes(EnumSet.of(protocolTypes));
+    }
+
+    public void setProtocolTypes(EnumSet<ProtocolTypes> protocolTypes) {
         this.protocolTypes = protocolTypes;
     }
 
