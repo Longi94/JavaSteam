@@ -1,7 +1,8 @@
 # JavaSteam
-[![Build Status](https://travis-ci.org/Longi94/JavaSteam.svg?branch=master)](https://travis-ci.org/Longi94/JavaSteam) [![codecov](https://codecov.io/gh/Longi94/JavaSteam/branch/master/graph/badge.svg)](https://codecov.io/gh/Longi94/JavaSteam)
+[![Build Status](https://travis-ci.org/Longi94/JavaSteam.svg?branch=master)](https://travis-ci.org/Longi94/JavaSteam) [![codecov](https://codecov.io/gh/Longi94/JavaSteam/branch/master/graph/badge.svg)](https://codecov.io/gh/Longi94/JavaSteam) 
+[![Discord](https://img.shields.io/discord/420907597906968586.svg)](https://discord.gg/8F2JuTu)
 
-Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit).
+Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 7.
 
 ## Download
 
@@ -83,6 +84,14 @@ With the lack of tutorials there are [samples](https://github.com/Longi94/JavaSt
 ## Build
 
 ```./gradlew build```
+
+## Contributing
+
+Contributions to the repository are always welcome! Checkout the [contribution guidelines](CONTRIBUTING.md) to get started.
+
+## Other
+
+Join the [discord server](https://discord.gg/8F2JuTu) if you have any questions related or unrelated to this repo or just want to chat!
 
 ## License
 
