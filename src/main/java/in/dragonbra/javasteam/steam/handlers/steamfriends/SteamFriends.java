@@ -7,6 +7,8 @@ import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.*;
 import in.dragonbra.javasteam.generated.*;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistory;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistoryResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistory;
@@ -162,6 +164,12 @@ public class SteamFriends extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleNicknameList(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientAMGetPersonaNameHistoryResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleAliasHistoryResponse(packetMsg);
             }
         });
 
@@ -846,6 +854,44 @@ public class SteamFriends extends ClientMsgHandler {
         return jobID;
     }
 
+    /**
+     * Request the alias history of the account of the given steam id.
+     * The result is returned in a {@link AliasHistoryCallback}.
+     *
+     * @param steamID the steam id
+     * @return The Job ID of the request. This can be used to find the appropriate {@link AliasHistoryCallback}.
+     */
+    public JobID requestAliasHistory(SteamID steamID) {
+        return requestAliasHistory(Collections.singletonList(steamID));
+    }
+
+    /**
+     * Request the alias history of the accounts of the given steam ids.
+     * The result is returned in a {@link AliasHistoryCallback}.
+     *
+     * @param steamIDs the steam ids
+     * @return The Job ID of the request. This can be used to find the appropriate {@link AliasHistoryCallback}.
+     */
+    public JobID requestAliasHistory(List<SteamID> steamIDs) {
+        if (steamIDs == null) {
+            throw new IllegalArgumentException("steamIDs is null");
+        }
+
+        ClientMsgProtobuf<CMsgClientAMGetPersonaNameHistory.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientAMGetPersonaNameHistory.class, EMsg.ClientAMGetPersonaNameHistory);
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
+
+        for (SteamID steamID : steamIDs) {
+            request.getBody().addIds(CMsgClientAMGetPersonaNameHistory.IdInstance.newBuilder()
+                    .setSteamid(steamID.convertToUInt64()));
+        }
+
+        client.send(request);
+
+        return jobID;
+    }
+
     @Override
     public void handleMsg(IPacketMsg packetMsg) {
         if (packetMsg == null) {
@@ -1075,16 +1121,23 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     private void handleNicknameList(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientPlayerNicknameList.Builder> request =
+        ClientMsgProtobuf<CMsgClientPlayerNicknameList.Builder> resp =
                 new ClientMsgProtobuf<>(CMsgClientPlayerNicknameList.class, packetMsg);
 
-        client.postCallback(new NicknameListCallback(request.getBody()));
+        client.postCallback(new NicknameListCallback(resp.getBody()));
     }
 
     private void handlePlayerNicknameResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientSetPlayerNicknameResponse.Builder> request =
+        ClientMsgProtobuf<CMsgClientSetPlayerNicknameResponse.Builder> resp =
                 new ClientMsgProtobuf<>(CMsgClientSetPlayerNicknameResponse.class, packetMsg);
 
-        client.postCallback(new NicknameCallback(request.getBody()));
+        client.postCallback(new NicknameCallback(resp.getTargetJobID(), resp.getBody()));
+    }
+
+    private void handleAliasHistoryResponse(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientAMGetPersonaNameHistoryResponse.Builder> resp =
+                new ClientMsgProtobuf<>(CMsgClientAMGetPersonaNameHistoryResponse.class, packetMsg);
+
+        client.postCallback(new AliasHistoryCallback(resp.getTargetJobID(), resp.getBody()));
     }
 }

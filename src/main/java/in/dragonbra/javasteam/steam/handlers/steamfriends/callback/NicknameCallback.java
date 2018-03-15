@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientSetPlayerNicknameResponse;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 
 /**
@@ -13,7 +14,8 @@ public class NicknameCallback extends CallbackMsg {
 
     private EResult result;
 
-    public NicknameCallback(CMsgClientSetPlayerNicknameResponse.Builder body) {
+    public NicknameCallback(JobID jobID, CMsgClientSetPlayerNicknameResponse.Builder body) {
+        setJobID(jobID);
         result = EResult.from(body.getEresult());
     }
 
