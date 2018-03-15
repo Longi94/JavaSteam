@@ -1,7 +1,5 @@
 package in.dragonbra.javasteam.util;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -17,8 +15,6 @@ public class NetHelpers {
         b.putInt(ipAddr);
 
         byte[] result = b.array();
-
-        ArrayUtils.reverse(result);
 
         try {
             return InetAddress.getByAddress(result);
