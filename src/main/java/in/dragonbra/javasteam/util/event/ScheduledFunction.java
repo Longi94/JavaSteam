@@ -13,18 +13,9 @@ public class ScheduledFunction {
 
     private Runnable func;
 
-    private Timer timer = new Timer();
+    private Timer timer;
 
     private boolean bStarted = false;
-
-    private TimerTask tick = new TimerTask() {
-        @Override
-        public void run() {
-            if (func != null) {
-                func.run();
-            }
-        }
-    };
 
     public ScheduledFunction(Runnable func, long delay) {
         this.delay = delay;
@@ -33,7 +24,15 @@ public class ScheduledFunction {
 
     public void start() {
         if (!bStarted) {
-            timer.scheduleAtFixedRate(tick, 0, delay);
+            timer = new Timer();
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (func != null) {
+                        func.run();
+                    }
+                }
+            }, 0, delay);
             bStarted = true;
         }
     }
@@ -41,7 +40,7 @@ public class ScheduledFunction {
     public void stop() {
         if (bStarted) {
             timer.cancel();
-            timer.purge();
+            timer = null;
             bStarted = false;
         }
     }
