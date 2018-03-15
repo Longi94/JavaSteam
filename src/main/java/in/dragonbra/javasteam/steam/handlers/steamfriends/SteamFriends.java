@@ -152,6 +152,18 @@ public class SteamFriends extends ClientMsgHandler {
                 handlePersonaChangeResponse(packetMsg);
             }
         });
+        dispatchMap.put(EMsg.ClientPlayerNicknameList, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleNicknameList(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.AMPlayerNicknameListResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleNicknameList(packetMsg);
+            }
+        });
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }
@@ -805,6 +817,35 @@ public class SteamFriends extends ClientMsgHandler {
         client.send(request);
     }
 
+    /**
+     * Set the nickname of a friend.
+     * The result is returned in a {@link NicknameCallback}.
+     *
+     * @param friendID the steam id of the friend
+     * @param nickname the nickname to set to
+     * @return The Job ID of the request. This can be used to find the appropriate {@link NicknameCallback}.
+     */
+    public JobID setFriendNickname(SteamID friendID, String nickname) {
+        if (friendID == null) {
+            throw new IllegalArgumentException("friendID is null");
+        }
+        if (nickname == null) {
+            throw new IllegalArgumentException("nickname is null");
+        }
+
+        ClientMsgProtobuf<CMsgClientSetPlayerNickname.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientSetPlayerNickname.class, EMsg.AMClientSetPlayerNickname);
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
+
+        request.getBody().setSteamid(friendID.convertToUInt64());
+        request.getBody().setNickname(nickname);
+
+        client.send(request);
+
+        return jobID;
+    }
+
     @Override
     public void handleMsg(IPacketMsg packetMsg) {
         if (packetMsg == null) {
@@ -1033,4 +1074,17 @@ public class SteamFriends extends ClientMsgHandler {
         client.postCallback(new PersonaChangeCallback(new JobID(packetMsg.getTargetJobID()), response.getBody()));
     }
 
+    private void handleNicknameList(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientPlayerNicknameList.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientPlayerNicknameList.class, packetMsg);
+
+        client.postCallback(new NicknameListCallback(request.getBody()));
+    }
+
+    private void handlePlayerNicknameResponse(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientSetPlayerNicknameResponse.Builder> request =
+                new ClientMsgProtobuf<>(CMsgClientSetPlayerNicknameResponse.class, packetMsg);
+
+        client.postCallback(new NicknameCallback(request.getBody()));
+    }
 }
