@@ -16,9 +16,9 @@ public class SteamID {
 
     private final BitVector64 steamID;
 
-    private static final Pattern STEAM2_REGEX = Pattern.compile("STEAM_(?<universe>[0-4]):(?<authserver>[0-1]):(?<accountid>\\d+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern STEAM3_REGEX = Pattern.compile("\\[(?<type>[AGMPCgcLTIUai]):(?<universe>[0-4]):(?<account>\\d+)(:(?<instance>\\d+))?\\]");
-    private static final Pattern STEAM3_FALLBACK_REGEX = Pattern.compile("\\[(?<type>[AGMPCgcLTIUai]):(?<universe>[0-4]):(?<account>\\d+)(\\((?<instance>\\d+)\\))?\\]");
+    private static final Pattern STEAM2_REGEX = Pattern.compile("STEAM_([0-4]):([0-1]):(\\d+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern STEAM3_REGEX = Pattern.compile("\\[([AGMPCgcLTIUai]):([0-4]):(\\d+)(:(\\d+))?]");
+    private static final Pattern STEAM3_FALLBACK_REGEX = Pattern.compile("\\[([AGMPCgcLTIUai]):([0-4]):(\\d+)(\\((\\d+)\\))?]");
 
     private static final Map<EAccountType, Character> ACCOUNT_TYPE_CHARS;
 
@@ -178,8 +178,8 @@ public class SteamID {
         long accountId;
         long authServer;
         try {
-            accountId = Long.parseLong(matcher.group("accountid"));
-            authServer = Long.parseLong(matcher.group("authserver"));
+            accountId = Long.parseLong(matcher.group(3));
+            authServer = Long.parseLong(matcher.group(2));
         } catch (NumberFormatException nfe) {
             return false;
         }
@@ -217,13 +217,13 @@ public class SteamID {
         long universe;
 
         try {
-            accId = Long.parseLong(matcher.group("account"));
-            universe = Long.parseLong(matcher.group("universe"));
+            accId = Long.parseLong(matcher.group(3));
+            universe = Long.parseLong(matcher.group(2));
         } catch (NumberFormatException nfe) {
             return false;
         }
 
-        String typeString = matcher.group("type");
+        String typeString = matcher.group(1);
 
         if (typeString.length() != 1) {
             return false;
@@ -233,7 +233,7 @@ public class SteamID {
 
         long instance;
 
-        String instanceGroup = matcher.group("instance");
+        String instanceGroup = matcher.group(5);
         if (!Strings.isNullOrEmpty(instanceGroup)) {
             instance = Long.parseLong(instanceGroup);
         } else {
