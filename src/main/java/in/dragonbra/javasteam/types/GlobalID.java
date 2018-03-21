@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.types;
 
+import in.dragonbra.javasteam.util.compat.ObjectsCompat;
+
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * Represents a globally unique identifier within the Steam network.
@@ -134,7 +135,7 @@ public class GlobalID {
             return false;
         }
 
-        return Objects.equals(gidBits.getData(), ((GlobalID) obj).gidBits.getData());
+        return ObjectsCompat.equals(gidBits.getData(), ((GlobalID) obj).gidBits.getData());
     }
 
     /**

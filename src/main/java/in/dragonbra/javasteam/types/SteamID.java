@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.util.CollectionUtils;
 import in.dragonbra.javasteam.util.Strings;
+import in.dragonbra.javasteam.util.compat.ObjectsCompat;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -554,7 +555,7 @@ public class SteamID {
 
         SteamID sid = (SteamID) obj;
 
-        return Objects.equals(steamID.getData(), sid.steamID.getData());
+        return ObjectsCompat.equals(steamID.getData(), sid.steamID.getData());
     }
 
     /**
