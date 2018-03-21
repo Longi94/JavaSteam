@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.types;
 
-import java.util.Objects;
+import in.dragonbra.javasteam.util.compat.ObjectsCompat;
 
 /**
  * This 64bit structure represents an app, mod, shortcut, or p2p file on the Steam network.
@@ -178,7 +178,7 @@ public class GameID {
             return false;
         }
 
-        return Objects.equals(gameId.getData(), ((GameID) obj).gameId.getData());
+        return ObjectsCompat.equals(gameId.getData(), ((GameID) obj).gameId.getData());
     }
 
     /**
