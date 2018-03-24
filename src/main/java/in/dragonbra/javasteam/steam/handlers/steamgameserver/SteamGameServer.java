@@ -148,7 +148,7 @@ public class SteamGameServer extends ClientMsgHandler {
      * The Steam server will disconnect the client, and a {@link DisconnectedCallback} will be posted.
      */
     public void logOff() {
-        expectDisconnection = true;
+        setExpectDisconnection(true);
 
         ClientMsgProtobuf<CMsgClientLogOff.Builder> logOff = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
         client.send(logOff);

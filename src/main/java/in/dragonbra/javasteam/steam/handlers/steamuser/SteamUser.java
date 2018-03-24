@@ -228,7 +228,7 @@ public class SteamUser extends ClientMsgHandler {
      * {@link in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback DisconnectedCallback} will be posted.
      */
     public void logOff() {
-        expectDisconnection = true;
+        setExpectDisconnection(true);
 
         ClientMsgProtobuf<CMsgClientLogOff.Builder> logOff = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
         client.send(logOff);

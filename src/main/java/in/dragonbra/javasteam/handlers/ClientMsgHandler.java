@@ -11,8 +11,6 @@ public abstract class ClientMsgHandler {
 
     protected SteamClient client;
 
-    protected boolean expectDisconnection;
-
     public void setup(SteamClient client) {
         this.client = client;
     }
@@ -24,7 +22,7 @@ public abstract class ClientMsgHandler {
      *
      * @return whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      */
-    public boolean isExpectDisconnection() {
+    protected boolean isExpectDisconnection() {
         return client.isExpectDisconnection();
     }
 
@@ -35,7 +33,7 @@ public abstract class ClientMsgHandler {
      *
      * @param expectDisconnection whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      */
-    public void setExpectDisconnection(boolean expectDisconnection) {
+    protected void setExpectDisconnection(boolean expectDisconnection) {
         client.setExpectDisconnection(expectDisconnection);
     }
 
