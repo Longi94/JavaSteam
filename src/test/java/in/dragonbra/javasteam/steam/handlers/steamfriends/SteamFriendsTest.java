@@ -37,6 +37,24 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
     }
 
     @Test
+    public void setPersonaName() {
+        handler.setPersonaName("testname");
+
+        ClientMsgProtobuf<CMsgClientChangeStatus.Builder> msg = verifySend(EMsg.ClientChangeStatus);
+
+        assertEquals("testname", msg.getBody().getPlayerName());
+    }
+
+    @Test
+    public void setPersonaState() {
+        handler.setPersonaState(EPersonaState.Online);
+
+        ClientMsgProtobuf<CMsgClientChangeStatus.Builder> msg = verifySend(EMsg.ClientChangeStatus);
+
+        assertEquals(EPersonaState.Online.code(), msg.getBody().getPersonaState());
+    }
+
+    @Test
     public void sendChatMessage() throws UnsupportedEncodingException {
         SteamID testId = new SteamID(123456789L);
         handler.sendChatMessage(testId, EChatEntryType.ChatMsg, "testmessage");
@@ -477,6 +495,17 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         ClanStateCallback callback = verifyCallback();
 
         assertEquals(1, callback.getMemberTotalCount());
+    }
+
+    @Test
+    public void handleFriendResponse() {
+        IPacketMsg msg = getPacket(EMsg.ClientAddFriendResponse, true);
+
+        handler.handleMsg(msg);
+
+        FriendAddedCallback callback = verifyCallback();
+
+        assertEquals(EResult.OK, callback.getResult());
     }
 
     @Test
