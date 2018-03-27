@@ -61,4 +61,40 @@ public class ProfileInfoCallback extends CallbackMsg {
         this.headline = headline;
         this.summary = summary;
     }
+
+    public EResult getResult() {
+        return result;
+    }
+
+    public SteamID getSteamID() {
+        return steamID;
+    }
+
+    public Date getTimeCreated() {
+        return timeCreated;
+    }
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public String getCityName() {
+        return cityName;
+    }
+
+    public String getStateName() {
+        return stateName;
+    }
+
+    public String getCountryName() {
+        return countryName;
+    }
+
+    public String getHeadline() {
+        return headline;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
 }

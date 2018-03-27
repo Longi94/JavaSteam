@@ -1,16 +1,19 @@
 package in.dragonbra.javasteam;
 
+import com.google.protobuf.ByteString;
 import in.dragonbra.javasteam.base.ClientMsg;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.generated.MsgClientLogOnResponse;
-import in.dragonbra.javasteam.generated.MsgClientLoggedOff;
+import in.dragonbra.javasteam.enums.*;
+import in.dragonbra.javasteam.generated.*;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
+import in.dragonbra.javasteam.types.SteamID;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * @author lngtr
@@ -38,6 +41,44 @@ public abstract class TestPackets {
                 return clientRequestWebAPIAuthenticateUserNonceResponse();
             case ClientMarketingMessageUpdate2:
                 return clientMarketingMessageUpdate2();
+            case ClientFriendMsgIncoming:
+                return clientFriendMsgIncoming();
+            case ClientFriendMsgEchoToSender:
+                return clientFriendMsgEchoToSender();
+            case ClientFSGetFriendMessageHistoryResponse:
+                return clientFSGetFriendMessageHistoryResponse();
+            case ClientFriendsList:
+                return clientFriendsList();
+            case ClientPersonaState:
+                return clientPersonaState();
+            case ClientClanState:
+                return clientClanState();
+            case ClientAddFriendResponse:
+                return clientAddFriendResponse();
+            case ClientChatEnter:
+                return clientChatEnter();
+            case ClientChatMsg:
+                return clientChatMsg();
+            case ClientChatMemberInfo:
+                return clientChatMemberInfo();
+            case ClientChatRoomInfo:
+                return clientChatRoomInfo();
+            case ClientChatActionResult:
+                return clientChatActionResult();
+            case ClientChatInvite:
+                return clientChatInvite();
+            case ClientSetIgnoreFriendResponse:
+                return clientSetIgnoreFriendResponse();
+            case ClientFriendProfileInfoResponse:
+                return clientFriendProfileInfoResponse();
+            case ClientPersonaChangeResponse:
+                return clientPersonaChangeResponse();
+            case ClientPlayerNicknameList:
+                return clientPlayerNicknameList();
+            case AMClientSetPlayerNicknameResponse:
+                return aMClientSetPlayerNicknameResponse();
+            case ClientAMGetPersonaNameHistoryResponse:
+                return clientAMGetPersonaNameHistoryResponse();
             default:
                 throw new NullPointerException();
         }
@@ -136,6 +177,155 @@ public abstract class TestPackets {
 
     private static byte[] clientMarketingMessageUpdate2() {
         return loadFile("ClientMarketingMessageUpdate2.bin");
+    }
+
+    private static byte[] clientFriendMsgIncoming() {
+        ClientMsgProtobuf<CMsgClientFriendMsgIncoming.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientFriendMsgIncoming.class, EMsg.ClientFriendMsgIncoming);
+
+        try {
+            msg.getBody().setMessage(ByteString.copyFrom("testmessage", "utf-8"));
+        } catch (UnsupportedEncodingException ignored) {
+        }
+
+        msg.getBody().setSteamidFrom(123);
+        return msg.serialize();
+    }
+
+    private static byte[] clientFriendMsgEchoToSender() {
+        ClientMsgProtobuf<CMsgClientFriendMsgIncoming.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientFriendMsgIncoming.class, EMsg.ClientFriendMsgEchoToSender);
+
+        try {
+            msg.getBody().setMessage(ByteString.copyFrom("testmessage", "utf-8"));
+        } catch (UnsupportedEncodingException ignored) {
+        }
+
+        msg.getBody().setSteamidFrom(123);
+        return msg.serialize();
+    }
+
+    private static byte[] clientFSGetFriendMessageHistoryResponse() {
+        return loadFile("ClientFSGetFriendMessageHistoryResponse.bin");
+    }
+
+    private static byte[] clientFriendsList() {
+        return loadFile("ClientFriendsList.bin");
+    }
+
+    private static byte[] clientPersonaState() {
+        return loadFile("ClientPersonaState.bin");
+    }
+
+    private static byte[] clientClanState() {
+        return loadFile("ClientClanState.bin");
+    }
+
+    private static byte[] clientAddFriendResponse() {
+        ClientMsgProtobuf<CMsgClientAddFriendResponse.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientAddFriendResponse.class, EMsg.ClientAddFriendResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatEnter() {
+        ClientMsg<MsgClientChatEnter> msg = new ClientMsg<>(MsgClientChatEnter.class);
+
+        msg.getBody().setSteamIdChat(new SteamID(123));
+        msg.getBody().setChatRoomType(EChatRoomType.Friend);
+        msg.getBody().setEnterResponse(EChatRoomEnterResponse.Success);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatMsg() {
+        ClientMsg<MsgClientChatMsg> msg = new ClientMsg<>(MsgClientChatMsg.class);
+
+        msg.getBody().setSteamIdChatter(new SteamID(123));
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatMemberInfo() {
+        ClientMsg<MsgClientChatMemberInfo> msg = new ClientMsg<>(MsgClientChatMemberInfo.class);
+
+        msg.getBody().setSteamIdChat(new SteamID(123));
+        msg.getBody().setType(EChatInfoType.StateChange);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatRoomInfo() {
+        ClientMsg<MsgClientChatRoomInfo> msg = new ClientMsg<>(MsgClientChatRoomInfo.class);
+
+        msg.getBody().setSteamIdChat(new SteamID(123));
+        msg.getBody().setType(EChatInfoType.InfoUpdate);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatActionResult() {
+        ClientMsg<MsgClientChatActionResult> msg = new ClientMsg<>(MsgClientChatActionResult.class);
+
+        msg.getBody().setSteamIdChat(new SteamID(123));
+        msg.getBody().setChatAction(EChatAction.Ban);
+        msg.getBody().setActionResult(EChatActionResult.Success);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientChatInvite() {
+        ClientMsgProtobuf<CMsgClientChatInvite.Builder> msg = new ClientMsgProtobuf<>(CMsgClientChatInvite.class, EMsg.ClientChatInvite);
+
+        msg.getBody().setSteamIdChat(123);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientSetIgnoreFriendResponse() {
+        ClientMsg<MsgClientSetIgnoreFriendResponse> msg = new ClientMsg<>(MsgClientSetIgnoreFriendResponse.class);
+
+        msg.getBody().setResult(EResult.OK);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientFriendProfileInfoResponse() {
+        ClientMsgProtobuf<CMsgClientFriendProfileInfoResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientFriendProfileInfoResponse.class, EMsg.ClientFriendProfileInfoResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientPersonaChangeResponse() {
+        ClientMsgProtobuf<CMsgPersonaChangeResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgPersonaChangeResponse.class, EMsg.ClientPersonaChangeResponse);
+
+        msg.getBody().setResult(EResult.OK.code());
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientPlayerNicknameList() {
+        ClientMsgProtobuf<CMsgClientPlayerNicknameList.Builder> msg = new ClientMsgProtobuf<>(CMsgClientPlayerNicknameList.class, EMsg.ClientPlayerNicknameList);
+
+        msg.getBody().addNicknames(CMsgClientPlayerNicknameList.PlayerNickname.newBuilder().setNickname("testnickname"));
+
+        return msg.serialize();
+    }
+
+    private static byte[] aMClientSetPlayerNicknameResponse() {
+        ClientMsgProtobuf<CMsgClientSetPlayerNicknameResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientSetPlayerNicknameResponse.class, EMsg.AMClientSetPlayerNicknameResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientAMGetPersonaNameHistoryResponse() {
+        return loadFile("ClientAMGetPersonaNameHistoryResponse.bin");
     }
 
     // endregion

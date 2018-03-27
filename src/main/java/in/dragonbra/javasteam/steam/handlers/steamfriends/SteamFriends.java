@@ -160,10 +160,10 @@ public class SteamFriends extends ClientMsgHandler {
                 handleNicknameList(packetMsg);
             }
         });
-        dispatchMap.put(EMsg.AMPlayerNicknameListResponse, new Consumer<IPacketMsg>() {
+        dispatchMap.put(EMsg.AMClientSetPlayerNicknameResponse, new Consumer<IPacketMsg>() {
             @Override
             public void accept(IPacketMsg packetMsg) {
-                handleNicknameList(packetMsg);
+                handlePlayerNicknameResponse(packetMsg);
             }
         });
         dispatchMap.put(EMsg.ClientAMGetPersonaNameHistoryResponse, new Consumer<IPacketMsg>() {
@@ -862,6 +862,9 @@ public class SteamFriends extends ClientMsgHandler {
      * @return The Job ID of the request. This can be used to find the appropriate {@link AliasHistoryCallback}.
      */
     public JobID requestAliasHistory(SteamID steamID) {
+        if (steamID == null) {
+            throw new IllegalArgumentException("steamID is null");
+        }
         return requestAliasHistory(Collections.singletonList(steamID));
     }
 
@@ -886,6 +889,8 @@ public class SteamFriends extends ClientMsgHandler {
             request.getBody().addIds(CMsgClientAMGetPersonaNameHistory.IdInstance.newBuilder()
                     .setSteamid(steamID.convertToUInt64()));
         }
+
+        request.getBody().setIdCount(request.getBody().getIdsCount());
 
         client.send(request);
 

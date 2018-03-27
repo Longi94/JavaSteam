@@ -32,4 +32,20 @@ public class ChatActionResultCallback extends CallbackMsg {
         this.action = action;
         this.result = result;
     }
+
+    public SteamID getChatRoomID() {
+        return chatRoomID;
+    }
+
+    public SteamID getChatterID() {
+        return chatterID;
+    }
+
+    public EChatAction getAction() {
+        return action;
+    }
+
+    public EChatActionResult getResult() {
+        return result;
+    }
 }

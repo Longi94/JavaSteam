@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
  * @author lngtr
  * @since 2018-03-24
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class SteamUserTest extends HandlerTestBase<SteamUser> {
 
     @Override
