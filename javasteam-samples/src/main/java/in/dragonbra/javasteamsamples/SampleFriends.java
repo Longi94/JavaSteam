@@ -153,13 +153,13 @@ public class SampleFriends implements Runnable {
     private void onFriendList(FriendsListCallback callback) {
         // at this point, the client has received it's friends list
 
-        int friendCount = steamFriends.getFriendsCount();
+        int friendCount = callback.getFriendList().size();
 
         System.out.println("We have " + friendCount + " friends");
 
         for (int i = 0; i < friendCount; i++) {
             // steamids identify objects that exist on the steam network, such as friends, as an example
-            SteamID steamIdFriend = steamFriends.getFriendByIndex(i);
+            SteamID steamIdFriend = callback.getFriendList().get(i).getSteamID();
 
             // we'll just display the STEAM_ rendered version
             System.out.println("Friend: " + steamIdFriend.render());

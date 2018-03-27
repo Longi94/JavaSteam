@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import org.junit.Before;
@@ -41,6 +42,7 @@ public abstract class HandlerTestBase<T extends ClientMsgHandler> extends TestBa
         handler = createHandler();
         handler.setup(steamClient);
         when(steamClient.getSteamID()).thenReturn(new SteamID(123L));
+        when(steamClient.getConfiguration()).thenReturn(SteamConfiguration.createDefault());
         when(steamClient.isConnected()).thenReturn(true);
         when(steamClient.getNextJobID()).thenReturn(SOURCE_JOB_ID);
         when(steamClient.getUniverse()).thenReturn(EUniverse.Public);

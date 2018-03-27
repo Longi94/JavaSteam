@@ -15,14 +15,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryForOfflineMessages;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientAccountInfo;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.cache.AccountCache;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.cache.Clan;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.cache.User;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.*;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
-import in.dragonbra.javasteam.types.GameID;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -40,12 +34,6 @@ import java.util.*;
 public class SteamFriends extends ClientMsgHandler {
 
     private static final Logger logger = LogManager.getLogger(SteamFriends.class);
-
-    private final Object listLock = new Object();
-    private List<SteamID> friendList = Collections.synchronizedList(new ArrayList<SteamID>());
-    private List<SteamID> clanList = Collections.synchronizedList(new ArrayList<SteamID>());
-
-    private AccountCache cache = new AccountCache();
 
     private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
 
@@ -86,12 +74,6 @@ public class SteamFriends extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleFriendMessageHistoryResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientAccountInfo, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleAccountInfo(packetMsg);
             }
         });
         dispatchMap.put(EMsg.ClientAddFriendResponse, new Consumer<IPacketMsg>() {
@@ -177,16 +159,6 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     /**
-     * Gets the local user's persona name. Will be null before user initialization.
-     * User initialization is performed prior to {@link AccountInfoCallback} callback.
-     *
-     * @return The name.
-     */
-    public String getPersonaName() {
-        return cache.getLocalUser().getName();
-    }
-
-    /**
      * Sets the local user's persona name and broadcasts it over the network.
      * Results are returned in a{@link PersonaChangeCallback} callback.
      *
@@ -197,23 +169,11 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("name is null");
         }
 
-        cache.getLocalUser().setName(name);
-
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
 
-        stateMsg.getBody().setPersonaState(cache.getLocalUser().getPersonaState().code());
         stateMsg.getBody().setPlayerName(name);
 
         client.send(stateMsg);
-    }
-
-    /**
-     * Gets the local user's persona state.
-     *
-     * @return The persona state.
-     */
-    public EPersonaState getPersonaState() {
-        return cache.getLocalUser().getPersonaState();
     }
 
     /**
@@ -227,193 +187,11 @@ public class SteamFriends extends ClientMsgHandler {
             throw new IllegalArgumentException("state is null");
         }
 
-        cache.getLocalUser().setPersonaState(state);
-
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
 
         stateMsg.getBody().setPersonaState(state.code());
 
         client.send(stateMsg);
-    }
-
-    /**
-     * Gets the friend count of the local user.
-     *
-     * @return The number of friends.
-     */
-    public int getFriendsCount() {
-        synchronized (listLock) {
-            return friendList.size();
-        }
-    }
-
-    /**
-     * Gets a friend by index.
-     *
-     * @param index The index.
-     * @return A valid steamid of a friend if the index is in range; otherwise a steamid representing 0
-     */
-    public SteamID getFriendByIndex(int index) {
-        synchronized (listLock) {
-            if (index < 0 || index >= friendList.size()) {
-                return new SteamID();
-            }
-
-            return friendList.get(index);
-        }
-    }
-
-    /**
-     * Gets the persona name of a friend.
-     *
-     * @param steamID The steam id.
-     * @return The name.
-     */
-    public String getPersonaName(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getName();
-    }
-
-    /**
-     * Gets the persona state of a friend.
-     *
-     * @param steamID The steam id.
-     * @return he persona state.
-     */
-    public EPersonaState getFriendPersonaState(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getPersonaState();
-    }
-
-    /**
-     * Gets the relationship of a friend.
-     *
-     * @param steamID The steam id.
-     * @return The relationship of the friend to the local user.
-     */
-    public EFriendRelationship getFriendRelationship(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getRelationship();
-    }
-
-    /**
-     * Gets the game name of a friend playing a game.
-     *
-     * @param steamID The steam id
-     * @return The game name of a friend playing a game, or null if they haven't been cached yet
-     */
-    public String getFriendGamePlayedName(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getGameName();
-    }
-
-    /**
-     * Gets the GameID of a friend playing a game.
-     *
-     * @param steamID The steam id.
-     * @return The gameid of a friend playing a game, or 0 if they haven't been cached yet.
-     */
-    public GameID getFriendGamePlayed(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getGameID();
-    }
-
-    /**
-     * Gets a SHA-1 hash representing the friend's avatar.
-     *
-     * @param steamID The SteamID of the friend to get the avatar of.
-     * @return A byte array representing a SHA-1 hash of the friend's avatar.
-     */
-    public byte[] getFriendAvatar(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getUser(steamID).getAvatarHash();
-    }
-
-    /**
-     * Gets the count of clans the local user is a member of.
-     *
-     * @return The number of clans this user is a member of.
-     */
-    public int getClanCount() {
-        synchronized (listLock) {
-            return clanList.size();
-        }
-    }
-
-    /**
-     * Gets a clan SteamID by index.
-     *
-     * @param index The index.
-     * @return A valid steamid of a clan if the index is in range; otherwise a steamid representing 0.
-     */
-    public SteamID getClanByIndex(int index) {
-        synchronized (listLock) {
-            if (index < 0 || index >= clanList.size()) {
-                return new SteamID();
-            }
-
-            return clanList.get(index);
-        }
-    }
-
-    /**
-     * Gets the name of a clan.
-     *
-     * @param steamID The clan SteamID.
-     * @return The name.
-     */
-    public String getClanName(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getClan(steamID).getName();
-    }
-
-    /**
-     * Gets the relationship of a clan.
-     *
-     * @param steamID The clan steamid.
-     * @return The relationship of the clan to the local user.
-     */
-    public EClanRelationship getClanRelationship(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getClan(steamID).getRelationship();
-    }
-
-    /**
-     * Gets a SHA-1 hash representing the clan's avatar.
-     *
-     * @param steamID The SteamID of the clan to get the avatar of.
-     * @return A byte array representing a SHA-1 hash of the clan's avatar, or null if the clan could not be found.
-     */
-    public byte[] getClanAvatar(SteamID steamID) {
-        if (steamID == null) {
-            throw new IllegalArgumentException("steamID is null");
-        }
-
-        return cache.getClan(steamID).getAvatarHash();
     }
 
     /**
@@ -920,11 +698,6 @@ public class SteamFriends extends ClientMsgHandler {
         return chatID;
     }
 
-    private void handleAccountInfo(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientAccountInfo.Builder> accInfo = new ClientMsgProtobuf<>(CMsgClientAccountInfo.class, packetMsg);
-        cache.getLocalUser().setName(accInfo.getBody().getPersonaName());
-    }
-
     private void handleFriendMsg(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientFriendMsgIncoming.Builder> friendMsg = new ClientMsgProtobuf<>(CMsgClientFriendMsgIncoming.class, packetMsg);
         client.postCallback(new FriendMsgCallback(friendMsg.getBody()));
@@ -944,70 +717,15 @@ public class SteamFriends extends ClientMsgHandler {
     private void handleFriendsList(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientFriendsList.Builder> list = new ClientMsgProtobuf<>(CMsgClientFriendsList.class, packetMsg);
 
-        cache.getLocalUser().setSteamID(client.getSteamID());
-
-        if (!list.getBody().getBincremental()) {
-            // if we're not an incremental update, the message contains all friends, so we should clear our current list
-            synchronized (listLock) {
-                friendList.clear();
-                clanList.clear();
-            }
-        }
-
         // we have to request information for all of our friends because steam only sends persona information for online friends
         ClientMsgProtobuf<CMsgClientRequestFriendData.Builder> reqInfo = new ClientMsgProtobuf<>(CMsgClientRequestFriendData.class, EMsg.ClientRequestFriendData);
 
         reqInfo.getBody().setPersonaStateRequested(EClientPersonaStateFlag.code(client.getConfiguration().getDefaultPersonaStateFlags()));
 
-        synchronized (listLock) {
-            List<SteamID> friendsToRemove = new ArrayList<>();
-            List<SteamID> clansToRemove = new ArrayList<>();
-
-            for (CMsgClientFriendsList.Friend friendObj : list.getBody().getFriendsList()) {
-                SteamID friendID = new SteamID(friendObj.getUlfriendid());
-
-                if (friendID.isIndividualAccount()) {
-                    User user = cache.getUser(friendID);
-
-                    user.setRelationship(EFriendRelationship.from(friendObj.getEfriendrelationship()));
-
-                    if (friendList.contains(friendID)) {
-                        // if this is a friend on our list, and they removed us, mark them for removal
-                        if (user.getRelationship() == EFriendRelationship.None) {
-                            friendsToRemove.add(friendID);
-                        }
-                    } else {
-                        // we don't know about this friend yet, lets add them
-                        friendList.add(friendID);
-                    }
-                } else if (friendID.isClanAccount()) {
-                    Clan clan = cache.getClan(friendID);
-
-                    clan.setRelationship(EClanRelationship.from(friendObj.getEfriendrelationship()));
-
-                    if (clanList.contains(friendID)) {
-                        // mark clans we were removed/kicked from
-                        // note: not actually sure about the kicked relationship, but i'm using it for good measure
-                        if (clan.getRelationship() == EClanRelationship.None || clan.getRelationship() == EClanRelationship.Kicked) {
-                            clansToRemove.add(friendID);
-                        }
-                    } else {
-                        clanList.add(friendID);
-                    }
-                }
-
-                if (!list.getBody().getBincremental()) {
-                    // request persona state for our friend & clan list when it's a non-incremental update
-                    reqInfo.getBody().addFriends(friendID.convertToUInt64());
-                }
-            }
-
-            // remove anything we marked for removal
-            for (SteamID f : friendsToRemove) {
-                friendList.remove(f);
-            }
-            for (SteamID c : clansToRemove) {
-                clanList.remove(c);
+        for (CMsgClientFriendsList.Friend friendObj : list.getBody().getFriendsList()) {
+            if (!list.getBody().getBincremental()) {
+                // request persona state for our friend & clan list when it's a non-incremental update
+                reqInfo.getBody().addFriends(friendObj.getUlfriendid());
             }
         }
 
@@ -1020,44 +738,6 @@ public class SteamFriends extends ClientMsgHandler {
 
     private void handlePersonaState(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientPersonaState.Builder> persState = new ClientMsgProtobuf<>(CMsgClientPersonaState.class, packetMsg);
-
-        int flags = persState.getBody().getStatusFlags();
-
-        for (CMsgClientPersonaState.Friend friend : persState.getBody().getFriendsList()) {
-            SteamID friendID = new SteamID(friend.getFriendid());
-
-            if (friendID.isIndividualAccount()) {
-                User cacheFriend = cache.getUser(friendID);
-
-                if ((flags & EClientPersonaStateFlag.PlayerName.code()) == EClientPersonaStateFlag.PlayerName.code()) {
-                    cacheFriend.setName(friend.getPlayerName());
-                }
-
-                if ((flags & EClientPersonaStateFlag.Presence.code()) == EClientPersonaStateFlag.Presence.code()) {
-                    cacheFriend.setAvatarHash(friend.getAvatarHash().toByteArray());
-                    cacheFriend.setPersonaState(EPersonaState.from(friend.getPersonaState()));
-                    cacheFriend.setPersonaStateFlags(friend.getPersonaStateFlags());
-                }
-
-                if ((flags & EClientPersonaStateFlag.GameDataBlob.code()) == EClientPersonaStateFlag.GameDataBlob.code()) {
-                    cacheFriend.setGameName(friend.getGameName());
-                    cacheFriend.setGameID(new GameID(friend.getGameid()));
-                    cacheFriend.setGameAppID(friend.getGamePlayedAppId());
-                }
-            } else if (friendID.isClanAccount()) {
-                Clan cacheClan = cache.getClan(friendID);
-
-                if ((flags & EClientPersonaStateFlag.PlayerName.code()) == EClientPersonaStateFlag.PlayerName.code()) {
-                    cacheClan.setName(friend.getPlayerName());
-                }
-
-                if ((flags & EClientPersonaStateFlag.Presence.code()) == EClientPersonaStateFlag.Presence.code()) {
-                    cacheClan.setAvatarHash(friend.getAvatarHash().toByteArray());
-                }
-            }
-
-            // TODO: 2018-02-26 cache other details/account types?
-        }
 
         client.postCallback(new PersonaStatesCallback(persState.getBody()));
     }
@@ -1118,9 +798,6 @@ public class SteamFriends extends ClientMsgHandler {
 
     private void handlePersonaChangeResponse(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgPersonaChangeResponse.Builder> response = new ClientMsgProtobuf<>(CMsgPersonaChangeResponse.class, packetMsg);
-
-        // update our cache to what steam says our name is
-        cache.getLocalUser().setName(response.getBody().getPlayerName());
 
         client.postCallback(new PersonaChangeCallback(new JobID(packetMsg.getTargetJobID()), response.getBody()));
     }
