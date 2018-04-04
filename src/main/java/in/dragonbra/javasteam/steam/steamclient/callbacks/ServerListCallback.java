@@ -7,7 +7,6 @@ import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This callback is fired when the client receives a list of all publically available Steam3 servers.
@@ -20,11 +19,14 @@ public class ServerListCallback extends CallbackMsg {
     public ServerListCallback(CMsgClientServerList.Builder serverList) {
         for (CMsgClientServerList.Server s : serverList.getServersList()) {
             EServerType type = EServerType.from(s.getServerType());
-            if (!servers.containsKey(type)) {
-                servers.put(type, new ArrayList<InetSocketAddress>());
+
+            Collection<InetSocketAddress> addresses = servers.get(type);
+            if (addresses == null) {
+                addresses = new ArrayList<>();
+                servers.put(type, addresses);
             }
 
-            servers.get(type).add(new InetSocketAddress(
+            addresses.add(new InetSocketAddress(
                     NetHelpers.getIPAddress(s.getServerIp()), s.getServerPort()
             ));
         }

@@ -229,8 +229,9 @@ public abstract class CMClient {
      * @return List of server endpoints
      */
     public List<InetSocketAddress> getServers(EServerType type) {
-        if (serverMap.containsKey(type)) {
-            return new ArrayList<>(serverMap.get(type));
+        Set<InetSocketAddress> addresses = serverMap.get(type);
+        if (addresses != null) {
+            return new ArrayList<>(addresses);
         }
 
         return new ArrayList<>();
@@ -441,11 +442,11 @@ public abstract class CMClient {
             EServerType type = EServerType.from(server.getServerType());
 
             Set<InetSocketAddress> endPointSet;
-            if (!serverMap.containsKey(type)) {
+            endPointSet = serverMap.get(type);
+
+            if (endPointSet == null) {
                 endPointSet = new HashSet<>();
                 serverMap.put(type, endPointSet);
-            } else {
-                endPointSet = serverMap.get(type);
             }
 
             endPointSet.add(new InetSocketAddress(NetHelpers.getIPAddress(server.getServerIp()), server.getServerPort()));

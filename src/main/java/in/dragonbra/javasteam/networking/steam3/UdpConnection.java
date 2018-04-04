@@ -297,9 +297,8 @@ public class UdpConnection extends Connection {
         UdpPacket packet;
 
         // Make sure that the first packet of the next message to handle is present
-        if (inPackets.containsKey(inSeqHandled + 1)) {
-            packet = inPackets.get(inSeqHandled + 1);
-        } else {
+        packet = inPackets.get(inSeqHandled + 1);
+        if (packet == null) {
             return 0;
         }
 

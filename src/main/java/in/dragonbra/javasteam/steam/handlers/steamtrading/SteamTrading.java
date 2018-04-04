@@ -108,8 +108,9 @@ public class SteamTrading extends ClientMsgHandler {
             throw new IllegalArgumentException("packetMsg is null");
         }
 
-        if (dispatchMap.containsKey(packetMsg.getMsgType())) {
-            dispatchMap.get(packetMsg.getMsgType()).accept(packetMsg);
+        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
+        if (dispatcher != null) {
+            dispatcher.accept(packetMsg);
         }
     }
 

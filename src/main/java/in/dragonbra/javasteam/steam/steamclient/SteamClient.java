@@ -153,11 +153,7 @@ public class SteamClient extends CMClient {
      */
     @SuppressWarnings("unchecked")
     public <T extends ClientMsgHandler> T getHandler(Class<T> type) {
-        if (handlers.containsKey(type)) {
-            return (T) handlers.get(type);
-        }
-
-        return null;
+        return (T) handlers.get(type);
     }
 
     /**
@@ -351,9 +347,10 @@ public class SteamClient extends CMClient {
             return false;
         }
 
-        if (dispatchMap.containsKey(packetMsg.getMsgType())) {
+        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
+        if (dispatcher != null) {
             // we want to handle some of the clientmsgs before we pass them along to registered handlers
-            dispatchMap.get(packetMsg.getMsgType()).accept(packetMsg);
+            dispatcher.accept(packetMsg);
         }
 
         for (Map.Entry<Class<? extends ClientMsgHandler>, ClientMsgHandler> entry : handlers.entrySet()) {

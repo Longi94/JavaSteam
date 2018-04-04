@@ -145,7 +145,10 @@ public class KVTextReader extends PushbackInputStream {
 
                     char escapedChar = (char) read();
 
-                    char replacedChar = ESCAPED_MAPPING.containsKey(escapedChar) ? ESCAPED_MAPPING.get(escapedChar) : escapedChar;
+                    Character replacedChar = ESCAPED_MAPPING.get(escapedChar);
+                    if (replacedChar == null) {
+                        replacedChar = escapedChar;
+                    }
 
                     sb.append(replacedChar);
 

@@ -79,6 +79,7 @@ public class KeyDictionary {
      * @return The public key.
      */
     public static byte[] getPublicKey(EUniverse universe) {
-        return KEYS.containsKey(universe) ? KEYS.get(universe) : KEYS.get(EUniverse.Invalid);
+        byte[] key = KEYS.get(universe);
+        return key == null ? KEYS.get(EUniverse.Invalid) : key;
     }
 }

@@ -22,10 +22,12 @@ public class LogManager {
      * @return the logger instance.
      */
     public static Logger getLogger(Class<?> clazz) {
-        if (!LOGGERS.containsKey(clazz)) {
-            LOGGERS.put(clazz, new Logger(clazz));
+        Logger logger = LOGGERS.get(clazz);
+        if (logger == null) {
+            logger = new Logger(clazz);
+            LOGGERS.put(clazz, logger);
         }
-        return LOGGERS.get(clazz);
+        return logger;
     }
 
     /**
