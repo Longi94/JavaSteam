@@ -2,6 +2,8 @@ package in.dragonbra.javasteamsamples;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
+import in.dragonbra.javasteam.steam.handlers.steamuser.MachineAuthDetails;
+import in.dragonbra.javasteam.steam.handlers.steamuser.OTPDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback;
@@ -15,6 +17,10 @@ import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 @SuppressWarnings("Duplicates")
@@ -163,9 +169,29 @@ public class SampleSteamGuardRememberMe implements Runnable {
     }
 
     private void onMachineAuth(UpdateMachineAuthCallback callback) {
-        try (FileOutputStream fos = new FileOutputStream("sentry.bin")) {
-            fos.write(callback.getData());
-        } catch (IOException e) {
+        File sentry = new File("sentry.bin");
+        try (FileOutputStream fos = new FileOutputStream(sentry)) {
+            FileChannel channel = fos.getChannel();
+            channel.position(callback.getOffset());
+            channel.write(ByteBuffer.wrap(callback.getData(), 0, callback.getBytesToWrite()));
+
+            OTPDetails otpDetails = new OTPDetails();
+            otpDetails.setIdentifier(callback.getOneTimePassword().getIdentifier());
+            otpDetails.setType(callback.getOneTimePassword().getType());
+
+            MachineAuthDetails details = new MachineAuthDetails();
+            details.setJobID(callback.getJobID());
+            details.setFileName(callback.getFileName());
+            details.setBytesWritten(callback.getBytesToWrite());
+            details.setFileSize((int) sentry.length());
+            details.setOffset(callback.getOffset());
+            details.seteResult(EResult.OK);
+            details.setLastError(0);
+            details.setOneTimePassword(otpDetails);
+            details.setSentryFileHash(calculateSHA1(sentry));
+
+            steamUser.sendMachineAuthResponse(details);
+        } catch (IOException | NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
     }
@@ -173,8 +199,23 @@ public class SampleSteamGuardRememberMe implements Runnable {
     private void onLoginKey(LoginKeyCallback callback) {
         try (FileWriter fw = new FileWriter("loginkey.txt")) {
             fw.write(callback.getLoginKey());
+            steamUser.acceptNewLoginKey(callback);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private byte[] calculateSHA1(File file) throws NoSuchAlgorithmException, IOException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-1");
+        InputStream fis = new FileInputStream(file);
+        int n = 0;
+        byte[] buffer = new byte[8192];
+        while (n != -1) {
+            n = fis.read(buffer);
+            if (n > 0) {
+                digest.update(buffer, 0, n);
+            }
+        }
+        return digest.digest();
     }
 }
