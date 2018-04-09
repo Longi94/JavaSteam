@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam.webapi;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.steamclient.configuration.ISteamConfigurationBuilder;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
@@ -20,7 +21,7 @@ import static org.junit.Assert.assertEquals;
  * @author lngtr
  * @since 2018-04-09
  */
-public class SteamDirectoryTest {
+public class SteamDirectoryTest extends TestBase {
 
     @Test
     public void load() throws IOException, InterruptedException {

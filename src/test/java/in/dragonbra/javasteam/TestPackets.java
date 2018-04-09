@@ -6,7 +6,13 @@ import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.enums.*;
 import in.dragonbra.javasteam.generated.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGameConnectTokens;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicketResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPasswordResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthTokenResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKeyResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicenseResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.types.SteamID;
@@ -79,6 +85,30 @@ public abstract class TestPackets {
                 return aMClientSetPlayerNicknameResponse();
             case ClientAMGetPersonaNameHistoryResponse:
                 return clientAMGetPersonaNameHistoryResponse();
+            case ClientPICSProductInfoResponse:
+                return clientPICSProductInfoResponse();
+            case ClientUpdateGuestPassesList:
+                return clientUpdateGuestPassesList();
+            case ClientPICSChangesSinceResponse:
+                return clientPICSChangesSinceResponse();
+            case ClientPICSAccessTokenResponse:
+                return clientPICSAccessTokenResponse();
+            case ClientLicenseList:
+                return clientLicenseList();
+            case ClientGameConnectTokens:
+                return clientGameConnectTokens();
+            case ClientVACBanStatus:
+                return clientVACBanStatus();
+            case ClientRequestFreeLicenseResponse:
+                return clientRequestFreeLicenseResponse();
+            case ClientGetAppOwnershipTicketResponse:
+                return clientGetAppOwnershipTicketResponse();
+            case ClientGetDepotDecryptionKeyResponse:
+                return clientGetDepotDecryptionKeyResponse();
+            case ClientGetCDNAuthTokenResponse:
+                return clientGetCDNAuthTokenResponse();
+            case ClientCheckAppBetaPasswordResponse:
+                return clientCheckAppBetaPasswordResponse();
             default:
                 throw new NullPointerException();
         }
@@ -326,6 +356,94 @@ public abstract class TestPackets {
 
     private static byte[] clientAMGetPersonaNameHistoryResponse() {
         return loadFile("ClientAMGetPersonaNameHistoryResponse.bin");
+    }
+
+    private static byte[] clientPICSProductInfoResponse() {
+        return loadFile("ClientPICSProductInfoResponse.bin");
+    }
+
+    private static byte[] clientUpdateGuestPassesList() {
+        return loadFile("ClientUpdateGuestPassesList.bin");
+    }
+
+    private static byte[] clientPICSChangesSinceResponse() {
+        return loadFile("ClientPICSChangesSinceResponse.bin");
+    }
+
+    private static byte[] clientPICSAccessTokenResponse() {
+        return loadFile("ClientPICSAccessTokenResponse.bin");
+    }
+
+    private static byte[] clientLicenseList() {
+        return loadFile("ClientLicenseList.bin");
+    }
+
+    private static byte[] clientGameConnectTokens() {
+        ClientMsgProtobuf<CMsgClientGameConnectTokens.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGameConnectTokens.class, EMsg.ClientGameConnectTokens);
+
+        msg.getBody().setMaxTokensToKeep(10);
+        for (int i = 0; i < 10; i++) {
+            msg.getBody().addTokens(ByteString.copyFrom(new byte[]{(byte) i}));
+        }
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientVACBanStatus() {
+        return loadFile("ClientVACBanStatus.bin");
+    }
+
+    private static byte[] clientRequestFreeLicenseResponse() {
+        ClientMsgProtobuf<CMsgClientRequestFreeLicenseResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientRequestFreeLicenseResponse.class, EMsg.ClientRequestFreeLicenseResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+        msg.getBody().addGrantedAppids(440);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientGetAppOwnershipTicketResponse() {
+        ClientMsgProtobuf<CMsgClientGetAppOwnershipTicketResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGetAppOwnershipTicketResponse.class, EMsg.ClientGetAppOwnershipTicketResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+        msg.getBody().setAppId(440);
+        msg.getBody().setTicket(ByteString.EMPTY);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientGetDepotDecryptionKeyResponse() {
+        ClientMsgProtobuf<CMsgClientGetDepotDecryptionKeyResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGetDepotDecryptionKeyResponse.class, EMsg.ClientGetDepotDecryptionKeyResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+        msg.getBody().setDepotId(1);
+        msg.getBody().setDepotEncryptionKey(ByteString.EMPTY);
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientGetCDNAuthTokenResponse() {
+        ClientMsgProtobuf<CMsgClientGetCDNAuthTokenResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGetCDNAuthTokenResponse.class, EMsg.ClientGetCDNAuthTokenResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+        msg.getBody().setExpirationTime(946684800);
+        msg.getBody().setToken("testtoken");
+
+        return msg.serialize();
+    }
+
+    private static byte[] clientCheckAppBetaPasswordResponse() {
+        ClientMsgProtobuf<CMsgClientCheckAppBetaPasswordResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientCheckAppBetaPasswordResponse.class, EMsg.ClientCheckAppBetaPasswordResponse);
+
+        msg.getBody().setEresult(EResult.OK.code());
+        msg.getBody().addBetapasswords(
+                CMsgClientCheckAppBetaPasswordResponse.BetaPassword.newBuilder()
+                        .setBetaname("testname")
+                        .setBetapassword("AAAA")
+                        .build()
+        );
+
+        return msg.serialize();
     }
 
     // endregion

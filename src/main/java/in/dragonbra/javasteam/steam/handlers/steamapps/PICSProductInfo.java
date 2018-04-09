@@ -75,7 +75,7 @@ public class PICSProductInfo extends CallbackMsg {
                 // todo: we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
                 br.readInt();
 
-                keyValues.readAsText(br);
+                keyValues.tryReadAsBinary(br);
             } catch (IOException e) {
                 throw new IllegalArgumentException("failed to read buffer", e);
             }
