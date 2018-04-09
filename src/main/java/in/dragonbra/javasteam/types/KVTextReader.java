@@ -64,11 +64,11 @@ public class KVTextReader extends PushbackInputStream {
             }
 
             currentKey = null;
-        } while (available() > 0);
+        } while (!endOfStream());
     }
 
     private void eatWhiteSpace() throws IOException {
-        while (available() > 0) {
+        while (!endOfStream()) {
             if (!Character.isWhitespace((char) peek())) {
                 break;
             }
@@ -78,7 +78,7 @@ public class KVTextReader extends PushbackInputStream {
     }
 
     private boolean eatCPPComment() throws IOException {
-        if (available() > 0) {
+        if (!endOfStream()) {
             char next = (char) peek();
 
             if (next == '/') {
@@ -101,12 +101,14 @@ public class KVTextReader extends PushbackInputStream {
         char c;
         do {
             c = (char) read();
-        } while (c != '\n' && available() > 0);
+        } while (c != '\n' && !endOfStream());
     }
 
     private byte peek() throws IOException {
         int p = read();
-        unread(p);
+        if (p >= 0) {
+            unread(p);
+        }
         return (byte) p;
     }
 
@@ -117,7 +119,7 @@ public class KVTextReader extends PushbackInputStream {
         while (true) {
             eatWhiteSpace();
 
-            if (available() == 0) {
+            if (endOfStream()) {
                 return null;
             }
 
@@ -126,7 +128,7 @@ public class KVTextReader extends PushbackInputStream {
             }
         }
 
-        if (available() == 0) {
+        if (endOfStream()) {
             return null;
         }
 
@@ -139,7 +141,7 @@ public class KVTextReader extends PushbackInputStream {
 
             StringBuilder sb = new StringBuilder();
 
-            while (available() > 0) {
+            while (!endOfStream()) {
                 if (peek() == '\\') {
                     read();
 
@@ -177,7 +179,7 @@ public class KVTextReader extends PushbackInputStream {
         int count = 0;
         StringBuilder ret = new StringBuilder();
 
-        while (available() > 0) {
+        while (!endOfStream()) {
             next = (char) peek();
 
             if (next == '"' || next == '{' || next == '}') {
@@ -205,5 +207,13 @@ public class KVTextReader extends PushbackInputStream {
             read();
         }
         return ret.toString();
+    }
+
+    private boolean endOfStream() {
+        try {
+            return peek() == -1;
+        } catch (IOException e) {
+            return true;
+        }
     }
 }

@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
+import in.dragonbra.javasteam.steam.webapi.WebAPI;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.util.EnumSet;
@@ -115,5 +116,15 @@ public class SteamConfiguration {
      */
     public SmartCMServerList getServerList() {
         return serverList;
+    }
+
+    /**
+     * Retrieves a handler capable of interacting with the specified interface on the Web API.
+     *
+     * @param _interface The interface to retrieve a handler for.
+     * @return A {@link WebAPI} object to interact with the Web API.
+     */
+    public WebAPI getWebAPI(String _interface) {
+        return new WebAPI(getWebAPIBaseAddress(), _interface, getWebAPIKey());
     }
 }
