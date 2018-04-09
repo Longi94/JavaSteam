@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,8 +33,11 @@ public class WebAPITest {
 
     private SteamConfiguration config;
 
+    private CountDownLatch lock;
+
     @Before
     public void setUp() throws IOException {
+        lock = new CountDownLatch(1);
         server = new MockWebServer();
 
         server.enqueue(new MockResponse().setBody("" +
@@ -98,12 +103,15 @@ public class WebAPITest {
             public void accept(KeyValue result) {
                 assertEquals("stringvalue", result.get("name").asString());
                 assertEquals("stringvalue", result.get("name").getValue());
+                lock.countDown();
             }
         });
 
         RecordedRequest request = server.takeRequest();
         assertEquals("/TestInterface/TestFunction/v1?format=vdf", request.getPath());
         assertEquals("GET", request.getMethod());
+
+        lock.await(2000, TimeUnit.MILLISECONDS);
     }
 
     @Test
