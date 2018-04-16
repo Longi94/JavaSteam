@@ -15,8 +15,6 @@ public class KeyDictionary {
     static {
         Map<EUniverse, byte[]> keys = new HashMap<>();
 
-        keys.put(EUniverse.Invalid, null);
-
         keys.put(EUniverse.Public, new byte[]{
                 (byte) 0x30, (byte) 0x81, (byte) 0x9D, (byte) 0x30, (byte) 0x0D, (byte) 0x06, (byte) 0x09, (byte) 0x2A, (byte) 0x86, (byte) 0x48, (byte) 0x86, (byte) 0xF7, (byte) 0x0D, (byte) 0x01, (byte) 0x01, (byte) 0x01,
                 (byte) 0x05, (byte) 0x00, (byte) 0x03, (byte) 0x81, (byte) 0x8B, (byte) 0x00, (byte) 0x30, (byte) 0x81, (byte) 0x87, (byte) 0x02, (byte) 0x81, (byte) 0x81, (byte) 0x00, (byte) 0xDF, (byte) 0xEC, (byte) 0x1A,
@@ -79,7 +77,6 @@ public class KeyDictionary {
      * @return The public key.
      */
     public static byte[] getPublicKey(EUniverse universe) {
-        byte[] key = KEYS.get(universe);
-        return key == null ? KEYS.get(EUniverse.Invalid) : key;
+        return KEYS.get(universe);
     }
 }
