@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.webapi;
 
 import in.dragonbra.javasteam.types.KeyValue;
+import in.dragonbra.javasteam.util.WebHelpers;
 import in.dragonbra.javasteam.util.compat.Consumer;
 import okhttp3.*;
 
@@ -258,6 +259,9 @@ public class WebAPI {
         if (httpMethod == null) {
             throw new IllegalArgumentException("httpMethod is null");
         }
+        if (!httpMethod.equalsIgnoreCase("GET") && !httpMethod.equalsIgnoreCase("POST")) {
+            throw new IllegalArgumentException("only GET and POST is supported right now");
+        }
         if (function == null) {
             throw new IllegalArgumentException("function is null");
         }
@@ -271,10 +275,6 @@ public class WebAPI {
             parameters.put("key", webAPIKey);
         }
 
-        if (!httpMethod.equalsIgnoreCase("GET") && !httpMethod.equalsIgnoreCase("POST")) {
-            throw new IllegalArgumentException("only GET and POST is supported right now");
-        }
-
         Request.Builder builder = new Request.Builder();
 
         HttpUrl.Builder urlBuilder = baseAddress.newBuilder()
@@ -284,13 +284,13 @@ public class WebAPI {
 
         if (httpMethod.equalsIgnoreCase("GET")) {
             for (Map.Entry<String, String> param : parameters.entrySet()) {
-                urlBuilder.addQueryParameter(param.getKey(), param.getValue());
+                urlBuilder.addQueryParameter(WebHelpers.urlEncode(param.getKey()), param.getValue());
             }
             builder.get();
         } else {
             FormBody.Builder bodyBuilder = new FormBody.Builder();
             for (Map.Entry<String, String> param : parameters.entrySet()) {
-                bodyBuilder.add(param.getKey(), param.getValue());
+                bodyBuilder.add(WebHelpers.urlEncode(param.getKey()), param.getValue());
             }
             builder.post(bodyBuilder.build());
         }
