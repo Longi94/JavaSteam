@@ -141,7 +141,7 @@ public class SteamUser extends ClientMsgHandler {
         logon.getProtoHeader().setSteamid(steamID.convertToUInt64());
 
         logon.getBody().setAccountName(details.getUsername());
-        if (details.getPassword() != null) {
+        if (!Strings.isNullOrEmpty(details.getPassword())) {
             logon.getBody().setPassword(details.getPassword());
         }
         logon.getBody().setShouldRememberPassword(details.isShouldRememberPassword());
