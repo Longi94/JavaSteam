@@ -284,13 +284,13 @@ public class WebAPI {
 
         if (httpMethod.equalsIgnoreCase("GET")) {
             for (Map.Entry<String, String> param : parameters.entrySet()) {
-                urlBuilder.addQueryParameter(WebHelpers.urlEncode(param.getKey()), param.getValue());
+                urlBuilder.addEncodedQueryParameter(WebHelpers.urlEncode(param.getKey()), param.getValue());
             }
             builder.get();
         } else {
             FormBody.Builder bodyBuilder = new FormBody.Builder();
             for (Map.Entry<String, String> param : parameters.entrySet()) {
-                bodyBuilder.add(WebHelpers.urlEncode(param.getKey()), param.getValue());
+                bodyBuilder.addEncoded(WebHelpers.urlEncode(param.getKey()), param.getValue());
             }
             builder.post(bodyBuilder.build());
         }
