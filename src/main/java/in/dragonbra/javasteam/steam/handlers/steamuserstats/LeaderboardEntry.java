@@ -46,4 +46,24 @@ public class LeaderboardEntry {
 
         details = Collections.unmodifiableList(details);
     }
+
+    public SteamID getSteamID() {
+        return steamID;
+    }
+
+    public int getGlobalRank() {
+        return globalRank;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public UGCHandle getUgcId() {
+        return ugcId;
+    }
+
+    public List<Integer> getDetails() {
+        return details;
+    }
 }
