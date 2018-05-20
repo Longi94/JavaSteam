@@ -24,6 +24,7 @@ hs_err_pid*
 
 .gradle
 /build/
+/javasteam-tf/build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
