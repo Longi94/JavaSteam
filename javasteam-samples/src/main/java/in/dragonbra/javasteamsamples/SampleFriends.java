@@ -80,7 +80,7 @@ public class SampleFriends implements Runnable {
         manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
         manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
 
-        manager.subscribe(AccountInfoCallback.class, this::anAccountInfo);
+        manager.subscribe(AccountInfoCallback.class, this::onAccountInfo);
         manager.subscribe(FriendsListCallback.class, this::onFriendList);
         manager.subscribe(PersonaStatesCallback.class, this::onPersonaStates);
         manager.subscribe(FriendAddedCallback.class, this::onFriendAdded);
@@ -142,7 +142,7 @@ public class SampleFriends implements Runnable {
         isRunning = false;
     }
 
-    private void anAccountInfo(AccountInfoCallback callback) {
+    private void onAccountInfo(AccountInfoCallback callback) {
         // before being able to interact with friends, you must wait for the account info callback
         // this callback is posted shortly after a successful logon
 
