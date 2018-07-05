@@ -22,7 +22,7 @@ public interface IPacketGCMsg {
      *
      * @return The message type.
      */
-    int msgType();
+    int getMsgType();
 
     /**
      * Gets the target job id for this packet message.

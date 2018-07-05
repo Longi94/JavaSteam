@@ -37,8 +37,8 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<Bod
      * @param clazz the type of the body
      * @param msg   The network message type this client message represents.
      */
-    public ClientGCMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketMsg msg) {
-        this(clazz, msg.getMsgType().code());
+    public ClientGCMsgProtobuf(Class<? extends AbstractMessage> clazz, IPacketGCMsg msg) {
+        this(clazz, msg.getMsgType());
         if (!msg.isProto()) {
             logger.debug("ClientMsgProtobuf<" + clazz.getSimpleName() + "> used for non-proto message!");
         }

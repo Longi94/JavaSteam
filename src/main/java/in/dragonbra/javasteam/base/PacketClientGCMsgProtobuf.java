@@ -51,7 +51,7 @@ public class PacketClientGCMsgProtobuf implements IPacketGCMsg {
     }
 
     @Override
-    public int msgType() {
+    public int getMsgType() {
         return msgType;
     }
 
