@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
@@ -29,9 +30,9 @@ class SteamLanguageGenTask extends DefaultTask {
     }
 
     @SuppressWarnings('GroovyUnusedDeclaration')
-    @Input
-    File getInputFile() {
-        return inputFile
+    @InputDirectory
+    File getInputDirectory() {
+        return project.file('src/main/steamd/')
     }
 
     @Input
