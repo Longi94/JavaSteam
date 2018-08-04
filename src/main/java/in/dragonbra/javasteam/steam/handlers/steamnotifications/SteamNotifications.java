@@ -31,7 +31,7 @@ public class SteamNotifications extends ClientMsgHandler {
                 handleUserNotifications(packetMsg);
             }
         });
-        dispatchMap.put(EMsg.ClientFSOfflineMessageNotification, new Consumer<IPacketMsg>() {
+        dispatchMap.put(EMsg.ClientChatOfflineMessageNotification, new Consumer<IPacketMsg>() {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleOfflineMessageNotification(packetMsg);
@@ -81,7 +81,7 @@ public class SteamNotifications extends ClientMsgHandler {
      */
     public void requestOfflineMessageCount() {
         ClientMsgProtobuf<CMsgClientRequestOfflineMessageCount.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientRequestOfflineMessageCount.class, EMsg.ClientFSRequestOfflineMessageCount);
+                new ClientMsgProtobuf<>(CMsgClientRequestOfflineMessageCount.class, EMsg.ClientChatRequestOfflineMessageCount);
 
         client.send(request);
     }

@@ -9,10 +9,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CM
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGameConnectTokens;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicketResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPasswordResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthTokenResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKeyResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicenseResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.types.SteamID;
@@ -51,8 +48,8 @@ public abstract class TestPackets {
                 return clientFriendMsgIncoming();
             case ClientFriendMsgEchoToSender:
                 return clientFriendMsgEchoToSender();
-            case ClientFSGetFriendMessageHistoryResponse:
-                return clientFSGetFriendMessageHistoryResponse();
+            case ClientChatGetFriendMessageHistoryResponse:
+                return clientChatGetFriendMessageHistoryResponse();
             case ClientFriendsList:
                 return clientFriendsList();
             case ClientPersonaState:
@@ -235,8 +232,17 @@ public abstract class TestPackets {
         return msg.serialize();
     }
 
-    private static byte[] clientFSGetFriendMessageHistoryResponse() {
-        return loadFile("ClientFSGetFriendMessageHistoryResponse.bin");
+    private static byte[] clientChatGetFriendMessageHistoryResponse() {
+        ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistoryResponse.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistoryResponse.class, EMsg.ClientChatGetFriendMessageHistoryResponse);
+
+        msg.getBody().setSteamid(76561198817909313L);
+        msg.getBody().setSuccess(EResult.OK.code());
+        msg.getBody().addMessages(CMsgClientChatGetFriendMessageHistoryResponse.FriendMessage.newBuilder().build());
+        msg.getBody().addMessages(CMsgClientChatGetFriendMessageHistoryResponse.FriendMessage.newBuilder().build());
+        msg.getBody().addMessages(CMsgClientChatGetFriendMessageHistoryResponse.FriendMessage.newBuilder().build());
+
+        return msg.serialize();
     }
 
     private static byte[] clientFriendsList() {

@@ -696,10 +696,12 @@ class JavaGen implements Closeable, Flushable {
 
             if (prop.emit) {
                 if (prop.obsolete != null) {
-                    writer.writeln("/**")
-                    writer.writeln(" * @deprecated $prop.obsolete")
-                    writer.writeln(" */")
-                    writer.writeln('@Deprecated')
+                    // including obsolete items can introduce duplicates
+                    continue
+//                    writer.writeln("/**")
+//                    writer.writeln(" * @deprecated $prop.obsolete")
+//                    writer.writeln(" */")
+//                    writer.writeln('@Deprecated')
                 }
 
                 if (flags && !NUMBER_PATTERN.matcher(getType(prop._default[0])).matches()) {

@@ -70,7 +70,7 @@ public class SteamFriends extends ClientMsgHandler {
                 handleFriendEchoMsg(packetMsg);
             }
         });
-        dispatchMap.put(EMsg.ClientChatGetFriendMessageHistory, new Consumer<IPacketMsg>() {
+        dispatchMap.put(EMsg.ClientChatGetFriendMessageHistoryResponse, new Consumer<IPacketMsg>() {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleFriendMessageHistoryResponse(packetMsg);
