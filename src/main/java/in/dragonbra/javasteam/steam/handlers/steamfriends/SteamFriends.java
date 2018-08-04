@@ -70,7 +70,7 @@ public class SteamFriends extends ClientMsgHandler {
                 handleFriendEchoMsg(packetMsg);
             }
         });
-        dispatchMap.put(EMsg.ClientFSGetFriendMessageHistoryResponse, new Consumer<IPacketMsg>() {
+        dispatchMap.put(EMsg.ClientChatGetFriendMessageHistory, new Consumer<IPacketMsg>() {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleFriendMessageHistoryResponse(packetMsg);
@@ -585,7 +585,7 @@ public class SteamFriends extends ClientMsgHandler {
         }
 
         ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistory.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistory.class, EMsg.ClientFSGetFriendMessageHistory);
+                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistory.class, EMsg.ClientChatGetFriendMessageHistory);
 
         request.getBody().setSteamid(steamID.convertToUInt64());
 
@@ -599,7 +599,7 @@ public class SteamFriends extends ClientMsgHandler {
      */
     public void requestOfflineMessages() {
         ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistoryForOfflineMessages.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistoryForOfflineMessages.class, EMsg.ClientFSGetFriendMessageHistoryForOfflineMessages);
+                new ClientMsgProtobuf<>(CMsgClientChatGetFriendMessageHistoryForOfflineMessages.class, EMsg.ClientChatGetFriendMessageHistoryForOfflineMessages);
         client.send(request);
     }
 
