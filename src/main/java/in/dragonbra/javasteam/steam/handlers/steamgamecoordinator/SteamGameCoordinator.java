@@ -49,7 +49,7 @@ public class SteamGameCoordinator extends ClientMsgHandler {
         ClientMsgProtobuf<CMsgGCClient.Builder> clientMsg = new ClientMsgProtobuf<>(CMsgGCClient.class, EMsg.ClientToGC);
 
         clientMsg.getProtoHeader().setRoutingAppid(appId);
-        clientMsg.getBody().setMsgtype(MsgUtil.makeGCMsg(msg.getMsgType().code(), msg.isProto()));
+        clientMsg.getBody().setMsgtype(MsgUtil.makeGCMsg(msg.getMsgType(), msg.isProto()));
         clientMsg.getBody().setAppid(appId);
 
         clientMsg.getBody().setPayload(ByteString.copyFrom(msg.serialize()));

@@ -1,6 +1,5 @@
 package in.dragonbra.javasteam.base;
 
-import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
@@ -20,7 +19,7 @@ public interface IClientGCMsg {
      *
      * @return The message type.
      */
-    EMsg getMsgType();
+    int getMsgType();
 
     /**
      * Gets the target job id for this client message.

@@ -1,6 +1,5 @@
 package in.dragonbra.javasteam.base;
 
-import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgGCHdr;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.log.LogManager;
@@ -108,8 +107,8 @@ public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgB
     }
 
     @Override
-    public EMsg getMsgType() {
-        return EMsg.from(msgType);
+    public int getMsgType() {
+        return msgType;
     }
 
     @Override

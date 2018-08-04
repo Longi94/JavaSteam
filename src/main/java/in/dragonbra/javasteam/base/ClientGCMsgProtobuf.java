@@ -2,7 +2,6 @@ package in.dragonbra.javasteam.base;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.GeneratedMessageV3;
-import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgGCHdrProtoBuf;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
 import in.dragonbra.javasteam.types.JobID;
@@ -116,8 +115,8 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<Bod
     }
 
     @Override
-    public EMsg getMsgType() {
-        return EMsg.from(getHeader().getMsg());
+    public int getMsgType() {
+        return getHeader().getMsg();
     }
 
     @Override
