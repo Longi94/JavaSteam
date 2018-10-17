@@ -10,7 +10,7 @@ Currently only [snapshot builds](https://oss.sonatype.org/content/repositories/s
 
 If you get a `java.security.InvalidKeyException: Illegal key size or default parameters` exception when trying to encrypt a message you need to download the [Unlimited Strength Jurisdiction Policy Files](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html) and place them under `${java.home}/jre/lib/security/`. See [this stackoverflow question](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters).
 
-1. Add the snapshot repository to your build.
+**1. Add the snapshot repository to your build.**
 
 Gradle
 ```groovy
@@ -29,7 +29,7 @@ Maven
 </repository>
 ```
 
-2. Add the JavaSteam dependency to your project.
+**2. Add the JavaSteam dependency to your project.**
 
 Gradle
 ```groovy
@@ -45,7 +45,7 @@ Maven
 </dependency>
 ```
 
-3. Add the appropriate cryptography dependency to your project. JavaSteam depends on this.
+**3. Add the appropriate cryptography dependency to your project. JavaSteam depends on this.**
 
 Gradle
 ```groovy
@@ -60,7 +60,7 @@ Maven
   <artifactId>bcprov-jdk15on</artifactId>
   <version>1.59</version>
 </dependency>
-<dependency>  <!-- ANDROID ONLY -->
+<dependency> <!-- ANDROID ONLY -->
     <groupId>com.madgag.spongycastle</groupId>
     <artifactId>prov</artifactId>
     <version>1.58.0.0</version>
