@@ -82,48 +82,49 @@ function checkPullRequests(github) {
         });
     });
 
-    const javaSteamPromise = github.issues.getForRepo({
-        owner: owner,
-        repo: repo,
-        state: 'all',
-        labels: 'MPR',
-        filter: 'created'
-    });
+    steamKitPromise.then(response => {
+        const pullRequests = JSON.parse(response);
 
-    Promise.all([steamKitPromise, javaSteamPromise]).then(values => {
-        const pullRequests = JSON.parse(values[0]);
-        const issues = values[1].data;
-
-        const latest = issues.length > 0 ? new Date(issues[0].created_at).getTime() : 0;
-
-        console.log('Newest MPR issue ' + latest);
-
-        const newPRs = pullRequests.filter(pr => {
-            const mergeTime = new Date(pr.merged_at).getTime();
-
-            return pr.merged_at && latestPullRequest < mergeTime && latest < mergeTime;
-        });
-
-        console.log(newPRs.length + ' new pull requests to process.');
-
-        if (newPRs.length > 0) {
-
-            authenticateOcto(octokit).then(() => {
-                newPRs.forEach(pr => {
-                    if (pr.merged_at) {
-
-                        const mergeTime = new Date(pr.merged_at).getTime();
-
-                        createIssue(octokit, pr);
-
-                        if (latestPullRequest < mergeTime) {
-                            latestPullRequest = mergeTime;
-                        }
-                    }
-                });
+        authenticateOcto(octokit).then(() => {
+            const javaSteamPromise = github.issues.getForRepo({
+                owner: owner,
+                repo: repo,
+                state: 'all',
+                labels: 'MPR',
+                filter: 'created'
             });
-        }
 
+            javaSteamPromise.then(issues => {
+                issues = issues.data;
+
+                const latest = issues.length > 0 ? new Date(issues[0].created_at).getTime() : 0;
+
+                console.log('Newest MPR issue ' + latest);
+
+                const newPRs = pullRequests.filter(pr => {
+                    const mergeTime = new Date(pr.merged_at).getTime();
+
+                    return pr.merged_at && latestPullRequest < mergeTime && latest < mergeTime;
+                });
+
+                console.log(newPRs.length + ' new pull requests to process.');
+
+                if (newPRs.length > 0) {
+                    newPRs.forEach(pr => {
+                        if (pr.merged_at) {
+
+                            const mergeTime = new Date(pr.merged_at).getTime();
+
+                            createIssue(octokit, pr);
+
+                            if (latestPullRequest < mergeTime) {
+                                latestPullRequest = mergeTime;
+                            }
+                        }
+                    });
+                }
+            }, console.log);
+        }, console.log);
     }, console.log);
 }
 
