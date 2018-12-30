@@ -19,10 +19,12 @@ if (!argv.installid) {
     process.exit();
 }
 
+let latestPullRequestFile = "latest_pull_request.txt";
 let latestPullRequest = 0;
 
-if (argv.latest) {
-    latestPullRequest = argv.latest;
+try {
+    latestPullRequest = parseInt(fs.readFileSync(latestPullRequestFile));
+} catch (ignored) {
 }
 
 const repo = argv.repo ? argv.repo : 'labrat';
@@ -125,6 +127,8 @@ function checkPullRequests(github) {
                         }
                     });
                 }
+
+                fs.writeFileSync(latestPullRequestFile, latestPullRequest.toString());
             }, console.log);
         }, console.log);
     }, console.log);
