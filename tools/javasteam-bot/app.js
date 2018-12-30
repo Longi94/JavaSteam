@@ -1,4 +1,3 @@
-const schedule = require('node-schedule');
 const request = require('request');
 const octokit = require('@octokit/rest')();
 const argv = require('yargs').argv;
@@ -60,10 +59,6 @@ const steamKitOptions = {
         'User-Agent': 'javasteam-bot'
     }
 };
-
-schedule.scheduleJob('0 0 * * * *', function () {
-    checkPullRequests(octokit);
-});
 
 // run once at start up
 checkPullRequests(octokit);
@@ -138,9 +133,9 @@ function createIssue(octokit, pullRequest) {
         body: 'A new PR was merged over at [SteamKit](https://github.com/SteamRE/SteamKit). It should be checked if it\'s relevant for JavaSteam or not.\n' +
         '\n' +
         'Merged at ' + pullRequest.merged_at + '\n' +
-        '[Head over to the PRs to see more details.](https://github.com/SteamRE/SteamKit/pulls) (no direct links to avoid reference spamming).',
+        '[Head over to the PRs to see more details.](https://github.com/SteamRE/SteamKit/pulls?q=is%3Apr+is%3Aclosed) (no direct links to avoid reference spamming).',
         labels: ['MPR']
-    }).then(value => {
+    }).then(() => {
         console.log('Created issue for' + pullRequest.number);
     }, reason => {
         console.log('Failed to create issue for' + pullRequest.number);
