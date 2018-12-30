@@ -31,25 +31,32 @@ const owner = argv.owner ? argv.owner : 'Longi94';
 const cert = fs.readFileSync(argv.key);
 
 async function authenticateOcto(octokit) {
+    console.log("Authenticating octokit");
+
+    console.log("Generating JWT payload");
     // Generate the JWT
     const payload = {
         // issued at time
         iat: Math.floor(Date.now() / 1000),
         //JWT expiration time (10 minute maximum)
-        exp: Math.floor(Date.now() / 1000) + (10 * 60),
+        exp: Math.floor(Date.now() / 1000) + (9 * 60),
         //GitHub App's identifier
         iss: argv.appid
     };
 
+    console.log("Signing jwt payload");
     const token = jwt.sign(payload, cert, {algorithm: 'RS256'});
 
+    console.log("Authenticating with the generated token");
     octokit.authenticate({
         type: 'app',
         token: token
     });
 
+    console.log("Creating installation token");
     const result = await octokit.apps.createInstallationToken({installation_id: argv.installid});
 
+    console.log("Authenticating with installation token");
     octokit.authenticate({type: 'token', token: result.data.token});
 }
 
