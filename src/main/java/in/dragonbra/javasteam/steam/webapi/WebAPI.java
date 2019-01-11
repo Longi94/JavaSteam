@@ -338,7 +338,7 @@ public class WebAPI {
     /**
      * Thrown when WebAPI request fails (non success response code).
      */
-    private class WebAPIRequestException extends IOException {
+    public class WebAPIRequestException extends IOException {
 
         private int statusCode;
 

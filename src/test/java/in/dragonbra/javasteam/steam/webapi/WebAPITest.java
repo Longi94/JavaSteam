@@ -106,7 +106,7 @@ public class WebAPITest extends TestBase {
                 assertEquals("stringvalue", result.get("name").getValue());
                 lock.countDown();
             }
-        });
+        }, null);
 
         RecordedRequest request = server.takeRequest();
         assertEquals("/TestInterface/TestFunction/v1?format=vdf", request.getPath());
