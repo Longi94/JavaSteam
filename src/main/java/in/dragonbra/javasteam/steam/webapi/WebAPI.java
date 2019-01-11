@@ -8,6 +8,7 @@ import okhttp3.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,13 +48,16 @@ public class WebAPI {
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @return A {@link KeyValue} object representing the results of the Web API call.
      * @throws IOException if the request could not be executed
+     * @throws WebAPIRequestException the request was successful but returned a non success response code
+     *
      */
-    public KeyValue call(String httpMethod, String function, int version, Map<String, String> parameters) throws IOException {
+    public KeyValue call(String httpMethod, String function, int version, Map<String, String> parameters)
+            throws IOException, WebAPIRequestException {
         Request request = buildRequest(httpMethod, function, version, parameters);
         Response response = client.newCall(request).execute();
 
         if (!response.isSuccessful()) {
-            throw new IllegalStateException("request unsuccessful: " + response.code() + "/" + response.message());
+            throw new WebAPIRequestException(response);
         }
 
         return parseResponse(response);
@@ -153,9 +157,11 @@ public class WebAPI {
      * @param version    The version of the function to call.
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String httpMethod, String function, int version, Map<String, String> parameters, final Consumer<KeyValue> callback) throws IOException {
+    public void call(String httpMethod, String function, int version, Map<String, String> parameters,
+                     final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error) throws IOException {
         Request request = buildRequest(httpMethod, function, version, parameters);
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -165,7 +171,11 @@ public class WebAPI {
 
             @Override
             public void onResponse(Call call, Response response) {
-                callback.accept(parseResponse(response));
+                if (!response.isSuccessful()) {
+                    error.accept(new WebAPIRequestException(response));
+                } else {
+                    callback.accept(parseResponse(response));
+                }
             }
         });
     }
@@ -177,10 +187,12 @@ public class WebAPI {
      * @param function   The function name to call.
      * @param version    The version of the function to call.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String httpMethod, String function, int version, final Consumer<KeyValue> callback) throws IOException {
-        call(httpMethod, function, version, null, callback);
+    public void call(String httpMethod, String function, int version, final Consumer<KeyValue> callback,
+                     final Consumer<WebAPIRequestException> error) throws IOException {
+        call(httpMethod, function, version, null, callback, error);
     }
 
     /**
@@ -190,10 +202,12 @@ public class WebAPI {
      * @param function   The function name to call.
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String httpMethod, String function, Map<String, String> parameters, final Consumer<KeyValue> callback) throws IOException {
-        call(httpMethod, function, 1, parameters, callback);
+    public void call(String httpMethod, String function, Map<String, String> parameters, final Consumer<KeyValue> callback,
+                     final Consumer<WebAPIRequestException> error) throws IOException {
+        call(httpMethod, function, 1, parameters, callback, error);
     }
 
     /**
@@ -202,10 +216,12 @@ public class WebAPI {
      * @param httpMethod The http request method. Either "POST" or "GET".
      * @param function   The function name to call.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String httpMethod, String function, final Consumer<KeyValue> callback) throws IOException {
-        call(httpMethod, function, 1, null, callback);
+    public void call(String httpMethod, String function, final Consumer<KeyValue> callback,
+                     final Consumer<WebAPIRequestException> error) throws IOException {
+        call(httpMethod, function, 1, null, callback, error);
     }
 
     /**
@@ -214,10 +230,12 @@ public class WebAPI {
      * @param function   The function name to call.
      * @param version    The version of the function to call.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String function, int version, final Consumer<KeyValue> callback) throws IOException {
-        call("GET", function, version, null, callback);
+    public void call(String function, int version, final Consumer<KeyValue> callback,
+                     final Consumer<WebAPIRequestException> error) throws IOException {
+        call("GET", function, version, null, callback, error);
     }
 
     /**
@@ -226,10 +244,12 @@ public class WebAPI {
      * @param function   The function name to call.
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String function, Map<String, String> parameters, final Consumer<KeyValue> callback) throws IOException {
-        call("GET", function, 1, parameters, callback);
+    public void call(String function, Map<String, String> parameters, final Consumer<KeyValue> callback,
+                     final Consumer<WebAPIRequestException> error) throws IOException {
+        call("GET", function, 1, parameters, callback, error);
     }
 
     /**
@@ -237,10 +257,12 @@ public class WebAPI {
      *
      * @param function   The function name to call.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error      the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
-    public void call(String function, final Consumer<KeyValue> callback) throws IOException {
-        call("GET", function, 1, null, callback);
+    public void call(String function, final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error)
+            throws IOException {
+        call("GET", function, 1, null, callback, error);
     }
 
     private KeyValue parseResponse(Response response) {
@@ -311,5 +333,39 @@ public class WebAPI {
 
     public String getWebAPIKey() {
         return webAPIKey;
+    }
+
+    /**
+     * Thrown when WebAPI request fails (non success response code).
+     */
+    private class WebAPIRequestException extends IOException {
+
+        private int statusCode;
+
+        private Map<String, List<String>> headers;
+
+        /**
+         * Initializes a new instance of the {@link WebAPIRequestException} class.
+         * @param response the response object from the call
+         */
+        WebAPIRequestException(Response response) {
+            super(response.message());
+            statusCode = response.code();
+            headers = response.headers().toMultimap();
+        }
+
+        /**
+         * @return the status code of the response
+         */
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        /**
+         * @return headers of the response
+         */
+        public Map<String, List<String>> getHeaders() {
+            return headers;
+        }
     }
 }
