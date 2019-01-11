@@ -304,6 +304,7 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
         assertFalse(callback.isHasWallet());
         assertEquals(0, callback.getBalance());
         assertEquals(ECurrencyCode.Invalid, callback.getCurrency());
+        assertEquals(0L, callback.getLongBalance());
     }
 
     @Test
