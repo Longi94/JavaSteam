@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.EnumSet;
 
 /**
- * Represents the persone state of a friend.
+ * Represents the persona state of a friend.
  */
 public class PersonaState {
     private EnumSet<EClientPersonaStateFlag> statusFlags;
