@@ -692,8 +692,7 @@ public class SteamFriends extends ClientMsgHandler {
 
         if (chatID.isClanAccount()) {
             // this steamid is incorrect, so we'll fix it up
-            chatID.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-            chatID.setAccountType(EAccountType.Chat);
+            chatID = chatID.toChatID();
         }
 
         return chatID;
