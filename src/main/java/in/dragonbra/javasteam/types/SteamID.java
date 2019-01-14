@@ -477,7 +477,7 @@ public class SteamID {
      * @throws IllegalStateException This SteamID is not a clan ID.
      */
     public SteamID toChatID() {
-        if (isClanAccount()) {
+        if (!isClanAccount()) {
             throw new IllegalStateException("Only Clan IDs can be converted to Chat IDs.");
         }
 

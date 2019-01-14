@@ -3,7 +3,10 @@ package in.dragonbra.javasteam.types;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EUniverse;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.*;
 
@@ -11,6 +14,7 @@ import static org.junit.Assert.*;
  * @author lngtr
  * @since 2018-02-19
  */
+@RunWith(JUnitParamsRunner.class)
 public class SteamIDTests extends TestBase {
 
     @Test
@@ -300,4 +304,93 @@ public class SteamIDTests extends TestBase {
         assertEquals("[i:2:123]", sid.render());
     }
 
+    @Test
+    public void testToChatIDConvertsWellKnownID() {
+        SteamID clanID = new SteamID(4, EUniverse.Public, EAccountType.Clan);
+        long expectedChatID = 110338190870577156L;
+        assertEquals(expectedChatID, clanID.toChatID().convertToUInt64());
+    }
+
+    @Test
+    public void testToChatIDDoesNotModifySelf() {
+        SteamID clanID = new SteamID(4, EUniverse.Public, EAccountType.Clan);
+        clanID.toChatID();
+
+        assertEquals(EUniverse.Public, clanID.getAccountUniverse());
+        assertEquals(EAccountType.Clan, clanID.getAccountType());
+        assertEquals(0L, clanID.getAccountInstance());
+        assertEquals(4L, clanID.getAccountID());
+    }
+
+    private EAccountType[] testParamsAccountType0() {
+        return new EAccountType[] {
+                EAccountType.AnonGameServer,
+                EAccountType.AnonUser,
+                EAccountType.Chat,
+                EAccountType.ConsoleUser,
+                EAccountType.ContentServer,
+                EAccountType.GameServer,
+                EAccountType.Individual,
+                EAccountType.Multiseat,
+                EAccountType.Pending,
+        };
+    }
+
+    @Test(expected = IllegalStateException.class)
+    @Parameters(method = "testParamsAccountType0")
+    public void testToChatIDOnlySupportsClans(EAccountType type) {
+        SteamID id = new SteamID(1, EUniverse.Public, type);
+        id.toChatID();
+    }
+
+    @Test
+    public void testTryGetClanIDConvertsWellKnownID() {
+        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, EAccountType.Chat);
+        SteamID groupID = clanID.tryGetClanID();
+        assertNotNull(groupID);
+        assertEquals(103582791429521412L, groupID.convertToUInt64());
+    }
+
+    @Test
+    public void testTryGetClanIDDoesNotModifySelf() {
+        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, EAccountType.Chat);
+        SteamID groupID = clanID.tryGetClanID();
+        assertNotNull(groupID);
+
+        assertEquals(EUniverse.Public, clanID.getAccountUniverse());
+        assertEquals(EAccountType.Chat, clanID.getAccountType());
+        assertEquals(SteamID.ChatInstanceFlags.CLAN.code(), clanID.getAccountInstance());
+        assertEquals(4L, clanID.getAccountID());
+    }
+
+    @Test
+    public void testTryGetClanIDReturnsFalseForAdHocChatRoom() {
+        SteamID chatID = new SteamID(108093571196988453L);
+
+        SteamID groupID = chatID.tryGetClanID();
+        assertNull(groupID);
+    }
+
+    private EAccountType[] testParamsAccountType1() {
+        return new EAccountType[] {
+                EAccountType.AnonGameServer,
+                EAccountType.AnonUser,
+                EAccountType.Clan,
+                EAccountType.ConsoleUser,
+                EAccountType.ContentServer,
+                EAccountType.GameServer,
+                EAccountType.Individual,
+                EAccountType.Multiseat,
+                EAccountType.Pending,
+        };
+    }
+
+    @Test
+    @Parameters(method = "testParamsAccountType1")
+    public void testTryGetClanIDOnlySupportsChatRooms(EAccountType type) {
+        SteamID chatID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, type);
+
+        SteamID groupID = chatID.tryGetClanID();
+        assertNull(groupID);
+    }
 }
