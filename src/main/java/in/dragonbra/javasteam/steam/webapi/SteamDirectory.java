@@ -25,6 +25,19 @@ public class SteamDirectory {
      * @throws IOException if the request could not be executed
      */
     public static List<ServerRecord> load(SteamConfiguration configuration) throws IOException {
+        return load(configuration, -1);
+    }
+
+    /**
+     * Load a list of servers from the Steam Directory.
+     *
+     * @param configuration Configuration Object
+     * @param maxServers    Max number of servers to return. The API will typically return this number per server type
+     *                      (socket and websocket). If negative, the parameter is not added to the request
+     * @return the list of servers
+     * @throws IOException if the request could not be executed
+     */
+    public static List<ServerRecord> load(SteamConfiguration configuration, int maxServers) throws IOException {
         if (configuration == null) {
             throw new IllegalArgumentException("configuration null");
         }
@@ -33,6 +46,10 @@ public class SteamDirectory {
 
         Map<String, String> params = new HashMap<>();
         params.put("cellid", String.valueOf(configuration.getCellID()));
+
+        if (maxServers >= 0) {
+            params.put("maxcount", String.valueOf(maxServers));
+        }
 
         KeyValue response = api.call("GetCMList", params);
 
