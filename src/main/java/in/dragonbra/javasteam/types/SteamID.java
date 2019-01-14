@@ -471,6 +471,41 @@ public class SteamID {
     }
 
     /**
+     * Converts this clan ID to a chat ID.
+     *
+     * @return The Chat ID for this clan's group chat.
+     * @throws IllegalStateException This SteamID is not a clan ID.
+     */
+    public SteamID toChatID() {
+        if (isClanAccount()) {
+            throw new IllegalStateException("Only Clan IDs can be converted to Chat IDs.");
+        }
+
+        SteamID chatID = new SteamID(convertToUInt64());
+
+        chatID.setAccountInstance(ChatInstanceFlags.CLAN.code());
+        chatID.setAccountType(EAccountType.Chat);
+
+        return chatID;
+    }
+
+    /**
+     * Converts this chat ID to a clan ID. This can be used to get the group that a group chat is associated with.
+     *
+     * @return the group that this chat ID is associated with, null if this does not represent a group chat
+     */
+    public SteamID tryGetClanID() {
+        if (isChatAccount() && getAccountInstance() == ChatInstanceFlags.CLAN.code()) {
+            SteamID groupID = new SteamID(convertToUInt64());
+            groupID.setAccountType(EAccountType.Clan);
+            groupID.setAccountInstance(0);
+            return groupID;
+        }
+
+        return null;
+    }
+
+    /**
      * Renders this instance into it's Steam3 representation.
      *
      * @return A string Steam3 representation of this SteamID.
