@@ -3,6 +3,9 @@ package in.dragonbra.javasteam.util;
 import in.dragonbra.javasteam.enums.EOSType;
 import org.apache.commons.lang3.SystemUtils;
 
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
+
 /**
  * @author lngtr
  * @since 2018-02-23
@@ -110,5 +113,18 @@ public class Utils {
             // we are not allowed to look at this property
             return null;
         }
+    }
+
+    /**
+     * Convenience method for calculating the CRC2 checksum of a string.
+     *
+     * @param s the string
+     * @return long value of the CRC32
+     */
+    public static long crc32(String s) {
+        Checksum checksum = new CRC32();
+        byte[] bytes = s.getBytes();
+        checksum.update(bytes, 0, bytes.length);
+        return checksum.getValue();
     }
 }

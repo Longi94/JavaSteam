@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.types;
 
+import in.dragonbra.javasteam.util.Utils;
 import in.dragonbra.javasteam.util.compat.ObjectsCompat;
 
 /**
@@ -32,6 +33,41 @@ public class GameID {
      */
     public GameID(int nAppId) {
         this((long) nAppId);
+    }
+
+    /**
+     * Initializes a new instance of the {@link GameID} class.
+     *
+     * @param nAppId  The base app id of the mod.
+     * @param modPath The game folder name of the mod.
+     */
+    public GameID(int nAppId, String modPath) {
+        this(0);
+        setAppID(nAppId);
+        setAppType(GameType.GAME_MOD);
+        setModID(Utils.crc32(modPath));
+    }
+
+    /**
+     * Initializes a new instance of the {@link GameID} class.
+     *
+     * @param exePath The path to the executable, usually quoted.
+     * @param appName The name of the application shortcut.
+     */
+    public GameID(String exePath, String appName) {
+        this(0);
+
+        StringBuilder builder = new StringBuilder();
+        if (exePath != null) {
+            builder.append(exePath);
+        }
+        if (appName != null) {
+            builder.append(appName);
+        }
+
+        setAppID(0);
+        setAppType(GameType.SHORTCUT);
+        setModID(Utils.crc32(builder.toString()));
     }
 
     /**
@@ -95,6 +131,7 @@ public class GameID {
      */
     public void setModID(long value) {
         gameId.setMask((short) 32, 0xFFFFFFFFL, value);
+        gameId.setMask((short) 63, 0xFFL, 1L);
     }
 
     /**
@@ -141,8 +178,6 @@ public class GameID {
     public boolean isSteamApp() {
         return getAppType() == GameType.APP;
     }
-
-
 
     /**
      * Sets the various components of this GameID from a 64bit integer form.
