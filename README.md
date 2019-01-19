@@ -49,7 +49,7 @@ Maven
 
 Gradle
 ```groovy
-implementation 'org.bouncycastle:bcprov-jdk15on:1.59'  // NON-ANDROID ONLY
+implementation 'org.bouncycastle:bcprov-jdk15on:1.60'  // NON-ANDROID ONLY
 implementation 'com.madgag.spongycastle:prov:1.58.0.0' // ANDROID ONLY
 ```
 
