@@ -58,7 +58,7 @@ Maven
 <dependency> <!-- NON-ANDROID ONLY -->
   <groupId>org.bouncycastle</groupId>
   <artifactId>bcprov-jdk15on</artifactId>
-  <version>1.59</version>
+  <version>1.60</version>
 </dependency>
 <dependency> <!-- ANDROID ONLY -->
     <groupId>com.madgag.spongycastle</groupId>
