@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
+import okhttp3.OkHttpClient;
 
 import java.util.EnumSet;
 
@@ -28,6 +29,14 @@ public interface ISteamConfigurationBuilder {
      * @return A builder with modified configuration.
      */
     ISteamConfigurationBuilder withConnectionTimeout(long connectionTimeout);
+
+    /**
+     * Configures this {@link SteamConfiguration} with custom HTTP behaviour.
+     *
+     * @param httpClient the http client
+     * @return A builder with modified configuration.
+     */
+    ISteamConfigurationBuilder withHttpClient(OkHttpClient httpClient);
 
     /**
      * Configures this {@link SteamConfiguration} with the default {@link EClientPersonaStateFlag}s to request from Steam.

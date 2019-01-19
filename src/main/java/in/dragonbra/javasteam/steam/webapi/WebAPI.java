@@ -26,7 +26,7 @@ public class WebAPI {
 
     private final String webAPIKey;
 
-    public WebAPI(String baseAddress, String _interface, String webAPIKey) {
+    public WebAPI(OkHttpClient httpClient, String baseAddress, String _interface, String webAPIKey) {
         this.baseAddress = HttpUrl.parse(baseAddress);
 
         if (this.baseAddress == null) {
@@ -35,8 +35,7 @@ public class WebAPI {
 
         this._interface = _interface;
         this.webAPIKey = webAPIKey;
-        client = new OkHttpClient.Builder()
-                .build();
+        client = httpClient;
     }
 
     /**

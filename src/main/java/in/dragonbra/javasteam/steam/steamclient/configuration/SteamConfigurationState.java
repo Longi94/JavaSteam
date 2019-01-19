@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
+import okhttp3.OkHttpClient;
 
 import java.util.EnumSet;
 
@@ -16,6 +17,7 @@ public class SteamConfigurationState {
     private boolean allowDirectoryFetch;
     private int cellID;
     private long connectionTimeout;
+    private OkHttpClient httpClient;
     private EnumSet<EClientPersonaStateFlag> defaultPersonaStateFlags;
     private EnumSet<ProtocolTypes> protocolTypes;
     private IServerListProvider serverListProvider;
@@ -45,6 +47,14 @@ public class SteamConfigurationState {
 
     public void setConnectionTimeout(long connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
+    }
+
+    public OkHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public void setHttpClient(OkHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     public EnumSet<EClientPersonaStateFlag> getDefaultPersonaStateFlags() {

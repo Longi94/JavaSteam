@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.webapi.WebAPI;
 import in.dragonbra.javasteam.util.compat.Consumer;
+import okhttp3.OkHttpClient;
 
 import java.util.EnumSet;
 
@@ -70,6 +71,13 @@ public class SteamConfiguration {
     }
 
     /**
+     * @return The http client
+     */
+    public OkHttpClient getHttpClient() {
+        return state.getHttpClient();
+    }
+
+    /**
      * @return The default persona state flags used when requesting information for a new friend, or when calling <b>SteamFriends.RequestFriendInfo</b> without specifying flags.
      */
     public EnumSet<EClientPersonaStateFlag> getDefaultPersonaStateFlags() {
@@ -125,6 +133,6 @@ public class SteamConfiguration {
      * @return A {@link WebAPI} object to interact with the Web API.
      */
     public WebAPI getWebAPI(String _interface) {
-        return new WebAPI(getWebAPIBaseAddress(), _interface, getWebAPIKey());
+        return new WebAPI(getHttpClient(), getWebAPIBaseAddress(), _interface, getWebAPIKey());
     }
 }

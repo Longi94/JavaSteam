@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.NullServerListProvider;
 import in.dragonbra.javasteam.steam.webapi.WebAPI;
+import okhttp3.OkHttpClient;
 
 import java.util.EnumSet;
 
@@ -32,6 +33,7 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
         state.setServerListProvider(new NullServerListProvider());
         state.setUniverse(EUniverse.Public);
         state.setWebAPIBaseAddress(WebAPI.DEFAULT_BASE_ADDRESS);
+        state.setHttpClient(new OkHttpClient());
 
         return state;
     }
@@ -49,6 +51,12 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
     @Override
     public ISteamConfigurationBuilder withConnectionTimeout(long connectionTimeout) {
         state.setConnectionTimeout(connectionTimeout);
+        return this;
+    }
+
+    @Override
+    public ISteamConfigurationBuilder withHttpClient(OkHttpClient httpClient) {
+        state.setHttpClient(httpClient);
         return this;
     }
 
