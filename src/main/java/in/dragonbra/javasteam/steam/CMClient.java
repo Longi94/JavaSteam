@@ -404,7 +404,9 @@ public abstract class CMClient {
 
         ClientMsgProtobuf<CMsgClientLogonResponse.Builder> logonResp = new ClientMsgProtobuf<>(CMsgClientLogonResponse.class, packetMsg);
 
-        if (logonResp.getBody().getEresult() == EResult.OK.code()) {
+        EResult logonResponse = EResult.from(logonResp.getBody().getEresult());
+
+        if (logonResponse == EResult.OK) {
             sessionID = logonResp.getProtoHeader().getClientSessionid();
             steamID = new SteamID(logonResp.getProtoHeader().getSteamid());
 
@@ -414,6 +416,8 @@ public abstract class CMClient {
             heartBeatFunc.stop();
             heartBeatFunc.setDelay(logonResp.getBody().getOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
+        } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
+            getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
         }
     }
 
