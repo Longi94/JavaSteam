@@ -85,10 +85,10 @@ public class Utils {
             return EOSType.MacOS1012;
         }
         if (checkOS("Mac OS X", "10.13")) {
-            return EOSType.MacOS1013;
+            return EOSType.Macos1013;
         }
         if (checkOS("Mac OS X", "10.14")) {
-            return EOSType.MacOS1014;
+            return EOSType.Macos1014;
         }
         if (SystemUtils.IS_OS_MAC) {
             return EOSType.MacOSUnknown;
