@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamworkshop.callback;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgCREEnumeratePublishedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgCREEnumeratePublishedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgCREEnumeratePublishedFilesResponse_PublishedFileId;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.EnumerationUserDetails;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
@@ -28,7 +29,7 @@ public class PublishedFilesCallback extends CallbackMsg {
         result = EResult.from(msg.getEresult());
 
         List<File> fileList = new ArrayList<>();
-        for (CMsgCREEnumeratePublishedFilesResponse.PublishedFileId f : msg.getPublishedFilesList()) {
+        for (CMsgCREEnumeratePublishedFilesResponse_PublishedFileId f : msg.getPublishedFilesList()) {
             fileList.add(new File(f));
         }
         files = Collections.unmodifiableList(fileList);
@@ -62,7 +63,7 @@ public class PublishedFilesCallback extends CallbackMsg {
 
         private int downVotes;
 
-        public File(CMsgCREEnumeratePublishedFilesResponse.PublishedFileId file) {
+        public File(CMsgCREEnumeratePublishedFilesResponse_PublishedFileId file) {
             fileID = file.getPublishedFileId();
             reports = file.getReports();
             score = file.getScore();

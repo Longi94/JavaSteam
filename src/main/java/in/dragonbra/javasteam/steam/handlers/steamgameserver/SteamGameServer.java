@@ -10,8 +10,8 @@ import in.dragonbra.javasteam.enums.EServerFlags;
 import in.dragonbra.javasteam.generated.MsgClientLogon;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientTicketAuthComplete;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgGSServerType;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgGSStatusReply;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGSServerType;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGSStatusReply;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon;
 import in.dragonbra.javasteam.steam.handlers.steamgameserver.callback.StatusReplyCallback;
@@ -87,7 +87,7 @@ public class SteamGameServer extends ClientMsgHandler {
         logon.getProtoHeader().setSteamid(gsId.convertToUInt64());
 
         int localIp = NetHelpers.getIPAddress(client.getLocalIP());
-        logon.getBody().setObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask);
+        logon.getBody().setDeprecatedObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask); // NOTE: Using deprecated method.
 
         logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
 
@@ -132,7 +132,7 @@ public class SteamGameServer extends ClientMsgHandler {
         logon.getProtoHeader().setSteamid(gsId.convertToUInt64());
 
         int localIp = NetHelpers.getIPAddress(client.getLocalIP());
-        logon.getBody().setObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask);
+        logon.getBody().setDeprecatedObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask); // NOTE: Using deprecated method.
 
         logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
 
@@ -180,7 +180,7 @@ public class SteamGameServer extends ClientMsgHandler {
         status.getBody().setGameVersion(details.getVersion());
 
         if (details.getAddress() != null) {
-            status.getBody().setGameIpAddress(NetHelpers.getIPAddress(details.getAddress()));
+            status.getBody().setDeprecatedGameIpAddress(NetHelpers.getIPAddress(details.getAddress())); // NOTE: Using deprecated method.
         }
 
         client.send(status);

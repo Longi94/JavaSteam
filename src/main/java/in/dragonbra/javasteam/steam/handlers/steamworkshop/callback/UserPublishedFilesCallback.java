@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamworkshop.callback;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMEnumerateUserPublishedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgClientUCMEnumerateUserPublishedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgClientUCMEnumerateUserPublishedFilesResponse_PublishedFileId;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.EnumerationDetails;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
@@ -28,7 +29,7 @@ public class UserPublishedFilesCallback extends CallbackMsg {
         result = EResult.from(msg.getEresult());
 
         List<File> fileList = new ArrayList<>();
-        for (CMsgClientUCMEnumerateUserPublishedFilesResponse.PublishedFileId f : msg.getPublishedFilesList()) {
+        for (CMsgClientUCMEnumerateUserPublishedFilesResponse_PublishedFileId f : msg.getPublishedFilesList()) {
             fileList.add(new File(f));
         }
         files = Collections.unmodifiableList(fileList);
@@ -54,7 +55,7 @@ public class UserPublishedFilesCallback extends CallbackMsg {
     public static class File {
         private long fileID;
 
-        public File(CMsgClientUCMEnumerateUserPublishedFilesResponse.PublishedFileId file) {
+        public File(CMsgClientUCMEnumerateUserPublishedFilesResponse_PublishedFileId file) {
             fileID = file.getPublishedFileId();
         }
 

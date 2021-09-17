@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamuserstats;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientLBSGetLBEntriesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntriesResponse;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.types.UGCHandle;
 import in.dragonbra.javasteam.util.stream.BinaryReader;

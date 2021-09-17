@@ -3,7 +3,7 @@ package in.dragonbra.javasteam.steam.handlers.steamuserstats.callback;
 import in.dragonbra.javasteam.enums.ELeaderboardDisplayType;
 import in.dragonbra.javasteam.enums.ELeaderboardSortMethod;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientLBSFindOrCreateLBResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLBResponse;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.JobID;

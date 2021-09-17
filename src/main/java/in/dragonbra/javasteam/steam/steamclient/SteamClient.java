@@ -5,7 +5,6 @@ import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
@@ -24,7 +23,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.ICallbackMsg;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.CMListCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.steam.steamclient.callbacks.ServerListCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -90,12 +88,6 @@ public class SteamClient extends CMClient {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleCMList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientServerList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleServerList(packetMsg);
             }
         });
         dispatchMap.put(EMsg.JobHeartbeat, new Consumer<IPacketMsg>() {
@@ -384,12 +376,6 @@ public class SteamClient extends CMClient {
         ClientMsgProtobuf<CMsgClientCMList.Builder> cmMsg = new ClientMsgProtobuf<>(CMsgClientCMList.class, packetMsg);
 
         postCallback(new CMListCallback(cmMsg.getBody()));
-    }
-
-    private void handleServerList(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientServerList.Builder> listMsg = new ClientMsgProtobuf<>(CMsgClientServerList.class, packetMsg);
-
-        postCallback(new ServerListCallback(listMsg.getBody()));
     }
 
     private void handleJobHeartbeat(IPacketMsg packetMsg) {

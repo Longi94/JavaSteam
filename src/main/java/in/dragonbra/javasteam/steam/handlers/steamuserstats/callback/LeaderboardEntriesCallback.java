@@ -2,7 +2,7 @@ package in.dragonbra.javasteam.steam.handlers.steamuserstats.callback;
 
 import in.dragonbra.javasteam.enums.ELeaderboardDataRequest;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientLBSGetLBEntriesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntriesResponse;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.LeaderboardEntry;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;

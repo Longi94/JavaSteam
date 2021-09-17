@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steammasterserver;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGMSClientServerQueryResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse;
 import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetSocketAddress;
@@ -16,7 +16,7 @@ public class Server {
 
     //NOTE: getDeprecatedServerIp() added
     public Server(CMsgGMSClientServerQueryResponse.Server server) {
-        endPoint = new InetSocketAddress(NetHelpers.getIPAddress(server.getDeprecatedServerIp()), server.getServerPort());
+        endPoint = new InetSocketAddress(NetHelpers.getIPAddress(server.getDeprecatedServerIp()), server.getQueryPort());
         authedPlayers = server.getAuthPlayers();
     }
 

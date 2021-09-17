@@ -42,6 +42,10 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private byte[] steam2Ticket;
 
+    /**
+     * @deprecated Deprecated in protobufs
+     */
+    @Deprecated
     private boolean usePICS;
 
     private String webAPIUserNonce;
@@ -61,7 +65,7 @@ public class LoggedOnCallback extends CallbackMsg {
         outOfGameSecsPerHeartbeat = resp.getOutOfGameHeartbeatSeconds();
         inGameSecsPerHeartbeat = resp.getInGameHeartbeatSeconds();
 
-        publicIP = NetHelpers.getIPAddress(resp.getPublicIp());
+        publicIP = NetHelpers.getIPAddress(resp.getPublicIp().getV4()); // Has ipV6 support, but still using ipV4
         serverTime = new Date(resp.getRtime32ServerTime() * 1000L);
 
         accountFlags = EAccountFlags.from(resp.getAccountFlags());
@@ -79,7 +83,7 @@ public class LoggedOnCallback extends CallbackMsg {
 
         webAPIUserNonce = resp.getWebapiAuthenticateUserNonce();
 
-        usePICS = resp.getUsePics();
+        usePICS = resp.getDeprecatedUsePics();
 
         vanityURL = resp.getVanityUrl();
 

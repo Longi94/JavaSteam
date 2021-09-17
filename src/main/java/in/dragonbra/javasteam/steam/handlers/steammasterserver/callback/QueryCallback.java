@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steammasterserver.callback;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGMSClientServerQueryResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.QueryDetails;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.Server;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;

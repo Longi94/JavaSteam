@@ -412,11 +412,11 @@ public class SteamID {
     ///   <b>true</b> if this instance is valid; otherwise, <b>false</b>.
     /// </value>
     public boolean isValid() {
-        if (getAccountType().code() <= EAccountType.Invalid.code() || getAccountType().code() >= EAccountType.Max.code()) {
+        if (getAccountType().code() <= EAccountType.Invalid.code() || getAccountType().code() > EAccountType.AnonUser.code()) {
             return false;
         }
 
-        if (getAccountUniverse().code() <= EUniverse.Invalid.code() || getAccountUniverse().code() >= EUniverse.Max.code()) {
+        if (getAccountUniverse().code() <= EUniverse.Invalid.code() || getAccountUniverse().code() > EUniverse.Dev.code()) {
             return false;
         }
 

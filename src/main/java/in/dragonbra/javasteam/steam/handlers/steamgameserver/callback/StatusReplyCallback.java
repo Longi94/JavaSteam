@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamgameserver.callback;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgGSStatusReply;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGSStatusReply;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
 /**
