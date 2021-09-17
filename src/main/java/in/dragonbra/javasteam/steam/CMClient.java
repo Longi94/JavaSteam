@@ -151,7 +151,7 @@ public abstract class CMClient {
             try {
                 disconnect();
 
-                assert connection != null;
+                assert connection == null;
 
                 expectDisconnection = false;
 
