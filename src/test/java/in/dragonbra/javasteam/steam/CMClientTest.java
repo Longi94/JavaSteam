@@ -1,19 +1,21 @@
 package in.dragonbra.javasteam.steam;
 
 import in.dragonbra.javasteam.TestBase;
-import in.dragonbra.javasteam.base.*;
+import in.dragonbra.javasteam.base.IPacketMsg;
+import in.dragonbra.javasteam.base.ISteamSerializableHeader;
+import in.dragonbra.javasteam.base.PacketClientMsgProtobuf;
+import in.dragonbra.javasteam.base.PacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.generated.MsgHdr;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.util.stream.BinaryWriter;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author lngtr
@@ -68,44 +70,6 @@ public class CMClientTest extends TestBase {
         byte[] data = new byte[3];
         IPacketMsg packetMsg = CMClient.getPacketMsg(data);
         assertNull(packetMsg);
-    }
-
-    @Test
-    public void serverLookupIsClearedWhenDisconnecting() {
-        ClientMsgProtobuf<CMsgClientServerList.Builder> msg = new ClientMsgProtobuf<CMsgClientServerList.Builder>(CMsgClientServerList.class, EMsg.ClientServerList);
-        CMsgClientServerList.Server server = CMsgClientServerList.Server.newBuilder()
-                .setServerIp(0x7F000001)
-                .setServerType(EServerType.CM.code())
-                .setServerPort(1234)
-                .build();
-        msg.getBody().addServers(server);
-
-        DummyClient client = new DummyClient();
-
-        client.handleClientMsg(msg);
-        assertEquals(1, client.getServers(EServerType.CM).size());
-
-        client.dummyDisconnect();
-        assertEquals(0, client.getServers(EServerType.CM).size());
-    }
-
-    @Test
-    public void serverLookupDoesNotAccumulateDuplicates() {
-        ClientMsgProtobuf<CMsgClientServerList.Builder> msg = new ClientMsgProtobuf<CMsgClientServerList.Builder>(CMsgClientServerList.class, EMsg.ClientServerList);
-        CMsgClientServerList.Server server = CMsgClientServerList.Server.newBuilder()
-                .setServerIp(0x7F000001)
-                .setServerType(EServerType.CM.code())
-                .setServerPort(1234)
-                .build();
-        msg.getBody().addServers(server);
-
-        DummyClient client = new DummyClient();
-
-        client.handleClientMsg(msg);
-        assertEquals(1, client.getServers(EServerType.CM).size());
-
-        client.handleClientMsg(msg);
-        assertEquals(1, client.getServers(EServerType.CM).size());
     }
 
     private static byte[] serialize(ISteamSerializableHeader hdr) throws IOException {
