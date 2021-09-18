@@ -8,9 +8,15 @@ import in.dragonbra.javasteam.generated.MsgClientUpdateGuestPassesList;
 import in.dragonbra.javasteam.generated.MsgClientVACBanStatus;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.*;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientPICSProductInfoRequest.AppInfo;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientPICSProductInfoRequest.PackageInfo;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.*;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenRequest;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceRequest;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest.AppInfo;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest.PackageInfo;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoResponse;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.*;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -375,7 +381,7 @@ public class SteamApps extends ClientMsgHandler {
 
             appInfo.setAccessToken(appRequest.getAccessToken());
             appInfo.setAppid(appRequest.getId());
-            appInfo.setOnlyPublic(appRequest.isPublic());
+            appInfo.setOnlyPublicObsolete(appRequest.isPublic());
 
             request.getBody().addApps(appInfo);
         }

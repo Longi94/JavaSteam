@@ -8,7 +8,6 @@ import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientServerList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLoggedOff;
@@ -267,9 +266,6 @@ public abstract class CMClient {
             case ClientLoggedOff: // to stop heartbeating when we get logged off
                 handleLoggedOff(packetMsg);
                 break;
-            case ClientServerList: // Steam server list
-                handleServerList(packetMsg);
-                break;
             case ClientCMList:
                 handleCMList(packetMsg);
                 break;
@@ -436,24 +432,6 @@ public abstract class CMClient {
             if (logoffResult == EResult.TryAnotherCM || logoffResult == EResult.ServiceUnavailable) {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
-        }
-    }
-
-    private void handleServerList(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientServerList.Builder> listMsg = new ClientMsgProtobuf<>(CMsgClientServerList.class, packetMsg);
-
-        for (CMsgClientServerList.Server server : listMsg.getBody().getServersList()) {
-            EServerType type = EServerType.from(server.getServerType());
-
-            Set<InetSocketAddress> endPointSet;
-            endPointSet = serverMap.get(type);
-
-            if (endPointSet == null) {
-                endPointSet = new HashSet<>();
-                serverMap.put(type, endPointSet);
-            }
-
-            endPointSet.add(new InetSocketAddress(NetHelpers.getIPAddress(server.getServerIp()), server.getServerPort()));
         }
     }
 

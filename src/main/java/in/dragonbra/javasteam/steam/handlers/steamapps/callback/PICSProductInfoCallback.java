@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientPICSProductInfoResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoResponse;
 import in.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.JobID;

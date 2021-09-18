@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamworkshop.callback;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMEnumerateUserSubscribedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgClientUCMEnumerateUserSubscribedFilesResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.FriendsMobile.CMsgClientUCMEnumerateUserSubscribedFilesResponse_PublishedFileId;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.EnumerationUserDetails;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
@@ -29,7 +30,7 @@ public class UserSubscribedFilesCallback extends CallbackMsg {
         result = EResult.from(msg.getEresult());
 
         List<File> fileList = new ArrayList<>();
-        for (CMsgClientUCMEnumerateUserSubscribedFilesResponse.PublishedFileId f : msg.getSubscribedFilesList()) {
+        for (CMsgClientUCMEnumerateUserSubscribedFilesResponse_PublishedFileId f : msg.getSubscribedFilesList()) {
             fileList.add(new File(f));
         }
         files = Collections.unmodifiableList(fileList);
@@ -57,7 +58,7 @@ public class UserSubscribedFilesCallback extends CallbackMsg {
 
         private Date timeSubscribed;
 
-        public File(CMsgClientUCMEnumerateUserSubscribedFilesResponse.PublishedFileId file) {
+        public File(CMsgClientUCMEnumerateUserSubscribedFilesResponse_PublishedFileId file) {
             fileID = file.getPublishedFileId();
             timeSubscribed = new Date(file.getRtime32Subscribed() * 1000L);
         }

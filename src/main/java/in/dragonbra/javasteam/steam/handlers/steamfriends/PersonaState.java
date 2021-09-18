@@ -54,8 +54,6 @@ public class PersonaState {
 
     private int onlineSessionInstances;
 
-    private int publishedSessionID;
-
     public PersonaState(CMsgClientPersonaState.Friend friend) {
         statusFlags = EClientPersonaStateFlag.from(friend.getPersonaStateFlags());
 
@@ -86,7 +84,6 @@ public class PersonaState {
         clanTag=  friend.getClanTag();
 
         onlineSessionInstances = friend.getOnlineSessionInstances();
-        publishedSessionID = friend.getPublishedInstanceId();
     }
 
     public EnumSet<EClientPersonaStateFlag> getStatusFlags() {
@@ -163,9 +160,5 @@ public class PersonaState {
 
     public int getOnlineSessionInstances() {
         return onlineSessionInstances;
-    }
-
-    public int getPublishedSessionID() {
-        return publishedSessionID;
     }
 }

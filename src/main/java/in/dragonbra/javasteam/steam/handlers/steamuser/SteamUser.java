@@ -131,10 +131,10 @@ public class SteamUser extends ClientMsgHandler {
         SteamID steamID = new SteamID(details.getAccountID(), details.getAccountInstance(), client.getUniverse(), EAccountType.Individual);
 
         if (details.getLoginID() != null) {
-            logon.getBody().setObfustucatedPrivateIp(details.getLoginID());
+            logon.getBody().setDeprecatedObfustucatedPrivateIp(details.getLoginID()); // NOTE: Using deprecated method.
         } else {
             int localIp = NetHelpers.getIPAddress(client.getLocalIP());
-            logon.getBody().setObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask);
+            logon.getBody().setDeprecatedObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask); // NOTE: Using deprecated method.
         }
 
         logon.getProtoHeader().setClientSessionid(0);

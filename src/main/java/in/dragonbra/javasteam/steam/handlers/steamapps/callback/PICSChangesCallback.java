@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientPICSChangesSinceResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceResponse;
 import in.dragonbra.javasteam.steam.handlers.steamapps.PICSChangeData;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.JobID;

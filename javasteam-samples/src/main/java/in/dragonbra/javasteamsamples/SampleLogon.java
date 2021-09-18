@@ -89,6 +89,10 @@ public class SampleLogon implements Runnable {
         details.setUsername(user);
         details.setPassword(pass);
 
+        // Set LoginID to a non-zero value if you have another client connected using the same account,
+        // the same private ip, and same public ip.
+        details.setLoginID(149);
+
         steamUser.logOn(details);
     }
 

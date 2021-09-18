@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamapps;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientPICSChangesSinceResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceResponse;
 
 /**
  * Holds the change data for a single app or package

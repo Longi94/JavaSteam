@@ -117,6 +117,10 @@ public class SampleSteamGuardRememberMe implements Runnable {
         details.setAuthCode(authCode);
         details.setShouldRememberPassword(true);
 
+        // Set LoginID to a non-zero value if you have another client connected using the same account,
+        // the same private ip, and same public ip.
+        details.setLoginID(149);
+
         steamUser.logOn(details);
     }
 

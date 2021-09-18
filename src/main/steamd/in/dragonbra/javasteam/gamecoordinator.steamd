@@ -1,5 +1,3 @@
-
-
 class MsgGCHdrProtoBuf
 {
 	protomaskgc uint msg = 0;
