@@ -190,6 +190,7 @@ public class SteamFriends extends ClientMsgHandler {
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
 
         stateMsg.getBody().setPersonaState(state.code());
+        stateMsg.getBody().setPersonaSetByUser(true);
 
         client.send(stateMsg);
     }
