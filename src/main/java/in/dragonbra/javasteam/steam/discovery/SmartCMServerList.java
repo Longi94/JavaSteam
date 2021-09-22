@@ -53,7 +53,7 @@ public class SmartCMServerList {
         }
 
         if (endPoints.isEmpty() && configuration.isAllowDirectoryFetch()) {
-            logger.debug("Could not query SteamDirectory, falling back to cm0");
+            logger.debug("Could not query SteamDirectory, falling back to cm2-ord1");
 
             // Grabbed a random host that is not an IP address from the endpoint list.
             InetSocketAddress cm0 = new InetSocketAddress("cm2-ord1.cm.steampowered.com", 27017);
