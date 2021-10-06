@@ -49,14 +49,14 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void getDepotDecryptionKey() {
-        JobID jobID = handler.getDepotDecryptionKey(10);
+        JobID jobID = handler.getDepotDecryptionKey(731, 730);
 
         ClientMsgProtobuf<CMsgClientGetDepotDecryptionKey.Builder> msg = verifySend(EMsg.ClientGetDepotDecryptionKey);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
         assertEquals(SOURCE_JOB_ID, jobID);
-        assertEquals(10, msg.getBody().getDepotId());
-        assertEquals(0, msg.getBody().getAppId());
+        assertEquals(731, msg.getBody().getDepotId());
+        assertEquals(730, msg.getBody().getAppId());
     }
 
     @Test
@@ -162,7 +162,7 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
         assertEquals(EResult.OK, callback.getResult());
         assertEquals(440, callback.getAppID());
-        assertArrayEquals(new byte[] {}, callback.getTicket());
+        assertArrayEquals(new byte[]{}, callback.getTicket());
     }
 
     @Test
@@ -175,7 +175,7 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
         assertEquals(EResult.OK, callback.getResult());
         assertEquals(1, callback.getDepotID());
-        assertArrayEquals(new byte[] {}, callback.getDepotKey());
+        assertArrayEquals(new byte[]{}, callback.getDepotKey());
     }
 
     @Test
@@ -307,6 +307,6 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
         assertEquals(EResult.OK, callback.getResult());
         assertEquals(1, callback.getBetaPasswords().size());
-        assertArrayEquals(new byte[] {(byte) 0xAA, (byte) 0xAA}, callback.getBetaPasswords().get("testname"));
+        assertArrayEquals(new byte[]{(byte) 0xAA, (byte) 0xAA}, callback.getBetaPasswords().get("testname"));
     }
 }
