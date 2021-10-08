@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *  This callback is fired when the PICS returns the changes since the last change number
+ * This callback is fired when the PICS returns the changes since the last change number
  */
 public class PICSChangesCallback extends CallbackMsg {
 
@@ -18,6 +18,10 @@ public class PICSChangesCallback extends CallbackMsg {
     private int currentChangeNumber;
 
     private boolean requiresFullUpdate;
+
+    private boolean requiresFullAppUpdate;
+
+    private boolean requiresFullPackageUpdate;
 
     private Map<Integer, PICSChangeData> packageChanges;
 
@@ -28,6 +32,8 @@ public class PICSChangesCallback extends CallbackMsg {
 
         lastChangeNumber = msg.getSinceChangeNumber();
         currentChangeNumber = msg.getCurrentChangeNumber();
+        requiresFullAppUpdate = msg.getForceFullAppUpdate();
+        requiresFullPackageUpdate = msg.getForceFullPackageUpdate();
         requiresFullUpdate = msg.getForceFullUpdate();
         packageChanges = new HashMap<>();
         appChanges = new HashMap<>();
@@ -51,6 +57,14 @@ public class PICSChangesCallback extends CallbackMsg {
 
     public boolean isRequiresFullUpdate() {
         return requiresFullUpdate;
+    }
+
+    public boolean isRequiresFullPackageUpdate() {
+        return requiresFullPackageUpdate;
+    }
+
+    public boolean isRequiresFullAppUpdate() {
+        return requiresFullAppUpdate;
     }
 
     public Map<Integer, PICSChangeData> getPackageChanges() {
