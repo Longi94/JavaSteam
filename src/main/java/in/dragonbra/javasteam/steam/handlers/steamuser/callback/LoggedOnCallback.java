@@ -42,12 +42,6 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private byte[] steam2Ticket;
 
-    /**
-     * @deprecated Deprecated in protobufs
-     */
-    @Deprecated
-    private boolean usePICS;
-
     private String webAPIUserNonce;
 
     private String ipCountryCode;
@@ -82,8 +76,6 @@ public class LoggedOnCallback extends CallbackMsg {
         ipCountryCode = resp.getIpCountryCode();
 
         webAPIUserNonce = resp.getWebapiAuthenticateUserNonce();
-
-        usePICS = resp.getDeprecatedUsePics();
 
         vanityURL = resp.getVanityUrl();
 
@@ -154,10 +146,6 @@ public class LoggedOnCallback extends CallbackMsg {
 
     public byte[] getSteam2Ticket() {
         return steam2Ticket;
-    }
-
-    public boolean isUsePICS() {
-        return usePICS;
     }
 
     public String getWebAPIUserNonce() {
