@@ -134,18 +134,7 @@ public class SteamApps extends ClientMsgHandler {
      * Results are returned in a {@link DepotKeyCallback} callback.
      *
      * @param depotId The DepotID to request a decryption key for.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link DepotKeyCallback}.
-     */
-    public JobID getDepotDecryptionKey(int depotId) {
-        return getDepotDecryptionKey(depotId, 0);
-    }
-
-    /**
-     * Request the depot decryption key for a specified DepotID.
-     * Results are returned in a {@link DepotKeyCallback} callback.
-     *
-     * @param depotId The DepotID to request a decryption key for.
-     * @param appId   The AppID to request the decryption key for.
+     * @param appId   The AppID parent of the DepotID.
      * @return The Job ID of the request. This can be used to find the appropriate {@link DepotKeyCallback}.
      */
     public JobID getDepotDecryptionKey(int depotId, int appId) {
