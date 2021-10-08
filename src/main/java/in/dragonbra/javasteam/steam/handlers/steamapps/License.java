@@ -35,6 +35,12 @@ public class License {
 
     private int territoryCode;
 
+    private long accessToken;
+
+    private int ownerAccountID;
+
+    private int masterPackageID;
+
     public License(CMsgClientLicenseList.License license) {
         packageID = license.getPackageId();
         lastChangeNumber = license.getChangeNumber();
@@ -47,6 +53,9 @@ public class License {
         purchaseCode = license.getPurchaseCountryCode();
         licenseType = ELicenseType.from(license.getLicenseType());
         territoryCode = license.getTerritoryCode();
+        accessToken = license.getAccessToken();
+        ownerAccountID = license.getOwnerId();
+        masterPackageID = license.getMasterPackageId();
     }
 
     public int getPackageID() {
@@ -91,5 +100,17 @@ public class License {
 
     public int getTerritoryCode() {
         return territoryCode;
+    }
+
+    public long getAccessToken() {
+        return accessToken;
+    }
+
+    public int getOwnerAccountID() {
+        return ownerAccountID;
+    }
+
+    public int getMasterPackageID() {
+        return masterPackageID;
     }
 }
