@@ -14,6 +14,7 @@ import in.dragonbra.javasteam.generated.MsgClientMarketingMessageUpdate2;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuth;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuthResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
@@ -74,6 +75,12 @@ public class SteamUser extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleAccountInfo(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientEmailAddrInfo, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleEmailAddrInfo(packetMsg);
             }
         });
         dispatchMap.put(EMsg.ClientWalletInfoUpdate, new Consumer<IPacketMsg>() {
@@ -367,6 +374,11 @@ public class SteamUser extends ClientMsgHandler {
     private void handleAccountInfo(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientAccountInfo.Builder> accInfo = new ClientMsgProtobuf<>(CMsgClientAccountInfo.class, packetMsg);
         client.postCallback(new AccountInfoCallback(accInfo.getBody()));
+    }
+
+    private void handleEmailAddrInfo(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientEmailAddrInfo.Builder> emailAddrInfo = new ClientMsgProtobuf<>(CMsgClientEmailAddrInfo.class, packetMsg);
+        client.postCallback(new EmailAddrInfoCallback(emailAddrInfo.getBody()));
     }
 
     private void handleWalletInfo(IPacketMsg packetMsg) {
