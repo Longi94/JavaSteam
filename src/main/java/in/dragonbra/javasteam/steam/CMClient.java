@@ -475,12 +475,21 @@ public abstract class CMClient {
     }
 
     /**
-     * Returns the the local IP of this client.
+     * Returns the local IP of this client.
      *
      * @return The local IP.
      */
     public InetAddress getLocalIP() {
         return connection.getLocalIP();
+    }
+
+    /**
+     * Returns the current endpoint this client is connected to.
+     *
+     * @return The current endpoint.
+     */
+    public InetSocketAddress getCurrentEndpoint() {
+        return connection.getCurrentEndPoint();
     }
 
     /**
