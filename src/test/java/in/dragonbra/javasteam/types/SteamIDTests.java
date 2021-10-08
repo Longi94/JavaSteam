@@ -147,7 +147,8 @@ public class SteamIDTests extends TestBase {
                 "[U:1:123]",
                 "[U:1:123:2]",
                 "[G:1:626]",
-                "[A:2:165:1234]"
+                "[A:2:165:1234]",
+                "[M:2:165:1234]"
         };
 
         for (String steamId : steamIds) {
