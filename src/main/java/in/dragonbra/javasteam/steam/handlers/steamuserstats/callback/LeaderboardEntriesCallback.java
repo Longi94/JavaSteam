@@ -38,14 +38,25 @@ public class LeaderboardEntriesCallback extends CallbackMsg {
         entries = Collections.unmodifiableList(list);
     }
 
+    /**
+     * Gets the result of the request.
+     *
+     * @return the result of the request by {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return how many entries there are for requested leaderboard.
+     */
     public int getEntryCount() {
         return entryCount;
     }
 
+    /**
+     * @return the list of leaderboard entries this response contains. See {@link LeaderboardEntry}
+     */
     public List<LeaderboardEntry> getEntries() {
         return entries;
     }

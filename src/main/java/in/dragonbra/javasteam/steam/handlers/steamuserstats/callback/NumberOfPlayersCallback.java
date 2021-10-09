@@ -21,10 +21,16 @@ public class NumberOfPlayersCallback extends CallbackMsg {
         numPlayers = resp.getPlayerCount();
     }
 
+    /**
+     * @return the result of the request by {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the current number of players according to Steam.
+     */
     public int getNumPlayers() {
         return numPlayers;
     }

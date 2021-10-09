@@ -34,22 +34,37 @@ public class FindOrCreateLeaderboardCallback extends CallbackMsg {
         displayType = ELeaderboardDisplayType.from(resp.getLeaderboardDisplayType());
     }
 
+    /**
+     * @return the result of the request by {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the leaderboard ID.
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * @return how many entries there are for requested leaderboard.
+     */
     public int getEntryCount() {
         return entryCount;
     }
 
+    /**
+     * @return sort method to use for this leaderboard. See {@link ELeaderboardSortMethod}.
+     */
     public ELeaderboardSortMethod getSortMethod() {
         return sortMethod;
     }
 
+    /**
+     * @return display type for this leaderboard. See {@link ELeaderboardDisplayType}
+     */
     public ELeaderboardDisplayType getDisplayType() {
         return displayType;
     }
