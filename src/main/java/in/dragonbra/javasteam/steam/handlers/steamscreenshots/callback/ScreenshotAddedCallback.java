@@ -22,10 +22,16 @@ public class ScreenshotAddedCallback extends CallbackMsg {
         screenshotID = new UGCHandle(msg.getScreenshotid());
     }
 
+    /**
+     * @return the result by {@link EResult}
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the screenshot ID of the newly added screenshot.
+     */
     public UGCHandle getScreenshotID() {
         return screenshotID;
     }
