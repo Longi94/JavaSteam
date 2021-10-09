@@ -20,7 +20,7 @@ import java.util.Map;
 public class SteamScreenshots extends ClientMsgHandler {
 
     /**
-     * Width of a screenshot thumnail
+     * Width of a screenshot thumbnail
      */
     public static final int SCREENSHOT_THUMBNAIL_WIDTH = 200;
 
