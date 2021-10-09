@@ -196,6 +196,41 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     /**
+     * Sets the local user's persona state flag back to normal desktop mode.
+     */
+    public void setPersonaStateFlag() {
+        ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
+
+        stateMsg.getBody().setPersonaSetByUser(true);
+        stateMsg.getBody().setPersonaStateFlags(0);
+
+        client.send(stateMsg);
+    }
+
+    /**
+     * Sets the local user's persona state flag to a valid ClientType
+     *
+     * @param flag one of the following
+     *             {@link EPersonaStateFlag#ClientTypeWeb},
+     *             {@link EPersonaStateFlag#ClientTypeMobile},
+     *             {@link EPersonaStateFlag#ClientTypeTenfoot},
+     *             or {@link EPersonaStateFlag#ClientTypeVR}.
+     */
+    public void setPersonaStateFlag(EPersonaStateFlag flag) {
+        if (flag.code() < EPersonaStateFlag.ClientTypeWeb.code() || flag.code() > EPersonaStateFlag.ClientTypeVR.code()) {
+            logger.debug("Persona State Flag was not a valid ClientType (" + flag.code() + ").");
+            return;
+        }
+
+        ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
+
+        stateMsg.getBody().setPersonaSetByUser(true);
+        stateMsg.getBody().setPersonaStateFlags(flag.code());
+
+        client.send(stateMsg);
+    }
+
+    /**
      * Sends a chat message to a friend.
      *
      * @param target  The target to send to.
