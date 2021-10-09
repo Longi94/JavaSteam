@@ -9,40 +9,50 @@ public class EnumerationUserDetails {
 
     private int appID;
 
-    private int sortOrder;
-
     private int startIndex;
 
     private EWorkshopFileAction userAction;
 
+    /**
+     * @return the AppID of the workshop to enumerate.
+     */
     public int getAppID() {
         return appID;
     }
 
+    /**
+     * @param appID the AppID of the workshop to enumerate.
+     */
     public void setAppID(int appID) {
         this.appID = appID;
     }
 
-    public int getSortOrder() {
-        return sortOrder;
-    }
-
-    public void setSortOrder(int sortOrder) {
-        this.sortOrder = sortOrder;
-    }
-
+    /**
+     * @return the start index.
+     */
     public int getStartIndex() {
         return startIndex;
     }
 
+    /**
+     * @param startIndex the start index.
+     */
     public void setStartIndex(int startIndex) {
         this.startIndex = startIndex;
     }
 
+    /**
+     * @return the user action to filter by {@link EWorkshopFileAction}.
+     * This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
+     */
     public EWorkshopFileAction getUserAction() {
         return userAction;
     }
 
+    /**
+     * @param userAction the user action to filter by {@link EWorkshopFileAction}.
+     *                   This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
+     */
     public void setUserAction(EWorkshopFileAction userAction) {
         this.userAction = userAction;
     }

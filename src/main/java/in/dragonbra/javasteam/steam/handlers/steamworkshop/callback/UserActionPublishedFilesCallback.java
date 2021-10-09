@@ -37,14 +37,23 @@ public class UserActionPublishedFilesCallback extends CallbackMsg {
         totalResults = msg.getTotalResults();
     }
 
+    /**
+     * @return the result by {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the list of enumerated files.
+     */
     public List<File> getFiles() {
         return files;
     }
 
+    /**
+     * @return the count of total results.
+     */
     public int getTotalResults() {
         return totalResults;
     }
@@ -63,10 +72,16 @@ public class UserActionPublishedFilesCallback extends CallbackMsg {
             timestamp = new Date(file.getRtimeTimeStamp() * 1000L);
         }
 
+        /**
+         * @return the file ID.
+         */
         public long getFileID() {
             return fileID;
         }
 
+        /**
+         * @return the timestamp of this file.
+         */
         public Date getTimestamp() {
             return timestamp;
         }
