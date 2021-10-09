@@ -21,10 +21,16 @@ public class WebAPIUserNonceCallback extends CallbackMsg {
         nonce = body.getWebapiAuthenticateUserNonce();
     }
 
+    /**
+     * @return the result of the request as {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the authentication nonce.
+     */
     public String getNonce() {
         return nonce;
     }

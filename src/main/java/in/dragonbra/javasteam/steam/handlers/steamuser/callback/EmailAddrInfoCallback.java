@@ -35,35 +35,43 @@ public class EmailAddrInfoCallback extends CallbackMsg {
     }
 
     /**
-     * Gets the email address of this account.
-     *
-     * @return the email address
+     * @return the email address of this account.
      */
     public String getEmailAddress() {
         return emailAddress;
     }
 
     /**
-     * Gets a value indicating validated email or not.
-     *
-     * @return whether the email address is validated or not.
+     * @return a value indicating validated email or not.
      */
     public boolean isEmailValidated() {
         return emailIsValidated;
     }
 
+    /**
+     * @return ???
+     */
     public boolean isEmailValidationChanged() {
         return emailValidationChanged;
     }
 
+    /**
+     * @return ???
+     */
     public boolean isCredentialChangeRequiresCode() {
         return credentialChangeRequiresCode;
     }
 
+    /**
+     * @return ???
+     */
     public boolean isPasswordOrSecretqaChangeRequiresCode() {
         return passwordOrSecretqaChangeRequiresCode;
     }
 
+    /**
+     * @return ???
+     */
     public boolean isRemindUserAboutEmail() {
         return remindUserAboutEmail;
     }

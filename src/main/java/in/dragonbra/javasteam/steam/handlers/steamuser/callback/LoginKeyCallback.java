@@ -17,10 +17,16 @@ public class LoginKeyCallback extends CallbackMsg {
         this.uniqueID = logKey.getUniqueId();
     }
 
+    /**
+     * @return the login key.
+     */
     public String getLoginKey() {
         return loginKey;
     }
 
+    /**
+     * @return the unique ID.
+     */
     public int getUniqueID() {
         return uniqueID;
     }

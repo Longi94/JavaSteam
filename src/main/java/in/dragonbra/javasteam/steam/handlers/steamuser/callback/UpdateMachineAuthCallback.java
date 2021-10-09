@@ -36,22 +36,37 @@ public class UpdateMachineAuthCallback extends CallbackMsg {
         oneTimePassword.timeDrift = msg.getOtpTimedrift();
     }
 
+    /**
+     * @return the sentry file data that should be written.
+     */
     public byte[] getData() {
         return data;
     }
 
+    /**
+     * @return the number of bytes to write.
+     */
     public int getBytesToWrite() {
         return bytesToWrite;
     }
 
+    /**
+     * @return the offset to write to.
+     */
     public int getOffset() {
         return offset;
     }
 
+    /**
+     * @return the name of the sentry file to write.
+     */
     public String getFileName() {
         return fileName;
     }
 
+    /**
+     * @return the one-time-password details as {@link OTPDetails}.
+     */
     public OTPDetails getOneTimePassword() {
         return oneTimePassword;
     }
@@ -69,18 +84,30 @@ public class UpdateMachineAuthCallback extends CallbackMsg {
 
         private int timeDrift;
 
+        /**
+         * @return the OTP type.
+         */
         public int getType() {
             return type;
         }
 
+        /**
+         * @return the OTP identifier.
+         */
         public String getIdentifier() {
             return identifier;
         }
 
+        /**
+         * @return the OTP shared secret.
+         */
         public byte[] getSharedSecret() {
             return sharedSecret;
         }
 
+        /**
+         * @return the OTP time drift.
+         */
         public int getTimeDrift() {
             return timeDrift;
         }
