@@ -53,7 +53,7 @@ public class EnumerationUserDetails {
      * Gets the user action to filter by.
      * This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
      *
-     * @return The user action.
+     * @return The user action. See {@link EWorkshopFileAction}
      */
     public EWorkshopFileAction getUserAction() {
         return userAction;
@@ -63,7 +63,7 @@ public class EnumerationUserDetails {
      * Sets the user action to filter by.
      * This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
      *
-     * @param userAction The user action.
+     * @param userAction {@link EWorkshopFileAction}
      */
     public void setUserAction(EWorkshopFileAction userAction) {
         this.userAction = userAction;
