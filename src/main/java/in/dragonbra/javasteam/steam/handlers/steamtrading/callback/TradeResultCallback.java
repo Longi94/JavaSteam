@@ -34,30 +34,51 @@ public class TradeResultCallback extends CallbackMsg {
         numDaysPasswordResetProbation = msg.getPasswordResetProbationDays();
     }
 
+    /**
+     * @return the Trade ID that this result is for.
+     */
     public int getTradeID() {
         return tradeID;
     }
 
+    /**
+     * @return the response of the trade proposal.
+     */
     public EEconTradeResponse getResponse() {
         return response;
     }
 
+    /**
+     * @return the {@link SteamID} of the client that responded to the proposal.
+     */
     public SteamID getOtherClient() {
         return otherClient;
     }
 
+    /**
+     * @return the number of days Steam Guard is required to have been active on this account.
+     */
     public int getNumDaysSteamGuardRequired() {
         return numDaysSteamGuardRequired;
     }
 
+    /**
+     * @return the number of days a new device cannot trade for.
+     */
     public int getNumDaysNewDeviceCooldown() {
         return numDaysNewDeviceCooldown;
     }
 
+    /**
+     * @return the default number of days one cannot trade for after a password reset.
+     */
     public int getDefaultNumDaysPasswordResetProbation() {
         return defaultNumDaysPasswordResetProbation;
     }
 
+    /**
+     * @return the number of days one cannot trade for after a password reset.
+     */
     public int getNumDaysPasswordResetProbation() {
         return numDaysPasswordResetProbation;
     }

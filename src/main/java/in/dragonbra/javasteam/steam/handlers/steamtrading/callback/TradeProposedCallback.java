@@ -18,10 +18,16 @@ public class TradeProposedCallback extends CallbackMsg {
         otherClient = new SteamID(msg.getOtherSteamid());
     }
 
+    /**
+     * @return the Trade ID of his proposal, used for replying.
+     */
     public int getTradeID() {
         return tradeID;
     }
 
+    /**
+     * @return the SteamID of the client that sent the proposal.
+     */
     public SteamID getOtherClient() {
         return otherClient;
     }
