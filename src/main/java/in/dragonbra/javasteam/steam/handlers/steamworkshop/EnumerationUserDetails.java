@@ -14,56 +14,44 @@ public class EnumerationUserDetails {
     private EWorkshopFileAction userAction;
 
     /**
-     * Gets the AppID of the workshop to enumerate.
-     *
-     * @return The AppID.
+     * @return the AppID of the workshop to enumerate.
      */
     public int getAppID() {
         return appID;
     }
 
     /**
-     * Sets the AppID of the workshop to enumerate.
-     *
-     * @param appID The AppID.
+     * @param appID the AppID of the workshop to enumerate.
      */
     public void setAppID(int appID) {
         this.appID = appID;
     }
 
     /**
-     * Gets the start index.
-     *
-     * @return The start index.
+     * @return the start index.
      */
     public int getStartIndex() {
         return startIndex;
     }
 
     /**
-     * Sets the start index.
-     *
-     * @param startIndex The start index.
+     * @param startIndex the start index.
      */
     public void setStartIndex(int startIndex) {
         this.startIndex = startIndex;
     }
 
     /**
-     * Gets the user action to filter by.
+     * @return the user action to filter by {@link EWorkshopFileAction}.
      * This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
-     *
-     * @return The user action. See {@link EWorkshopFileAction}
      */
     public EWorkshopFileAction getUserAction() {
         return userAction;
     }
 
     /**
-     * Sets the user action to filter by.
-     * This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
-     *
-     * @param userAction {@link EWorkshopFileAction}
+     * @param userAction the user action to filter by {@link EWorkshopFileAction}.
+     *                   This value is only used by {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}
      */
     public void setUserAction(EWorkshopFileAction userAction) {
         this.userAction = userAction;

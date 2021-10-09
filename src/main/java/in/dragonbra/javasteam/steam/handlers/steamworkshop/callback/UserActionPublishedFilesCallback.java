@@ -38,27 +38,21 @@ public class UserActionPublishedFilesCallback extends CallbackMsg {
     }
 
     /**
-     * Gets the result.
-     *
-     * @return The result in {@link EResult}
+     * @return the result by {@link EResult}.
      */
     public EResult getResult() {
         return result;
     }
 
     /**
-     * Gets the list of enumerated files.
-     *
-     * @return The list of enumerated files.
+     * @return the list of enumerated files.
      */
     public List<File> getFiles() {
         return files;
     }
 
     /**
-     * Gets the count of total results.
-     *
-     * @return The total results.
+     * @return the count of total results.
      */
     public int getTotalResults() {
         return totalResults;
@@ -79,18 +73,14 @@ public class UserActionPublishedFilesCallback extends CallbackMsg {
         }
 
         /**
-         * Gets the file ID.
-         *
-         * @return The File ID.
+         * @return the file ID.
          */
         public long getFileID() {
             return fileID;
         }
 
         /**
-         * Gets the timestamp of this file.
-         *
-         * @return The timestamp.
+         * @return the timestamp of this file.
          */
         public Date getTimestamp() {
             return timestamp;
