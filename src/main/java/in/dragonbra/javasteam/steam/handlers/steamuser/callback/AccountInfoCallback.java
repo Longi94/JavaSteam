@@ -7,10 +7,11 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import java.util.EnumSet;
 
 /**
- * This callback is received when account information is recieved from the network.
+ * This callback is received when account information is received from the network.
  * This generally happens after logon.
  */
 public class AccountInfoCallback extends CallbackMsg {
+
     private String personaName;
 
     private String country;
@@ -35,26 +36,44 @@ public class AccountInfoCallback extends CallbackMsg {
         facebookName = msg.getFacebookName();
     }
 
+    /**
+     * @return the last recorded persona name used by this account.
+     */
     public String getPersonaName() {
         return personaName;
     }
 
+    /**
+     * @return the country this account is connected from.
+     */
     public String getCountry() {
         return country;
     }
 
+    /**
+     * @return the count of SteamGuard authenticated computers.
+     */
     public int getCountAuthedComputers() {
         return countAuthedComputers;
     }
 
+    /**
+     * @return the account flags for this account. See {@link EAccountFlags}.
+     */
     public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 
+    /**
+     * @return the facebook ID of this account if it is linked with facebook.
+     */
     public long getFacebookID() {
         return facebookID;
     }
 
+    /**
+     * @return the facebook name if this account is linked with facebook.
+     */
     public String getFacebookName() {
         return facebookName;
     }

@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.enums.EAccountFlags;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.generated.MsgClientLogOnResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
+import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
@@ -100,70 +101,125 @@ public class LoggedOnCallback extends CallbackMsg {
         this.result = result;
     }
 
+    /**
+     * @return the result of the logon as {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the extended result of the logon as {@link EResult}.
+     */
     public EResult getExtendedResult() {
         return extendedResult;
     }
 
+    /**
+     * @return the out of game secs per heartbeat value.
+     * This is used internally to initialize heartbeating.
+     */
     public int getOutOfGameSecsPerHeartbeat() {
         return outOfGameSecsPerHeartbeat;
     }
 
+    /**
+     * @return the in game secs per heartbeat value.
+     * This is used internally to initialize heartbeating.
+     */
     public int getInGameSecsPerHeartbeat() {
         return inGameSecsPerHeartbeat;
     }
 
+    /**
+     * @return the public IP of the client.
+     */
     public InetAddress getPublicIP() {
         return publicIP;
     }
 
+    /**
+     * @return the Steam3 server time.
+     */
     public Date getServerTime() {
         return serverTime;
     }
 
+    /**
+     * @return the account flags assigned by the server. See {@link EAccountFlags}.
+     */
     public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 
+    /**
+     * @return the client steam ID as {@link SteamID}
+     */
     public SteamID getClientSteamID() {
         return clientSteamID;
     }
 
+    /**
+     * @return the email domain.
+     */
     public String getEmailDomain() {
         return emailDomain;
     }
 
+    /**
+     * @return the Steam2 CellID.
+     */
     public int getCellID() {
         return cellID;
     }
 
+    /**
+     * @return the Steam2 CellID ping threshold.
+     */
     public int getCellIDPingThreshold() {
         return cellIDPingThreshold;
     }
 
+    /**
+     * @return the Steam2 ticket.
+     * This is used for authenticated content downloads in Steam2.
+     * This field will only be set when {@link LogOnDetails#isRequestSteam2Ticket} has been set to true.
+     */
     public byte[] getSteam2Ticket() {
         return steam2Ticket;
     }
 
+    /**
+     * @return the WebAPI authentication user nonce.
+     */
     public String getWebAPIUserNonce() {
         return webAPIUserNonce;
     }
 
+    /**
+     * @return the IP country code.
+     */
     public String getIpCountryCode() {
         return ipCountryCode;
     }
 
+    /**
+     * @return the vanity URL.
+     */
     public String getVanityURL() {
         return vanityURL;
     }
 
+    /**
+     * @return the threshold for login failures before Steam wants the client to migrate to a new CM.
+     */
     public int getNumLoginFailuresToMigrate() {
         return numLoginFailuresToMigrate;
     }
 
+    /**
+     * @return the threshold for disconnects before Steam wants the client to migrate to a new CM.
+     */
     public int getNumDisconnectsToMigrate() {
         return numDisconnectsToMigrate;
     }

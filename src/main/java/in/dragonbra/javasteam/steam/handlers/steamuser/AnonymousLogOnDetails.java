@@ -19,26 +19,56 @@ public class AnonymousLogOnDetails {
         clientLanguage = "english";
     }
 
+    /**
+     * Gets the CellID
+     *
+     * @return the CellID.
+     */
     public int getCellID() {
         return cellID;
     }
 
+    /**
+     * Sets the CellID
+     *
+     * @param cellID the CellID.
+     */
     public void setCellID(int cellID) {
         this.cellID = cellID;
     }
 
+    /**
+     * Gets the client operating system type.
+     *
+     * @return the client operating system type.
+     */
     public EOSType getClientOSType() {
         return clientOSType;
     }
 
+    /**
+     * Sets the client operating system type.
+     *
+     * @param clientOSType the client operating system type.
+     */
     public void setClientOSType(EOSType clientOSType) {
         this.clientOSType = clientOSType;
     }
 
+    /**
+     * Gets the client language.
+     *
+     * @return the client language.
+     */
     public String getClientLanguage() {
         return clientLanguage;
     }
 
+    /**
+     * Sets the client language.
+     *
+     * @param clientLanguage the client language.
+     */
     public void setClientLanguage(String clientLanguage) {
         this.clientLanguage = clientLanguage;
     }

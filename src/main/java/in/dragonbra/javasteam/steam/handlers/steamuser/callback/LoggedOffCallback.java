@@ -14,6 +14,9 @@ public class LoggedOffCallback extends CallbackMsg {
         this.result = result;
     }
 
+    /**
+     * @return the result of the log-off as {@link EResult}.
+     */
     public EResult getResult() {
         return result;
     }

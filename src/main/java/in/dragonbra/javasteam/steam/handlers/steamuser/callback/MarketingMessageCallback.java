@@ -43,10 +43,16 @@ public class MarketingMessageCallback extends CallbackMsg {
         messages = Collections.unmodifiableList(msgList);
     }
 
+    /**
+     * @return the time of this marketing message update.
+     */
     public Date getUpdateTime() {
         return updateTime;
     }
 
+    /**
+     * @return the messages as a collection of {@link Message}
+     */
     public Collection<Message> getMessages() {
         return messages;
     }
@@ -71,14 +77,23 @@ public class MarketingMessageCallback extends CallbackMsg {
             }
         }
 
+        /**
+         * @return the unique identifier for this marketing message. See {@link GlobalID}.
+         */
         public GlobalID getId() {
             return id;
         }
 
+        /**
+         * @return the URL for this marketing message.
+         */
         public String getUrl() {
             return url;
         }
 
+        /**
+         * @return the marketing message flags. See {@link EMarketingMessageFlags}.
+         */
         public EnumSet<EMarketingMessageFlags> getFlags() {
             return flags;
         }
