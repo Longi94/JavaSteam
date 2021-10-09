@@ -47,22 +47,47 @@ public class LeaderboardEntry {
         details = Collections.unmodifiableList(details);
     }
 
+    /**
+     * Gets the {@link SteamID} for this entry.
+     *
+     * @return The {@link SteamID}
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * Gets the global rank for this entry.
+     *
+     * @return The entry's global rank.
+     */
     public int getGlobalRank() {
         return globalRank;
     }
 
+    /**
+     * Gets the score for this entry.
+     *
+     * @return The entry's score.
+     */
     public int getScore() {
         return score;
     }
 
+    /**
+     * Gets the {@link UGCHandle} attached to this entry.
+     *
+     * @return The {@link UGCHandle}
+     */
     public UGCHandle getUgcId() {
         return ugcId;
     }
 
+    /**
+     * Extra game-defined information regarding how the user got that score.
+     *
+     * @return A list of Integers.
+     */
     public List<Integer> getDetails() {
         return details;
     }
