@@ -35,45 +35,35 @@ public class FindOrCreateLeaderboardCallback extends CallbackMsg {
     }
 
     /**
-     * Gets the result of the request.
-     *
-     * @return The result in {@link EResult}
+     * @return the result of the request by {@link EResult}.
      */
     public EResult getResult() {
         return result;
     }
 
     /**
-     * Leaderboard ID.
-     *
-     * @return The leaderboard ID.
+     * @return the leaderboard ID.
      */
     public int getId() {
         return id;
     }
 
     /**
-     * How many entries there are for requested leaderboard.
-     *
-     * @return The number of entries.
+     * @return how many entries there are for requested leaderboard.
      */
     public int getEntryCount() {
         return entryCount;
     }
 
     /**
-     * Sort method to use for this leaderboard.
-     *
-     * @return The sort method by {@link ELeaderboardSortMethod}
+     * @return sort method to use for this leaderboard. See {@link ELeaderboardSortMethod}.
      */
     public ELeaderboardSortMethod getSortMethod() {
         return sortMethod;
     }
 
     /**
-     * Display type for this leaderboard.
-     *
-     * @return The display type by {@link ELeaderboardDisplayType}
+     * @return display type for this leaderboard. See {@link ELeaderboardDisplayType}
      */
     public ELeaderboardDisplayType getDisplayType() {
         return displayType;

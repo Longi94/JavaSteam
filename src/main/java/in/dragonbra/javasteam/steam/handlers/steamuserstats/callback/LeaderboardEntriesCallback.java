@@ -41,25 +41,21 @@ public class LeaderboardEntriesCallback extends CallbackMsg {
     /**
      * Gets the result of the request.
      *
-     * @return The result by {@link EResult}
+     * @return the result of the request by {@link EResult}.
      */
     public EResult getResult() {
         return result;
     }
 
     /**
-     * How many entries there are for requested leaderboard.
-     *
-     * @return The number of entries.
+     * @return how many entries there are for requested leaderboard.
      */
     public int getEntryCount() {
         return entryCount;
     }
 
     /**
-     * Gets the list of leaderboard entries this response contains.
-     *
-     * @return The list of leaderboard entries. {@link LeaderboardEntry}
+     * @return the list of leaderboard entries this response contains. See {@link LeaderboardEntry}
      */
     public List<LeaderboardEntry> getEntries() {
         return entries;

@@ -48,45 +48,35 @@ public class LeaderboardEntry {
     }
 
     /**
-     * Gets the {@link SteamID} for this entry.
-     *
-     * @return The {@link SteamID}
+     * @return the {@link SteamID} for this entry.
      */
     public SteamID getSteamID() {
         return steamID;
     }
 
     /**
-     * Gets the global rank for this entry.
-     *
-     * @return The entry's global rank.
+     * @return the global rank for this entry.
      */
     public int getGlobalRank() {
         return globalRank;
     }
 
     /**
-     * Gets the score for this entry.
-     *
-     * @return The entry's score.
+     * @return the score for this entry.
      */
     public int getScore() {
         return score;
     }
 
     /**
-     * Gets the {@link UGCHandle} attached to this entry.
-     *
-     * @return The {@link UGCHandle}
+     * @return the {@link UGCHandle} attached to this entry.
      */
     public UGCHandle getUgcId() {
         return ugcId;
     }
 
     /**
-     * Extra game-defined information regarding how the user got that score.
-     *
-     * @return A list of Integers.
+     * @return extra game-defined information regarding how the user got that score.
      */
     public List<Integer> getDetails() {
         return details;

@@ -22,18 +22,14 @@ public class NumberOfPlayersCallback extends CallbackMsg {
     }
 
     /**
-     * Gets the result of the request.
-     *
-     * @return The result in {@link EResult}
+     * @return the result of the request by {@link EResult}.
      */
     public EResult getResult() {
         return result;
     }
 
     /**
-     * Gets the current number of players according to Steam.
-     *
-     * @return The number of players.
+     * @return the current number of players according to Steam.
      */
     public int getNumPlayers() {
         return numPlayers;
