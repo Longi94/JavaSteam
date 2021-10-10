@@ -20,6 +20,9 @@ public class PersonaStatesCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return a list of friends states.
+     */
     public List<PersonaState> getPersonaStates() {
         return personaStates;
     }

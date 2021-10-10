@@ -16,9 +16,12 @@ import java.util.List;
 
 /**
  * This callback is fired in response to receiving historical messages.
+ *
  * @see SteamFriends#requestOfflineMessages()
+ * @see SteamFriends#requestMessageHistory(SteamID)
  */
 public class FriendMsgHistoryCallback extends CallbackMsg {
+
     private EResult result;
 
     private SteamID steamID;
@@ -41,14 +44,25 @@ public class FriendMsgHistoryCallback extends CallbackMsg {
         this.messages = Collections.unmodifiableList(messages);
     }
 
+    /**
+     * @return the result of the request.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the {@link SteamID} of the user with whom these messages were exchanged.
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * Offline messages are marked by having set {@link FriendMessage#isUnread()} to <b>true</b>
+     *
+     * @return the messages exchanged with the user.
+     */
     public List<FriendMessage> getMessages() {
         return messages;
     }

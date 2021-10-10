@@ -10,6 +10,7 @@ import java.util.Date;
  * Represents an event or announcement that was posted by a clan.
  */
 public class Event {
+
     private GlobalID id;
 
     private Date eventTime;
@@ -30,22 +31,39 @@ public class Event {
         justPosted = clanEvent.getJustPosted();
     }
 
+    /**
+     * @return the globally unique ID for this specific event.
+     */
     public GlobalID getId() {
         return id;
     }
 
+    /**
+     * @return the event time.
+     */
     public Date getEventTime() {
         return eventTime;
     }
 
+    /**
+     * @return the headline of the event.
+     */
     public String getHeadline() {
         return headline;
     }
 
+    /**
+     * @return the {@link GameID} associated with this event, if any.
+     */
     public GameID getGameID() {
         return gameID;
     }
 
+    /**
+     * Gets a value indicating whether this event was just posted.
+     *
+     * @return <b>true</b> if the event was just posted; otherwise, <b>false</b>.
+     */
     public boolean isJustPosted() {
         return justPosted;
     }

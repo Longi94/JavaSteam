@@ -39,30 +39,51 @@ public class ChatInviteCallback extends CallbackMsg {
         gameID = new GameID(invite.getGameId());
     }
 
+    /**
+     * @return the {@link SteamID} of the user who was invited to the chat.
+     */
     public SteamID getInvitedID() {
         return invitedID;
     }
 
+    /**
+     * @return the chat room {@link SteamID}.
+     */
     public SteamID getChatRoomID() {
         return chatRoomID;
     }
 
+    /**
+     * @return the {@link SteamID} of the user who performed the invitation.
+     */
     public SteamID getPatronID() {
         return patronID;
     }
 
+    /**
+     * @return the chat room type.
+     */
     public EChatRoomType getChatRoomType() {
         return chatRoomType;
     }
 
+    /**
+     * @return the {@link SteamID} of the chat friend.
+     */
     public SteamID getFriendChatID() {
         return friendChatID;
     }
 
+    /**
+     * @return the name of the chat room.
+     */
     public String getChatRoomName() {
         return chatRoomName;
     }
 
+    /**
+     * @return the {@link GameID} associated with this chat room, if it's a game lobby.
+     */
     public GameID getGameID() {
         return gameID;
     }

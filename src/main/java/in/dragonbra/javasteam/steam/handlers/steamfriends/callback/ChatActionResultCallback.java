@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.types.SteamID;
  * This callback is fired when a chat action has completed.
  */
 public class ChatActionResultCallback extends CallbackMsg {
+
     private SteamID chatRoomID;
 
     private SteamID chatterID;
@@ -33,18 +34,30 @@ public class ChatActionResultCallback extends CallbackMsg {
         this.result = result;
     }
 
+    /**
+     * @return the SteamID of the chat room the action was performed in.
+     */
     public SteamID getChatRoomID() {
         return chatRoomID;
     }
 
+    /**
+     * @return the SteamID of the chat member the action was performed on.
+     */
     public SteamID getChatterID() {
         return chatterID;
     }
 
+    /**
+     * @return the chat action that was performed.
+     */
     public EChatAction getAction() {
         return action;
     }
 
+    /**
+     * @return the result of the chat action.
+     */
     public EChatActionResult getResult() {
         return result;
     }

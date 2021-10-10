@@ -16,6 +16,7 @@ import java.util.EnumSet;
  * This callback is fired in response to chat member info being recieved.
  */
 public class ChatMemberInfoCallback extends CallbackMsg {
+
     private SteamID chatRoomID;
 
     private EChatInfoType type;
@@ -54,6 +55,7 @@ public class ChatMemberInfoCallback extends CallbackMsg {
      * Represents state change information.
      */
     public static class StateChangeDetails {
+
         private SteamID chatterActedOn;
 
         private EnumSet<EChatMemberStateChange> stateChange;
@@ -76,18 +78,32 @@ public class ChatMemberInfoCallback extends CallbackMsg {
             }
         }
 
+        /**
+         * @return the {@link SteamID} of the chatter that was acted on.
+         */
         public SteamID getChatterActedOn() {
             return chatterActedOn;
         }
 
+        /**
+         * @return the state change for the acted on SteamID.
+         */
         public EnumSet<EChatMemberStateChange> getStateChange() {
             return stateChange;
         }
 
+        /**
+         * @return the {@link SteamID} of the chatter that acted on {@link StateChangeDetails#chatterActedOn}.
+         */
         public SteamID getChatterActedBy() {
             return chatterActedBy;
         }
 
+        /**
+         * This field is only populated when {@link StateChangeDetails#stateChange} is {@link EChatMemberStateChange#Entered}.
+         *
+         * @return the member information for a user that has joined the chat room.
+         */
         public ChatMemberInfo getMemberInfo() {
             return memberInfo;
         }

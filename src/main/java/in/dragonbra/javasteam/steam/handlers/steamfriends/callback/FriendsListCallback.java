@@ -12,6 +12,7 @@ import java.util.List;
  * This callback is fired when the client receives a list of friends.
  */
 public class FriendsListCallback extends CallbackMsg {
+
     private boolean incremental;
 
     private List<Friend> friendList;
@@ -27,10 +28,18 @@ public class FriendsListCallback extends CallbackMsg {
         friendList = Collections.unmodifiableList(list);
     }
 
+    /**
+     * Gets a value indicating whether this {@link FriendsListCallback} is an incremental update.
+     *
+     * @return <b>true</b> if incremental; otherwise, <b>false</b>.
+     */
     public boolean isIncremental() {
         return incremental;
     }
 
+    /**
+     * @return the friend list.
+     */
     public List<Friend> getFriendList() {
         return friendList;
     }

@@ -69,46 +69,79 @@ public class ClanStateCallback extends CallbackMsg {
         this.announcements = Collections.unmodifiableList(announcements);
     }
 
+    /**
+     * @return the {@link SteamID} of the clan that posted this state update.
+     */
     public SteamID getClanID() {
         return clanID;
     }
 
+    /**
+     * @return the account flags.
+     */
     public EnumSet<EAccountFlags> getAccountFlags() {
         return accountFlags;
     }
 
+    /**
+     * @return the privacy of the chat room.
+     */
     public boolean isChatRoomPrivate() {
         return chatRoomPrivate;
     }
 
+    /**
+     * @return the name of the clan.
+     */
     public String getClanName() {
         return clanName;
     }
 
+    /**
+     * @return the SHA-1 avatar hash.
+     */
     public byte[] getAvatarHash() {
         return avatarHash;
     }
 
+    /**
+     * @return the total number of members in this clan.
+     */
     public int getMemberTotalCount() {
         return memberTotalCount;
     }
 
+    /**
+     * @return the number of members in this clan that are currently online.
+     */
     public int getMemberOnlineCount() {
         return memberOnlineCount;
     }
 
+    /**
+     * @return the number of members in this clan that are currently chatting.
+     */
     public int getMemberChattingCount() {
         return memberChattingCount;
     }
 
+    /**
+     * @return the number of members in this clan that are currently in-game.
+     */
     public int getMemberInGameCount() {
         return memberInGameCount;
     }
 
+    /**
+     * @return any events associated with this clan state update. See {@link Event}
+     */
     public List<Event> getEvents() {
         return events;
     }
 
+    /**
+     * @return any announcements associated with this clan state update. See {@link Event}
+     */
     public List<Event> getAnnouncements() {
         return announcements;
     }

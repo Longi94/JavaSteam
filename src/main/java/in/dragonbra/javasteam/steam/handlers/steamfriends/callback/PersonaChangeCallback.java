@@ -12,6 +12,7 @@ import in.dragonbra.javasteam.types.JobID;
  * with {@link SteamFriends#setPersonaName(String)} or {@link SteamFriends#setPersonaState(EPersonaState)}.
  */
 public class PersonaChangeCallback extends CallbackMsg {
+
     private EResult result;
 
     private String name;
@@ -23,10 +24,16 @@ public class PersonaChangeCallback extends CallbackMsg {
         name = msg.getPlayerName();
     }
 
+    /**
+     * @return the result of changing this client's persona information.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the name of this client according to Steam.
+     */
     public String getName() {
         return name;
     }
