@@ -198,7 +198,7 @@ public class SteamFriends extends ClientMsgHandler {
     /**
      * Sets the local user's persona state flag back to normal desktop mode.
      */
-    public void setPersonaStateFlag() {
+    public void resetPersonaStateFlag() {
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
 
         stateMsg.getBody().setPersonaSetByUser(true);
