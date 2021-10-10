@@ -47,30 +47,51 @@ public class PICSChangesCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the supplied change number for the request.
+     */
     public int getLastChangeNumber() {
         return lastChangeNumber;
     }
 
+    /**
+     * @return the current change number.
+     */
     public int getCurrentChangeNumber() {
         return currentChangeNumber;
     }
 
+    /**
+     * @return if this update requires a full update of the information.
+     */
     public boolean isRequiresFullUpdate() {
         return requiresFullUpdate;
     }
 
+    /**
+     * @return if this update requires a full update of the app information.
+     */
     public boolean isRequiresFullPackageUpdate() {
         return requiresFullPackageUpdate;
     }
 
+    /**
+     * @return if this update requires a full update of the package information.
+     */
     public boolean isRequiresFullAppUpdate() {
         return requiresFullAppUpdate;
     }
 
+    /**
+     * @return a map containing requested package tokens.
+     */
     public Map<Integer, PICSChangeData> getPackageChanges() {
         return packageChanges;
     }
 
+    /**
+     * @return a map containing requested package tokens.
+     */
     public Map<Integer, PICSChangeData> getAppChanges() {
         return appChanges;
     }

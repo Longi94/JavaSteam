@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *  This callback is fired when the PICS returns the product information requested
+ * This callback is fired when the PICS returns the product information requested
  */
 public class PICSProductInfoCallback extends CallbackMsg {
 
@@ -46,26 +46,44 @@ public class PICSProductInfoCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return if this response contains only product metadata.
+     */
     public boolean isMetaDataOnly() {
         return metaDataOnly;
     }
 
+    /**
+     * @return if there are more product information responses pending.
+     */
     public boolean isResponsePending() {
         return responsePending;
     }
 
+    /**
+     * @return a list of unknown package ids.
+     */
     public List<Integer> getUnknownPackages() {
         return unknownPackages;
     }
 
+    /**
+     * @return a list of unknown app ids.
+     */
     public List<Integer> getUnknownApps() {
         return unknownApps;
     }
 
+    /**
+     * @return a map containing requested app info.
+     */
     public Map<Integer, PICSProductInfo> getApps() {
         return apps;
     }
 
+    /**
+     * @return a map containing requested package info.
+     */
     public Map<Integer, PICSProductInfo> getPackages() {
         return packages;
     }

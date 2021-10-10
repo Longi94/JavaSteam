@@ -29,14 +29,23 @@ public class FreeLicenseCallback extends CallbackMsg {
         grantedPackages = Collections.unmodifiableList(msg.getGrantedPackageidsList());
     }
 
+    /**
+     * @return the result of the message.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the list of granted apps.
+     */
     public List<Integer> getGrantedApps() {
         return grantedApps;
     }
 
+    /**
+     * @return the list of granted packages.
+     */
     public List<Integer> getGrantedPackages() {
         return grantedPackages;
     }

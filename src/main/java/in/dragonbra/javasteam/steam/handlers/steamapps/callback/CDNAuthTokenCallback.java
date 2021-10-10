@@ -26,14 +26,23 @@ public class CDNAuthTokenCallback extends CallbackMsg {
         expiration = new Date(msg.getExpirationTime() * 1000L);
     }
 
+    /**
+     * @return the result of the operation.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the CDN auth token.
+     */
     public String getToken() {
         return token;
     }
 
+    /**
+     * @return the token expiration date.
+     */
     public Date getExpiration() {
         return expiration;
     }

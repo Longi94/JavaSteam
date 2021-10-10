@@ -82,34 +82,58 @@ public class PICSProductInfo extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the ID of the app or package.
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * @return the current change number for the app or package.
+     */
     public int getChangeNumber() {
         return changeNumber;
     }
 
+    /**
+     * @return if an access token was required for the request.
+     */
     public boolean isMissingToken() {
         return missingToken;
     }
 
+    /**
+     * @return the hash of the content.
+     */
     public byte[] getShaHash() {
         return shaHash;
     }
 
+    /**
+     * @return the KeyValue info.
+     */
     public KeyValue getKeyValues() {
         return keyValues;
     }
 
+    /**
+     * @return for an app request, returns if only the public information was requested.
+     */
     public boolean isOnlyPublic() {
         return onlyPublic;
     }
 
+    /**
+     * @return whether or not to use HTTP to load the KeyValues data.
+     */
     public boolean isUseHttp() {
         return useHttp;
     }
 
+    /**
+     * @return for an app metadata-only request, returns the Uri for HTTP appinfo requests.
+     */
     public URI getHttpUri() {
         return httpUri;
     }

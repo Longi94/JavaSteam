@@ -31,6 +31,9 @@ public class VACStatusCallback extends CallbackMsg {
         bannedApps = Collections.unmodifiableList(tempList);
     }
 
+    /**
+     * @return a list of VAC banned apps the client is banned from.
+     */
     public List<Integer> getBannedApps() {
         return bannedApps;
     }

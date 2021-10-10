@@ -7,7 +7,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
- * This callback is recieved in response to calling {@link SteamApps#getDepotDecryptionKey(int, int)}
+ * This callback is received in response to calling {@link SteamApps#getDepotDecryptionKey(int, int)}
  */
 public class DepotKeyCallback extends CallbackMsg {
 
@@ -25,14 +25,23 @@ public class DepotKeyCallback extends CallbackMsg {
         depotKey = msg.getDepotEncryptionKey().toByteArray();
     }
 
+    /**
+     * @return the result of requesting this encryption key.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the DepotID this encryption key is for.
+     */
     public int getDepotID() {
         return depotID;
     }
 
+    /**
+     * @return the encryption key for this depot.
+     */
     public byte[] getDepotKey() {
         return depotKey;
     }

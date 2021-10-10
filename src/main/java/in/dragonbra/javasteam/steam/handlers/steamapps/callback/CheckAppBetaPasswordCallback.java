@@ -29,10 +29,16 @@ public class CheckAppBetaPasswordCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the result of the operation.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return a map of beta names to their encryption keys.
+     */
     public Map<String, byte[]> getBetaPasswords() {
         return betaPasswords;
     }

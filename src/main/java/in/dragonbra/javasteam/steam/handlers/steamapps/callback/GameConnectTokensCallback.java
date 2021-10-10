@@ -28,10 +28,16 @@ public class GameConnectTokensCallback extends CallbackMsg {
         tokens = Collections.unmodifiableList(temp);
     }
 
+    /**
+     * @return a count of tokens to keep.
+     */
     public int getTokensToKeep() {
         return tokensToKeep;
     }
 
+    /**
+     * @return the list of tokens.
+     */
     public List<byte[]> getTokens() {
         return tokens;
     }

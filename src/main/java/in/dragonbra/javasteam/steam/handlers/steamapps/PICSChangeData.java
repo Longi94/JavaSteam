@@ -25,14 +25,23 @@ public class PICSChangeData {
         needsToken = change.getNeedsToken();
     }
 
+    /**
+     * @return the app or package ID this change data represents
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * @return the current change number of this app
+     */
     public int getChangeNumber() {
         return changeNumber;
     }
 
+    /**
+     * @return signals if an access token is needed for this request
+     */
     public boolean isNeedsToken() {
         return needsToken;
     }
