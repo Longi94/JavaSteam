@@ -218,8 +218,7 @@ public class SteamFriends extends ClientMsgHandler {
      */
     public void setPersonaStateFlag(EPersonaStateFlag flag) {
         if (flag.code() < EPersonaStateFlag.ClientTypeWeb.code() || flag.code() > EPersonaStateFlag.ClientTypeVR.code()) {
-            logger.debug("Persona State Flag was not a valid ClientType (" + flag.code() + ").");
-            return;
+            throw new IllegalArgumentException("Persona State Flag was not a valid ClientType");
         }
 
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder> stateMsg = new ClientMsgProtobuf<>(CMsgClientChangeStatus.class, EMsg.ClientChangeStatus);
