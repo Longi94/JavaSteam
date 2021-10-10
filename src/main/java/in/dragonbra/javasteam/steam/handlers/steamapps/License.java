@@ -58,58 +58,100 @@ public class License {
         masterPackageID = license.getMasterPackageId();
     }
 
+    /**
+     * @return the package ID used to identify the license.
+     */
     public int getPackageID() {
         return packageID;
     }
 
+    /**
+     * @return the last change number for this license.
+     */
     public int getLastChangeNumber() {
         return lastChangeNumber;
     }
 
+    /**
+     * @return the time the license was created.
+     */
     public Date getTimeCreated() {
         return timeCreated;
     }
 
+    /**
+     * @return the next process time for the license.
+     */
     public Date getTimeNextProcess() {
         return timeNextProcess;
     }
 
+    /**
+     * @return the minute limit of the license.
+     */
     public int getMinuteLimit() {
         return minuteLimit;
     }
 
+    /**
+     * @return the minutes used of the license.
+     */
     public int getMinutesUsed() {
         return minutesUsed;
     }
 
+    /**
+     * @return the payment method used when the license was created.
+     */
     public EPaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
+    /**
+     * @return the license flags.
+     */
     public EnumSet<ELicenseFlags> getLicenseFlags() {
         return licenseFlags;
     }
 
+    /**
+     * @return the two letter country code where the license was purchased.
+     */
     public String getPurchaseCode() {
         return purchaseCode;
     }
 
+    /**
+     * @return the type of the license.
+     */
     public ELicenseType getLicenseType() {
         return licenseType;
     }
 
+    /**
+     * @return the territory code of the license.
+     */
     public int getTerritoryCode() {
         return territoryCode;
     }
 
+    /**
+     * @return the PICS access token for this package.
+     */
     public long getAccessToken() {
         return accessToken;
     }
 
+    /**
+     * @return the owner account id of the license.
+     */
     public int getOwnerAccountID() {
         return ownerAccountID;
     }
 
+    /**
+     * @return the master package id.
+     */
     public int getMasterPackageID() {
         return masterPackageID;
     }

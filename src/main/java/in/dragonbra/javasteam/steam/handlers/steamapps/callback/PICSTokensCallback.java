@@ -40,18 +40,30 @@ public class PICSTokensCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return a list of denied package tokens.
+     */
     public List<Integer> getPackageTokensDenied() {
         return packageTokensDenied;
     }
 
+    /**
+     * @return a list of denied app tokens.
+     */
     public List<Integer> getAppTokensDenied() {
         return appTokensDenied;
     }
 
+    /**
+     * @return a map containing requested package tokens.
+     */
     public Map<Integer, Long> getPackageTokens() {
         return packageTokens;
     }
 
+    /**
+     * @return a map containing requested package tokens.
+     */
     public Map<Integer, Long> getAppTokens() {
         return appTokens;
     }

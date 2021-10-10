@@ -30,10 +30,16 @@ public class LicenseListCallback extends CallbackMsg {
         licenseList = Collections.unmodifiableList(licenses);
     }
 
+    /**
+     * @return the result of the message.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the license list.
+     */
     public List<License> getLicenseList() {
         return licenseList;
     }

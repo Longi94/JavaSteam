@@ -40,18 +40,31 @@ public class GuestPassListCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the result of the operation.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the number of guest passes to be given out.
+     */
     public int getCountGuestPassesToGive() {
         return countGuestPassesToGive;
     }
 
+    /**
+     * @return the number of guest passes to be redeemed.
+     */
     public int getCountGuestPassesToRedeem() {
         return countGuestPassesToRedeem;
     }
 
+    /**
+     *
+     * @return the guest pass list.
+     */
     public List<KeyValue> getGuestPasses() {
         return guestPasses;
     }

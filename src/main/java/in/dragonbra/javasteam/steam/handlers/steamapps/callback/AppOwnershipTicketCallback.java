@@ -25,14 +25,23 @@ public class AppOwnershipTicketCallback extends CallbackMsg {
         ticket = msg.getTicket().toByteArray();
     }
 
+    /**
+     * @return the result of requesting the ticket.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the AppID this ticket is for.
+     */
     public int getAppID() {
         return appID;
     }
 
+    /**
+     * @return the ticket data.
+     */
     public byte[] getTicket() {
         return ticket;
     }
