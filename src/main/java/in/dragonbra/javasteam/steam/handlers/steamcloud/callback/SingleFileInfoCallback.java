@@ -40,30 +40,51 @@ public class SingleFileInfoCallback extends CallbackMsg {
         isExplicitDelete = msg.getIsExplicitDelete();
     }
 
+    /**
+     * @return the result of the request.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the App ID the file is for.
+     */
     public int getAppID() {
         return appID;
     }
 
+    /**
+     * @return the file name request.
+     */
     public String getFileName() {
         return fileName;
     }
 
+    /**
+     * @return the SHA hash of the file.
+     */
     public byte[] getShaHash() {
         return shaHash;
     }
 
+    /**
+     * @return the timestamp of the file.
+     */
     public Date getTimestamp() {
         return timestamp;
     }
 
+    /**
+     * @return the size of the file.
+     */
     public int getFileSize() {
         return fileSize;
     }
 
+    /**
+     * @return if the file was explicitly deleted by the user.
+     */
     public boolean isExplicitDelete() {
         return isExplicitDelete;
     }

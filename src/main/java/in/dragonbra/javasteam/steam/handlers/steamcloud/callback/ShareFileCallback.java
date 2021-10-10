@@ -22,10 +22,16 @@ public class ShareFileCallback extends CallbackMsg {
         ugcId = msg.getHcontent();
     }
 
+    /**
+     * @return the result of the request.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the resulting UGC handle.
+     */
     public long getUgcId() {
         return ugcId;
     }
