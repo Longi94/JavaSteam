@@ -17,6 +17,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CM
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuth;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuthResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
 import in.dragonbra.javasteam.types.JobID;
@@ -93,6 +94,12 @@ public class SteamUser extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleWebAPIUserNonce(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientVanityURLChangedNotification, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleVanityURLChangedNotification(packetMsg);
             }
         });
         dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, new Consumer<IPacketMsg>() {
@@ -389,6 +396,11 @@ public class SteamUser extends ClientMsgHandler {
     private void handleWebAPIUserNonce(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonceResponse.Builder> userNonce = new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonceResponse.class, packetMsg);
         client.postCallback(new WebAPIUserNonceCallback(userNonce.getTargetJobID(), userNonce.getBody()));
+    }
+
+    private void handleVanityURLChangedNotification(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientVanityURLChangedNotification.Builder> vanityUrl = new ClientMsgProtobuf<>(CMsgClientVanityURLChangedNotification.class, packetMsg);
+        client.postCallback(new VanityURLChangedCallback(vanityUrl.getTargetJobID(), vanityUrl.getBody()));
     }
 
     private void handleMarketingMessageUpdate(IPacketMsg packetMsg) {
