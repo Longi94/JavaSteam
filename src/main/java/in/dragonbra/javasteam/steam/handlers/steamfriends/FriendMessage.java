@@ -8,6 +8,7 @@ import java.util.Date;
  * Represents a single Message sent to or received from a friend
  */
 public class FriendMessage {
+
     private SteamID steamID;
 
     private boolean unread;
@@ -23,18 +24,30 @@ public class FriendMessage {
         this.timestamp = timestamp;
     }
 
+    /**
+     * @return the {@link SteamID} of the User that wrote the message
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * @return whether or not the message has been read, i.e., is an offline message.
+     */
     public boolean isUnread() {
         return unread;
     }
 
+    /**
+     * @return the actual message
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * @return time (in UTC) when the message was sent
+     */
     public Date getTimestamp() {
         return timestamp;
     }

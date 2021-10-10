@@ -17,13 +17,20 @@ public class ChatRoomInfoCallback extends CallbackMsg {
     public ChatRoomInfoCallback(MsgClientChatRoomInfo msg, byte[] payload) {
         chatRoomID = msg.getSteamIdChat();
         type = msg.getType();
+
         // todo: handle inner payload based on the type similar to ChatMemberInfoCallback
     }
 
+    /**
+     * @return {@link SteamID} of the chat room.
+     */
     public SteamID getChatRoomID() {
         return chatRoomID;
     }
 
+    /**
+     * @return the info type.
+     */
     public EChatInfoType getType() {
         return type;
     }

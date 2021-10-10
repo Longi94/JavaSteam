@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
  * This callback is fired in response to receiving a message from a friend.
  */
 public class FriendMsgCallback extends CallbackMsg {
+
     private SteamID sender;
 
     private EChatEntryType entryType;
@@ -31,18 +32,32 @@ public class FriendMsgCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the sender.
+     */
     public SteamID getSender() {
         return sender;
     }
 
+    /**
+     * @return the chat entry type.
+     */
     public EChatEntryType getEntryType() {
         return entryType;
     }
 
+    /**
+     * Gets a value indicating whether this message is from a limited account.
+     *
+     * @return <b>true</b> if this message is from a limited account; otherwise, <b>false</b>.
+     */
     public boolean isFromLimitedAccount() {
         return fromLimitedAccount;
     }
 
+    /**
+     * @return the message.
+     */
     public String getMessage() {
         return message;
     }

@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
  * This callback is fired when a chat room message arrives.
  */
 public class ChatMsgCallback extends CallbackMsg {
+
     private SteamID chatterID;
 
     private SteamID chatRoomID;
@@ -27,18 +28,30 @@ public class ChatMsgCallback extends CallbackMsg {
         message = new String(payload, Charset.forName("UTF-8")).replaceAll("\0+$", ""); // trim any extra null chars from the end
     }
 
+    /**
+     * @return the {@link SteamID} of the chatter.
+     */
     public SteamID getChatterID() {
         return chatterID;
     }
 
+    /**
+     * @return the {@link SteamID} of the chat room.
+     */
     public SteamID getChatRoomID() {
         return chatRoomID;
     }
 
+    /**
+     * @return chat entry type.
+     */
     public EChatEntryType getChatMsgType() {
         return chatMsgType;
     }
 
+    /**
+     * @return the message.
+     */
     public String getMessage() {
         return message;
     }

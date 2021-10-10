@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.types.SteamID;
  * This callback is fired in response to adding a user to your friends list.
  */
 public class FriendAddedCallback extends CallbackMsg {
+
     private EResult result;
 
     private SteamID steamID;
@@ -23,14 +24,23 @@ public class FriendAddedCallback extends CallbackMsg {
         personaName = msg.getPersonaNameAdded();
     }
 
+    /**
+     * @return the result of the request.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the {@link SteamID} of the friend that was added.
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * @return the persona name of the friend.
+     */
     public String getPersonaName() {
         return personaName;
     }

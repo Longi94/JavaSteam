@@ -17,6 +17,9 @@ public class IgnoreFriendCallback extends CallbackMsg {
         result = response.getResult();
     }
 
+    /**
+     * @return the result of ignoring a friend.
+     */
     public EResult getResult() {
         return result;
     }

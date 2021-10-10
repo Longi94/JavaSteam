@@ -12,11 +12,12 @@ import java.util.Date;
  * This callback is fired in response to requesting profile info for a user.
  */
 public class ProfileInfoCallback extends CallbackMsg {
+
     private EResult result;
 
     private SteamID steamID;
 
-    private Date timeCreated;;
+    private Date timeCreated;
 
     private String realName;
 
@@ -62,38 +63,65 @@ public class ProfileInfoCallback extends CallbackMsg {
         this.summary = summary;
     }
 
+    /**
+     * @return the result of requesting profile info.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the {@link SteamID} this info belongs to.
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * @return the time this account was created.
+     */
     public Date getTimeCreated() {
         return timeCreated;
     }
 
+    /**
+     * @return the real name.
+     */
     public String getRealName() {
         return realName;
     }
 
+    /**
+     * @return the name of the city.
+     */
     public String getCityName() {
         return cityName;
     }
 
+    /**
+     * @return the name of the state.
+     */
     public String getStateName() {
         return stateName;
     }
 
+    /**
+     * @return the name of the country.
+     */
     public String getCountryName() {
         return countryName;
     }
 
+    /**
+     * @return the headline.
+     */
     public String getHeadline() {
         return headline;
     }
 
+    /**
+     * @return the summary.
+     */
     public String getSummary() {
         return summary;
     }

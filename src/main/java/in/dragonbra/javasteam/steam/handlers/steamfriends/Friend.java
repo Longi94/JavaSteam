@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.types.SteamID;
  * Represents a single friend entry in a client's friendlist.
  */
 public class Friend {
+
     private SteamID steamID;
 
     private EFriendRelationship relationship;
@@ -17,10 +18,16 @@ public class Friend {
         relationship = EFriendRelationship.from(friend.getEfriendrelationship());
     }
 
+    /**
+     * @return the {@link SteamID} of the friend.
+     */
     public SteamID getSteamID() {
         return steamID;
     }
 
+    /**
+     * @return the relationship to this friend.
+     */
     public EFriendRelationship getRelationship() {
         return relationship;
     }

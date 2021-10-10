@@ -19,6 +19,7 @@ import java.util.List;
  * This callback is fired in response to attempting to join a chat.
  */
 public class ChatEnterCallback extends CallbackMsg {
+
     private SteamID chatID;
 
     private SteamID friendID;
@@ -79,42 +80,72 @@ public class ChatEnterCallback extends CallbackMsg {
         }
     }
 
+    /**
+     * @return the {@link SteamID} of the chat room.
+     */
     public SteamID getChatID() {
         return chatID;
     }
 
+    /**
+     * @return the friend ID.
+     */
     public SteamID getFriendID() {
         return friendID;
     }
 
+    /**
+     * @return the type of the chat room.
+     */
     public EChatRoomType getChatRoomType() {
         return chatRoomType;
     }
 
+    /**
+     * @return the {@link SteamID} of the chat room owner.
+     */
     public SteamID getOwnerID() {
         return ownerID;
     }
 
+    /**
+     * @return the clan {@link SteamID} that owns this chat room.
+     */
     public SteamID getClanID() {
         return clanID;
     }
 
+    /**
+     * @return the chat flags.
+     */
     public byte getChatFlags() {
         return chatFlags;
     }
 
+    /**
+     * @return the chat enter response.
+     */
     public EChatRoomEnterResponse getEnterResponse() {
         return enterResponse;
     }
 
+    /**
+     * @return the number of users currently in this chat room.
+     */
     public int getNumChatMembers() {
         return numChatMembers;
     }
 
+    /**
+     * @return the name of the chat room.
+     */
     public String getChatRoomName() {
         return chatRoomName;
     }
 
+    /**
+     * @return a list of {@link ChatMemberInfo} instances for each of the members of this chat room.
+     */
     public List<ChatMemberInfo> getChatMembers() {
         return chatMembers;
     }
