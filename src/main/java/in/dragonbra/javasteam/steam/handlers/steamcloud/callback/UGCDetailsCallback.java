@@ -39,26 +39,44 @@ public class UGCDetailsCallback extends CallbackMsg {
         fileSize = msg.getFileSize();
     }
 
+    /**
+     * @return the result of the request.
+     */
     public EResult getResult() {
         return result;
     }
 
+    /**
+     * @return the App ID the UGC is for.
+     */
     public int getAppID() {
         return appID;
     }
 
+    /**
+     * @return the SteamID of the UGC's creator.
+     */
     public SteamID getCreator() {
         return creator;
     }
 
+    /**
+     * @return the URL that the content is located at.
+     */
     public String getUrl() {
         return url;
     }
 
+    /**
+     * @return the name of the file.
+     */
     public String getFileName() {
         return fileName;
     }
 
+    /**
+     * @return the size of the file.
+     */
     public int getFileSize() {
         return fileSize;
     }
