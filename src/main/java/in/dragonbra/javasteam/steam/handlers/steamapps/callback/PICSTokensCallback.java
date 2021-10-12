@@ -36,7 +36,7 @@ public class PICSTokensCallback extends CallbackMsg {
         }
 
         for (CMsgClientPICSAccessTokenResponse.AppToken appToken : msg.getAppAccessTokensList()) {
-            packageTokens.put(appToken.getAppid(), appToken.getAccessToken());
+            appTokens.put(appToken.getAppid(), appToken.getAccessToken());
         }
     }
 
