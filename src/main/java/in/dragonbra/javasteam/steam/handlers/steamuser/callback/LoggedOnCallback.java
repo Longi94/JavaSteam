@@ -1,9 +1,12 @@
 package in.dragonbra.javasteam.steam.handlers.steamuser.callback;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import in.dragonbra.javasteam.enums.EAccountFlags;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.generated.MsgClientLogOnResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.ParentalSettings;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
@@ -53,6 +56,8 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private int numDisconnectsToMigrate;
 
+    private ParentalSettings parentalSettings;
+
     public LoggedOnCallback(CMsgClientLogonResponse.Builder resp) {
         result = EResult.from(resp.getEresult());
         extendedResult = EResult.from(resp.getEresultExtended());
@@ -82,6 +87,15 @@ public class LoggedOnCallback extends CallbackMsg {
 
         numLoginFailuresToMigrate = resp.getCountLoginfailuresToMigrate();
         numDisconnectsToMigrate = resp.getCountDisconnectsToMigrate();
+
+        ByteString data = resp.getParentalSettings();
+        if (data != null) {
+            try {
+                parentalSettings = ParentalSettings.parseFrom(data);
+            } catch (InvalidProtocolBufferException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public LoggedOnCallback(MsgClientLogOnResponse resp) {
@@ -222,5 +236,12 @@ public class LoggedOnCallback extends CallbackMsg {
      */
     public int getNumDisconnectsToMigrate() {
         return numDisconnectsToMigrate;
+    }
+
+    /**
+     * @return the Steam parental settings.
+     */
+    public ParentalSettings getParentalSettings() {
+        return parentalSettings;
     }
 }
