@@ -72,6 +72,6 @@ public class SteamGameCoordinator extends ClientMsgHandler {
     private void handleFromGC(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgGCClient.Builder> msg = new ClientMsgProtobuf<>(CMsgGCClient.class, packetMsg);
 
-        client.postCallback(new MessageCallback(msg.getBody()));
+        client.postCallback(new MessageCallback(msg.getTargetJobID(), msg.getBody()));
     }
 }

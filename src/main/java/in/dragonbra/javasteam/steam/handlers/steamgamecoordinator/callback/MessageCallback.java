@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.base.PacketClientGCMsg;
 import in.dragonbra.javasteam.base.PacketClientGCMsgProtobuf;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.MsgUtil;
 
 /**
@@ -18,7 +19,9 @@ public class MessageCallback extends CallbackMsg {
 
     private IPacketGCMsg message;
 
-    public MessageCallback(CMsgGCClient.Builder gcMsg) {
+    public MessageCallback(JobID jobID, CMsgGCClient.Builder gcMsg) {
+        setJobID(jobID);
+
         eMsg = gcMsg.getMsgtype();
         appID = gcMsg.getAppid();
         message = getPacketGCMsg(gcMsg.getMsgtype(), gcMsg.getPayload().toByteArray());
