@@ -1,17 +1,5 @@
 package in.dragonbra.javasteamsamples._2extending;
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
-import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback;
-import in.dragonbra.javasteam.steam.steamclient.SteamClient;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
-import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
-import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.util.log.DefaultLogListener;
-import in.dragonbra.javasteam.util.log.LogManager;
-
 //
 // Sample 2: Extending SteamKit2
 //
@@ -28,9 +16,9 @@ import in.dragonbra.javasteam.util.log.LogManager;
  * @since 2021-10-11
  */
 @SuppressWarnings("Duplicates")
-public class SampleExtending implements Runnable {
+public class SampleExtending/* implements Runnable*/ {
 
-    private SteamClient steamClient;
+    /*private SteamClient steamClient;
 
     private CallbackManager manager;
 
@@ -57,7 +45,7 @@ public class SampleExtending implements Runnable {
 
         LogManager.addListener(new DefaultLogListener());
 
-        new SampleExtending(args[0], args[1]).run();
+        // new SampleExtending(args[0], args[1]).run();
     }
 
     @Override
@@ -162,5 +150,5 @@ public class SampleExtending implements Runnable {
 
         // for this sample we'll just log off
         myHandler.logOff("", "");
-    }
+    }*/
 }
