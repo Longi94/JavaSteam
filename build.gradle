@@ -10,11 +10,11 @@ buildscript {
 }
 
 group 'in.dragonbra'
-version '1.0.0-SNAPSHOT'
+version '1.0.0'
 
 allprojects {
     group 'in.dragonbra'
-    version '1.0.0-SNAPSHOT'
+    version '1.0.0'
 }
 
 apply plugin: 'maven'
