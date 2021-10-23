@@ -194,12 +194,16 @@ public abstract class CMClient {
             throw new IllegalArgumentException("A value for 'msg' must be supplied");
         }
 
-        if (sessionID != null) {
-            msg.setSessionID(sessionID);
+        Integer _sessionID = this.sessionID;
+
+        if (_sessionID != null) {
+            msg.setSessionID(_sessionID);
         }
 
-        if (steamID != null) {
-            msg.setSteamID(steamID);
+        SteamID _steamID = this.steamID;
+
+        if (_steamID != null) {
+            msg.setSteamID(_steamID);
         }
 
         logger.debug(String.format("Sent -> EMsg: %s (Proto: %s)", msg.getMsgType(), msg.isProto()));
