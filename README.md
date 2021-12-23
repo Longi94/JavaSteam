@@ -6,7 +6,7 @@ Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). 
 
 ## Download
 
-Currently only [snapshot builds](https://oss.sonatype.org/content/repositories/snapshots/in/dragonbra/javasteam/1.0.0-SNAPSHOT/) are available on Sonatype's snapshot repository.
+Version 1.0.0 is available through [Maven](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 
 If you get a `java.security.InvalidKeyException: Illegal key size or default parameters` exception when trying to encrypt a message you need to download the [Unlimited Strength Jurisdiction Policy Files](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html) and place them under `${java.home}/jre/lib/security/`. See [this stackoverflow question](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters).
 
@@ -15,17 +15,15 @@ If you get a `java.security.InvalidKeyException: Illegal key size or default par
 Gradle
 ```groovy
 repositories {
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
+    mavenCentral()
 }
 ```
 
 Maven
 ```xml
 <repository>
-  <id>snapshots-repo</id>
-  <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+  <id>central</id>
+  <url>https://repo.maven.apache.org/maven2</url>
 </repository>
 ```
 
@@ -33,15 +31,15 @@ Maven
 
 Gradle
 ```groovy
-implementation 'in.dragonbra:javasteam:1.0.0-SNAPSHOT'
+implementation 'in.dragonbra:javasteam:1.0.0'
 ```
 
 Maven
 ```xml
 <dependency>
-  <groupId>in.dragonbra</groupId>
-  <artifactId>javasteam</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+    <groupId>in.dragonbra</groupId>
+    <artifactId>javasteam</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
 
@@ -74,6 +72,8 @@ You can head to the very short [Getting Started](https://github.com/Longi94/Java
 ## Build
 
 ```./gradlew build```
+
+Note: If you are building locally for testing purposes, comment out `signing` and `uploadArchives` in the build.gradle files in order to build successfully. 
 
 ## Contributing
 
