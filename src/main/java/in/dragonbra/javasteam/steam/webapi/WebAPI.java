@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.webapi;
 
 import in.dragonbra.javasteam.types.KeyValue;
+import in.dragonbra.javasteam.util.Versions;
 import in.dragonbra.javasteam.util.WebHelpers;
 import in.dragonbra.javasteam.util.compat.Consumer;
 import okhttp3.*;
@@ -46,9 +47,8 @@ public class WebAPI {
      * @param version    The version of the function to call.
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @return A {@link KeyValue} object representing the results of the Web API call.
-     * @throws IOException if the request could not be executed
+     * @throws IOException            if the request could not be executed
      * @throws WebAPIRequestException the request was successful but returned a non success response code
-     *
      */
     public KeyValue call(String httpMethod, String function, int version, Map<String, String> parameters)
             throws IOException, WebAPIRequestException {
@@ -116,8 +116,8 @@ public class WebAPI {
     /**
      * Manually calls the specified Web API function with the provided details. This method is synchronous.
      *
-     * @param function   The function name to call.
-     * @param version    The version of the function to call.
+     * @param function The function name to call.
+     * @param version  The version of the function to call.
      * @return A {@link KeyValue} object representing the results of the Web API call.
      * @throws IOException if the request could not be executed
      */
@@ -140,7 +140,7 @@ public class WebAPI {
     /**
      * Manually calls the specified Web API function with the provided details. This method is synchronous.
      *
-     * @param function   The function name to call.
+     * @param function The function name to call.
      * @return A {@link KeyValue} object representing the results of the Web API call.
      * @throws IOException if the request could not be executed
      */
@@ -226,10 +226,10 @@ public class WebAPI {
     /**
      * Manually calls the specified Web API function with the provided details. This method is asynchronous.
      *
-     * @param function   The function name to call.
-     * @param version    The version of the function to call.
-     * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
-     * @param error      the callback for handling response errors.
+     * @param function The function name to call.
+     * @param version  The version of the function to call.
+     * @param callback the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error    the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
     public void call(String function, int version, final Consumer<KeyValue> callback,
@@ -254,9 +254,9 @@ public class WebAPI {
     /**
      * Manually calls the specified Web API function with the provided details. This method is asynchronous.
      *
-     * @param function   The function name to call.
-     * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
-     * @param error      the callback for handling response errors.
+     * @param function The function name to call.
+     * @param callback the callback that will be called with the resulting {@link KeyValue} object.
+     * @param error    the callback for handling response errors.
      * @throws IOException if the request could not be executed
      */
     public void call(String function, final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error)
@@ -297,6 +297,7 @@ public class WebAPI {
         }
 
         Request.Builder builder = new Request.Builder();
+        builder.header("User-Agent", "JavaSteam-" + Versions.VERSION);
 
         HttpUrl.Builder urlBuilder = baseAddress.newBuilder()
                 .addPathSegment(_interface)
@@ -345,6 +346,7 @@ public class WebAPI {
 
         /**
          * Initializes a new instance of the {@link WebAPIRequestException} class.
+         *
          * @param response the response object from the call
          */
         WebAPIRequestException(Response response) {

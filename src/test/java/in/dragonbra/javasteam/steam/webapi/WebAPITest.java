@@ -4,6 +4,7 @@ import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.steamclient.configuration.ISteamConfigurationBuilder;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.KeyValue;
+import in.dragonbra.javasteam.util.Versions;
 import in.dragonbra.javasteam.util.compat.Consumer;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
@@ -62,6 +63,17 @@ public class WebAPITest extends TestBase {
     @After
     public void tearDown() throws IOException {
         server.shutdown();
+    }
+
+    @Test
+    public void requestHeaders() throws InterruptedException, IOException {
+        WebAPI api = config.getWebAPI("TestInterface");
+
+        api.call("TestFunction");
+
+        RecordedRequest request = server.takeRequest();
+
+        assertEquals("JavaSteam-" + Versions.VERSION, request.getHeaders().get("User-Agent"));
     }
 
     @Test
