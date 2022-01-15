@@ -12,6 +12,7 @@ import in.dragonbra.javasteam.generated.MsgClientLoggedOff;
 import in.dragonbra.javasteam.generated.MsgClientLogon;
 import in.dragonbra.javasteam.generated.MsgClientMarketingMessageUpdate2;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
@@ -144,12 +145,23 @@ public class SteamUser extends ClientMsgHandler {
 
         SteamID steamID = new SteamID(details.getAccountID(), details.getAccountInstance(), client.getUniverse(), EAccountType.Individual);
 
+        SteammessagesBase.CMsgIPAddress.Builder ipAddress = SteammessagesBase.CMsgIPAddress.newBuilder();
         if (details.getLoginID() != null) {
-            logon.getBody().setDeprecatedObfustucatedPrivateIp(details.getLoginID()); // NOTE: Using deprecated method.
+            ipAddress.setV4(details.getLoginID());
+
+            logon.getBody().setObfuscatedPrivateIp(ipAddress.build());
         } else {
             int localIp = NetHelpers.getIPAddress(client.getLocalIP());
-            logon.getBody().setDeprecatedObfustucatedPrivateIp(localIp ^ MsgClientLogon.ObfuscationMask); // NOTE: Using deprecated method.
+            ipAddress.setV4(localIp ^ MsgClientLogon.ObfuscationMask);
+
+            logon.getBody().setObfuscatedPrivateIp(ipAddress);
         }
+
+        // Legacy field, Steam client still sets it
+        if (logon.getBody().getObfuscatedPrivateIp().hasV4()) {
+            logon.getBody().setDeprecatedObfustucatedPrivateIp(logon.getBody().getObfuscatedPrivateIp().getV4());
+        }
+
 
         logon.getProtoHeader().setClientSessionid(0);
         logon.getProtoHeader().setSteamid(steamID.convertToUInt64());
