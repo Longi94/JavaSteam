@@ -154,7 +154,7 @@ public class SteamUser extends ClientMsgHandler {
             int localIp = NetHelpers.getIPAddress(client.getLocalIP());
             ipAddress.setV4(localIp ^ MsgClientLogon.ObfuscationMask);
 
-            logon.getBody().setObfuscatedPrivateIp(ipAddress);
+            logon.getBody().setObfuscatedPrivateIp(ipAddress.build());
         }
 
         // Legacy field, Steam client still sets it
