@@ -8,7 +8,7 @@ import in.dragonbra.javasteam.util.Utils;
  */
 public class AnonymousLogOnDetails {
 
-    private int cellID;
+    private Integer cellID;
 
     private EOSType clientOSType;
 
@@ -24,7 +24,7 @@ public class AnonymousLogOnDetails {
      *
      * @return the CellID.
      */
-    public int getCellID() {
+    public Integer getCellID() {
         return cellID;
     }
 
