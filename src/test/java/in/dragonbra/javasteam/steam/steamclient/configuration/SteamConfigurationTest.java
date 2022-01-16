@@ -4,7 +4,7 @@ import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
-import in.dragonbra.javasteam.steam.discovery.NullServerListProvider;
+import in.dragonbra.javasteam.steam.discovery.MemoryServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.util.compat.Consumer;
 import okhttp3.OkHttpClient;
@@ -70,7 +70,7 @@ public class SteamConfigurationTest {
 
     @Test
     public void serverListProviderIsNothingFancy() {
-        assertTrue(defaultConfig.getServerListProvider() instanceof NullServerListProvider);
+        assertTrue(defaultConfig.getServerListProvider() instanceof MemoryServerListProvider);
     }
 
     @Test

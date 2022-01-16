@@ -4,7 +4,7 @@ import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
-import in.dragonbra.javasteam.steam.discovery.NullServerListProvider;
+import in.dragonbra.javasteam.steam.discovery.MemoryServerListProvider;
 import in.dragonbra.javasteam.steam.webapi.WebAPI;
 import okhttp3.OkHttpClient;
 
@@ -30,7 +30,7 @@ public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
         state.setDefaultPersonaStateFlags(EnumSet.of(EClientPersonaStateFlag.PlayerName, EClientPersonaStateFlag.Presence,
                 EClientPersonaStateFlag.SourceID, EClientPersonaStateFlag.GameExtraInfo, EClientPersonaStateFlag.LastSeen));
         state.setProtocolTypes(ProtocolTypes.TCP);
-        state.setServerListProvider(new NullServerListProvider());
+        state.setServerListProvider(new MemoryServerListProvider());
         state.setUniverse(EUniverse.Public);
         state.setWebAPIBaseAddress(WebAPI.DEFAULT_BASE_ADDRESS);
         state.setHttpClient(new OkHttpClient());
