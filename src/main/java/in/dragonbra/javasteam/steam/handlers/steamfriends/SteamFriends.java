@@ -196,6 +196,7 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     /**
+     * JavaSteam addition:
      * Sets the local user's persona state flag back to normal desktop mode.
      */
     public void resetPersonaStateFlag() {
@@ -208,6 +209,7 @@ public class SteamFriends extends ClientMsgHandler {
     }
 
     /**
+     * JavaSteam addition:
      * Sets the local user's persona state flag to a valid ClientType
      *
      * @param flag one of the following
