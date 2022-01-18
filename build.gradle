@@ -31,13 +31,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.8.8'
-    implementation 'com.google.protobuf:protobuf-java:3.17.3'
-    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.protobuf:protobuf-java:3.19.3'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
     implementation 'commons-validator:commons-validator:1.7'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.java-websocket:Java-WebSocket:1.5.2'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.12.13'
+    testCompile 'com.squareup.okhttp3:mockwebserver:3.14.9'
     testCompile 'commons-codec:commons-codec:1.15'
     testCompile 'commons-io:commons-io:2.11.0'
     testCompile 'junit:junit:4.13.2'
@@ -68,12 +68,10 @@ sourceSets {
         java {
             srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
             srcDirs += new File(buildDir, 'generated/source/proto/main/java')
+            srcDirs += new File(buildDir, 'generated/source/in/dragonbra/javasteam')
         }
     }
 }
-
-compileJava.dependsOn generateSteamLanguage
-check.dependsOn jacocoTestReport
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -84,6 +82,24 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
+
+task generatVersionClass {
+    def outputDir = file("$buildDir/generated/source/in/dragonbra/javasteam/util")
+    outputs.dir outputDir
+    doFirst {
+        outputDir.exists() || outputDir.mkdirs()
+        new File(outputDir, "Versions.java")
+                .write("""package in.dragonbra.javasteam.util;
+
+public class Versions { 
+    public static final String VERSION = \"$project.version\"; 
+}""")
+    }
+}
+
+compileJava.dependsOn generatVersionClass
+compileJava.dependsOn generateSteamLanguage
+check.dependsOn jacocoTestReport
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"

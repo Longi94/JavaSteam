@@ -45,6 +45,18 @@ public class SteamApps extends ClientMsgHandler {
                 handleFreeLicense(packetMsg);
             }
         });
+        dispatchMap.put(EMsg.ClientPurchaseResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handlePurchaseResponse(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientRedeemGuestPassResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleRedeemGuestPassResponse(packetMsg);
+            }
+        });
         dispatchMap.put(EMsg.ClientGameConnectTokens, new Consumer<IPacketMsg>() {
             @Override
             public void accept(IPacketMsg packetMsg) {
@@ -520,6 +532,20 @@ public class SteamApps extends ClientMsgHandler {
                 new ClientMsgProtobuf<>(CMsgClientRequestFreeLicenseResponse.class, packetMsg);
 
         client.postCallback(new FreeLicenseCallback(grantedLicenses.getTargetJobID(), grantedLicenses.getBody()));
+    }
+
+    private void handlePurchaseResponse(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientPurchaseResponse.Builder> callback =
+                new ClientMsgProtobuf<>(CMsgClientPurchaseResponse.class, packetMsg);
+
+        client.postCallback(new PurchaseResponseCallback(callback.getTargetJobID(), callback.getBody()));
+    }
+
+    private void handleRedeemGuestPassResponse(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientRedeemGuestPassResponse.Builder> callback =
+                new ClientMsgProtobuf<>(CMsgClientRedeemGuestPassResponse.class, packetMsg);
+
+        client.postCallback(new RedeemGuestPassResponseCallback(callback.getTargetJobID(), callback.getBody()));
     }
 
     private void handleVACBanStatus(IPacketMsg packetMsg) {
