@@ -156,7 +156,7 @@ public class TcpConnection extends Connection {
             } catch (IOException e) {
                 logger.debug("Socket exception while writing data.", e);
 
-                // looks like the only the only way to detect a closed connection is to try and write to it
+                // looks like the only way to detect a closed connection is to try and write to it
                 // afaik read also throws an exception if the connection is open but there is nothing to read
                 if (netLoop != null) {
                     netLoop.stop(false);
