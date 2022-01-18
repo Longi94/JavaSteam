@@ -67,12 +67,10 @@ sourceSets {
         java {
             srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
             srcDirs += new File(buildDir, 'generated/source/proto/main/java')
+            srcDirs += new File(buildDir, 'generated/source/in/dragonbra/javasteam')
         }
     }
 }
-
-compileJava.dependsOn generateSteamLanguage
-check.dependsOn jacocoTestReport
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -83,6 +81,24 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
+
+task generatVersionClass {
+    def outputDir = file("$buildDir/generated/source/in/dragonbra/javasteam/util")
+    outputs.dir outputDir
+    doFirst {
+        outputDir.exists() || outputDir.mkdirs()
+        new File(outputDir, "Versions.java")
+                .write("""package in.dragonbra.javasteam.util;
+
+public class Versions { 
+    public static final String VERSION = \"$project.version\"; 
+}""")
+    }
+}
+
+compileJava.dependsOn generatVersionClass
+compileJava.dependsOn generateSteamLanguage
+check.dependsOn jacocoTestReport
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
