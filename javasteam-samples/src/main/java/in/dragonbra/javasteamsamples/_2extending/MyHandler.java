@@ -1,10 +1,18 @@
 package in.dragonbra.javasteamsamples._2extending;
 
+import in.dragonbra.javasteam.base.ClientMsgProtobuf;
+import in.dragonbra.javasteam.base.IPacketMsg;
+import in.dragonbra.javasteam.enums.EMsg;
+import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.handlers.ClientMsgHandler;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
+import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
-public class MyHandler /*extends ClientMsgHandler*/ {
+public class MyHandler extends ClientMsgHandler {
 
-    /*// define our custom callback class
+    // define our custom callback class
     // this will pass data back to the user of the handler
     static class MyCallback extends CallbackMsg {
 
@@ -21,17 +29,16 @@ public class MyHandler /*extends ClientMsgHandler*/ {
         }
     }
 
-    *//**
+    /**
      * JavaSteam edit:
      * <p>
      * There is a log-off bug currently. Check the to-do at {@link SteamUser#logOff()}
      * The concept of this example is still valid.
-     *//*
+     */
     // handlers can also define functions which can send data to the steam servers
     public void logOff(String user, String pass) {
-
-//        ClientMsgProtobuf<CMsgClientLogOff.Builder> logOffMessage = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
-//        client.send(logOffMessage);
+        ClientMsgProtobuf<CMsgClientLogOff.Builder> logOffMessage = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
+        client.send(logOffMessage);
 
         client.disconnect(); // JavaSteam edit here.
     }
@@ -74,5 +81,5 @@ public class MyHandler /*extends ClientMsgHandler*/ {
 
         // post the callback to be consumed by user code
         client.postCallback(new MyCallback(result));
-    }*/
+    }
 }
