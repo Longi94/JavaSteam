@@ -33,7 +33,12 @@ public class HardwareUtils {
             SERIAL_NUMBER = getSerialNumberUnix();
         }
 
-        return SERIAL_NUMBER == null ? new byte[0] : SERIAL_NUMBER.getBytes();
+        // if SERIAL_NUMBER still was null
+        if(SERIAL_NUMBER == null) {
+            SERIAL_NUMBER = "JavaSteam-SerialNumber";
+        }
+
+        return SERIAL_NUMBER.getBytes();
     }
 
     private static String getSerialNumberWin() {
