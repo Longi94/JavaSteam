@@ -14,7 +14,7 @@ public class LogOnDetails {
 
     private String password = "";
 
-    private int cellID;
+    private Integer cellID;
 
     private Integer loginID;
 
@@ -87,7 +87,7 @@ public class LogOnDetails {
      *
      * @return the CellID.
      */
-    public int getCellID() {
+    public Integer getCellID() {
         return cellID;
     }
 

@@ -163,7 +163,12 @@ public class SteamUser extends ClientMsgHandler {
         logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
         logon.getBody().setClientOsType(details.getClientOSType().code());
         logon.getBody().setClientLanguage(details.getClientLanguage());
-        logon.getBody().setCellId(details.getCellID());
+
+        if (details.getCellID() != null) {
+            logon.getBody().setCellId(details.getCellID());
+        } else {
+            logon.getBody().setCellId(client.getConfiguration().getCellID());
+        }
 
         logon.getBody().setSteam2TicketRequest(details.isRequestSteam2Ticket());
 
@@ -229,7 +234,12 @@ public class SteamUser extends ClientMsgHandler {
         logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
         logon.getBody().setClientOsType(details.getClientOSType().code());
         logon.getBody().setClientLanguage(details.getClientLanguage());
-        logon.getBody().setCellId(details.getCellID());
+
+        if (details.getCellID() != null) {
+            logon.getBody().setCellId(details.getCellID());
+        } else {
+            logon.getBody().setCellId(client.getConfiguration().getCellID());
+        }
 
         logon.getBody().setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()));
 
