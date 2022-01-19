@@ -3,7 +3,7 @@ import "google/protobuf/descriptor.proto";
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
-option cc_generic_services = true;
+option java_generic_services = true;
 option (force_php_generation) = true;
 
 extend .google.protobuf.MessageOptions {
@@ -17,6 +17,7 @@ extend .google.protobuf.FileOptions {
 
 extend .google.protobuf.FieldOptions {
 	optional bool php_output_always_number = 50020 [default = false];
+	optional bool allow_field_named_steam_id = 50024 [default = false];
 }
 
 enum EProtoClanEventType {

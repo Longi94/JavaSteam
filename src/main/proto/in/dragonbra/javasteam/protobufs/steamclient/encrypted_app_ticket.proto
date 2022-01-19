@@ -1,7 +1,7 @@
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
-option cc_generic_services = false;
+option java_generic_services = false;
 
 message EncryptedAppTicket {
 	optional uint32 ticket_version_no = 1;

@@ -5,7 +5,7 @@ import "in/dragonbra/javasteam/protobufs/tf/base_gcmessages.proto";
 option java_package = "in.dragonbra.javasteam.protobufs.tf";
 
 option optimize_for = SPEED;
-option cc_generic_services = false;
+option java_generic_services = false;
 
 enum ETFGCMsg {
 	k_EMsgGCReportWarKill = 5001;
@@ -904,6 +904,7 @@ message CMsgGameServerMatchmakingStatus {
 	optional bool server_trusted = 11;
 	optional bool server_dedicated = 12;
 	optional uint32 strict = 17;
+	optional string fake_ip = 25;
 	repeated .CMsgGameServerMatchmakingStatus.Player players = 13;
 	optional .TF_GC_GameState game_state = 14 [default = TF_GC_GAMESTATE_STATE_INIT];
 	optional .CMsgGameServerMatchmakingStatus.Event event = 15 [default = None];

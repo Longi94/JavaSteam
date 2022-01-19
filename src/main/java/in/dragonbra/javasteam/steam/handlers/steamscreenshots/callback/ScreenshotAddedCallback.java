@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamscreenshots.callback;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMAddScreenshotResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshotResponse;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.UGCHandle;
