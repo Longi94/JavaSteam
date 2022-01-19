@@ -4,9 +4,9 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.KeyValue;
+import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,8 +65,10 @@ public class SteamDirectory {
         List<ServerRecord> records = new ArrayList<>();
 
         for (KeyValue socket : socketList.getChildren()) {
-            String[] split = socket.getValue().split(":");
-            records.add(ServerRecord.createSocketServer(new InetSocketAddress(split[0], Integer.parseInt(split[1]))));
+            ServerRecord record = ServerRecord.tryCreateSocketServer(socket.getValue());
+            if (record != null) {
+                records.add(record);
+            }
         }
 
         for (KeyValue socket : webSocketList.getChildren()) {

@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.discovery;
 
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
+import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
@@ -52,6 +53,24 @@ public class ServerRecord {
     }
 
     public static ServerRecord createSocketServer(InetSocketAddress endpoint) {
+        return new ServerRecord(endpoint, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
+    }
+
+    /**
+     * Creates a Socket server given an IP endpoint.
+     *
+     * @param address The IP address and port of the server, as a string.
+     * @return A new [ServerRecord], if the address was able to be parsed. **null** otherwise.
+     */
+    public static ServerRecord tryCreateSocketServer(String address) {
+        InetSocketAddress endpoint;
+
+        endpoint = NetHelpers.tryParseIPEndPoint(address);
+
+        if (endpoint == null) {
+            return null;
+        }
+
         return new ServerRecord(endpoint, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
     }
 

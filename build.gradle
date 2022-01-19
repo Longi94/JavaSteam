@@ -34,6 +34,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.google.protobuf:protobuf-java:3.19.3'
     implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+    implementation 'commons-validator:commons-validator:1.7'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.java-websocket:Java-WebSocket:1.5.2'
     testCompile 'com.squareup.okhttp3:mockwebserver:3.14.9'
