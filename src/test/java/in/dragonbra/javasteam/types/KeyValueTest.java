@@ -363,7 +363,7 @@ public class KeyValueTest extends TestBase {
 
         String text;
         File temporaryFile = folder.newFile();
-        kv.saveToFile(temporaryFile, false );
+        kv.saveToFile(temporaryFile, false);
         text = new String(Files.readAllBytes(Paths.get(temporaryFile.getPath())));
 
         assertEquals(expected, text);
@@ -429,6 +429,53 @@ public class KeyValueTest extends TestBase {
 
         String expectedValue = "\"key\"\n{\n\t\"slashes\"\t\t\"\\\\o/\"\n\t\"newline\"\t\t\"\\r\\n\"\n}\n";
         assertEquals(expectedValue, text);
+    }
+
+    @Test
+    public void keyValuesTextPreserveEmptyObjects() throws IOException {
+        KeyValue kv = new KeyValue("key");
+        kv.getChildren().add(new KeyValue("emptyObj"));
+        kv.getChildren().add(new KeyValue("emptyString", ""));
+
+        String text;
+        MemoryStream ms = new MemoryStream();
+        kv.saveToStream(ms.asOutputStream(), false);
+        ms.seek(0, SeekOrigin.BEGIN);
+
+        text = new String(ms.toByteArray());
+
+        String expectedValue = "\"key\"\n{\n\t\"emptyObj\"\n\t{\n\t}\n\t\"emptyString\"\t\t\"\"\n}\n";
+        assertEquals(expectedValue, text);
+    }
+
+    @Test
+    public void keyValuesBinaryPreserveEmptyObjects() throws IOException {
+        String expectedHexString = "006B65790000656D7074794F626A000801656D707479537472696E6700000808";
+
+        KeyValue kv = new KeyValue("key");
+        kv.getChildren().add(new KeyValue("emptyObj"));
+        kv.getChildren().add(new KeyValue("emptyString", ""));
+
+        KeyValue deserializedKv = new KeyValue();
+        byte[] binaryValue;
+
+        MemoryStream ms = new MemoryStream();
+        kv.saveToStream(ms.asOutputStream(), true);
+        ms.seek(0, SeekOrigin.BEGIN);
+
+        binaryValue = ms.toByteArray();
+        deserializedKv.tryReadAsBinary(ms);
+
+        StringBuilder hexValue = new StringBuilder();
+        for (byte value : binaryValue) {
+            String string = String.format("%02X", value);
+            hexValue.append(string);
+        }
+
+        assertEquals(expectedHexString, hexValue.toString());
+        assertNull(deserializedKv.get("emptyObj").getValue());
+        assertTrue(deserializedKv.get("emptyObj").getChildren().isEmpty());
+        assertEquals("", deserializedKv.get("emptyString").getValue());
     }
 
     @Test

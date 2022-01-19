@@ -520,7 +520,7 @@ public class KeyValue {
         // Only supported types ATM:
         // 1. KeyValue with children (no value itself)
         // 2. String KeyValue
-        if (!children.isEmpty()) {
+        if (value == null) {
             os.write(Type.NONE.code());
             os.write(name.getBytes(Charset.forName("UTF-8")));
             os.write(0);
@@ -532,11 +532,7 @@ public class KeyValue {
             os.write(Type.STRING.code());
             os.write(name.getBytes(Charset.forName("UTF-8")));
             os.write(0);
-            if (value == null) {
-                os.write("".getBytes(Charset.forName("UTF-8")));
-            } else {
-                os.write(value.getBytes(Charset.forName("UTF-8")));
-            }
+            os.write(value.getBytes(Charset.forName("UTF-8")));
             os.write(0);
         }
     }
