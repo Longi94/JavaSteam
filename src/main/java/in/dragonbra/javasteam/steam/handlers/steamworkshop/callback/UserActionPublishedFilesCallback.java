@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamworkshop.callback;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.EnumerationUserDetails;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;

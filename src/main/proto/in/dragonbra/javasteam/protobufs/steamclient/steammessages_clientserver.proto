@@ -4,7 +4,7 @@ import "in/dragonbra/javasteam/protobufs/steamclient/encrypted_app_ticket.proto"
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
-option cc_generic_services = false;
+option java_generic_services = false;
 
 message CMsgClientRegisterAuthTicketWithCM {
 	optional uint32 protocol_version = 1;
@@ -113,6 +113,7 @@ message CMsgClientGamesPlayed {
 		optional uint32 vr_hmd_runtime = 22;
 		optional .CMsgIPAddress game_ip_address = 23;
 		optional uint32 controller_connection_type = 24 [default = 0];
+		optional int32 game_os_platform = 25;
 	}
 
 	repeated .CMsgClientGamesPlayed.GamePlayed games_played = 1;
