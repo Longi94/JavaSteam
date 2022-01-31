@@ -71,9 +71,7 @@ You can head to the very short [Getting Started](https://github.com/Longi94/Java
 
 ## Build
 
-```./gradlew build```
-
-Note: If you are building locally for testing purposes, comment out `signing` and `uploadArchives` in the build.gradle files in order to build successfully. 
+```./gradlew build -x signArchives```
 
 ## Contributing
 
