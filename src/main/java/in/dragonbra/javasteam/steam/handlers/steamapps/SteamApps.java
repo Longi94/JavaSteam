@@ -4,6 +4,8 @@ import in.dragonbra.javasteam.base.ClientMsg;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
+import in.dragonbra.javasteam.generated.MsgClientGetLegacyGameKey;
+import in.dragonbra.javasteam.generated.MsgClientGetLegacyGameKeyResponse;
 import in.dragonbra.javasteam.generated.MsgClientUpdateGuestPassesList;
 import in.dragonbra.javasteam.generated.MsgClientVACBanStatus;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
@@ -79,6 +81,12 @@ public class SteamApps extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleDepotKeyResponse(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientGetLegacyGameKeyResponse, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handleLegacyGameKeyResponse(packetMsg);
             }
         });
         dispatchMap.put(EMsg.ClientPICSAccessTokenResponse, new Consumer<IPacketMsg>() {
@@ -487,6 +495,25 @@ public class SteamApps extends ClientMsgHandler {
         return jobID;
     }
 
+    /**
+     * Request the legacy CD game keys for the requested appid.
+     *
+     * @param appId The AppID to request game keys for.
+     * @return The Job ID of the request. This can be used to find the appropriate {@link LegacyGameKeyCallback}
+     */
+    public JobID getLegacyGameKey(int appId) {
+        ClientMsg<MsgClientGetLegacyGameKey> request = new ClientMsg<>(MsgClientGetLegacyGameKey.class);
+        JobID jobID = client.getNextJobID();
+        request.setSourceJobID(jobID);
+
+        request.setSourceJobID(jobID);
+        request.getBody().setAppId(appId);
+
+        client.send(request);
+
+        return jobID;
+    }
+
     @Override
     public void handleMsg(IPacketMsg packetMsg) {
         if (packetMsg == null) {
@@ -518,6 +545,13 @@ public class SteamApps extends ClientMsgHandler {
                 new ClientMsgProtobuf<>(CMsgClientGameConnectTokens.class, packetMsg);
 
         client.postCallback(new GameConnectTokensCallback(gcTokens.getBody()));
+    }
+
+    private void handleLegacyGameKeyResponse(IPacketMsg packetMsg) {
+        ClientMsg<MsgClientGetLegacyGameKeyResponse> keyResponse =
+                new ClientMsg<>(MsgClientGetLegacyGameKeyResponse.class, packetMsg);
+
+        client.postCallback(new LegacyGameKeyCallback(keyResponse.getTargetJobID(), keyResponse.getBody(), keyResponse.getPayload().toByteArray()));
     }
 
     private void handleLicenseList(IPacketMsg packetMsg) {
