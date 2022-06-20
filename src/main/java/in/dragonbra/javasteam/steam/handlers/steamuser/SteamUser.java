@@ -15,7 +15,9 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientPlayingSessionState;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuth;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuthResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
@@ -107,6 +109,12 @@ public class SteamUser extends ClientMsgHandler {
             @Override
             public void accept(IPacketMsg packetMsg) {
                 handleMarketingMessageUpdate(packetMsg);
+            }
+        });
+        dispatchMap.put(EMsg.ClientPlayingSessionState, new Consumer<IPacketMsg>() {
+            @Override
+            public void accept(IPacketMsg packetMsg) {
+                handlePlayingSessionState(packetMsg);
             }
         });
 
@@ -431,5 +439,11 @@ public class SteamUser extends ClientMsgHandler {
         byte[] payload = marketingMessage.getPayload().toByteArray();
 
         client.postCallback(new MarketingMessageCallback(marketingMessage.getBody(), payload));
+    }
+
+    private void handlePlayingSessionState(IPacketMsg packetMsg) {
+        ClientMsgProtobuf<CMsgClientPlayingSessionState.Builder> playingSessionState = new ClientMsgProtobuf<>(CMsgClientPlayingSessionState.class, packetMsg);
+
+        client.postCallback(new PlayingSessionStateCallback(playingSessionState.getTargetJobID(), playingSessionState.getBody()));
     }
 }
