@@ -206,8 +206,6 @@ public abstract class CMClient {
             msg.setSteamID(_steamID);
         }
 
-        logger.debug(String.format("Sent -> EMsg: %s (Proto: %s)", msg.getMsgType(), msg.isProto()));
-
         try {
             if (debugNetworkListener != null) {
                 debugNetworkListener.onOutgoingNetworkMessage(msg.getMsgType(), msg.serialize());
@@ -246,8 +244,6 @@ public abstract class CMClient {
             disconnect();
             return false;
         }
-
-        logger.debug(String.format("<- Recv'd EMsg: %s (%d) (Proto: %s)", packetMsg.getMsgType(), packetMsg.getMsgType().code(), packetMsg.isProto()));
 
         // Multi message gets logged down the line after it's decompressed
         if (packetMsg.getMsgType() != EMsg.Multi) {

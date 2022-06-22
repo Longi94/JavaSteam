@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Dump any network messages sent to and received from the Steam server that the client is connected to.
  * These messages are dumped to file, and can be analyzed further with NetHookAnalyzer, a hex editor, or your own purpose-built tools.
- *
+ * <p>
  * Be careful with this, sensitive data may be written to the disk (such as your Steam password).
  */
 public class NetHookNetworkListener implements IDebugNetworkListener {
@@ -42,6 +42,8 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
 
     @Override
     public void onIncomingNetworkMessage(EMsg msgType, byte[] data) {
+        logger.debug(String.format("<- Recv'd EMsg: %s (%d)", msgType, msgType.code()));
+
         try {
             Files.write(Paths.get(new File(logDirectory, getFile("in", msgType)).getAbsolutePath()), data);
         } catch (IOException e) {
@@ -51,6 +53,8 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
 
     @Override
     public void onOutgoingNetworkMessage(EMsg msgType, byte[] data) {
+        logger.debug(String.format("Sent -> EMsg: %s", msgType));
+
         try {
             Files.write(Paths.get(new File(logDirectory, getFile("out", msgType)).getAbsolutePath()), data);
         } catch (IOException e) {
