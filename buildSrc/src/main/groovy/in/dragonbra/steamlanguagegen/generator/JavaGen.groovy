@@ -80,7 +80,7 @@ class JavaGen implements Closeable, Flushable {
                 if (node.name.contains('MsgGC')) {
                     imports << 'in.dragonbra.javasteam.base.IGCSerializableHeader'
                 } else {
-                    imports << 'in.dragonbra.javasteam.base.ISteamSerializableHeader' << 'in.dragonbra.javasteam.enums.EMsg'
+                    imports << 'in.dragonbra.javasteam.base.ISteamSerializableHeader'
                 }
             } else {
                 imports << 'in.dragonbra.javasteam.base.ISteamSerializable'
@@ -101,7 +101,6 @@ class JavaGen implements Closeable, Flushable {
                 } else if (prop.flags == 'proto') {
                     imports << 'in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader'
                 } else if (prop.flags == 'protomask') {
-                    imports << 'in.dragonbra.javasteam.enums.EMsg'
                     imports << 'in.dragonbra.javasteam.util.MsgUtil'
                 }
 

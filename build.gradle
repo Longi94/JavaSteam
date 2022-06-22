@@ -68,7 +68,7 @@ sourceSets {
         java {
             srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
             srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-            srcDirs += new File(buildDir, 'generated/source/in/dragonbra/javasteam')
+            srcDirs += new File(buildDir, 'generated/source/javasteam/main/java')
         }
     }
 }
@@ -84,7 +84,8 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 task generatVersionClass {
-    def outputDir = file("$buildDir/generated/source/in/dragonbra/javasteam/util")
+    def generatedDir = file("$buildDir/generated/source/javasteam/main/java")
+    def outputDir = file("$generatedDir/in/dragonbra/javasteam/util")
     outputs.dir outputDir
     doFirst {
         outputDir.exists() || outputDir.mkdirs()
