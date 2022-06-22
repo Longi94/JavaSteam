@@ -71,7 +71,11 @@ You can head to the very short [Getting Started](https://github.com/Longi94/Java
 
 ## Build
 
+Full build:<br>
 ```./gradlew build -x signArchives```
+
+(Optional) Generate Protobufs and SteamLanguage:<br>
+```./gradlew generateProto generateSteamLanguage```
 
 ## Contributing
 
