@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.util;
 
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.net.InetAddress;
@@ -12,6 +13,23 @@ import java.nio.ByteBuffer;
  * @since 2018-02-22
  */
 public class NetHelpers {
+
+    public static SteammessagesBase.CMsgIPAddress getMsgIPAddress(InetAddress ipAddr) {
+        SteammessagesBase.CMsgIPAddress.Builder msgIpAddress = SteammessagesBase.CMsgIPAddress.newBuilder();
+        byte[] addrBytes = ipAddr.getAddress();
+
+        msgIpAddress.setV4(ByteBuffer.wrap(addrBytes).get());
+
+        return msgIpAddress.build();
+    }
+
+    public static InetAddress getIPAddress(SteammessagesBase.CMsgIPAddress ipAddress) {
+        return NetHelpers.getIPAddress(ipAddress.getV4());
+        // TODO handle ipV6 sometime
+        // if (ipAddress.hasV6()) {
+        // } else {
+        // }
+    }
 
     public static InetAddress getIPAddress(int ipAddr) {
         ByteBuffer b = ByteBuffer.allocate(4);

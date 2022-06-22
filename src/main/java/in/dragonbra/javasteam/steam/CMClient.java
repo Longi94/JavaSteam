@@ -46,6 +46,10 @@ public abstract class CMClient {
 
     private SteamConfiguration configuration;
 
+    private InetAddress publicIP;
+
+    private String ipCountryCode;
+
     private boolean isConnected;
 
     private long sessionToken;
@@ -411,6 +415,8 @@ public abstract class CMClient {
             steamID = new SteamID(logonResp.getProtoHeader().getSteamid());
 
             cellID = logonResp.getBody().getCellId();
+            publicIP = NetHelpers.getIPAddress(logonResp.getBody().getPublicIp());
+            ipCountryCode = logonResp.getBody().getIpCountryCode();
 
             // restart heartbeat
             heartBeatFunc.stop();
@@ -494,6 +500,26 @@ public abstract class CMClient {
      */
     public InetSocketAddress getCurrentEndpoint() {
         return connection.getCurrentEndPoint();
+    }
+
+    /**
+     * Gets the public IP address of this client. This value is assigned after a logon attempt has succeeded.
+     * This value will be <strong>null</strong> if the client is logged off of Steam.
+     *
+     * @return The public ip.
+     */
+    public InetAddress getPublicIP() {
+        return publicIP;
+    }
+
+    /**
+     * Gets the country code of our public IP address according to Steam. This value is assigned after a logon attempt has succeeded.
+     * This value will be <strong>null</strong> if the client is logged off of Steam.
+     *
+     * @return The ip country code.
+     */
+    public String getIpCountryCode() {
+        return ipCountryCode;
     }
 
     /**
