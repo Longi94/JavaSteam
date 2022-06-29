@@ -16,6 +16,8 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
 
     private volatile boolean userInitiated = false;
 
+    private InetSocketAddress socketEndPoint;
+
     @Override
     public void connect(InetSocketAddress endPoint, int timeout) {
         logger.debug("Connecting to " + endPoint + "...");
@@ -25,6 +27,8 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
             logger.debug("Attempted to connect while already connected. Closing old connection...");
             oldClient.close();
         }
+
+        socketEndPoint = endPoint;
 
         newClient.connect();
     }
@@ -51,7 +55,7 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
 
     @Override
     public InetSocketAddress getCurrentEndPoint() {
-        return client.get().getRemoteSocketAddress();
+        return socketEndPoint;
     }
 
     @Override
@@ -66,6 +70,8 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
             oldClient.close();
             this.userInitiated = userInitiated;
         }
+
+        socketEndPoint = null;
     }
 
     private static URI getUri(InetSocketAddress address) {
