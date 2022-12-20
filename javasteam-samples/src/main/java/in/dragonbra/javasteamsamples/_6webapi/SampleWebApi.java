@@ -149,11 +149,7 @@ public class SampleWebApi implements Runnable {
 
             KeyValue result = api.call("GetNewsForApp", 2, args);
 
-            // todo 10-11-2021 - It seems newsitems is returning null for this example.
-            //  When it should return at least 20 items.
-            for (KeyValue item : result.getChildren()) {
-                System.out.println("Item: " + item);
-            }
+            printKeyValue(result, 1);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -167,5 +163,22 @@ public class SampleWebApi implements Runnable {
         System.out.println("Logged off of Steam: " + callback.getResult());
 
         isRunning = false;
+    }
+
+    // Recursively print out child KeyValues.
+    private void printKeyValue(KeyValue keyValue, int depth) {
+        StringBuilder spacePadding = new StringBuilder();
+        for (int x = 0; x < depth; x++) {
+            spacePadding.append("    ");
+        }
+
+        if (keyValue.getChildren().size() == 0) {
+            System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());
+        } else {
+            System.out.println(spacePadding + keyValue.getName() + ":");
+            for (KeyValue child : keyValue.getChildren()) {
+                printKeyValue(child, depth + 1);
+            }
+        }
     }
 }
