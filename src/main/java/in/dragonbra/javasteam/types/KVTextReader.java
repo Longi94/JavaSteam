@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.types;
 import in.dragonbra.javasteam.util.Passable;
 import in.dragonbra.javasteam.util.Strings;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
@@ -139,7 +140,7 @@ public class KVTextReader extends PushbackInputStream {
             // "
             read();
 
-            StringBuilder sb = new StringBuilder();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             while (!endOfStream()) {
                 if (peek() == '\\') {
@@ -152,7 +153,7 @@ public class KVTextReader extends PushbackInputStream {
                         replacedChar = escapedChar;
                     }
 
-                    sb.append(replacedChar);
+                    baos.write(replacedChar);
 
                     continue;
                 }
@@ -161,13 +162,14 @@ public class KVTextReader extends PushbackInputStream {
                     break;
                 }
 
-                sb.append((char) read());
+                baos.write(read());
             }
 
             // "
             read();
 
-            return sb.toString();
+            // convert the output stream as an utf-8 supported string.
+            return baos.toString("UTF-8");
         }
 
         if (next == '{' || next == '}') {
