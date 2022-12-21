@@ -1,39 +1,100 @@
 //file:noinspection GroovyAssignabilityCheck
 
-import in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        // We're staying behind on a few versions on protobuf-gradle-plugin
-        // See: https://github.com/google/protobuf-gradle-plugin/issues/641
-
-        // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
-    }
+// We're staying behind on a few versions on protobuf-gradle-plugin
+// See: https://github.com/google/protobuf-gradle-plugin/issues/641
+// https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
+plugins {
+    id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
+    id 'com.google.protobuf' version "0.8.18"
+    id 'jacoco'
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+    id 'steamlanguagegen'
 }
-
-group 'in.dragonbra'
-version '1.2.0-SNAPSHOT'
 
 allprojects {
     group 'in.dragonbra'
     version '1.2.0-SNAPSHOT'
 }
 
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
-apply plugin: 'jacoco'
-apply plugin: SteamLanguageGenPlugin
-
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+}
+
+protobuf {
+    protoc {
+        // https://mvnrepository.com/artifact/com.google.protobuf/protoc
+        artifact = 'com.google.protobuf:protoc:3.21.9'
+    }
+}
+
+jacoco {
+    // https://www.eclemma.org/jacoco
+    toolVersion = "0.8.8"
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = false
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
+            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
+            srcDirs += new File(buildDir, 'generated/source/in/dragonbra/javasteam')
+        }
+    }
+}
+
+tasks.register('sourcesJar', Jar) {
+    dependsOn classes
+    archiveClassifier.set('sources')
+    from sourceSets.main.allSource
+}
+
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
+    archiveClassifier.set('javadoc')
+    from javadoc.destinationDir
+}
+
+tasks.register('generateVersionClass') {
+    def outputDir = file("$buildDir/generated/source/in/dragonbra/javasteam/util")
+    outputs.dir outputDir
+    doFirst {
+        outputDir.exists() || outputDir.mkdirs()
+        new File(outputDir, "Versions.java")
+                .write("""package in.dragonbra.javasteam.util;
+
+public class Versions { 
+    public static final String VERSION = \"$project.version\"; 
+}""")
+    }
+}
+
+compileJava.dependsOn generateVersionClass
+compileJava.dependsOn generateSteamLanguage
+check.dependsOn jacocoTestReport
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+// java {
+//     withJavadocJar()
+//     withSourcesJar()
+// }
+
+javadoc {
+    exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
 dependencies {
@@ -72,120 +133,59 @@ dependencies {
     testImplementation 'pl.pragmatists:JUnitParams:1.1.1'
 }
 
-protobuf {
-    protoc {
-        // https://mvnrepository.com/artifact/com.google.protobuf/protoc
-        artifact = 'com.google.protobuf:protoc:3.21.9'
+/**
+ * Artifact publishing
+ */
+nexusPublishing {
+    repositories {
+        sonatype()
     }
 }
 
-jacoco {
-    // https://www.eclemma.org/jacoco
-    toolVersion = "0.8.8"
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled false
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
-            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-            srcDirs += new File(buildDir, 'generated/source/in/dragonbra/javasteam')
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from(components.java)
+            pom {
+                name = 'JavaSteam'
+                packaging = 'jar'
+                description = 'Java library to interact with Valve\'s Steam network.'
+                url = 'https://github.com/Longi94/JavaSteam'
+                inceptionYear = '2018'
+                scm {
+                    connection = 'scm:git:git://github.com/Longi94/JavaSteam.git'
+                    developerConnection = 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
+                    url = 'http://github.com/Longi94/JavaSteam/tree/master'
+                }
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Longi'
+                        name = 'Long Tran'
+                        email = 'lngtrn94@gmail.com'
+                    }
+                }
+            }
         }
     }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-task generatVersionClass {
-    def outputDir = file("$buildDir/generated/source/in/dragonbra/javasteam/util")
-    outputs.dir outputDir
-    doFirst {
-        outputDir.exists() || outputDir.mkdirs()
-        new File(outputDir, "Versions.java")
-                .write("""package in.dragonbra.javasteam.util;
-
-public class Versions { 
-    public static final String VERSION = \"$project.version\"; 
-}""")
+    repositories {
+        maven {
+            def stagingRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : stagingRepoUrl
+            credentials {
+                username = ossrhUsername ?: ''
+                password = ossrhPassword ?: ''
+            }
+        }
     }
-}
-
-compileJava.dependsOn generatVersionClass
-compileJava.dependsOn generateSteamLanguage
-check.dependsOn jacocoTestReport
-
-javadoc {
-    exclude "**/in/dragonbra/javasteam/protobufs/**"
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
 }
 
 signing {
-    sign configurations.archives
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                pom {
-                    name = 'JavaSteam'
-                    packaging = 'jar'
-                    description = 'Java library to interact with Valve\'s Steam network.'
-                    url = 'https://github.com/Longi94/JavaSteam'
-                    inceptionYear = '2018'
-
-                    scm {
-                        connection = 'scm:git:git://github.com/Longi94/JavaSteam.git'
-                        developerConnection = 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
-                        url = 'http://github.com/Longi94/JavaSteam/tree/master'
-                    }
-
-                    licenses {
-                        license {
-                            name = 'MIT License'
-                            url = 'http://www.opensource.org/licenses/mit-license.php'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id = 'Longi'
-                            name = 'Long Tran'
-                            email = 'lngtrn94@gmail.com'
-                        }
-                    }
-                }
-            }
-        }
-        repositories {
-            maven {
-                def stagingRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-                def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
-                url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : stagingRepoUrl
-                credentials {
-                    username = ossrhUsername ?: ''
-                    password = ossrhPassword ?: ''
-                }
-            }
-        }
-    }
+    sign publishing.publications.mavenJava
 }

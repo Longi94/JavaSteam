@@ -1,7 +1,6 @@
-group 'in.dragonbra'
-version '1.2.0-SNAPSHOT'
-
-apply plugin: 'java'
+plugins {
+    id 'java'
+}
 
 sourceCompatibility = 1.8
 
