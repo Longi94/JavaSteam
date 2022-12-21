@@ -10,11 +10,15 @@ repositories {
 }
 
 dependencies {
-    compile rootProject
+    implementation rootProject
+
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 
     // To access protobufs directly as shown in Sample #2
-    implementation 'com.google.protobuf:protobuf-java:3.19.3'
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.21.12'
 
-    testImplementation 'junit:junit:4.13.2'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
 }

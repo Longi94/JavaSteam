@@ -5,7 +5,9 @@ repositories {
 }
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
+    implementation gradleApi()
+    implementation localGroovy()
+
+    // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation 'commons-io:commons-io:2.11.0'
 }

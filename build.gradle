@@ -1,3 +1,5 @@
+//file:noinspection GroovyAssignabilityCheck
+
 import in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin
 
 buildscript {
@@ -5,7 +7,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
+        // We're staying behind on a few versions on protobuf-gradle-plugin
+        // See: https://github.com/google/protobuf-gradle-plugin/issues/641
+
+        // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.18'
     }
 }
 
@@ -17,7 +23,7 @@ allprojects {
     version '1.1.0'
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply plugin: 'java'
 apply plugin: 'com.google.protobuf'
@@ -31,29 +37,51 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.google.protobuf:protobuf-java:3.19.3'
-    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.21.12'
+
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+
+    // https://mvnrepository.com/artifact/commons-validator/commons-validator
     implementation 'commons-validator:commons-validator:1.7'
+
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.2'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.14.9'
-    testCompile 'commons-codec:commons-codec:1.15'
-    testCompile 'commons-io:commons-io:2.11.0'
-    testCompile 'junit:junit:4.13.2'
-    testCompile 'org.bouncycastle:bcprov-jdk15on:1.69'
-    testCompile 'org.mockito:mockito-core:3.12.4'
-    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+
+    // https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+
+
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    testImplementation 'commons-codec:commons-codec:1.15'
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    testImplementation 'commons-io:commons-io:2.11.0'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+    testImplementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:4.10.0'
+    // https://mvnrepository.com/artifact/pl.pragmatists/JUnitParams
+    testImplementation 'pl.pragmatists:JUnitParams:1.1.1'
 }
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.18.0'
+        // https://mvnrepository.com/artifact/com.google.protobuf/protoc
+        artifact = 'com.google.protobuf:protoc:3.21.9'
     }
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    // https://www.eclemma.org/jacoco
+    toolVersion = "0.8.8"
 }
 
 jacocoTestReport {
@@ -114,43 +142,48 @@ signing {
     sign configurations.archives
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+afterEvaluate {
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                pom {
+                    name = 'JavaSteam'
+                    packaging = 'jar'
+                    description = 'Java library to interact with Valve\'s Steam network.'
+                    url = 'https://github.com/Longi94/JavaSteam'
+                    inceptionYear = '2018'
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            pom.project {
-                name 'JavaSteam'
-                packaging 'jar'
-                description 'Java library to interact with Valve\'s Steam network.'
-                url 'https://github.com/Longi94/JavaSteam'
-                inceptionYear '2018'
+                    scm {
+                        connection = 'scm:git:git://github.com/Longi94/JavaSteam.git'
+                        developerConnection = 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
+                        url = 'http://github.com/Longi94/JavaSteam/tree/master'
+                    }
 
-                scm {
-                    connection 'scm:git:git://github.com/Longi94/JavaSteam.git'
-                    developerConnection 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
-                    url 'http://github.com/Longi94/JavaSteam/tree/master'
-                }
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'http://www.opensource.org/licenses/mit-license.php'
+                        }
+                    }
 
-                licenses {
-                    license {
-                        name 'MIT License'
-                        url 'http://www.opensource.org/licenses/mit-license.php'
+                    developers {
+                        developer {
+                            id = 'Longi'
+                            name = 'Long Tran'
+                            email = 'lngtrn94@gmail.com'
+                        }
                     }
                 }
-
-                developers {
-                    developer {
-                        id 'Longi'
-                        name 'Long Tran'
-                        email 'lngtrn94@gmail.com'
-                    }
+            }
+        }
+        repositories {
+            maven {
+                def stagingRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+                def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+                url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : stagingRepoUrl
+                credentials {
+                    username = ossrhUsername ?: ''
+                    password = ossrhPassword ?: ''
                 }
             }
         }
