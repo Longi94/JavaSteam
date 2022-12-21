@@ -16,11 +16,11 @@ buildscript {
 }
 
 group 'in.dragonbra'
-version '1.2.0'
+version '1.2.0-SNAPSHOT'
 
 allprojects {
     group 'in.dragonbra'
-    version '1.2.0'
+    version '1.2.0-SNAPSHOT'
 }
 
 apply plugin: 'maven-publish'
