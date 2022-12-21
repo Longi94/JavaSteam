@@ -88,7 +88,9 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void picsGetProductInfo() {
-        JobID jobID = handler.picsGetProductInfo(440, 420);
+        PICSRequest app = new PICSRequest(440);
+        PICSRequest _package = new PICSRequest(420);
+        JobID jobID = handler.picsGetProductInfo(app, _package);
 
         ClientMsgProtobuf<CMsgClientPICSProductInfoRequest.Builder> msg = verifySend(EMsg.ClientPICSProductInfoRequest);
 

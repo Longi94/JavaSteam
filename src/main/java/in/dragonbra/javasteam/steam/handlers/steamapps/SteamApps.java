@@ -281,22 +281,8 @@ public class SteamApps extends ClientMsgHandler {
      * @param _package Package id requested.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(Integer app, Integer _package) {
-        return picsGetProductInfo(app, _package, true, false);
-    }
-
-
-    /**
-     * Request product information for an app or package
-     * Results are returned in a {@link PICSProductInfoCallback} callback.
-     *
-     * @param app        App id requested.
-     * @param _package   Package id requested.
-     * @param onlyPublic Whether to send only public information.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
-     */
-    public JobID picsGetProductInfo(Integer app, Integer _package, boolean onlyPublic) {
-        return picsGetProductInfo(app, _package, onlyPublic, false);
+    public JobID picsGetProductInfo(PICSRequest app, PICSRequest _package) {
+        return picsGetProductInfo(app, _package, false);
     }
 
     /**
@@ -305,13 +291,12 @@ public class SteamApps extends ClientMsgHandler {
      *
      * @param app          App id requested.
      * @param _package     Package id requested.
-     * @param onlyPublic   Whether to send only public information.
      * @param metaDataOnly Whether to send only meta data.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(Integer app, Integer _package, boolean onlyPublic, boolean metaDataOnly) {
-        List<Integer> apps = new ArrayList<>();
-        List<Integer> packages = new ArrayList<>();
+    public JobID picsGetProductInfo(PICSRequest app, PICSRequest _package, boolean metaDataOnly) {
+        List<PICSRequest> apps = new ArrayList<>();
+        List<PICSRequest> packages = new ArrayList<>();
 
         if (app != null) {
             apps.add(app);
@@ -321,7 +306,7 @@ public class SteamApps extends ClientMsgHandler {
             packages.add(_package);
         }
 
-        return picsGetProductInfo(apps, packages, onlyPublic, metaDataOnly);
+        return picsGetProductInfo(apps, packages, metaDataOnly);
     }
 
     /**
@@ -332,34 +317,8 @@ public class SteamApps extends ClientMsgHandler {
      * @param packages List of package ids requested.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(Iterable<Integer> apps, Iterable<Integer> packages) {
-        return picsGetProductInfo(apps, packages, true, false);
-    }
-
-    /**
-     * Request product information for a list of apps or packages
-     * Results are returned in a {@link PICSProductInfoCallback} callback.
-     *
-     * @param apps         List of app ids requested.
-     * @param packages     List of package ids requested.
-     * @param onlyPublic   Whether to send only public information.
-     * @param metaDataOnly Whether to send only meta data.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
-     */
-    public JobID picsGetProductInfo(Iterable<Integer> apps, Iterable<Integer> packages, boolean onlyPublic, boolean metaDataOnly) {
-        List<PICSRequest> appRequests = new ArrayList<>();
-        List<PICSRequest> packageRequests = new ArrayList<>();
-
-        for (Integer app : apps) {
-            appRequests.add(new PICSRequest(app, 0, onlyPublic));
-        }
-
-        for (Integer _package : packages) {
-            packageRequests.add(new PICSRequest(_package, 0, onlyPublic));
-        }
-
-        return picsGetProductInfo(appRequests, packageRequests, metaDataOnly);
-
+    public JobID picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages) {
+        return picsGetProductInfo(apps, packages, false);
     }
 
     /**
@@ -390,7 +349,7 @@ public class SteamApps extends ClientMsgHandler {
 
             appInfo.setAccessToken(appRequest.getAccessToken());
             appInfo.setAppid(appRequest.getId());
-            appInfo.setOnlyPublicObsolete(appRequest.isPublic());
+            appInfo.setOnlyPublicObsolete(false);
 
             request.getBody().addApps(appInfo);
         }
