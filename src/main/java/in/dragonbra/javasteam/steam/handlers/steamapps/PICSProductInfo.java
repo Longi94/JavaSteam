@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.util.stream.MemoryStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 
 /**
  * Represents the information for a single app or package
@@ -40,8 +41,14 @@ public class PICSProductInfo extends CallbackMsg {
 
         keyValues = new KeyValue();
         if (appInfo.hasBuffer() && !appInfo.getBuffer().isEmpty()) {
-            // we don't want to read the trailing null byte
-            try (MemoryStream ms = new MemoryStream(appInfo.getBuffer().toByteArray(), 0, appInfo.getBuffer().size() - 1)) {
+            try {
+                // get the buffer as a string using the jvm's default charset.
+                // note: IDK why, but we have to encode this using the default charset
+                String bufferString = appInfo.getBuffer().toString(Charset.defaultCharset());
+                // get the buffer as a byte array using utf-8 as a supported charset
+                byte[] byteBuffer = bufferString.getBytes("UTF-8");
+                // we don't want to read the trailing null byte
+                MemoryStream ms = new MemoryStream(byteBuffer, 0, byteBuffer.length - 1);
                 keyValues.readAsText(ms);
             } catch (IOException e) {
                 throw new IllegalArgumentException("failed to read buffer", e);

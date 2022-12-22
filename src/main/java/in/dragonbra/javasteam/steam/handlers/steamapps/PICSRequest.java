@@ -9,13 +9,11 @@ public class PICSRequest {
 
     private long accessToken;
 
-    private boolean _public;
-
     /**
      * Instantiate a PICS product info request
      */
     public PICSRequest() {
-        this(0, 0L, true);
+        this(0, 0L);
     }
 
     /**
@@ -24,7 +22,7 @@ public class PICSRequest {
      * @param id App or package ID\
      */
     public PICSRequest(int id) {
-        this(id, 0L, true);
+        this(id, 0L);
     }
 
     /**
@@ -32,12 +30,10 @@ public class PICSRequest {
      *
      * @param id          App or package ID
      * @param accessToken PICS access token
-     * @param _public     Get only public info
      */
-    public PICSRequest(int id, long accessToken, boolean _public) {
+    public PICSRequest(int id, long accessToken) {
         this.id = id;
         this.accessToken = accessToken;
-        this._public = _public;
     }
 
     /**
@@ -66,19 +62,5 @@ public class PICSRequest {
      */
     public void setAccessToken(long accessToken) {
         this.accessToken = accessToken;
-    }
-
-    /**
-     * @return The flag specifying if only public data is requested
-     */
-    public boolean isPublic() {
-        return _public;
-    }
-
-    /**
-     * @param _public The flag specifying if only public data is requested
-     */
-    public void setPublic(boolean _public) {
-        this._public = _public;
     }
 }
