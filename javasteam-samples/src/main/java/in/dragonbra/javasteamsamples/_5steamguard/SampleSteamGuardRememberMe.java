@@ -29,7 +29,7 @@ import java.util.Scanner;
 //
 // this sample goes into detail for how to handle steamguard protected accounts and how to login to them
 //
-// SteamGuard works by enforcing a two factor authentication scheme
+// SteamGuard works by enforcing a two-factor authentication scheme
 // upon first logon to an account with SG enabled, the steam server will email an authcode to the validated address of the account
 // this authcode token can be used as the second factor during logon, but the token has a limited time span in which it is valid
 //

@@ -115,7 +115,7 @@ public class License {
     }
 
     /**
-     * @return the two letter country code where the license was purchased.
+     * @return the two-letter country code where the license was purchased.
      */
     public String getPurchaseCode() {
         return purchaseCode;

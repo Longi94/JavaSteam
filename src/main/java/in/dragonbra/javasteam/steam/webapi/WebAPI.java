@@ -157,10 +157,9 @@ public class WebAPI {
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
      * @param error      the callback for handling response errors.
-     * @throws IOException if the request could not be executed
      */
     public void call(String httpMethod, String function, int version, Map<String, String> parameters,
-                     final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error) throws IOException {
+                     final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error) {
         Request request = buildRequest(httpMethod, function, version, parameters);
         client.newCall(request).enqueue(new Callback() {
             @Override

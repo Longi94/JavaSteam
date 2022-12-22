@@ -1,5 +1,7 @@
 package in.dragonbra.javasteam.util.compat;
 
+import java.util.Objects;
+
 /**
  * @author steev
  * @since 2018-03-21

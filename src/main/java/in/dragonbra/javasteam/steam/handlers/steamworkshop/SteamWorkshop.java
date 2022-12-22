@@ -30,7 +30,7 @@ public class SteamWorkshop extends ClientMsgHandler {
     }
 
     /**
-     * Enumerates the list of published files for the current logged in user based on user action.
+     * Enumerates the list of published files for the current logged-in user based on user action.
      * Results are returned in a {@link UserActionPublishedFilesCallback}.
      *
      * @param details The specific details of the request.

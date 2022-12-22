@@ -82,7 +82,6 @@ public class KeyValue {
         return INVALID;
     }
 
-
     /**
      * Sets the child {@link KeyValue} with the specified key.
      *
@@ -288,7 +287,7 @@ public class KeyValue {
     public <T extends Enum<T>> EnumSet<T> asEnum(Class<T> enumClass, EnumSet<T> defaultValue) {
         // this is ugly af, but it comes with handling bit flags as enumsets
         try {
-            // see if its a number first
+            // see if it's a number first
             int code = Integer.parseInt(value);
 
             Field codeField = enumClass.getDeclaredField("code");
@@ -606,6 +605,7 @@ public class KeyValue {
         return tryReadAsBinaryCore(is, this, null);
     }
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     private static boolean tryReadAsBinaryCore(InputStream is, KeyValue current, KeyValue parent) throws IOException {
         current.children = new ArrayList<>();
 

@@ -405,12 +405,11 @@ public class SteamID {
         return getAccountType() == EAccountType.ConsoleUser;
     }
 
-    /// <summary>
-    /// Gets a value indicating whether this instance is valid.
-    /// </summary>
-    /// <value>
-    ///   <b>true</b> if this instance is valid; otherwise, <b>false</b>.
-    /// </value>
+    /**
+     * Gets a value indicating whether this instance is valid.
+     *
+     * @return <b>true</b> if this instance is valid; otherwise, <b>false</b>.
+     */
     public boolean isValid() {
         if (getAccountType().code() <= EAccountType.Invalid.code() || getAccountType().code() > EAccountType.AnonUser.code()) {
             return false;
@@ -431,6 +430,7 @@ public class SteamID {
         }
 
         if (getAccountType() == EAccountType.GameServer) {
+            //noinspection RedundantIfStatement
             if (getAccountID() == 0)
                 return false;
         }

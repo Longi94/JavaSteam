@@ -480,6 +480,7 @@ public class UdpConnection extends Connection {
 
         inPackets.put(packet.getHeader().getSeqThis(), packet);
 
+        //noinspection StatementWithEmptyBody
         while (dispatchMessage()) ;
     }
 

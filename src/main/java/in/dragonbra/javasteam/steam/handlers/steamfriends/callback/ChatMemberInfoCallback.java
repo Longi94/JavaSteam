@@ -27,6 +27,7 @@ public class ChatMemberInfoCallback extends CallbackMsg {
         chatRoomID = msg.getSteamIdChat();
         type = msg.getType();
 
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case StateChange:
                 stateChangeInfo = new StateChangeDetails(payload);

@@ -24,7 +24,7 @@ public class CallbackManager implements ICallbackMgrInternals {
     /**
      * Initializes a new instance of the {@link CallbackManager} class.
      *
-     * @param steamClient The {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} instance to handle the callbacks of.
+     * @param steamClient The {@link SteamClient SteamClient} instance to handle the callbacks of.
      */
     public CallbackManager(SteamClient steamClient) {
         if (steamClient == null) {

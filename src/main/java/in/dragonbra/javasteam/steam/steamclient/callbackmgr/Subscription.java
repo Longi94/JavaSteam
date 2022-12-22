@@ -18,7 +18,7 @@ public class Subscription implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (call != null && manager != null) {
             manager.unregister(call);
             call = null;

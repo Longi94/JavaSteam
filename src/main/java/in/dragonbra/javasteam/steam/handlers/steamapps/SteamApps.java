@@ -252,7 +252,7 @@ public class SteamApps extends ClientMsgHandler {
      *
      * @param apps         List of {@link PICSRequest} requests for apps.
      * @param packages     List of {@link PICSRequest} requests for packages.
-     * @param metaDataOnly Whether to send only meta data.
+     * @param metaDataOnly Whether to send only metadata.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
     public JobID picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages, boolean metaDataOnly) {
