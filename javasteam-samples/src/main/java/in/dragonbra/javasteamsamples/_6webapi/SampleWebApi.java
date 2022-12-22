@@ -15,6 +15,7 @@ import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -167,10 +168,7 @@ public class SampleWebApi implements Runnable {
 
     // Recursively print out child KeyValues.
     private void printKeyValue(KeyValue keyValue, int depth) {
-        StringBuilder spacePadding = new StringBuilder();
-        for (int x = 0; x < depth; x++) {
-            spacePadding.append("    ");
-        }
+        String spacePadding = String.join("", Collections.nCopies(depth, "    "));
 
         if (keyValue.getChildren().size() == 0) {
             System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());

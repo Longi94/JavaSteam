@@ -178,7 +178,7 @@ public class UdpConnection extends Connection {
         UdpPacket[] packets = new UdpPacket[(int) ((ms.getLength() / UdpPacket.MAX_PAYLOAD) + 1)];
 
         for (int i = 0; i < packets.length; i++) {
-            long index = i * UdpPacket.MAX_PAYLOAD;
+            long index = (long) i * UdpPacket.MAX_PAYLOAD;
             long length = Math.min(UdpPacket.MAX_PAYLOAD, ms.getLength() - index);
 
             packets[i] = new UdpPacket(EUdpPacketType.Data, ms, length);
@@ -393,12 +393,7 @@ public class UdpConnection extends Connection {
                 outSeqSent = outSeqAcked;
             }
 
-            Iterator<UdpPacket> iter = outPackets.iterator();
-            while (iter.hasNext()) {
-                if (iter.next().getHeader().getSeqThis() <= outSeqAcked) {
-                    iter.remove();
-                }
-            }
+            outPackets.removeIf(udpPacket -> udpPacket.getHeader().getSeqThis() <= outSeqAcked);
             nextResend = System.currentTimeMillis() + RESEND_DELAY;
         }
 

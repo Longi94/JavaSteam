@@ -95,7 +95,7 @@ public class ServerRecord {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof ServerRecord)) {
+        if (!(obj instanceof ServerRecord)) {
             return false;
         }
 

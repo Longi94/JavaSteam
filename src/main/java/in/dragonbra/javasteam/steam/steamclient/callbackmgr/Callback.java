@@ -41,7 +41,7 @@ public class Callback<TCall extends ICallbackMsg> extends CallbackBase implement
     }
 
     @Override
-    Class getCallbackType() {
+    Class<?> getCallbackType() {
         return callbackType;
     }
 

@@ -63,6 +63,6 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
     }
 
     private String getFile(String direction, EMsg msgType) {
-        return String.format("%d_%s_%d_k_EMsg%s.bin", messageNumber.getAndIncrement(), direction, msgType.code(), msgType.toString());
+        return String.format("%d_%s_%d_k_EMsg%s.bin", messageNumber.getAndIncrement(), direction, msgType.code(), msgType);
     }
 }

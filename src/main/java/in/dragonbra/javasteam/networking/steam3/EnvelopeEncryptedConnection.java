@@ -121,7 +121,7 @@ public class EnvelopeEncryptedConnection extends Connection {
         Msg<MsgChannelEncryptResponse> response = new Msg<>(MsgChannelEncryptResponse.class);
 
         byte[] tempSessionKey = CryptoHelper.generateRandomBlock(32);
-        byte[] encryptedHandshakeBlob = null;
+        byte[] encryptedHandshakeBlob;
 
         RSACrypto rsa = new RSACrypto(publicKey);
 

@@ -36,7 +36,7 @@ public class LogOnDetails {
 
     private EOSType clientOSType;
 
-    private String clientLanguage = "";
+    private String clientLanguage;
 
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;

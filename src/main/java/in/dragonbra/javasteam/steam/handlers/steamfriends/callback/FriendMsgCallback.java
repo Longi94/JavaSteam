@@ -5,7 +5,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFri
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This callback is fired in response to receiving a message from a friend.
@@ -27,7 +27,7 @@ public class FriendMsgCallback extends CallbackMsg {
         fromLimitedAccount = msg.getFromLimitedAccount();
 
         if (msg.hasMessage()) {
-            message = msg.getMessage().toString(Charset.forName("UTF-8"));
+            message = msg.getMessage().toString(StandardCharsets.UTF_8);
             message = message.replaceAll("\0+$", ""); // trim any extra null chars from the end
         }
     }

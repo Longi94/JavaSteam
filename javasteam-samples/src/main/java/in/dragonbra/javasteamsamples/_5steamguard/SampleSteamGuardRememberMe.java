@@ -19,6 +19,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
@@ -247,17 +248,22 @@ public class SampleSteamGuardRememberMe implements Runnable {
         }
     }
 
-    private byte[] calculateSHA1(File file) throws NoSuchAlgorithmException, IOException {
+    private byte[] calculateSHA1(File file) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
-        InputStream fis = new FileInputStream(file);
-        int n = 0;
-        byte[] buffer = new byte[8192];
-        while (n != -1) {
-            n = fis.read(buffer);
-            if (n > 0) {
-                digest.update(buffer, 0, n);
+
+        try (InputStream fis = Files.newInputStream(file.toPath());) {
+            int n = 0;
+            byte[] buffer = new byte[8192];
+            while (n != -1) {
+                n = fis.read(buffer);
+                if (n > 0) {
+                    digest.update(buffer, 0, n);
+                }
             }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to calculate SHA1", e);
         }
+
         return digest.digest();
     }
 }

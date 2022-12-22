@@ -104,7 +104,7 @@ public class LoggedOnCallback extends CallbackMsg {
         outOfGameSecsPerHeartbeat = resp.getOutOfGameHeartbeatRateSec();
         inGameSecsPerHeartbeat = resp.getInGameHeartbeatRateSec();
 
-        publicIP = NetHelpers.getIPAddress((int) resp.getIpPublic());
+        publicIP = NetHelpers.getIPAddress(resp.getIpPublic());
 
         serverTime = new Date(resp.getServerRealTime() * 1000L);
 

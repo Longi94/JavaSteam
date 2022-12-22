@@ -366,7 +366,7 @@ public class SteamID {
      * @return <b>true</b> if this instance is a lobby; otherwise, <b>false</b>.
      */
     public boolean isLobby() {
-        return getAccountType() == EAccountType.Chat && (getAccountInstance() & (long) ChatInstanceFlags.LOBBY.code()) > 0;
+        return getAccountType() == EAccountType.Chat && (getAccountInstance() & ChatInstanceFlags.LOBBY.code()) > 0;
     }
 
     /**
@@ -587,7 +587,7 @@ public class SteamID {
      */
     @Override
     public boolean equals(Object obj) {
-        if (obj == null || !(obj instanceof SteamID)) {
+        if (!(obj instanceof SteamID)) {
             return false;
         }
 

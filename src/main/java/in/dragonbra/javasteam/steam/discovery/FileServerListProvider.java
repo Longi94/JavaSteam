@@ -81,7 +81,6 @@ public class FileServerListProvider implements IServerListProvider {
         try (FileOutputStream fos = new FileOutputStream(file, false)) {
             builder.build().writeTo(fos);
             fos.flush();
-            fos.close();
         } catch (IOException e) {
             logger.debug("Failed to write servers to file " + file.getAbsolutePath(), e);
         }

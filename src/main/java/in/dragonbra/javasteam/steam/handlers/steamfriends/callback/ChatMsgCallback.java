@@ -5,7 +5,7 @@ import in.dragonbra.javasteam.generated.MsgClientChatMsg;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import in.dragonbra.javasteam.types.SteamID;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This callback is fired when a chat room message arrives.
@@ -25,7 +25,7 @@ public class ChatMsgCallback extends CallbackMsg {
         chatRoomID = msg.getSteamIdChatRoom();
         chatMsgType = msg.getChatMsgType();
 
-        message = new String(payload, Charset.forName("UTF-8")).replaceAll("\0+$", ""); // trim any extra null chars from the end
+        message = new String(payload, StandardCharsets.UTF_8).replaceAll("\0+$", ""); // trim any extra null chars from the end
     }
 
     /**

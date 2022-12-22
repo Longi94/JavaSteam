@@ -84,24 +84,9 @@ public class SteamClient extends CMClient {
 
         processStartTime = new Date();
 
-        dispatchMap.put(EMsg.ClientCMList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleCMList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.JobHeartbeat, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleJobHeartbeat(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.DestJobFailed, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleJobFailed(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
+        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
+        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
     }
 
     /**

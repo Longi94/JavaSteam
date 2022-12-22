@@ -29,12 +29,7 @@ public class SteamScreenshots extends ClientMsgHandler {
     public SteamScreenshots() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientUCMAddScreenshotResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleUCMAddScreenshot(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientUCMAddScreenshotResponse, this::handleUCMAddScreenshot);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

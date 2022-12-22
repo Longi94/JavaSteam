@@ -35,96 +35,21 @@ public class SteamApps extends ClientMsgHandler {
     public SteamApps() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientLicenseList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleLicenseList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientRequestFreeLicenseResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFreeLicense(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPurchaseResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePurchaseResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientRedeemGuestPassResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleRedeemGuestPassResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientGameConnectTokens, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleGameConnectTokens(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientVACBanStatus, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleVACBanStatus(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientGetAppOwnershipTicketResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleAppOwnershipTicketResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientGetDepotDecryptionKeyResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleDepotKeyResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientGetLegacyGameKeyResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleLegacyGameKeyResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPICSAccessTokenResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePICSAccessTokenResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPICSChangesSinceResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePICSChangesSinceResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPICSProductInfoResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePICSProductInfoResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientUpdateGuestPassesList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleGuestPassList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientGetCDNAuthTokenResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleCDNAuthTokenResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientCheckAppBetaPasswordResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleCheckAppBetaPasswordResponse(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientLicenseList, this::handleLicenseList);
+        dispatchMap.put(EMsg.ClientRequestFreeLicenseResponse, this::handleFreeLicense);
+        dispatchMap.put(EMsg.ClientPurchaseResponse, this::handlePurchaseResponse);
+        dispatchMap.put(EMsg.ClientRedeemGuestPassResponse, this::handleRedeemGuestPassResponse);
+        dispatchMap.put(EMsg.ClientGameConnectTokens, this::handleGameConnectTokens);
+        dispatchMap.put(EMsg.ClientVACBanStatus, this::handleVACBanStatus);
+        dispatchMap.put(EMsg.ClientGetAppOwnershipTicketResponse, this::handleAppOwnershipTicketResponse);
+        dispatchMap.put(EMsg.ClientGetDepotDecryptionKeyResponse, this::handleDepotKeyResponse);
+        dispatchMap.put(EMsg.ClientGetLegacyGameKeyResponse, this::handleLegacyGameKeyResponse);
+        dispatchMap.put(EMsg.ClientPICSAccessTokenResponse, this::handlePICSAccessTokenResponse);
+        dispatchMap.put(EMsg.ClientPICSChangesSinceResponse, this::handlePICSChangesSinceResponse);
+        dispatchMap.put(EMsg.ClientPICSProductInfoResponse, this::handlePICSProductInfoResponse);
+        dispatchMap.put(EMsg.ClientUpdateGuestPassesList, this::handleGuestPassList);
+        dispatchMap.put(EMsg.ClientGetCDNAuthTokenResponse, this::handleCDNAuthTokenResponse);
+        dispatchMap.put(EMsg.ClientCheckAppBetaPasswordResponse, this::handleCheckAppBetaPasswordResponse);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

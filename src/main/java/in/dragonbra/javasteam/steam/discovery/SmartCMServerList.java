@@ -19,7 +19,7 @@ public class SmartCMServerList {
 
     private final SteamConfiguration configuration;
 
-    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<ServerInfo>());
+    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
 
     private Long badConnectionMemoryTimeSpan;
 
@@ -162,23 +162,21 @@ public class SmartCMServerList {
             }
         }
 
-        Collections.sort(serverInfos, new Comparator<ServerInfo>() {
-            @Override
-            public int compare(ServerInfo o1, ServerInfo o2) {
-                if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
-                    return 1;
-                }
-
-                if (o1.getLastBadConnection() == null) {
-                    return -1;
-                }
-
-                if (o2.getLastBadConnection() == null) {
-                    return 1;
-                }
-
-                return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
+        //noinspection ComparatorMethodParameterNotUsed
+        serverInfos.sort((o1, o2) -> {
+            if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
+                return 1;
             }
+
+            if (o1.getLastBadConnection() == null) {
+                return -1;
+            }
+
+            if (o2.getLastBadConnection() == null) {
+                return 1;
+            }
+
+            return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
         });
 
         if (serverInfos.isEmpty()) {

@@ -110,7 +110,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String httpMethod, String function, int version) throws IOException {
-        return call(httpMethod, function, version, (Map<String, String>) null);
+        return call(httpMethod, function, version, null);
     }
 
     /**
@@ -122,7 +122,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String function, int version) throws IOException {
-        return call("GET", function, version, (Map<String, String>) null);
+        return call("GET", function, version, null);
     }
 
     /**
@@ -134,7 +134,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String httpMethod, String function) throws IOException {
-        return call(httpMethod, function, 1, (Map<String, String>) null);
+        return call(httpMethod, function, 1, null);
     }
 
     /**
@@ -145,7 +145,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String function) throws IOException {
-        return call("GET", function, 1, (Map<String, String>) null);
+        return call("GET", function, 1, null);
     }
 
     /**

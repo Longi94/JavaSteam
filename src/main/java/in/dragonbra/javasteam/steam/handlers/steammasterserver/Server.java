@@ -14,9 +14,8 @@ public class Server {
 
     private int authedPlayers;
 
-    //NOTE: getDeprecatedServerIp() added
     public Server(CMsgGMSClientServerQueryResponse.Server server) {
-        endPoint = new InetSocketAddress(NetHelpers.getIPAddress(server.getDeprecatedServerIp()), server.getQueryPort());
+        endPoint = new InetSocketAddress(NetHelpers.getIPAddress(server.getServerIp().getV4()), server.getQueryPort());
         authedPlayers = server.getAuthPlayers();
     }
 

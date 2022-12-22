@@ -25,12 +25,7 @@ public class SteamGameCoordinator extends ClientMsgHandler {
     public SteamGameCoordinator() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientFromGC, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFromGC(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientFromGC, this::handleFromGC);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

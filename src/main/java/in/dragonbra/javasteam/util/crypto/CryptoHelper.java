@@ -71,7 +71,7 @@ public class CryptoHelper {
         }
 
         CRC32 crc = new CRC32();
-        crc.update(input);
+        crc.update(input, 0, input.length);
         final long hash = crc.getValue();
         MemoryStream ms = new MemoryStream(4);
         BinaryWriter bw = new BinaryWriter(ms.asOutputStream());
@@ -93,7 +93,7 @@ public class CryptoHelper {
      * @throws CryptoException deception while encrypting
      */
     public static byte[] symmetricDecrypt(byte[] input, byte[] key) throws CryptoException {
-        return symmetricDecrypt(input, key, new Passable<byte[]>());
+        return symmetricDecrypt(input, key, new Passable<>());
     }
 
     /**

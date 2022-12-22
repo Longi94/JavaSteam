@@ -19,7 +19,7 @@ public class CallbackManager implements ICallbackMgrInternals {
 
     private SteamClient steamClient;
 
-    private Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<CallbackBase, Boolean>());
+    private Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Initializes a new instance of the {@link CallbackManager} class.
