@@ -50,7 +50,9 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_10) {
                 return EOSType.Windows10;
             }
-            // TODO: Apache Commons missing: Windows 11
+            if(checkOS("Windows 11", "10.0")){
+                return EOSType.Win11;
+            }
             // Windows Server
             if (SystemUtils.IS_OS_WINDOWS_2003) {
                 return EOSType.Win2003;
@@ -61,10 +63,17 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_2012) {
                 return EOSType.Win2012;
             }
-            // Windows Unknown
-            if (SystemUtils.IS_OS_WINDOWS) {
-                return EOSType.WinUnknown;
+            if(checkOS("Windows Server 2016", "10.0")) {
+                return EOSType.Win2016;
             }
+            if(checkOS("Windows Server 2019", "10.0")) {
+                return EOSType.Win2019;
+            }
+            if(checkOS("Windows Server 2022", "10.0")) {
+                return EOSType.Win2022;
+            }
+            // Windows Unknown
+            return EOSType.WinUnknown;
         }
         // Mac OS
         if (SystemUtils.IS_OS_MAC) {
@@ -110,9 +119,7 @@ public class Utils {
             // TODO: Apache Commons missing: macOS Monterey
             // TODO: Apache Commons missing: macOS Ventura
             // Mac OS Unknown
-            if (SystemUtils.IS_OS_MAC) {
-                return EOSType.MacOSUnknown;
-            }
+            return EOSType.MacOSUnknown;
         }
         // Android
         if (JAVA_RUNTIME != null && JAVA_RUNTIME.startsWith("Android")) {
@@ -199,6 +206,7 @@ public class Utils {
         return EOSType.Unknown;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean checkOS(String namePrefix, String versionPrefix) {
         return SystemUtils.OS_NAME.startsWith(namePrefix) && SystemUtils.OS_VERSION.startsWith(versionPrefix);
     }
