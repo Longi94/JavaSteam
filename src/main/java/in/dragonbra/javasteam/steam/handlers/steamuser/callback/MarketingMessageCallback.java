@@ -20,9 +20,9 @@ public class MarketingMessageCallback extends CallbackMsg {
 
     private static final Logger logger = LogManager.getLogger(MarketingMessageCallback.class);
 
-    private Date updateTime;
+    private final Date updateTime;
 
-    private Collection<Message> messages;
+    private final Collection<Message> messages;
 
     public MarketingMessageCallback(MsgClientMarketingMessageUpdate2 body, byte[] payload) {
         updateTime = new Date(body.getMarketingMessageUpdateTime() * 1000L);

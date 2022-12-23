@@ -17,9 +17,9 @@ import java.util.EnumSet;
  */
 public class ChatMemberInfoCallback extends CallbackMsg {
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private EChatInfoType type;
+    private final EChatInfoType type;
 
     private StateChangeDetails stateChangeInfo;
 

@@ -9,9 +9,10 @@ import java.util.Date;
  * @since 2018-02-20
  */
 public class ServerInfo {
-    private ServerRecord record;
 
-    private ProtocolTypes protocol;
+    private final ServerRecord record;
+
+    private final ProtocolTypes protocol;
 
     private Date lastBadConnection;
 

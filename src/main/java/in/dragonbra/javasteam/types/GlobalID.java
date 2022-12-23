@@ -9,7 +9,8 @@ import java.util.Date;
  * Guaranteed to be unique across all racks and servers for a given Steam universe.
  */
 public class GlobalID {
-    private BitVector64 gidBits;
+
+    private final BitVector64 gidBits;
 
     /**
      * Initializes a new instance of the {@link GlobalID} class.

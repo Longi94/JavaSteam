@@ -1,7 +1,6 @@
 package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * @author lngtr

@@ -8,17 +8,17 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class EmailAddrInfoCallback extends CallbackMsg {
 
-    private String emailAddress;
+    private final String emailAddress;
 
-    private boolean emailIsValidated;
+    private final boolean emailIsValidated;
 
-    private boolean emailValidationChanged;
+    private final boolean emailValidationChanged;
 
-    private boolean credentialChangeRequiresCode;
+    private final boolean credentialChangeRequiresCode;
 
-    private boolean passwordOrSecretqaChangeRequiresCode;
+    private final boolean passwordOrSecretqaChangeRequiresCode;
 
-    private boolean remindUserAboutEmail;
+    private final boolean remindUserAboutEmail;
 
     public EmailAddrInfoCallback(CMsgClientEmailAddrInfo.Builder msg) {
         emailAddress = msg.getEmailAddress();

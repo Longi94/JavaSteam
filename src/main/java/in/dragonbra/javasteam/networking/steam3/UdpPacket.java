@@ -15,7 +15,7 @@ import java.io.IOException;
 class UdpPacket {
     public static final int MAX_PAYLOAD = 0x4DC;
 
-    private UdpHeader header;
+    private final UdpHeader header;
 
     private MemoryStream payload;
 

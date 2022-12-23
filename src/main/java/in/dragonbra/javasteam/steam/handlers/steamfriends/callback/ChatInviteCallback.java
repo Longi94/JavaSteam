@@ -11,19 +11,19 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class ChatInviteCallback extends CallbackMsg {
 
-    private SteamID invitedID;
+    private final SteamID invitedID;
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private SteamID patronID;
+    private final SteamID patronID;
 
-    private EChatRoomType chatRoomType;
+    private final EChatRoomType chatRoomType;
 
-    private SteamID friendChatID;
+    private final SteamID friendChatID;
 
-    private String chatRoomName;
+    private final String chatRoomName;
 
-    private GameID gameID;
+    private final GameID gameID;
 
     public ChatInviteCallback(CMsgClientChatInvite.Builder invite) {
         invitedID = new SteamID(invite.getSteamIdInvited());

@@ -8,7 +8,7 @@ import java.nio.charset.Charset;
  */
 public class BinaryReader extends FilterInputStream {
 
-    private byte[] readBuffer = new byte[8];
+    private final byte[] readBuffer = new byte[8];
 
     private int position = 0;
 

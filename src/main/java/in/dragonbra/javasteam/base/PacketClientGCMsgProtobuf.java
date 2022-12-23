@@ -11,13 +11,13 @@ import java.io.IOException;
  */
 public class PacketClientGCMsgProtobuf implements IPacketGCMsg {
 
-    private int msgType;
+    private final int msgType;
 
-    private JobID targetJobID;
+    private final JobID targetJobID;
 
-    private JobID sourceJobID;
+    private final JobID sourceJobID;
 
-    private byte[] payload;
+    private final byte[] payload;
 
     /**
      * Initializes a new instance of the {@link PacketClientGCMsgProtobuf} class.

@@ -28,6 +28,7 @@ public class TcpConnection extends Connection {
 
     private BinaryReader netReader;
 
+    @SuppressWarnings("FieldCanBeLocal")
     private Thread netThread;
 
     private NetLoop netLoop;

@@ -33,7 +33,7 @@ import java.util.Map;
  * @author lngtr
  * @since 2021-10-11
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleWebApi implements Runnable {
 
     private SteamClient steamClient;
@@ -44,9 +44,9 @@ public class SampleWebApi implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     public SampleWebApi(String user, String pass) {
         this.user = user;

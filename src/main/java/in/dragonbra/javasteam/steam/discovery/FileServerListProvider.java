@@ -17,7 +17,7 @@ public class FileServerListProvider implements IServerListProvider {
 
     private static final Logger logger = LogManager.getLogger(FileServerListProvider.class);
 
-    private File file;
+    private final File file;
 
     /**
      * Instantiates a {@link FileServerListProvider} object.

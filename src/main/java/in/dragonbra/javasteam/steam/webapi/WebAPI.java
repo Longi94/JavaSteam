@@ -337,11 +337,11 @@ public class WebAPI {
     /**
      * Thrown when WebAPI request fails (non success response code).
      */
-    public class WebAPIRequestException extends IOException {
+    public static class WebAPIRequestException extends IOException {
 
-        private int statusCode;
+        private final int statusCode;
 
-        private Map<String, List<String>> headers;
+        private final Map<String, List<String>> headers;
 
         /**
          * Initializes a new instance of the {@link WebAPIRequestException} class.

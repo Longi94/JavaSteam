@@ -9,7 +9,7 @@ import java.io.OutputStream;
  */
 public class BinaryWriter extends FilterOutputStream {
 
-    private byte[] writeBuffer = new byte[8];
+    private final byte[] writeBuffer = new byte[8];
 
     public BinaryWriter(OutputStream out) {
         super(out);

@@ -11,19 +11,18 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class ChatActionResultCallback extends CallbackMsg {
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private SteamID chatterID;
+    private final SteamID chatterID;
 
-    private EChatAction action;
+    private final EChatAction action;
 
-    private EChatActionResult result;
+    private final EChatActionResult result;
 
     public ChatActionResultCallback(MsgClientChatActionResult result) {
-        chatRoomID = result.getSteamIdChat();
-        chatterID = result.getSteamIdUserActedOn();
-
-        action = result.getChatAction();
+        this.chatRoomID = result.getSteamIdChat();
+        this.chatterID = result.getSteamIdUserActedOn();
+        this.action = result.getChatAction();
         this.result = result.getActionResult();
     }
 

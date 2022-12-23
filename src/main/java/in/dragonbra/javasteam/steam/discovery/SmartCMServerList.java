@@ -19,7 +19,7 @@ public class SmartCMServerList {
 
     private final SteamConfiguration configuration;
 
-    private List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
+    private final List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
 
     private Long badConnectionMemoryTimeSpan;
 

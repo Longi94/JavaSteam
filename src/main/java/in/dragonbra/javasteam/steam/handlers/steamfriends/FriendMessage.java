@@ -9,13 +9,13 @@ import java.util.Date;
  */
 public class FriendMessage {
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private boolean unread;
+    private final boolean unread;
 
-    private String message;
+    private final String message;
 
-    private Date timestamp;
+    private final Date timestamp;
 
     public FriendMessage(SteamID steamID, boolean unread, String message, Date timestamp) {
         this.steamID = steamID;

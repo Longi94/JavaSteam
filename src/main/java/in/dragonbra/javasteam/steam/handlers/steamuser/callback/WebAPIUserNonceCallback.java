@@ -10,9 +10,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class WebAPIUserNonceCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private String nonce;
+    private final String nonce;
 
     public WebAPIUserNonceCallback(JobID jobID, CMsgClientRequestWebAPIAuthenticateUserNonceResponse.Builder body) {
         setJobID(jobID);

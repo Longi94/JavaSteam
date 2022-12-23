@@ -13,33 +13,33 @@ import java.util.EnumSet;
  */
 public class License {
 
-    private int packageID;
+    private final int packageID;
 
-    private int lastChangeNumber;
+    private final int lastChangeNumber;
 
-    private Date timeCreated;
+    private final Date timeCreated;
 
-    private Date timeNextProcess;
+    private final Date timeNextProcess;
 
-    private int minuteLimit;
+    private final int minuteLimit;
 
-    private int minutesUsed;
+    private final int minutesUsed;
 
-    private EPaymentMethod paymentMethod;
+    private final EPaymentMethod paymentMethod;
 
-    private EnumSet<ELicenseFlags> licenseFlags;
+    private final EnumSet<ELicenseFlags> licenseFlags;
 
-    private String purchaseCode;
+    private final String purchaseCode;
 
-    private ELicenseType licenseType;
+    private final ELicenseType licenseType;
 
-    private int territoryCode;
+    private final int territoryCode;
 
-    private long accessToken;
+    private final long accessToken;
 
-    private int ownerAccountID;
+    private final int ownerAccountID;
 
-    private int masterPackageID;
+    private final int masterPackageID;
 
     public License(CMsgClientLicenseList.License license) {
         packageID = license.getPackageId();

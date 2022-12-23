@@ -12,11 +12,11 @@ import java.util.Date;
  */
 public class CDNAuthTokenCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private String token;
+    private final String token;
 
-    private Date expiration;
+    private final Date expiration;
 
     public CDNAuthTokenCallback(JobID jobID, CMsgClientGetCDNAuthTokenResponse.Builder msg) {
         setJobID(jobID);

@@ -48,15 +48,19 @@ public class UdpConnection extends Connection {
      */
     private volatile AtomicReference<State> state;
 
-
     private Thread netThread;
+
+    @SuppressWarnings("FieldCanBeLocal")
     private NetLoop netLoop;
-    private DatagramSocket sock;
+
+    private final DatagramSocket sock;
 
     private long timeout;
+
     private long nextResend;
 
     private static int SOURCE_CONN_ID = 512;
+
     private int remoteConnId;
 
     /**

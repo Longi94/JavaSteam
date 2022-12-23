@@ -11,7 +11,7 @@ public class ScheduledFunction {
 
     private long delay;
 
-    private Runnable func;
+    private final Runnable func;
 
     private Timer timer;
 

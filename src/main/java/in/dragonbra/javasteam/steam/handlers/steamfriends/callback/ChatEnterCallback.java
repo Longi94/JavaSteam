@@ -20,21 +20,21 @@ import java.util.List;
  */
 public class ChatEnterCallback extends CallbackMsg {
 
-    private SteamID chatID;
+    private final SteamID chatID;
 
-    private SteamID friendID;
+    private final SteamID friendID;
 
-    private EChatRoomType chatRoomType;
+    private final EChatRoomType chatRoomType;
 
-    private SteamID ownerID;
+    private final SteamID ownerID;
 
-    private SteamID clanID;
+    private final SteamID clanID;
 
-    private byte chatFlags;
+    private final byte chatFlags;
 
-    private EChatRoomEnterResponse enterResponse;
+    private final EChatRoomEnterResponse enterResponse;
 
-    private int numChatMembers;
+    private final int numChatMembers;
 
     private String chatRoomName;
 

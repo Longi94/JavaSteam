@@ -9,11 +9,11 @@ public class Callback<TCall extends ICallbackMsg> extends CallbackBase implement
 
     ICallbackMgrInternals mgr;
 
-    private JobID jobID;
+    private final JobID jobID;
 
-    private Consumer<TCall> onRun;
+    private final Consumer<TCall> onRun;
 
-    private Class<? extends TCall> callbackType;
+    private final Class<? extends TCall> callbackType;
 
     public Callback(Class<? extends TCall> callbackType, Consumer<TCall> func) {
         this(callbackType, func, null);

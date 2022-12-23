@@ -18,15 +18,15 @@ import java.nio.charset.StandardCharsets;
  */
 public class PICSProductInfo extends CallbackMsg {
 
-    private int id;
+    private final int id;
 
-    private int changeNumber;
+    private final int changeNumber;
 
-    private boolean missingToken;
+    private final boolean missingToken;
 
-    private byte[] shaHash;
+    private final byte[] shaHash;
 
-    private KeyValue keyValues;
+    private final KeyValue keyValues;
 
     private boolean onlyPublic;
 

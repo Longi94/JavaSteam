@@ -14,9 +14,9 @@ import java.util.List;
  */
 public class LicenseListCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private List<License> licenseList;
+    private final List<License> licenseList;
 
     public LicenseListCallback(CMsgClientLicenseList.Builder msg) {
         result = EResult.from(msg.getEresult());

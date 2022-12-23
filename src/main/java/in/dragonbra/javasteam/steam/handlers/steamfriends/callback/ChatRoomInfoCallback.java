@@ -10,9 +10,9 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class ChatRoomInfoCallback extends CallbackMsg {
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private EChatInfoType type;
+    private final EChatInfoType type;
 
     public ChatRoomInfoCallback(MsgClientChatRoomInfo msg, byte[] payload) {
         chatRoomID = msg.getSteamIdChat();

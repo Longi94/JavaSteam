@@ -11,9 +11,9 @@ import in.dragonbra.javasteam.types.UGCHandle;
  */
 public class ScreenshotAddedCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private UGCHandle screenshotID;
+    private final UGCHandle screenshotID;
 
     public ScreenshotAddedCallback(JobID jobID, CMsgClientUCMAddScreenshotResponse.Builder msg) {
         setJobID(jobID);

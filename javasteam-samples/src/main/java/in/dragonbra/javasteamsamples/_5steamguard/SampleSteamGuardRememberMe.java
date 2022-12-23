@@ -57,7 +57,7 @@ import java.util.Scanner;
  * @author lngtr
  * @since 2018-02-28
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleSteamGuardRememberMe implements Runnable {
 
     private SteamClient steamClient;
@@ -68,9 +68,9 @@ public class SampleSteamGuardRememberMe implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     private String authCode;
 

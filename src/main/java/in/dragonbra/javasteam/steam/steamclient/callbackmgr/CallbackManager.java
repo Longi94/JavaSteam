@@ -17,9 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CallbackManager implements ICallbackMgrInternals {
 
-    private SteamClient steamClient;
+    private final SteamClient steamClient;
 
-    private Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Initializes a new instance of the {@link CallbackManager} class.

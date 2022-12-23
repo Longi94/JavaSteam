@@ -12,13 +12,13 @@ import java.nio.charset.StandardCharsets;
  */
 public class ChatMsgCallback extends CallbackMsg {
 
-    private SteamID chatterID;
+    private final SteamID chatterID;
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private EChatEntryType chatMsgType;
+    private final EChatEntryType chatMsgType;
 
-    private String message;
+    private final String message;
 
     public ChatMsgCallback(MsgClientChatMsg msg, byte[] payload) {
         chatterID = msg.getSteamIdChatter();

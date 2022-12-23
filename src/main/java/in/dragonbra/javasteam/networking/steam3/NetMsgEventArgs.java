@@ -10,9 +10,9 @@ import java.net.InetSocketAddress;
  */
 public class NetMsgEventArgs extends EventArgs {
 
-    private byte[] data;
+    private final byte[] data;
 
-    private InetSocketAddress endPoint;
+    private final InetSocketAddress endPoint;
 
     public NetMsgEventArgs(byte[] data, InetSocketAddress endPoint) {
         this.data = data;

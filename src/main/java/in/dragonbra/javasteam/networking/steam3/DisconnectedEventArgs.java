@@ -8,7 +8,7 @@ import in.dragonbra.javasteam.util.event.EventArgs;
  */
 public class DisconnectedEventArgs extends EventArgs {
 
-    private boolean userInitiated;
+    private final boolean userInitiated;
 
     public DisconnectedEventArgs(boolean userInitiated) {
         this.userInitiated = userInitiated;

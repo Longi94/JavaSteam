@@ -23,9 +23,9 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
 
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy_MM_dd_H_m_s_S");
 
-    private AtomicLong messageNumber = new AtomicLong(0L);
+    private final AtomicLong messageNumber = new AtomicLong(0L);
 
-    private File logDirectory;
+    private final File logDirectory;
 
     public NetHookNetworkListener() {
         this("netlogs");

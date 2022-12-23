@@ -12,11 +12,11 @@ import java.nio.charset.StandardCharsets;
  */
 public class FriendMsgCallback extends CallbackMsg {
 
-    private SteamID sender;
+    private final SteamID sender;
 
-    private EChatEntryType entryType;
+    private final EChatEntryType entryType;
 
-    private boolean fromLimitedAccount;
+    private final boolean fromLimitedAccount;
 
     private String message;
 

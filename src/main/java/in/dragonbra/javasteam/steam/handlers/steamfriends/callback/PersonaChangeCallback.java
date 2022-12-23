@@ -13,9 +13,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class PersonaChangeCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private String name;
+    private final String name;
 
     public PersonaChangeCallback(JobID jobID, CMsgPersonaChangeResponse.Builder msg) {
         setJobID(jobID);

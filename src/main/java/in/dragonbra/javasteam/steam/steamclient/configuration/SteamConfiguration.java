@@ -20,7 +20,7 @@ public class SteamConfiguration {
 
     private final SteamConfigurationState state;
 
-    private SmartCMServerList serverList;
+    private final SmartCMServerList serverList;
 
     SteamConfiguration(SteamConfigurationState state) {
         this.state = state;

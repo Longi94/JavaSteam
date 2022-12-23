@@ -13,23 +13,23 @@ import java.util.Date;
  */
 public class ProfileInfoCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private Date timeCreated;
+    private final Date timeCreated;
 
-    private String realName;
+    private final String realName;
 
-    private String cityName;
+    private final String cityName;
 
-    private String stateName;
+    private final String stateName;
 
-    private String countryName;
+    private final String countryName;
 
-    private String headline;
+    private final String headline;
 
-    private String summary;
+    private final String summary;
 
     public ProfileInfoCallback(JobID jobID, CMsgClientFriendProfileInfoResponse.Builder response) {
         setJobID(jobID);

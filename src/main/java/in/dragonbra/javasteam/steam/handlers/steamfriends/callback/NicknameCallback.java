@@ -12,7 +12,7 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class NicknameCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
     public NicknameCallback(JobID jobID, CMsgClientSetPlayerNicknameResponse.Builder body) {
         setJobID(jobID);

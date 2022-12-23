@@ -677,7 +677,7 @@ public class KeyValue {
         END((byte) 8),
         INT64((byte) 10);
 
-        private byte code;
+        private final byte code;
 
         Type(byte code) {
             this.code = code;

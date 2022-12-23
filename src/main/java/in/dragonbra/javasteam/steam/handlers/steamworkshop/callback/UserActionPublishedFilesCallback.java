@@ -17,11 +17,11 @@ import java.util.List;
  */
 public class UserActionPublishedFilesCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private List<File> files;
+    private final List<File> files;
 
-    private int totalResults;
+    private final int totalResults;
 
     public UserActionPublishedFilesCallback(JobID jobID, CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.Builder msg) {
         setJobID(jobID);
@@ -63,9 +63,9 @@ public class UserActionPublishedFilesCallback extends CallbackMsg {
      */
     public static class File {
 
-        private long fileID;
+        private final long fileID;
 
-        private Date timestamp;
+        private final Date timestamp;
 
         public File(CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.PublishedFileId file) {
             fileID = file.getPublishedFileId();

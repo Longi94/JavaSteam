@@ -11,9 +11,9 @@ import java.util.EnumSet;
  */
 public class ServerRecord {
 
-    private InetSocketAddress endpoint;
+    private final InetSocketAddress endpoint;
 
-    private EnumSet<ProtocolTypes> protocolTypes;
+    private final EnumSet<ProtocolTypes> protocolTypes;
 
     ServerRecord(InetSocketAddress endpoint, ProtocolTypes protocolTypes) {
         this(endpoint, EnumSet.of(protocolTypes));

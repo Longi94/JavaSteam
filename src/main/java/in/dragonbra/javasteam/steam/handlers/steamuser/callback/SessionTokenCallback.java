@@ -9,7 +9,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class SessionTokenCallback extends CallbackMsg {
 
-    private long sessionToken;
+    private final long sessionToken;
 
     public SessionTokenCallback(SteammessagesClientserver.CMsgClientSessionToken.Builder msg) {
         sessionToken = msg.getToken();

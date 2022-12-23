@@ -11,11 +11,11 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class DepotKeyCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int depotID;
+    private final int depotID;
 
-    private byte[] depotKey;
+    private final byte[] depotKey;
 
     public DepotKeyCallback(JobID jobID, CMsgClientGetDepotDecryptionKeyResponse.Builder msg) {
         setJobID(jobID);

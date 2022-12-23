@@ -13,17 +13,17 @@ import in.dragonbra.javasteam.types.UGCHandle;
  */
 public class UGCDetailsCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int appID;
+    private final int appID;
 
-    private SteamID creator;
+    private final SteamID creator;
 
-    private String url;
+    private final String url;
 
-    private String fileName;
+    private final String fileName;
 
-    private int fileSize;
+    private final int fileSize;
 
     public UGCDetailsCallback(JobID jobID, CMsgClientUFSGetUGCDetailsResponse.Builder msg) {
         setJobID(jobID);

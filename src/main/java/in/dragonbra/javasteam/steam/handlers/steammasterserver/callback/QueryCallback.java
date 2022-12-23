@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class QueryCallback extends CallbackMsg {
 
-    private List<Server> servers;
+    private final List<Server> servers;
 
     public QueryCallback(JobID jobID, CMsgGMSClientServerQueryResponse.Builder msg) {
         setJobID(jobID);

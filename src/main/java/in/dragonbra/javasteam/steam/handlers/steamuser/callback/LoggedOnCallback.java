@@ -22,7 +22,7 @@ import java.util.EnumSet;
  */
 public class LoggedOnCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
     private EResult extendedResult;
 

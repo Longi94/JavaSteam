@@ -44,7 +44,7 @@ public abstract class CMClient {
 
     private static final Logger logger = LogManager.getLogger(CMClient.class);
 
-    private SteamConfiguration configuration;
+    private final SteamConfiguration configuration;
 
     private boolean isConnected;
 
@@ -65,9 +65,9 @@ public abstract class CMClient {
 
     private Connection connection;
 
-    private ScheduledFunction heartBeatFunc;
+    private final ScheduledFunction heartBeatFunc;
 
-    private Map<EServerType, Set<InetSocketAddress>> serverMap;
+    private final Map<EServerType, Set<InetSocketAddress>> serverMap;
 
     private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> onClientMsgReceived(getPacketMsg(e.getData()));
 

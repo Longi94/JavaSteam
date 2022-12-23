@@ -27,7 +27,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
  * @author lngtr
  * @since 2021-10-11
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleExtending implements Runnable {
 
     private SteamClient steamClient;
@@ -40,9 +40,9 @@ public class SampleExtending implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     public SampleExtending(String user, String pass) {
         this.user = user;

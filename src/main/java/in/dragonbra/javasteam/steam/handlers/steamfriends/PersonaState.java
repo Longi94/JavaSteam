@@ -17,43 +17,43 @@ import java.util.EnumSet;
  */
 public class PersonaState {
 
-    private EnumSet<EClientPersonaStateFlag> statusFlags;
+    private final EnumSet<EClientPersonaStateFlag> statusFlags;
 
-    private SteamID friendID;
+    private final SteamID friendID;
 
-    private EPersonaState state;
+    private final EPersonaState state;
 
-    private EnumSet<EPersonaStateFlag> stateFlags;
+    private final EnumSet<EPersonaStateFlag> stateFlags;
 
-    private int gameAppID;
+    private final int gameAppID;
 
-    private GameID gameID;
+    private final GameID gameID;
 
-    private String gameName;
+    private final String gameName;
 
-    private InetAddress gameServerIP;
+    private final InetAddress gameServerIP;
 
-    private int gameServerPort;
+    private final int gameServerPort;
 
-    private int queryPort;
+    private final int queryPort;
 
-    private SteamID sourceSteamID;
+    private final SteamID sourceSteamID;
 
-    private byte[] gameDataBlob;
+    private final byte[] gameDataBlob;
 
-    private String name;
+    private final String name;
 
-    private byte[] avatarHash;
+    private final byte[] avatarHash;
 
-    private Date lastLogOff;
+    private final Date lastLogOff;
 
-    private Date lastLogOn;
+    private final Date lastLogOn;
 
-    private int clanRank;
+    private final int clanRank;
 
-    private String clanTag;
+    private final String clanTag;
 
-    private int onlineSessionInstances;
+    private final int onlineSessionInstances;
 
     public PersonaState(CMsgClientPersonaState.Friend friend) {
         statusFlags = EClientPersonaStateFlag.from(friend.getPersonaStateFlags());
