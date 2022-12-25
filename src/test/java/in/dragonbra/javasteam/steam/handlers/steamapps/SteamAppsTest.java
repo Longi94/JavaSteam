@@ -5,30 +5,33 @@ import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicket;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenRequest;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceRequest;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPassword;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKey;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicense;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenRequest;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceRequest;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest;
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.*;
 import in.dragonbra.javasteam.types.JobID;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Date;
 import java.util.LinkedList;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
  * @since 2018-04-09
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Override
@@ -102,14 +105,14 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
         assertEquals(420, msg.getBody().getPackages(0).getPackageid());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void picsGetProductInfoNull() {
-        handler.picsGetProductInfo(null, new LinkedList<PICSRequest>(), false);
+        assertThrows(IllegalArgumentException.class, () -> handler.picsGetProductInfo(null, new LinkedList<>(), false));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void picsGetProductInfoNull2() {
-        handler.picsGetProductInfo(new LinkedList<PICSRequest>(), null, false);
+        assertThrows(IllegalArgumentException.class, () -> handler.picsGetProductInfo(new LinkedList<>(), null, false));
     }
 
     @Test
@@ -137,9 +140,9 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
         assertEquals(440, msg.getBody().getAppids(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void requestFreeLicenseNull() {
-        handler.requestFreeLicense(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.requestFreeLicense(null));
     }
 
     @Test

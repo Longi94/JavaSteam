@@ -25,5 +25,11 @@ gradlePlugin {
             version = "1.0.0"
             group = "in.dragonbra.steamlanguagegen"
         }
+        create("projectversiongen") {
+            id = "projectversiongen"
+            implementationClass = "in.dragonbra.versiongen.VersionGenPlugin"
+            version = "1.0.0"
+            group = "in.dragonbra.versiongen"
+        }
     }
 }

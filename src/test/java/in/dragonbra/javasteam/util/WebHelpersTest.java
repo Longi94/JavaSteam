@@ -1,10 +1,9 @@
 package in.dragonbra.javasteam.util;
 
 import in.dragonbra.javasteam.TestBase;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author lngtr
@@ -15,6 +14,6 @@ public class WebHelpersTest extends TestBase {
     @Test
     public void urlEncode() {
         String result = WebHelpers.urlEncode("encrypt THIS sTrInG1234 \10 \11 \12");
-        Assert.assertEquals("encrypt+THIS+sTrInG1234+%08+%09+%0A", result);
+        assertEquals("encrypt+THIS+sTrInG1234+%08+%09+%0A", result);
     }
 }

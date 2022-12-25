@@ -3,18 +3,16 @@ package in.dragonbra.javasteam.types;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EUniverse;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
  * @since 2018-02-19
  */
-@RunWith(JUnitParamsRunner.class)
 public class SteamIDTests extends TestBase {
 
     @Test
@@ -264,9 +262,9 @@ public class SteamIDTests extends TestBase {
     @Test
     public void steamIDHashCodeUsesLongHashCode() {
         SteamID sid = new SteamID(172376458626834L);
-        Long longValue = 172376458626834L;
+        long longValue = 172376458626834L;
 
-        assertEquals(sid.hashCode(), longValue.hashCode());
+        assertEquals(sid.hashCode(), Long.hashCode(longValue));
     }
 
     @Test
@@ -322,25 +320,13 @@ public class SteamIDTests extends TestBase {
         assertEquals(4L, clanID.getAccountID());
     }
 
-    private EAccountType[] testParamsAccountType0() {
-        return new EAccountType[] {
-                EAccountType.AnonGameServer,
-                EAccountType.AnonUser,
-                EAccountType.Chat,
-                EAccountType.ConsoleUser,
-                EAccountType.ContentServer,
-                EAccountType.GameServer,
-                EAccountType.Individual,
-                EAccountType.Multiseat,
-                EAccountType.Pending,
-        };
-    }
-
-    @Test(expected = IllegalStateException.class)
-    @Parameters(method = "testParamsAccountType0")
+    @ParameterizedTest
+    @EnumSource(value = EAccountType.class, names = {"Invalid", "Clan"}, mode = EnumSource.Mode.EXCLUDE)
     public void toChatIDOnlySupportsClans(EAccountType type) {
-        SteamID id = new SteamID(1, EUniverse.Public, type);
-        id.toChatID();
+        assertThrows(IllegalStateException.class, () -> {
+            SteamID id = new SteamID(1, EUniverse.Public, type);
+            id.toChatID();
+        });
     }
 
     @Test
@@ -371,22 +357,8 @@ public class SteamIDTests extends TestBase {
         assertNull(groupID);
     }
 
-    private EAccountType[] testParamsAccountType1() {
-        return new EAccountType[] {
-                EAccountType.AnonGameServer,
-                EAccountType.AnonUser,
-                EAccountType.Clan,
-                EAccountType.ConsoleUser,
-                EAccountType.ContentServer,
-                EAccountType.GameServer,
-                EAccountType.Individual,
-                EAccountType.Multiseat,
-                EAccountType.Pending,
-        };
-    }
-
-    @Test
-    @Parameters(method = "testParamsAccountType1")
+    @ParameterizedTest
+    @EnumSource(value = EAccountType.class, names = {"Invalid", "Chat"}, mode = EnumSource.Mode.EXCLUDE)
     public void tryGetClanIDOnlySupportsChatRooms(EAccountType type) {
         SteamID chatID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, type);
 

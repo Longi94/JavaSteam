@@ -2,26 +2,29 @@ package in.dragonbra.javasteam.steam.discovery;
 
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class FileServerListProviderTest extends TestBase {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    Path folder;
 
     @Test
     public void testSaveAndRead() throws IOException {
-        FileServerListProvider provider = new FileServerListProvider(folder.newFile());
+        final Path tempFile = Files.createFile(folder.resolve("FileServerListProvider.txt"));
+
+        FileServerListProvider provider = new FileServerListProvider(tempFile.toFile());
 
         List<ServerRecord> serverRecords = new ArrayList<>();
 
@@ -34,12 +37,14 @@ public class FileServerListProviderTest extends TestBase {
 
         List<ServerRecord> loadedList = provider.fetchServerList();
 
-        assertThat(loadedList, is(serverRecords));
+        assertEquals(loadedList, serverRecords);
     }
 
     @Test
     public void testMissingFile() throws IOException {
-        FileServerListProvider provider = new FileServerListProvider(folder.newFile());
+        final Path tempFile = Files.createFile(folder.resolve("FileServerListProvider.txt"));
+
+        FileServerListProvider provider = new FileServerListProvider(tempFile.toFile());
 
         List<ServerRecord> serverRecords = provider.fetchServerList();
 

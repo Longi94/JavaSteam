@@ -1,7 +1,7 @@
 //file:noinspection GroovyAssignabilityCheck
 
 plugins {
-    id 'com.google.protobuf'
+    id 'com.google.protobuf' version "0.9.1"
     id 'java'
     id 'maven-publish'
     id 'signing'
@@ -13,53 +13,36 @@ repositories {
     mavenCentral()
 }
 
-protobuf {
-    protoc {
-        // https://mvnrepository.com/artifact/com.google.protobuf/protoc
-        artifact = 'com.google.protobuf:protoc:3.21.9'
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-        }
-    }
-}
-
-tasks.register('sourcesJar', Jar) {
-    dependsOn classes
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
-}
-
-tasks.register('javadocJar', Jar) {
-    dependsOn javadoc
-    archiveClassifier.set('javadoc')
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+// https://mvnrepository.com/artifact/com.google.protobuf/protoc
+protobuf.protoc {
+    artifact = 'com.google.protobuf:protoc:3.21.12'
 }
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
+test {
+    useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 dependencies {
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
     implementation 'com.google.protobuf:protobuf-java:3.21.12'
+
+    /* Unit Testing */
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
 }
 
-/**
- * Artifact publishing
- */
+/* Artifact publishing */
+
 publishing {
     publications {
         mavenJava(MavenPublication) {

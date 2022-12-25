@@ -1,16 +1,16 @@
 //file:noinspection GroovyAssignabilityCheck
 
-// We're staying behind on a few versions on protobuf-gradle-plugin
-// See: https://github.com/google/protobuf-gradle-plugin/issues/641
+// https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
 // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 plugins {
     id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
-    id 'com.google.protobuf' version "0.8.18"
+    id 'com.google.protobuf' version "0.9.1"
     id 'jacoco'
     id 'java'
     id 'maven-publish'
     id 'signing'
     id 'steamlanguagegen'
+    id 'projectversiongen'
 }
 
 allprojects {
@@ -24,119 +24,90 @@ repositories {
     mavenCentral()
 }
 
-protobuf {
-    protoc {
-        // https://mvnrepository.com/artifact/com.google.protobuf/protoc
-        artifact = 'com.google.protobuf:protoc:3.21.9'
-    }
+// https://mvnrepository.com/artifact/com.google.protobuf/protoc
+protobuf.protoc {
+    artifact = 'com.google.protobuf:protoc:3.21.12'
 }
 
-jacoco {
-    // https://www.eclemma.org/jacoco
-    toolVersion = "0.8.8"
+// https://www.eclemma.org/jacoco
+jacoco.toolVersion = "0.8.8"
+
+jacocoTestReport.reports {
+    xml.required = true
+    html.required = false
 }
-
-jacocoTestReport {
-    reports {
-        xml.required = true
-        html.required = false
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
-            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-            srcDirs += new File(buildDir, 'generated/source/javasteam/main/java')
-        }
-    }
-}
-
-tasks.register('sourcesJar', Jar) {
-    dependsOn classes
-    archiveClassifier.set('sources')
-    from sourceSets.main.allSource
-}
-
-tasks.register('javadocJar', Jar) {
-    dependsOn javadoc
-    archiveClassifier.set('javadoc')
-    from javadoc.destinationDir
-}
-
-tasks.register('generateVersionClass') {
-    def generatedDir = file("$buildDir/generated/source/javasteam/main/java")
-    def outputDir = file("$generatedDir/in/dragonbra/javasteam/util")
-    outputs.dir outputDir
-    doFirst {
-        outputDir.exists() || outputDir.mkdirs()
-        new File(outputDir, "Versions.java")
-                .write("""package in.dragonbra.javasteam.util;
-
-public class Versions { 
-    public static final String VERSION = \"$project.version\"; 
-}""")
-    }
-}
-
-compileJava.dependsOn generateVersionClass
-compileJava.dependsOn generateSteamLanguage
-check.dependsOn jacocoTestReport
-
-artifacts {
-    archives sourcesJar
-    archives javadocJar
-}
-
-// java {
-//     withJavadocJar()
-//     withSourcesJar()
-// }
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
+test {
+    useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Note: Only allow junit 5
+configurations {
+    configureEach {
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+// Note: builtBy() fixes gradle warning "Execution optimizations have been disabled for task"
+sourceSets.main {
+    java.srcDirs(
+            files("build/generated/source/steamd/main/java").builtBy(generateSteamLanguage),
+            files("build/generated/source/javasteam/main/java").builtBy(generateProjectVersion)
+    )
+}
+
+check.dependsOn jacocoTestReport
+compileJava.dependsOn(generateSteamLanguage)
+compileJava.dependsOn(generateProjectVersion)
+
 dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.10'
-
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
     implementation 'com.google.protobuf:protobuf-java:3.21.12'
-
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
-
     // https://mvnrepository.com/artifact/commons-validator/commons-validator
     implementation 'commons-validator:commons-validator:1.7'
-
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-
     // https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
     implementation 'org.java-websocket:Java-WebSocket:1.5.3'
 
+    /* Unit Testing */
 
-    // https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
+    testImplementation 'com.squareup.okhttp3:mockwebserver3-junit5:5.0.0-alpha.10'
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     testImplementation 'commons-codec:commons-codec:1.15'
     // https://mvnrepository.com/artifact/commons-io/commons-io
     testImplementation 'commons-io:commons-io:2.11.0'
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
     // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
     testImplementation 'org.bouncycastle:bcprov-jdk15on:1.70'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
     testImplementation 'org.mockito:mockito-core:4.10.0'
-    // https://mvnrepository.com/artifact/pl.pragmatists/JUnitParams
-    testImplementation 'pl.pragmatists:JUnitParams:1.1.1'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.1'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.10.0'
 }
 
-/**
- * Artifact publishing
- */
+/* Artifact publishing */
+
 nexusPublishing {
     repositories {
         sonatype()

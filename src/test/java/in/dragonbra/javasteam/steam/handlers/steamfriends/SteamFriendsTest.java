@@ -14,21 +14,24 @@ import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.*;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.EnumSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
  * @since 2018-03-27
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
 
     @Override
@@ -66,21 +69,25 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(EChatEntryType.ChatMsg.code(), msg.getBody().getChatEntryType());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatMessageNullId() {
-        handler.sendChatMessage(null, EChatEntryType.ChatMsg, "testmessage");
+        assertThrows(IllegalArgumentException.class, () -> handler.sendChatMessage(null, EChatEntryType.ChatMsg, "testmessage"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatMessageNullType() {
-        SteamID testId = new SteamID(123456789L);
-        handler.sendChatMessage(testId, null, "testmessage");
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID testId = new SteamID(123456789L);
+            handler.sendChatMessage(testId, null, "testmessage");
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatMessageNullMessage() {
-        SteamID testId = new SteamID(123456789L);
-        handler.sendChatMessage(testId, EChatEntryType.ChatMsg, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID testId = new SteamID(123456789L);
+            handler.sendChatMessage(testId, EChatEntryType.ChatMsg, null);
+        });
     }
 
     @Test
@@ -99,14 +106,14 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals("testaccount", msg.getBody().getAccountnameOrEmailToAdd());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addFriendNull() {
-        handler.addFriend((SteamID) null);
+        assertThrows(IllegalArgumentException.class, () -> handler.addFriend((SteamID) null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void addFriendNull2() {
-        handler.addFriend((String) null);
+        assertThrows(IllegalArgumentException.class, () -> handler.addFriend((String) null));
     }
 
     @Test
@@ -119,9 +126,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(123456789L, msg.getBody().getFriendid());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void removeFriendNull() {
-        handler.removeFriend(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.removeFriend(null));
     }
 
     @Test
@@ -136,9 +143,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(testId, msg.getBody().getSteamIdChat());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void joinChatNull() {
-        handler.joinChat(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.joinChat(null));
     }
 
     @Test
@@ -154,9 +161,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(EChatInfoType.StateChange, msg.getBody().getType());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void leaveChatNull() {
-        handler.leaveChat(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.leaveChat(null));
     }
 
     @Test
@@ -176,25 +183,29 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals("testmessage", msg.readNullTermString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatRoomMessageNullId() {
-        handler.sendChatRoomMessage(null, EChatEntryType.ChatMsg, "testmessage");
+        assertThrows(IllegalArgumentException.class, () -> handler.sendChatRoomMessage(null, EChatEntryType.ChatMsg, "testmessage"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatRoomMessageNullType() {
-        SteamID testId = new SteamID(123456789L);
-        testId.setAccountType(EAccountType.Chat);
-        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.sendChatRoomMessage(testId, null, "testmessage");
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID testId = new SteamID(123456789L);
+            testId.setAccountType(EAccountType.Chat);
+            testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.sendChatRoomMessage(testId, null, "testmessage");
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void sendChatRoomMessageNullMessage() {
-        SteamID testId = new SteamID(123456789L);
-        testId.setAccountType(EAccountType.Chat);
-        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.sendChatRoomMessage(testId, EChatEntryType.ChatMsg, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID testId = new SteamID(123456789L);
+            testId.setAccountType(EAccountType.Chat);
+            testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.sendChatRoomMessage(testId, EChatEntryType.ChatMsg, null);
+        });
     }
 
     @Test
@@ -211,18 +222,22 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(userId.convertToUInt64(), msg.getBody().getSteamIdInvited());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void inviteUserToChatNullUser() {
-        SteamID chatId = new SteamID(123456789L);
-        chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.inviteUserToChat(null, chatId);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID chatId = new SteamID(123456789L);
+            chatId.setAccountType(EAccountType.Chat);
+            chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.inviteUserToChat(null, chatId);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void inviteUserToChatNullChat() {
-        SteamID userId = new SteamID(987654321L);
-        handler.inviteUserToChat(userId, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID userId = new SteamID(987654321L);
+            handler.inviteUserToChat(userId, null);
+        });
     }
 
     @Test
@@ -240,18 +255,22 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(EChatAction.Kick, msg.getBody().getChatAction());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void kickChatMemberNullUser() {
-        SteamID chatId = new SteamID(123456789L);
-        chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.kickChatMember(chatId, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID chatId = new SteamID(123456789L);
+            chatId.setAccountType(EAccountType.Chat);
+            chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.kickChatMember(chatId, null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void kickChatMemberNullChat() {
-        SteamID userId = new SteamID(987654321L);
-        handler.kickChatMember(null, userId);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID userId = new SteamID(987654321L);
+            handler.kickChatMember(null, userId);
+        });
     }
 
     @Test
@@ -269,18 +288,22 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(EChatAction.Ban, msg.getBody().getChatAction());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void banChatMemberNullUser() {
-        SteamID chatId = new SteamID(123456789L);
-        chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.banChatMember(chatId, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID chatId = new SteamID(123456789L);
+            chatId.setAccountType(EAccountType.Chat);
+            chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.banChatMember(chatId, null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void banChatMemberNullChat() {
-        SteamID userId = new SteamID(987654321L);
-        handler.banChatMember(null, userId);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID userId = new SteamID(987654321L);
+            handler.banChatMember(null, userId);
+        });
     }
 
     @Test
@@ -298,18 +321,22 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(EChatAction.UnBan, msg.getBody().getChatAction());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void unbanChatMemberNullUser() {
-        SteamID chatId = new SteamID(123456789L);
-        chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
-        handler.unbanChatMember(chatId, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID chatId = new SteamID(123456789L);
+            chatId.setAccountType(EAccountType.Chat);
+            chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+            handler.unbanChatMember(chatId, null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void unbanChatMemberNullChat() {
-        SteamID userId = new SteamID(987654321L);
-        handler.unbanChatMember(null, userId);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID userId = new SteamID(987654321L);
+            handler.unbanChatMember(null, userId);
+        });
     }
 
     @Test
@@ -326,9 +353,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(1, msg.getBody().getFriendsCount());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void requestFriendInfoNull() {
-        handler.requestFriendInfo((SteamID) null, 1);
+        assertThrows(IllegalArgumentException.class, () -> handler.requestFriendInfo((SteamID) null, 1));
     }
 
     @Test
@@ -342,9 +369,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(userId, msg.getBody().getSteamIdFriend());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void ignoreFriendNull() {
-        handler.ignoreFriend(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.ignoreFriend(null));
     }
 
     @Test
@@ -357,9 +384,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(987654321L, msg.getBody().getSteamidFriend());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void requestProfileInfoNull() {
-        handler.requestProfileInfo(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.requestProfileInfo(null));
     }
 
     @Test
@@ -372,9 +399,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(987654321L, msg.getBody().getSteamid());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void requestMessageHistoryNull() {
-        handler.requestMessageHistory(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.requestMessageHistory(null));
     }
 
     @Test
@@ -397,15 +424,17 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals("testnickname", msg.getBody().getNickname());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setFriendNicknameNullId() {
-        SteamID userId = new SteamID(987654321L);
-        handler.setFriendNickname(userId, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            SteamID userId = new SteamID(987654321L);
+            handler.setFriendNickname(userId, null);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setFriendNicknameNullNickname() {
-        handler.setFriendNickname(null, "testnickname");
+        assertThrows(IllegalArgumentException.class, () -> handler.setFriendNickname(null, "testnickname"));
     }
 
     @Test
@@ -420,9 +449,9 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals(987654321L, msg.getBody().getIds(0).getSteamid());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void requestAliasHistoryNull() {
-        handler.requestAliasHistory((SteamID) null);
+        assertThrows(IllegalArgumentException.class, () -> handler.requestAliasHistory((SteamID) null));
     }
 
     @Test
