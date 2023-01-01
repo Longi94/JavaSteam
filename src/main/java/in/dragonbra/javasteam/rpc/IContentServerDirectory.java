@@ -1,0 +1,13 @@
+package in.dragonbra.javasteam.rpc;
+
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.*;
+
+public interface IContentServerDirectory {
+    CContentServerDirectory_GetServersForSteamPipe_Response GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request);
+
+    CContentServerDirectory_GetDepotPatchInfo_Response GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request);
+
+    CContentServerDirectory_GetClientUpdateHosts_Response GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request);
+
+    CContentServerDirectory_GetManifestRequestCode_Response GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request);
+}
