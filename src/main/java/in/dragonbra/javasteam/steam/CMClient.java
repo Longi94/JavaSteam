@@ -410,7 +410,7 @@ public abstract class CMClient {
 
             // restart heartbeat
             heartBeatFunc.stop();
-            heartBeatFunc.setDelay(logonResp.getBody().getOutOfGameHeartbeatSeconds() * 1000L);
+            heartBeatFunc.setDelay(logonResp.getBody().getLegacyOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
         } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
             getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);

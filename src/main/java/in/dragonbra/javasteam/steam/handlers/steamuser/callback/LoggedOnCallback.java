@@ -62,8 +62,8 @@ public class LoggedOnCallback extends CallbackMsg {
         result = EResult.from(resp.getEresult());
         extendedResult = EResult.from(resp.getEresultExtended());
 
-        outOfGameSecsPerHeartbeat = resp.getOutOfGameHeartbeatSeconds();
-        inGameSecsPerHeartbeat = resp.getInGameHeartbeatSeconds();
+        outOfGameSecsPerHeartbeat = resp.getLegacyOutOfGameHeartbeatSeconds();
+        inGameSecsPerHeartbeat = resp.getHeartbeatSeconds();
 
         publicIP = NetHelpers.getIPAddress(resp.getPublicIp().getV4()); // Has ipV6 support, but still using ipV4
         serverTime = new Date(resp.getRtime32ServerTime() * 1000L);

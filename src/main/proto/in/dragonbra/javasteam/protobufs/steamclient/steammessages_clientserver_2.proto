@@ -607,8 +607,8 @@ message CMsgClientServiceMethodLegacyResponse {
 }
 
 message CMsgClientUIMode {
-	optional uint32 uimode = 1;
-	optional uint32 chat_mode = 2;
+	optional uint32 uimode = 1; // uimode set value: 1 = Big Picture, 0 = Desktop
+	optional uint32 chat_mode = 2; // chat_mode set value: 2 = Steam Unified Chat
 }
 
 message CMsgClientVanityURLChangedNotification {
@@ -775,4 +775,15 @@ message CMsgClientVoiceCallPreAuthorizeResponse {
 message CMsgBadgeCraftedNotification {
 	optional uint32 appid = 1;
 	optional uint32 badge_level = 2;
+}
+
+message CMsgClientStartPeerContentServer {
+	optional fixed64 steamid = 1;
+	optional fixed64 client_remote_id = 2;
+	optional uint32 app_id = 3;
+}
+
+message CMsgClientStartPeerContentServerResponse {
+	optional uint32 result = 1;
+	optional uint32 server_port = 2;
 }
