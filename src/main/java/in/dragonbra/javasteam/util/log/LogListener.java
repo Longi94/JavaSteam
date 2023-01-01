@@ -6,4 +6,6 @@ package in.dragonbra.javasteam.util.log;
  */
 public interface LogListener {
     void onLog(Class clazz, String message, Throwable throwable);
+
+    void onError(Class clazz, String message, Throwable throwable);
 }
