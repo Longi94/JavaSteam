@@ -10,7 +10,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  * @author Lossy
  * @since 2023-01-04
  * <p>
- * This callback represents a service notification recieved though <see cref="SteamUnifiedMessages"/>.
+ * This callback represents a service notification received though {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
  */
 @SuppressWarnings("unused")
 public class ServiceMethodNotification extends CallbackMsg {

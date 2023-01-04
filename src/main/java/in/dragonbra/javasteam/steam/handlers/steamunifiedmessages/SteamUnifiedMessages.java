@@ -56,13 +56,13 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
 
     /**
      * Sends a message.
-     * Results are returned in a <see cref="ServiceMethodResponse"/>.
+     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
      * @param clazz      The type of the body, for type erasure
      * @param name       Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
-     * @param <TRequest> The type of protobuf object.
-     * @return The JobID of the request. This can be used to find the appropriate <see cref="ServiceMethodResponse"/>.
+     * @param <TRequest> The message type parameter
+     * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
     public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String name, TRequest message) {
         if (message == null) {
@@ -88,7 +88,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param clazz      The type of the body, for type erasure
      * @param name       Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
-     * @param <TRequest> The type of protobuf object. The type of protobuf object.
+     * @param <TRequest> The message type parameter
      */
     public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String name, TRequest message) {
         if (message == null) {
@@ -105,15 +105,15 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
 
     /**
      * Sends a message.
-     * Results are returned in a <see cref="ServiceMethodResponse"/>.
+     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}
      *
      * @param clazz          The type of the body, for type erasure
      * @param name           Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message        The message to send.
      * @param isNotification Whether this message is a notification or not
-     * @param <TRequest>     The type of protobuf object
-     * @return The JobID of the request. This can be used to find the appropriate <see cref="ServiceMethodResponse"/>.
-     * @deprecated Use SendNotification() instead of passing 'true' bool in SendMessage. SendMessage incorrectly returned AsyncJob for notifications, they have no response by design.
+     * @param <TRequest>     The message type parameter
+     * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * @deprecated Use SendNotification() instead of passing 'true' bool in SendMessage. SendMessage incorrectly returned JobID for notifications, they have no response by design.
      */
     @Deprecated
     public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String name, TRequest message, Boolean isNotification) {

@@ -16,14 +16,14 @@ public abstract class UnifiedService {
     /**
      * Cast the protobuf request class into a GeneratedMessageV3.Builder class to make ClientMsgProtobuf happy.
      *
-     * @param o          the request .builder()
-     * @param clazz      type erasure to the Builder class.
-     * @param <TRequest> GeneratedMessageV3.Builder<TRequest>
+     * @param object     The request .builder()
+     * @param clazz      Type erasure to the Builder class.
+     * @param <TRequest> The type parameter for the object to be cast to.
      * @return the class that's been cast.
      */
-    public static <TRequest extends GeneratedMessageV3.Builder<TRequest>> TRequest convertInstanceOfObject(Object o, Class<TRequest> clazz) {
+    public static <TRequest extends GeneratedMessageV3.Builder<TRequest>> TRequest convertInstanceOfObject(Object object, Class<TRequest> clazz) {
         try {
-            return clazz.cast(o);
+            return clazz.cast(object);
         } catch (ClassCastException e) {
             e.printStackTrace();
             return null;
@@ -58,42 +58,40 @@ public abstract class UnifiedService {
     }
 
     /**
-     * @param clazz
-     * @param parentClassName
-     * @param methodName
-     * @param request
-     * @param <TRequest>
-     * @return
+     * Sends a message.
+     * <p>
+     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     *
+     * @param clazz       The type of protobuf object request.
+     * @param serviceName The service name, ServiceName.RpcName.
+     * @param rpcName     The rpc name of the service, ServiceName.RpcName.
+     * @param request     The requested protobuf object's builder
+     * @param <TRequest>  The request type parameter.
+     * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
     public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage
-    (Class<? extends AbstractMessage> clazz, String parentClassName, String methodName, TRequest request) {
+    (Class<? extends AbstractMessage> clazz, String serviceName, String rpcName, TRequest request) {
 
-        return sendMessageOrNotification(clazz, getTargetJobName(parentClassName, methodName), request, false);
+        return sendMessageOrNotification(clazz, getTargetJobName(serviceName, rpcName), request, false);
     }
 
     /**
-     * @param clazz
-     * @param parentClassName
-     * @param methodName
-     * @param <TRequest>
-     * @param request
+     * Sends a notification.
+     *
+     * @param clazz       The type of protobuf object request.
+     * @param serviceName The service name, ServiceName.RpcName.
+     * @param rpcName     The rpc name of the service, ServiceName.RpcName.
+     * @param request     The type of the protobuf object which is the response to the RPC call.
+     * @param <TRequest>  The request type parameter
      */
     public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification
-    (Class<? extends AbstractMessage> clazz, String parentClassName, String methodName, TRequest request) {
+    (Class<? extends AbstractMessage> clazz, String serviceName, String rpcName, TRequest request) {
 
-        sendMessageOrNotification(clazz, getTargetJobName(parentClassName, methodName), request, true);
+        sendMessageOrNotification(clazz, getTargetJobName(serviceName, rpcName), request, true);
     }
 
-    /**
-     * @param clazz
-     * @param name
-     * @param message
-     * @param isNotification
-     * @param <TRequest>
-     * @return
-     */
     private <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessageOrNotification
-    (Class<? extends AbstractMessage> clazz, String name, TRequest message, Boolean isNotification) {
+            (Class<? extends AbstractMessage> clazz, String name, TRequest message, Boolean isNotification) {
 
         if (isNotification) {
             steamUnifiedMessages.sendNotification(clazz, name, message);
