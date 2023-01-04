@@ -12,8 +12,6 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class Player extends UnifiedService implements IPlayer {
 
-    private final String className = this.getClass().getSimpleName();
-
     public Player(SteamUnifiedMessages steamUnifiedMessages) {
         super(steamUnifiedMessages);
     }
@@ -45,7 +43,7 @@ public class Player extends UnifiedService implements IPlayer {
     @Override
     public JobID GetGameBadgeLevels(CPlayer_GetGameBadgeLevels_Request request) {
         CPlayer_GetGameBadgeLevels_Request.Builder msg = convertInstanceOfObject(request.toBuilder(), CPlayer_GetGameBadgeLevels_Request.Builder.class);
-        return sendMessage(CPlayer_GetGameBadgeLevels_Request.class, className, getMethodName(), msg);
+        return sendMessage(CPlayer_GetGameBadgeLevels_Request.class, getClassName(), getMethodName(), msg);
     }
 
     @Override
@@ -141,7 +139,7 @@ public class Player extends UnifiedService implements IPlayer {
     @Override
     public JobID GetFavoriteBadge(CPlayer_GetFavoriteBadge_Request request) {
         CPlayer_GetFavoriteBadge_Request.Builder msg = convertInstanceOfObject(request.toBuilder(), CPlayer_GetFavoriteBadge_Request.Builder.class);
-        return sendMessage(CPlayer_GetFavoriteBadge_Request.class, className, getMethodName(), msg);
+        return sendMessage(CPlayer_GetFavoriteBadge_Request.class, getClassName(), getMethodName(), msg);
     }
 
     @Override

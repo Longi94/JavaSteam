@@ -13,6 +13,12 @@ public abstract class UnifiedService {
 
     private final SteamUnifiedMessages steamUnifiedMessages;
 
+    private final String className = this.getClass().getSimpleName();
+
+    public String getClassName() {
+        return className;
+    }
+
     /**
      * Cast the protobuf request class into a GeneratedMessageV3.Builder class to make ClientMsgProtobuf happy.
      *
