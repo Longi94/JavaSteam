@@ -3,7 +3,7 @@ import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_clientserver_
 
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
-option java_generic_services = true;
+option java_generic_services = false;
 
 enum EChatRoomJoinState {
     k_EChatRoomJoinState_Default = 0;
