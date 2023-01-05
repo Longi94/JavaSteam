@@ -1,7 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
@@ -19,9 +18,9 @@ public class ServiceMethodNotification extends CallbackMsg {
 
     private final Object body;
 
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> ServiceMethodNotification(Class<? extends AbstractMessage> messageType, IPacketMsg packetMsg) {
+    public ServiceMethodNotification(Class<? extends AbstractMessage> messageType, IPacketMsg packetMsg) {
         // Bounce into generic-land.
-        ClientMsgProtobuf<TRequest> clientMsg = new ClientMsgProtobuf<>(messageType, packetMsg);
+        ClientMsgProtobuf<?> clientMsg = new ClientMsgProtobuf<>(messageType, packetMsg);
 
         // Note: JobID will be -1
 

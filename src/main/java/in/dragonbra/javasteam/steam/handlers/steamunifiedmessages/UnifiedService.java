@@ -15,6 +15,10 @@ public abstract class UnifiedService {
 
     private final SteamUnifiedMessages steamUnifiedMessages;
 
+    public UnifiedService(SteamUnifiedMessages steamUnifiedMessages) {
+        this.steamUnifiedMessages = steamUnifiedMessages;
+    }
+
     public String getClassName() {
         return this.getClass().getSimpleName();
     }
@@ -35,10 +39,6 @@ public abstract class UnifiedService {
      */
     public static String getMethodName() {
         return Thread.currentThread().getStackTrace()[3].getMethodName();
-    }
-
-    public UnifiedService(SteamUnifiedMessages steamUnifiedMessages) {
-        this.steamUnifiedMessages = steamUnifiedMessages;
     }
 
     /**

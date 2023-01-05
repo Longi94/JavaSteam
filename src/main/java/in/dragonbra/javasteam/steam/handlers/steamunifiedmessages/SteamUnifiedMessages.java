@@ -103,29 +103,6 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
         client.send(msg);
     }
 
-    /**
-     * Sends a message.
-     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}
-     *
-     * @param clazz          The type of the body, for type erasure
-     * @param rpcName        Name of the RPC endpoint. Takes the format ServiceName.RpcName
-     * @param message        The message to send.
-     * @param isNotification Whether this message is a notification or not
-     * @param <TRequest>     The type of protobuf object.
-     * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
-     * @deprecated Use SendNotification() instead of passing 'true' bool in SendMessage. SendMessage incorrectly returned JobID for notifications, they have no response by design.
-     */
-    @Deprecated
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message, Boolean isNotification) {
-        if (!isNotification) {
-            return sendMessage(clazz, rpcName, message);
-        }
-
-        sendNotification(clazz, rpcName, message);
-
-        return JobID.INVALID;
-    }
-
     private void handleServiceMethodResponse(IPacketMsg packetMsg) {
         if (!(packetMsg instanceof PacketClientMsgProtobuf)) {
             throw new IllegalArgumentException("Packet message is expected to be protobuf.");
