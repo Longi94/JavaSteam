@@ -1,12 +1,21 @@
 package in.dragonbra.javasteam.rpc;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.*;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesUnifiedBaseSteamclient.NoResponse;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.CParental_ParentalLock_Notification;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.CParental_ParentalSettingsChange_Notification;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.CParental_ParentalUnlock_Notification;
 
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 public interface IParentalClient {
-    NoResponse NotifySettingsChange(CParental_ParentalSettingsChange_Notification request);
 
-    NoResponse NotifyUnlock(CParental_ParentalUnlock_Notification request);
+    /* NoResponse */
+    void NotifySettingsChange(CParental_ParentalSettingsChange_Notification request);
 
-    NoResponse NotifyLock(CParental_ParentalLock_Notification request);
+    /* NoResponse */
+    void NotifyUnlock(CParental_ParentalUnlock_Notification request);
+
+    /* NoResponse */
+    void NotifyLock(CParental_ParentalLock_Notification request);
 }
