@@ -6,6 +6,11 @@ import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMe
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.types.JobID;
 
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
+@SuppressWarnings("unused")
 public class Chat extends UnifiedService implements IChat {
 
     public Chat(SteamUnifiedMessages steamUnifiedMessages) {

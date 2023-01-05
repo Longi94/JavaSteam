@@ -5,8 +5,10 @@ import in.dragonbra.javasteam.rpc.IRemoteClientSteamClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class RemoteClientSteamClient extends UnifiedService implements IRemoteClientSteamClient {
 

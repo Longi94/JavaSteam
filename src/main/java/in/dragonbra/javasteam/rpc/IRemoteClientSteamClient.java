@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesRemoteclientSer
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IRemoteClientSteamClient {
 
     /* NoResponse */

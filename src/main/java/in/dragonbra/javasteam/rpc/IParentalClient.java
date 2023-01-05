@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamcl
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IParentalClient {
 
     /* NoResponse */

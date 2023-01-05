@@ -1,13 +1,15 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.*;
 import in.dragonbra.javasteam.rpc.IContentServerDirectory;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.types.JobID;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class ContentServerDirectory extends UnifiedService implements IContentServerDirectory {
 
@@ -16,22 +18,22 @@ public class ContentServerDirectory extends UnifiedService implements IContentSe
     }
 
     @Override
-    public JobID GetServersForSteamPipe(SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Request request) {
-        return null;
+    public JobID GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
+        return sendMessage(CContentServerDirectory_GetServersForSteamPipe_Request.class, request.toBuilder());
     }
 
     @Override
-    public JobID GetDepotPatchInfo(SteammessagesContentsystemSteamclient.CContentServerDirectory_GetDepotPatchInfo_Request request) {
-        return null;
+    public JobID GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
+        return sendMessage(CContentServerDirectory_GetDepotPatchInfo_Request.class, request.toBuilder());
     }
 
     @Override
-    public JobID GetClientUpdateHosts(SteammessagesContentsystemSteamclient.CContentServerDirectory_GetClientUpdateHosts_Request request) {
-        return null;
+    public JobID GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
+        return sendMessage(CContentServerDirectory_GetClientUpdateHosts_Request.class, request.toBuilder());
     }
 
     @Override
-    public JobID GetManifestRequestCode(SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Request request) {
-        return null;
+    public JobID GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
+        return sendMessage(CContentServerDirectory_GetManifestRequestCode_Request.class, request.toBuilder());
     }
 }

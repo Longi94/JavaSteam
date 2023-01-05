@@ -1,12 +1,14 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.CChatUsability_RequestClientUsabilityMetrics_Notification;
 import in.dragonbra.javasteam.rpc.IChatUsabilityClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class ChatUsabilityClient extends UnifiedService implements IChatUsabilityClient {
 
@@ -15,7 +17,7 @@ public class ChatUsabilityClient extends UnifiedService implements IChatUsabilit
     }
 
     @Override
-    public void NotifyRequestClientUsabilityMetrics(SteammessagesChatSteamclient.CChatUsability_RequestClientUsabilityMetrics_Notification request) {
-
+    public void NotifyRequestClientUsabilityMetrics(CChatUsability_RequestClientUsabilityMetrics_Notification request) {
+        sendNotification(CChatUsability_RequestClientUsabilityMetrics_Notification.class, request.toBuilder());
     }
 }

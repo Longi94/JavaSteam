@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.types.JobID;
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IPlayer {
     /* CPlayer_GetMutualFriendsForIncomingInvites_Response  */
     JobID GetMutualFriendsForIncomingInvites(CPlayer_GetMutualFriendsForIncomingInvites_Request request);

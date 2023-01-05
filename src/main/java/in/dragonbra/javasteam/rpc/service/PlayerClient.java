@@ -1,12 +1,14 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesPlayerSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesPlayerSteamclient.*;
 import in.dragonbra.javasteam.rpc.IPlayerClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class PlayerClient extends UnifiedService implements IPlayerClient {
 
@@ -15,42 +17,42 @@ public class PlayerClient extends UnifiedService implements IPlayerClient {
     }
 
     @Override
-    public void NotifyLastPlayedTimes(SteammessagesPlayerSteamclient.CPlayer_LastPlayedTimes_Notification request) {
-
+    public void NotifyLastPlayedTimes(CPlayer_LastPlayedTimes_Notification request) {
+        sendNotification(CPlayer_LastPlayedTimes_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyFriendNicknameChanged(SteammessagesPlayerSteamclient.CPlayer_FriendNicknameChanged_Notification request) {
-
+    public void NotifyFriendNicknameChanged(CPlayer_FriendNicknameChanged_Notification request) {
+        sendNotification(CPlayer_FriendNicknameChanged_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyFriendEquippedProfileItemsChanged(SteammessagesPlayerSteamclient.CPlayer_FriendEquippedProfileItemsChanged_Notification request) {
-
+    public void NotifyFriendEquippedProfileItemsChanged(CPlayer_FriendEquippedProfileItemsChanged_Notification request) {
+        sendNotification(CPlayer_FriendEquippedProfileItemsChanged_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyNewSteamAnnouncementState(SteammessagesPlayerSteamclient.CPlayer_NewSteamAnnouncementState_Notification request) {
-
+    public void NotifyNewSteamAnnouncementState(CPlayer_NewSteamAnnouncementState_Notification request) {
+        sendNotification(CPlayer_NewSteamAnnouncementState_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyCommunityPreferencesChanged(SteammessagesPlayerSteamclient.CPlayer_CommunityPreferencesChanged_Notification request) {
-
+    public void NotifyCommunityPreferencesChanged(CPlayer_CommunityPreferencesChanged_Notification request) {
+        sendNotification(CPlayer_CommunityPreferencesChanged_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyTextFilterWordsChanged(SteammessagesPlayerSteamclient.CPlayer_TextFilterWordsChanged_Notification request) {
-
+    public void NotifyTextFilterWordsChanged(CPlayer_TextFilterWordsChanged_Notification request) {
+        sendNotification(CPlayer_TextFilterWordsChanged_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyPerFriendPreferencesChanged(SteammessagesPlayerSteamclient.CPlayer_PerFriendPreferencesChanged_Notification request) {
-
+    public void NotifyPerFriendPreferencesChanged(CPlayer_PerFriendPreferencesChanged_Notification request) {
+        sendNotification(CPlayer_PerFriendPreferencesChanged_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyPrivacyPrivacySettingsChanged(SteammessagesPlayerSteamclient.CPlayer_PrivacySettingsChanged_Notification request) {
-
+    public void NotifyPrivacyPrivacySettingsChanged(CPlayer_PrivacySettingsChanged_Notification request) {
+        sendNotification(CPlayer_PrivacySettingsChanged_Notification.class, request.toBuilder());
     }
 }

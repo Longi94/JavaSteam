@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.types.JobID;
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IChat {
 
     /* CChat_RequestFriendPersonaStates_Response */

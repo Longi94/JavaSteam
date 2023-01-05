@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesS
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IFriendMessagesClient {
 
     /* NoResponse */

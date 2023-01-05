@@ -1,12 +1,14 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.*;
 import in.dragonbra.javasteam.rpc.IFriendMessagesClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class FriendMessagesClient extends UnifiedService implements IFriendMessagesClient {
 
@@ -15,17 +17,17 @@ public class FriendMessagesClient extends UnifiedService implements IFriendMessa
     }
 
     @Override
-    public void IncomingMessage(SteammessagesFriendmessagesSteamclient.CFriendMessages_IncomingMessage_Notification request) {
-
+    public void IncomingMessage(CFriendMessages_IncomingMessage_Notification request) {
+        sendNotification(CFriendMessages_IncomingMessage_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyAckMessageEcho(SteammessagesFriendmessagesSteamclient.CFriendMessages_AckMessage_Notification request) {
-
+    public void NotifyAckMessageEcho(CFriendMessages_AckMessage_Notification request) {
+        sendNotification(CFriendMessages_AckMessage_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void MessageReaction(SteammessagesFriendmessagesSteamclient.CFriendMessages_MessageReaction_Notification request) {
-
+    public void MessageReaction(CFriendMessages_MessageReaction_Notification request) {
+        sendNotification(CFriendMessages_MessageReaction_Notification.class, request.toBuilder());
     }
 }

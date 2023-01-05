@@ -1,12 +1,14 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.*;
 import in.dragonbra.javasteam.rpc.IParentalClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class ParentalClient extends UnifiedService implements IParentalClient {
 
@@ -15,17 +17,17 @@ public class ParentalClient extends UnifiedService implements IParentalClient {
     }
 
     @Override
-    public void NotifySettingsChange(SteammessagesParentalSteamclient.CParental_ParentalSettingsChange_Notification request) {
-
+    public void NotifySettingsChange(CParental_ParentalSettingsChange_Notification request) {
+        sendNotification(CParental_ParentalSettingsChange_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyUnlock(SteammessagesParentalSteamclient.CParental_ParentalUnlock_Notification request) {
-
+    public void NotifyUnlock(CParental_ParentalUnlock_Notification request) {
+        sendNotification(CParental_ParentalUnlock_Notification.class, request.toBuilder());
     }
 
     @Override
-    public void NotifyLock(SteammessagesParentalSteamclient.CParental_ParentalLock_Notification request) {
-
+    public void NotifyLock(CParental_ParentalLock_Notification request) {
+        sendNotification(CParental_ParentalLock_Notification.class, request.toBuilder());
     }
 }

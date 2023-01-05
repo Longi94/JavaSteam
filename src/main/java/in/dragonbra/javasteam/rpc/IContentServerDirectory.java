@@ -3,6 +3,11 @@ package in.dragonbra.javasteam.rpc;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.*;
 import in.dragonbra.javasteam.types.JobID;
 
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
+@SuppressWarnings("unused")
 public interface IContentServerDirectory {
 
     /* CContentServerDirectory_GetServersForSteamPipe_Response */

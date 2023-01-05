@@ -1,13 +1,15 @@
 package in.dragonbra.javasteam.rpc.service;
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.*;
 import in.dragonbra.javasteam.rpc.IFriendMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.types.JobID;
 
-// TODO implement
-
+/**
+ * @author Lossy
+ * @since 2023-01-04
+ */
 @SuppressWarnings("unused")
 public class FriendMessages extends UnifiedService implements IFriendMessages {
 
@@ -16,32 +18,32 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
     }
 
     @Override
-    public JobID GetRecentMessages(SteammessagesFriendmessagesSteamclient.CFriendMessages_GetRecentMessages_Request request) {
-        return null;
+    public JobID GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
+        return sendMessage(CFriendMessages_GetRecentMessages_Request.class, request.toBuilder());
     }
 
     @Override
-    public SteammessagesFriendmessagesSteamclient.CFriendsMessages_GetActiveMessageSessions_Response GetActiveMessageSessions(SteammessagesFriendmessagesSteamclient.CFriendsMessages_GetActiveMessageSessions_Request request) {
-        return null;
+    public JobID GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
+        return sendMessage(CFriendsMessages_GetActiveMessageSessions_Request.class, request.toBuilder());
     }
 
     @Override
-    public JobID SendMessage(SteammessagesFriendmessagesSteamclient.CFriendMessages_SendMessage_Request request) {
-        return null;
+    public JobID SendMessage(CFriendMessages_SendMessage_Request request) {
+        return sendMessage(CFriendMessages_SendMessage_Request.class, request.toBuilder());
     }
 
     @Override
-    public void AckMessage(SteammessagesFriendmessagesSteamclient.CFriendMessages_AckMessage_Notification request) {
-
+    public void AckMessage(CFriendMessages_AckMessage_Notification request) {
+        sendNotification(CFriendMessages_AckMessage_Notification.class, request.toBuilder());
     }
 
     @Override
-    public JobID IsInFriendsUIBeta(SteammessagesFriendmessagesSteamclient.CFriendMessages_IsInFriendsUIBeta_Request request) {
-        return null;
+    public JobID IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
+        return sendMessage(CFriendMessages_IsInFriendsUIBeta_Request.class, request.toBuilder());
     }
 
     @Override
-    public JobID UpdateMessageReaction(SteammessagesFriendmessagesSteamclient.CFriendMessages_UpdateMessageReaction_Request request) {
-        return null;
+    public JobID UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
+        return sendMessage(CFriendMessages_UpdateMessageReaction_Request.class, request.toBuilder());
     }
 }

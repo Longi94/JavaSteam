@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.types.JobID;
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IParental {
 
     /* CParental_EnableParentalSettings_Response */

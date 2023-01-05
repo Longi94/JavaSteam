@@ -1,13 +1,13 @@
 package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesRemoteclientServiceMessages.*;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesUnifiedBaseSteamclient.*;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
  * @author Lossy
  * @since 2023-01-04
  */
+@SuppressWarnings("unused")
 public interface IRemoteClient {
 
     /* CRemoteClient_GetPairingInfo_Response */
