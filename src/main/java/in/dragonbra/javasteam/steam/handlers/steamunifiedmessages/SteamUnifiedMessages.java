@@ -59,12 +59,12 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
      * @param clazz      The type of the body, for type erasure
-     * @param name       Name of the RPC endpoint. Takes the format ServiceName.RpcName
+     * @param rpcName    Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
-     * @param <TRequest> The message type parameter
+     * @param <TRequest> The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String name, TRequest message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -74,7 +74,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
 
         ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
         msg.setSourceJobID(jobID);
-        msg.getHeader().getProto().setTargetJobName(name);
+        msg.getHeader().getProto().setTargetJobName(rpcName);
         msg.setBody(message);
 
         client.send(msg);
@@ -86,18 +86,18 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * Sends a notification.
      *
      * @param clazz      The type of the body, for type erasure
-     * @param name       Name of the RPC endpoint. Takes the format ServiceName.RpcName
+     * @param rpcName    Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
-     * @param <TRequest> The message type parameter
+     * @param <TRequest> The type of protobuf object.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String name, TRequest message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
 
         EMsg eMsg = client.getSteamID() == null ? EMsg.ServiceMethodCallFromClientNonAuthed : EMsg.ServiceMethodCallFromClient;
         ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
-        msg.getHeader().getProto().setTargetJobName(name);
+        msg.getHeader().getProto().setTargetJobName(rpcName);
         msg.setBody(message);
 
         client.send(msg);
@@ -108,20 +108,20 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}
      *
      * @param clazz          The type of the body, for type erasure
-     * @param name           Name of the RPC endpoint. Takes the format ServiceName.RpcName
+     * @param rpcName        Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message        The message to send.
      * @param isNotification Whether this message is a notification or not
-     * @param <TRequest>     The message type parameter
+     * @param <TRequest>     The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      * @deprecated Use SendNotification() instead of passing 'true' bool in SendMessage. SendMessage incorrectly returned JobID for notifications, they have no response by design.
      */
     @Deprecated
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String name, TRequest message, Boolean isNotification) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message, Boolean isNotification) {
         if (!isNotification) {
-            return sendMessage(clazz, name, message);
+            return sendMessage(clazz, rpcName, message);
         }
 
-        sendNotification(clazz, name, message);
+        sendNotification(clazz, rpcName, message);
 
         return JobID.INVALID;
     }
