@@ -18,41 +18,41 @@ public class PlayerClient extends UnifiedService implements IPlayerClient {
 
     @Override
     public void NotifyLastPlayedTimes(CPlayer_LastPlayedTimes_Notification request) {
-        sendNotification(CPlayer_LastPlayedTimes_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyFriendNicknameChanged(CPlayer_FriendNicknameChanged_Notification request) {
-        sendNotification(CPlayer_FriendNicknameChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyFriendEquippedProfileItemsChanged(CPlayer_FriendEquippedProfileItemsChanged_Notification request) {
-        sendNotification(CPlayer_FriendEquippedProfileItemsChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyNewSteamAnnouncementState(CPlayer_NewSteamAnnouncementState_Notification request) {
-        sendNotification(CPlayer_NewSteamAnnouncementState_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyCommunityPreferencesChanged(CPlayer_CommunityPreferencesChanged_Notification request) {
-        sendNotification(CPlayer_CommunityPreferencesChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyTextFilterWordsChanged(CPlayer_TextFilterWordsChanged_Notification request) {
-        sendNotification(CPlayer_TextFilterWordsChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyPerFriendPreferencesChanged(CPlayer_PerFriendPreferencesChanged_Notification request) {
-        sendNotification(CPlayer_PerFriendPreferencesChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyPrivacyPrivacySettingsChanged(CPlayer_PrivacySettingsChanged_Notification request) {
-        sendNotification(CPlayer_PrivacySettingsChanged_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 }

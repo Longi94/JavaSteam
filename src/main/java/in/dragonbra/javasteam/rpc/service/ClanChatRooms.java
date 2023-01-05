@@ -19,11 +19,11 @@ public class ClanChatRooms extends UnifiedService implements IClanChatRooms {
 
     @Override
     public JobID GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request) {
-        return sendMessage(CClanChatRooms_GetClanChatRoomInfo_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 
     @Override
     public JobID SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request) {
-        return sendMessage(CClanChatRooms_SetClanChatRoomPrivate_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 }

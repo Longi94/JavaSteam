@@ -64,7 +64,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param <TRequest> The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -75,7 +75,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
         ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
         msg.setSourceJobID(jobID);
         msg.getHeader().getProto().setTargetJobName(rpcName);
-        msg.setBody(message);
+        msg.getBody().mergeFrom(message);
 
         client.send(msg);
 
@@ -90,7 +90,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param message    The message to send.
      * @param <TRequest> The type of protobuf object.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String rpcName, TRequest message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -98,7 +98,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
         EMsg eMsg = client.getSteamID() == null ? EMsg.ServiceMethodCallFromClientNonAuthed : EMsg.ServiceMethodCallFromClient;
         ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
         msg.getHeader().getProto().setTargetJobName(rpcName);
-        msg.setBody(message);
+        msg.getBody().mergeFrom(message);
 
         client.send(msg);
     }

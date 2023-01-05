@@ -19,21 +19,21 @@ public class ContentServerDirectory extends UnifiedService implements IContentSe
 
     @Override
     public JobID GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
-        return sendMessage(CContentServerDirectory_GetServersForSteamPipe_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 
     @Override
     public JobID GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
-        return sendMessage(CContentServerDirectory_GetDepotPatchInfo_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 
     @Override
     public JobID GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
-        return sendMessage(CContentServerDirectory_GetClientUpdateHosts_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 
     @Override
     public JobID GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
-        return sendMessage(CContentServerDirectory_GetManifestRequestCode_Request.class, request.toBuilder());
+        return sendMessage(request);
     }
 }

@@ -18,16 +18,16 @@ public class ParentalClient extends UnifiedService implements IParentalClient {
 
     @Override
     public void NotifySettingsChange(CParental_ParentalSettingsChange_Notification request) {
-        sendNotification(CParental_ParentalSettingsChange_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyUnlock(CParental_ParentalUnlock_Notification request) {
-        sendNotification(CParental_ParentalUnlock_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyLock(CParental_ParentalLock_Notification request) {
-        sendNotification(CParental_ParentalLock_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 }

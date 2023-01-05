@@ -18,31 +18,31 @@ public class RemoteClientSteamClient extends UnifiedService implements IRemoteCl
 
     @Override
     public void NotifyRegisterStatusUpdate(CRemoteClient_RegisterStatusUpdate_Notification request) {
-        sendNotification(CRemoteClient_RegisterStatusUpdate_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyUnregisterStatusUpdate(CRemoteClient_UnregisterStatusUpdate_Notification request) {
-        sendNotification(CRemoteClient_UnregisterStatusUpdate_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyRemotePacket(CRemoteClient_RemotePacket_Notification request) {
-        sendNotification(CRemoteClient_RemotePacket_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifySteamBroadcastPacket(CRemoteClient_SteamBroadcast_Notification request) {
-        sendNotification(CRemoteClient_SteamBroadcast_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifySteamToSteamPacket(CRemoteClient_SteamToSteam_Notification request) {
-        sendNotification(CRemoteClient_SteamToSteam_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 
     @Override
     public void NotifyRemotePlayTogetherPacket(CRemotePlayTogether_Notification request) {
-        sendNotification(CRemotePlayTogether_Notification.class, request.toBuilder());
+        sendNotification(request);
     }
 }

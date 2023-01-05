@@ -1,7 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
@@ -28,7 +27,7 @@ public abstract class UnifiedService {
      * @param methodName      The calling method name, ie: GetGameBadgeLevels
      * @return The name of the RPC endpoint as formatted ServiceName.RpcName. ie: Player.GetGameBadgeLevels#1
      */
-    private static String getRpcName(String parentClassName, String methodName) {
+    private static String getRpcEndpoint(String parentClassName, String methodName) {
         return String.format("%s.%s#%s", parentClassName, methodName, 1);
     }
 
@@ -46,35 +45,32 @@ public abstract class UnifiedService {
      * <p>
      * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
-     * @param clazz      The type of the body, for type erasure
-     * @param message    The message to send.
-     * @param <TRequest> The type of protobuf object.
+     * @param message The message to send.
      * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, TRequest message) {
+    public JobID sendMessage(AbstractMessage message) {
         String serviceName = getClassName();
         String rpcName = getMethodName();
+        String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
-        return sendMessageOrNotification(clazz, getRpcName(serviceName, rpcName), message, false);
+        return sendMessageOrNotification(message.getClass(), rpcEndpoint, message, false);
     }
 
     /**
      * Sends a notification.
      *
-     * @param clazz      The type of the body, for type erasure
-     * @param message    The message to send.
-     * @param <TRequest> The type of protobuf object.
+     * @param message The message to send.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, TRequest message) {
+    public void sendNotification(AbstractMessage message) {
         String serviceName = getClassName();
         String rpcName = getMethodName();
+        String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
-
-        sendMessageOrNotification(clazz, getRpcName(serviceName, rpcName), message, true);
+        sendMessageOrNotification(message.getClass(), rpcEndpoint, message, true);
     }
 
-    private <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessageOrNotification
-            (Class<? extends AbstractMessage> clazz, String rpcName, TRequest message, Boolean isNotification) {
+    private JobID sendMessageOrNotification
+            (Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message, Boolean isNotification) {
 
         if (isNotification) {
             steamUnifiedMessages.sendNotification(clazz, rpcName, message);
