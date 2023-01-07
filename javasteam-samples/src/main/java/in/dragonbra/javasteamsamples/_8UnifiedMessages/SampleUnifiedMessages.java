@@ -189,7 +189,7 @@ public class SampleUnifiedMessages implements Runnable {
 
         // alternatively, the request can be made using SteamUnifiedMessages directly, but then you must build the service request name manually
         // the name format is in the form of <Service>.<Method>#<Version>
-        badgeRequest = steamUnifiedMessages.sendMessage(CPlayer_GetGameBadgeLevels_Request.class, "Player.GetGameBadgeLevels#1", badgeLevelsRequest.build());
+        badgeRequest = steamUnifiedMessages.sendMessage("Player.GetGameBadgeLevels#1", badgeLevelsRequest.build());
     }
 
     private void onLoggedOff(LoggedOffCallback callback) {

@@ -58,13 +58,12 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * Sends a message.
      * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
-     * @param clazz      The type of the body, for type erasure
      * @param rpcName    Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
      * @param <TRequest> The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(String rpcName, GeneratedMessageV3 message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -72,7 +71,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
         JobID jobID = client.getNextJobID();
         EMsg eMsg = client.getSteamID() == null ? EMsg.ServiceMethodCallFromClientNonAuthed : EMsg.ServiceMethodCallFromClient;
 
-        ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
+        ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(message.getClass(), eMsg);
         msg.setSourceJobID(jobID);
         msg.getHeader().getProto().setTargetJobName(rpcName);
         msg.getBody().mergeFrom(message);
@@ -85,18 +84,17 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
     /**
      * Sends a notification.
      *
-     * @param clazz      The type of the body, for type erasure
      * @param rpcName    Name of the RPC endpoint. Takes the format ServiceName.RpcName
      * @param message    The message to send.
      * @param <TRequest> The type of protobuf object.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(String rpcName, GeneratedMessageV3 message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
 
         EMsg eMsg = client.getSteamID() == null ? EMsg.ServiceMethodCallFromClientNonAuthed : EMsg.ServiceMethodCallFromClient;
-        ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(clazz, eMsg);
+        ClientMsgProtobuf<TRequest> msg = new ClientMsgProtobuf<>(message.getClass(), eMsg);
         msg.getHeader().getProto().setTargetJobName(rpcName);
         msg.getBody().mergeFrom(message);
 

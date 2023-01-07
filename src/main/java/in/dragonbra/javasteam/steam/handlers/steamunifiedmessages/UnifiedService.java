@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
 
-import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.GeneratedMessageV3;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
@@ -48,12 +48,12 @@ public abstract class UnifiedService {
      * @param message The message to send.
      * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public JobID sendMessage(AbstractMessage message) {
+    public JobID sendMessage(GeneratedMessageV3 message) {
         String serviceName = getClassName();
         String rpcName = getMethodName();
         String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
-        return sendMessageOrNotification(message.getClass(), rpcEndpoint, message, false);
+        return sendMessageOrNotification(rpcEndpoint, message, false);
     }
 
     /**
@@ -61,22 +61,21 @@ public abstract class UnifiedService {
      *
      * @param message The message to send.
      */
-    public void sendNotification(AbstractMessage message) {
+    public void sendNotification(GeneratedMessageV3 message) {
         String serviceName = getClassName();
         String rpcName = getMethodName();
         String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
-        sendMessageOrNotification(message.getClass(), rpcEndpoint, message, true);
+        sendMessageOrNotification(rpcEndpoint, message, true);
     }
 
-    private JobID sendMessageOrNotification
-            (Class<? extends AbstractMessage> clazz, String rpcName, AbstractMessage message, Boolean isNotification) {
+    private JobID sendMessageOrNotification(String rpcName, GeneratedMessageV3 message, Boolean isNotification) {
 
         if (isNotification) {
-            steamUnifiedMessages.sendNotification(clazz, rpcName, message);
+            steamUnifiedMessages.sendNotification(rpcName, message);
             return null;
         }
 
-        return steamUnifiedMessages.sendMessage(clazz, rpcName, message);
+        return steamUnifiedMessages.sendMessage(rpcName, message);
     }
 }
