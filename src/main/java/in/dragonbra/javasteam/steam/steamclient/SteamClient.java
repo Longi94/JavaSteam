@@ -82,7 +82,7 @@ public class SteamClient extends CMClient {
         addHandler(new SteamMasterServer());
         addHandler(new SteamGameServer());
         addHandler(new SteamGameCoordinator());
-        // addHandler(new SteamUnifiedMessages()); // TODO uncomment when ready
+        addHandler(new SteamUnifiedMessages());
 
         processStartTime = new Date();
 
