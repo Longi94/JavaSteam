@@ -1,0 +1,66 @@
+name: Bug report
+description: File a bug report
+title: "[Bug]: "
+labels: bug
+assignees: []
+body:
+
+  - type: textarea
+    id: describe-the-bug
+    attributes:
+      label: Describe the bug
+      placeholder: Describe what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-actually-happened
+    attributes:
+      label: To Reproduce
+      placeholder: What are some steps to reliably reproduce the bug?
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: input
+    id: java-steam-version
+    attributes:
+      label: JavaSteam Version
+      description: "What version of JavaSteam are you using? (ie: 1.1.0)"
+    validations:
+      required: true
+
+  - type: input
+    id: os-platform-version
+    attributes:
+      label: Platform Version
+      description: "What operating system are you running? (ie: Windows, Linux, Android)"
+    validations:
+      required: true
+
+  - type: input
+    id: jvm-platform-version
+    attributes:
+      label: JVM Version
+      description: "What JVM are you running? (ie: openjdk 11.0.17)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: "Is there any additional info to be added? (ie: logs)"
+    validations:
+      required: false
