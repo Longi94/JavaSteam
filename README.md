@@ -1,8 +1,9 @@
 # JavaSteam
-[![Build Status](https://travis-ci.org/Longi94/JavaSteam.svg?branch=master)](https://travis-ci.org/Longi94/JavaSteam) [![codecov](https://codecov.io/gh/Longi94/JavaSteam/branch/master/graph/badge.svg)](https://codecov.io/gh/Longi94/JavaSteam) 
+[![Java CI/CD](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build.yml/badge.svg)](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/in.dragonbra/javasteam)](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 [![Discord](https://img.shields.io/discord/420907597906968586.svg)](https://discord.gg/8F2JuTu)
 
-Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 8.
+Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 8.
 
 ## Download
 
@@ -31,7 +32,7 @@ Maven
 
 Gradle
 ```groovy
-implementation 'in.dragonbra:javasteam:1.1.0'
+implementation 'in.dragonbra:javasteam:x.y.z'
 ```
 
 Maven
@@ -39,7 +40,7 @@ Maven
 <dependency>
     <groupId>in.dragonbra</groupId>
     <artifactId>javasteam</artifactId>
-    <version>1.1.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 
@@ -50,7 +51,7 @@ Gradle
 // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
 implementation 'org.bouncycastle:bcprov-jdk15on:x.y.z>'  // NON-ANDROID ONLY
 // https://mvnrepository.com/artifact/com.madgag.spongycastle/prov
-implementation 'com.madgag.spongycastle:prov:x.y.z' // ANDROID ONLY
+implementation 'com.madgag.spongycastle:prov:w.x.y.z' // ANDROID ONLY
 ```
 
 Maven
@@ -65,7 +66,7 @@ Maven
 <dependency> <!-- ANDROID ONLY -->
     <groupId>com.madgag.spongycastle</groupId>
     <artifactId>prov</artifactId>
-    <version>x.y.z</version>
+    <version>w.x.y.z</version>
 </dependency>
 ```
 
