@@ -19,7 +19,7 @@ public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgB
 
     private static final Logger logger = LogManager.getLogger(ClientGCMsg.class);
 
-    private int msgType;
+    private final int msgType;
 
     private BodyType body;
 

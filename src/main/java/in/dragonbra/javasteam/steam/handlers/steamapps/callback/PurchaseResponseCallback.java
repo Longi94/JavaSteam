@@ -12,11 +12,11 @@ import java.io.IOException;
 
 public class PurchaseResponseCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private EPurchaseResultDetail purchaseResultDetail;
+    private final EPurchaseResultDetail purchaseResultDetail;
 
-    private KeyValue purchaseReceiptInfo;
+    private final KeyValue purchaseReceiptInfo;
 
     public PurchaseResponseCallback(JobID jobID, CMsgClientPurchaseResponse.Builder msg) {
         setJobID(jobID);

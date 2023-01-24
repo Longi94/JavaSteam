@@ -12,17 +12,17 @@ import java.util.EnumSet;
  */
 public class AccountInfoCallback extends CallbackMsg {
 
-    private String personaName;
+    private final String personaName;
 
-    private String country;
+    private final String country;
 
-    private int countAuthedComputers;
+    private final int countAuthedComputers;
 
-    private EnumSet<EAccountFlags> accountFlags;
+    private final EnumSet<EAccountFlags> accountFlags;
 
-    private long facebookID;
+    private final long facebookID;
 
-    private String facebookName;
+    private final String facebookName;
 
     public AccountInfoCallback(CMsgClientAccountInfo.Builder msg) {
         personaName = msg.getPersonaName();

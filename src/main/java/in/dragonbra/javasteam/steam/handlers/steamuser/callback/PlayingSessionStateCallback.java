@@ -11,9 +11,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class PlayingSessionStateCallback extends CallbackMsg {
 
-    private boolean playingBlocked;
+    private final boolean playingBlocked;
 
-    private int playingAppID;
+    private final int playingAppID;
 
     public PlayingSessionStateCallback(JobID jobID, CMsgClientPlayingSessionState.Builder msg) {
         setJobID(jobID);

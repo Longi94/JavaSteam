@@ -11,11 +11,11 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class AppOwnershipTicketCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int appID;
+    private final int appID;
 
-    private byte[] ticket;
+    private final byte[] ticket;
 
     public AppOwnershipTicketCallback(JobID jobID, CMsgClientGetAppOwnershipTicketResponse.Builder msg) {
         setJobID(jobID);

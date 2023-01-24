@@ -9,11 +9,11 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class CommentNotificationsCallback extends CallbackMsg {
 
-    private int commentCount;
+    private final int commentCount;
 
-    private int commentOwnerCount;
+    private final int commentOwnerCount;
 
-    private int commentSubscriptionsCount;
+    private final int commentSubscriptionsCount;
 
     public CommentNotificationsCallback(CMsgClientCommentNotifications.Builder msg) {
         commentCount = msg.getCountNewComments();

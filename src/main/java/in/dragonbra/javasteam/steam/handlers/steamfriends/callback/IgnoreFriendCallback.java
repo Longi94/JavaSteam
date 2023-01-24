@@ -10,7 +10,7 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class IgnoreFriendCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
     public IgnoreFriendCallback(JobID jobID, MsgClientSetIgnoreFriendResponse response) {
         setJobID(jobID);

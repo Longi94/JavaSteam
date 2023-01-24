@@ -40,17 +40,17 @@ public class SteamClient extends CMClient {
 
     private static final Logger logger = LogManager.getLogger(SteamClient.class);
 
-    private Map<Class<? extends ClientMsgHandler>, ClientMsgHandler> handlers = new HashMap<>();
+    private final Map<Class<? extends ClientMsgHandler>, ClientMsgHandler> handlers = new HashMap<>();
 
-    private AtomicLong currentJobId = new AtomicLong(0L);
+    private final AtomicLong currentJobId = new AtomicLong(0L);
 
-    private Date processStartTime;
+    private final Date processStartTime;
 
     private final Object callbackLock = new Object();
 
-    private Queue<ICallbackMsg> callbackQueue = new LinkedList<>();
+    private final Queue<ICallbackMsg> callbackQueue = new LinkedList<>();
 
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap = new HashMap<>();
+    private final Map<EMsg, Consumer<IPacketMsg>> dispatchMap = new HashMap<>();
 
     /**
      * Initializes a new instance of the {@link SteamClient} class with the default configuration.
@@ -84,24 +84,9 @@ public class SteamClient extends CMClient {
 
         processStartTime = new Date();
 
-        dispatchMap.put(EMsg.ClientCMList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleCMList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.JobHeartbeat, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleJobHeartbeat(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.DestJobFailed, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleJobFailed(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
+        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
+        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
     }
 
     /**

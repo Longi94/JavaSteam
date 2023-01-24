@@ -22,11 +22,11 @@ import java.util.List;
  */
 public class FriendMsgHistoryCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private List<FriendMessage> messages;
+    private final List<FriendMessage> messages;
 
     public FriendMsgHistoryCallback(CMsgClientChatGetFriendMessageHistoryResponse.Builder msg, EUniverse universe) {
         result = EResult.from(msg.getSuccess());

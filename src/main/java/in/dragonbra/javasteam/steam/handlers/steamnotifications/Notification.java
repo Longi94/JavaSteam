@@ -7,9 +7,9 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
  */
 public class Notification {
 
-    private int count;
+    private final int count;
 
-    private int type;
+    private final int type;
 
     public Notification(CMsgClientUserNotifications.Notification notification) {
         count = notification.getCount();

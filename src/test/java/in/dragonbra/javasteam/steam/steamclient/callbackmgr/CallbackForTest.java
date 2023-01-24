@@ -7,14 +7,14 @@ import java.util.UUID;
  * @since 2018-02-25
  */
 public class CallbackForTest extends CallbackMsg {
+
+    private UUID uuid;
+
     public CallbackForTest(UUID uuid) {
         this.uuid = uuid;
     }
 
-    private UUID uuid;
-
     public CallbackForTest() {
-
     }
 
     public UUID getUuid() {

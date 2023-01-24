@@ -4,7 +4,6 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.KeyValue;
-import in.dragonbra.javasteam.util.NetHelpers;
 
 import java.io.IOException;
 import java.util.ArrayList;

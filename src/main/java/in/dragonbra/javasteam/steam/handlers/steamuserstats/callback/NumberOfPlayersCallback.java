@@ -11,9 +11,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class NumberOfPlayersCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int numPlayers;
+    private final int numPlayers;
 
     public NumberOfPlayersCallback(JobID jobID, CMsgDPGetNumberOfCurrentPlayersResponse.Builder resp) {
         setJobID(jobID);

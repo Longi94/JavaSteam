@@ -10,19 +10,19 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class TradeResultCallback extends CallbackMsg {
 
-    private int tradeID;
+    private final int tradeID;
 
-    private EEconTradeResponse response;
+    private final EEconTradeResponse response;
 
-    private SteamID otherClient;
+    private final SteamID otherClient;
 
-    private int numDaysSteamGuardRequired;
+    private final int numDaysSteamGuardRequired;
 
-    private int numDaysNewDeviceCooldown;
+    private final int numDaysNewDeviceCooldown;
 
-    private int defaultNumDaysPasswordResetProbation;
+    private final int defaultNumDaysPasswordResetProbation;
 
-    private int numDaysPasswordResetProbation;
+    private final int numDaysPasswordResetProbation;
 
     public TradeResultCallback(CMsgTrading_InitiateTradeResponse.Builder msg) {
         tradeID = msg.getTradeRequestId();

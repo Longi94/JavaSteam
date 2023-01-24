@@ -11,9 +11,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class ShareFileCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private long ugcId;
+    private final long ugcId;
 
     public ShareFileCallback(JobID jobID, CMsgClientUFSShareFileResponse.Builder msg) {
         setJobID(jobID);

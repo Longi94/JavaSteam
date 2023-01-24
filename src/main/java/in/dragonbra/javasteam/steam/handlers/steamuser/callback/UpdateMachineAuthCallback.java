@@ -9,15 +9,15 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class UpdateMachineAuthCallback extends CallbackMsg {
 
-    private byte[] data;
+    private final byte[] data;
 
-    private int bytesToWrite;
+    private final int bytesToWrite;
 
-    private int offset;
+    private final int offset;
 
-    private String fileName;
+    private final String fileName;
 
-    private OTPDetails oneTimePassword;
+    private final OTPDetails oneTimePassword;
 
     public UpdateMachineAuthCallback(JobID jobID, CMsgClientUpdateMachineAuth.Builder msg) {
         setJobID(jobID);

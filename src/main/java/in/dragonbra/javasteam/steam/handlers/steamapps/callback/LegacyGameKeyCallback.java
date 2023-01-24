@@ -11,9 +11,9 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class LegacyGameKeyCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int appID;
+    private final int appID;
 
     private String key;
 

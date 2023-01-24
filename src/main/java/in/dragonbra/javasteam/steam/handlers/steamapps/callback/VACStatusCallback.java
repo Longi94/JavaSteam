@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class VACStatusCallback extends CallbackMsg {
 
-    private List<Integer> bannedApps;
+    private final List<Integer> bannedApps;
 
     public VACStatusCallback(MsgClientVACBanStatus msg, byte[] payload) {
         List<Integer> tempList = new ArrayList<>();

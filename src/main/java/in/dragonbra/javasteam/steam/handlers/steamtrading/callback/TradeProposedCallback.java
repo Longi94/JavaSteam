@@ -9,9 +9,9 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class TradeProposedCallback extends CallbackMsg {
 
-    private int tradeID;
+    private final int tradeID;
 
-    private SteamID otherClient;
+    private final SteamID otherClient;
 
     public TradeProposedCallback(CMsgTrading_InitiateTradeRequest.Builder msg) {
         tradeID = msg.getTradeRequestId();

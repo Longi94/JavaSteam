@@ -27,7 +27,7 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<Bod
 
     private BodyType body;
 
-    private Class<? extends AbstractMessage> clazz;
+    private final Class<? extends AbstractMessage> clazz;
 
     /**
      * Initializes a new instance of the {@link ClientMsgProtobuf} class.

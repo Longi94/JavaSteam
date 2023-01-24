@@ -5,5 +5,5 @@ package in.dragonbra.javasteam.util.log;
  * @since 2018-03-02
  */
 public interface LogListener {
-    void onLog(Class clazz, String message, Throwable throwable);
+    void onLog(Class<?> clazz, String message, Throwable throwable);
 }

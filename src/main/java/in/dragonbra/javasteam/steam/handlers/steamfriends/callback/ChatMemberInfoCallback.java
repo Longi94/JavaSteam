@@ -17,9 +17,9 @@ import java.util.EnumSet;
  */
 public class ChatMemberInfoCallback extends CallbackMsg {
 
-    private SteamID chatRoomID;
+    private final SteamID chatRoomID;
 
-    private EChatInfoType type;
+    private final EChatInfoType type;
 
     private StateChangeDetails stateChangeInfo;
 
@@ -27,6 +27,7 @@ public class ChatMemberInfoCallback extends CallbackMsg {
         chatRoomID = msg.getSteamIdChat();
         type = msg.getType();
 
+        //noinspection SwitchStatementWithTooFewBranches
         switch (type) {
             case StateChange:
                 stateChangeInfo = new StateChangeDetails(payload);

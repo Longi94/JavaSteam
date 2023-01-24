@@ -24,18 +24,13 @@ public class SteamWorkshop extends ClientMsgHandler {
     public SteamWorkshop() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientUCMEnumeratePublishedFilesByUserActionResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleEnumPublishedFilesByAction(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientUCMEnumeratePublishedFilesByUserActionResponse, this::handleEnumPublishedFilesByAction);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }
 
     /**
-     * Enumerates the list of published files for the current logged in user based on user action.
+     * Enumerates the list of published files for the current logged-in user based on user action.
      * Results are returned in a {@link UserActionPublishedFilesCallback}.
      *
      * @param details The specific details of the request.

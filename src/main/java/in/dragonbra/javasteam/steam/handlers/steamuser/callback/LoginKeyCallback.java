@@ -8,9 +8,9 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class LoginKeyCallback extends CallbackMsg {
 
-    private String loginKey;
+    private final String loginKey;
 
-    private int uniqueID;
+    private final int uniqueID;
 
     public LoginKeyCallback(CMsgClientNewLoginKey.Builder logKey) {
         this.loginKey = logKey.getLoginKey();

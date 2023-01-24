@@ -4,14 +4,14 @@ import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
@@ -22,7 +22,7 @@ public class CallbackManagerTest extends TestBase {
     private SteamClient client;
     private CallbackManager mgr;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         client = new SteamClient();
         mgr = new CallbackManager(client);
@@ -34,12 +34,7 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                didCall[0] = true;
-            }
-        };
+        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
             postAndRunCallback(callback);
@@ -56,14 +51,11 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackMsg> action = new Consumer<CallbackMsg>() {
-            @Override
-            public void accept(CallbackMsg cb) {
-                assertTrue(cb instanceof CallbackForTest);
-                CallbackForTest cft = (CallbackForTest) cb;
-                assertEquals(callback.getUuid(), cft.getUuid());
-                didCall[0] = true;
-            }
+        Consumer<CallbackMsg> action = cb -> {
+            assertTrue(cb instanceof CallbackForTest);
+            CallbackForTest cft = (CallbackForTest) cb;
+            assertEquals(callback.getUuid(), cft.getUuid());
+            didCall[0] = true;
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
@@ -83,13 +75,10 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                assertEquals(jobID, cb.getJobID());
-                assertEquals(callback.getUuid(), cb.getUuid());
-                didCall[0] = true;
-            }
+        Consumer<CallbackForTest> action = cb -> {
+            assertEquals(jobID, cb.getJobID());
+            assertEquals(callback.getUuid(), cb.getUuid());
+            didCall[0] = true;
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, JobID.INVALID, action)) {
@@ -109,13 +98,10 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                assertEquals(jobID, cb.getJobID());
-                assertEquals(callback.getUuid(), cb.getUuid());
-                didCall[0] = true;
-            }
+        Consumer<CallbackForTest> action = cb -> {
+            assertEquals(jobID, cb.getJobID());
+            assertEquals(callback.getUuid(), cb.getUuid());
+            didCall[0] = true;
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
@@ -135,12 +121,7 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                didCall[0] = true;
-            }
-        };
+        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), action)) {
             postAndRunCallback(callback);
@@ -159,13 +140,10 @@ public class CallbackManagerTest extends TestBase {
 
         final boolean[] didCall = {false};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                assertEquals(jobID, cb.getJobID());
-                assertEquals(callback.getUuid(), cb.getUuid());
-                didCall[0] = true;
-            }
+        Consumer<CallbackForTest> action = cb -> {
+            assertEquals(jobID, cb.getJobID());
+            assertEquals(callback.getUuid(), cb.getUuid());
+            didCall[0] = true;
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123456), action)) {
@@ -183,12 +161,7 @@ public class CallbackManagerTest extends TestBase {
 
         final int[] callCount = {0};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                callCount[0]++;
-            }
-        };
+        Consumer<CallbackForTest> action = cb -> callCount[0]++;
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
             postAndRunCallback(callback);
@@ -206,12 +179,9 @@ public class CallbackManagerTest extends TestBase {
 
         final int[] numCallbacksRun = {0};
 
-        Consumer<CallbackForTest> action = new Consumer<CallbackForTest>() {
-            @Override
-            public void accept(CallbackForTest cb) {
-                assertEquals(callback.getUuid(), cb.getUuid());
-                numCallbacksRun[0]++;
-            }
+        Consumer<CallbackForTest> action = cb -> {
+            assertEquals(callback.getUuid(), cb.getUuid());
+            numCallbacksRun[0]++;
         };
 
         try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {

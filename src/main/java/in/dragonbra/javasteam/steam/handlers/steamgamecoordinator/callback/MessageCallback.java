@@ -13,11 +13,11 @@ import in.dragonbra.javasteam.util.MsgUtil;
  */
 public class MessageCallback extends CallbackMsg {
 
-    private int eMsg;
+    private final int eMsg;
 
-    private int appID;
+    private final int appID;
 
-    private IPacketGCMsg message;
+    private final IPacketGCMsg message;
 
     public MessageCallback(JobID jobID, CMsgGCClient.Builder gcMsg) {
         setJobID(jobID);

@@ -33,24 +33,9 @@ public class SteamUserStats extends ClientMsgHandler {
     public SteamUserStats() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientGetNumberOfCurrentPlayersDPResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleNumberOfPlayersResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientLBSFindOrCreateLBResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFindOrCreateLBResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientLBSGetLBEntriesResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleGetLBEntriesResponse(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientGetNumberOfCurrentPlayersDPResponse, this::handleNumberOfPlayersResponse);
+        dispatchMap.put(EMsg.ClientLBSFindOrCreateLBResponse, this::handleFindOrCreateLBResponse);
+        dispatchMap.put(EMsg.ClientLBSGetLBEntriesResponse, this::handleGetLBEntriesResponse);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

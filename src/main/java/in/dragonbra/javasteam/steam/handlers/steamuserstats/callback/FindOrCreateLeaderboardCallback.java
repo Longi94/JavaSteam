@@ -14,15 +14,15 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class FindOrCreateLeaderboardCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int id;
+    private final int id;
 
-    private int entryCount;
+    private final int entryCount;
 
-    private ELeaderboardSortMethod sortMethod;
+    private final ELeaderboardSortMethod sortMethod;
 
-    private ELeaderboardDisplayType displayType;
+    private final ELeaderboardDisplayType displayType;
 
     public FindOrCreateLeaderboardCallback(JobID jobID, CMsgClientLBSFindOrCreateLBResponse.Builder resp) {
         setJobID(jobID);

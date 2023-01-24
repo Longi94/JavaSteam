@@ -12,7 +12,7 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
 
     private static final Logger logger = LogManager.getLogger(WebSocketConnection.class);
 
-    private AtomicReference<WebSocketCMClient> client = new AtomicReference<>(null);
+    private final AtomicReference<WebSocketCMClient> client = new AtomicReference<>(null);
 
     private volatile boolean userInitiated = false;
 

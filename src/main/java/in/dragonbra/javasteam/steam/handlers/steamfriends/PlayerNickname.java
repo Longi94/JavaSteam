@@ -8,9 +8,9 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class PlayerNickname {
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private String nickname;
+    private final String nickname;
 
     public PlayerNickname(CMsgClientPlayerNicknameList.PlayerNickname nickname) {
         this.nickname = nickname.getNickname();

@@ -1,6 +1,6 @@
 package in.dragonbra.javasteam.util;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author lngtr
@@ -18,7 +18,7 @@ public class WebHelpers {
     }
 
     public static String urlEncode(String input) {
-        return urlEncode(input.getBytes(Charset.forName("UTF-8")));
+        return urlEncode(input.getBytes(StandardCharsets.UTF_8));
     }
 
     public static String urlEncode(byte[] input) {

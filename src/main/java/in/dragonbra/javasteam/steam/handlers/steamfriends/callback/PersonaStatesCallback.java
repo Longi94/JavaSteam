@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class PersonaStatesCallback extends CallbackMsg {
 
-    private List<PersonaState> personaStates = new LinkedList<>();
+    private final List<PersonaState> personaStates = new LinkedList<>();
 
     public PersonaStatesCallback(CMsgClientPersonaState.Builder body) {
         for (CMsgClientPersonaState.Friend friend : body.getFriendsList()) {

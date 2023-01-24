@@ -1,27 +1,26 @@
 package in.dragonbra.javasteam.steam.webapi;
 
 import in.dragonbra.javasteam.TestBase;
-import in.dragonbra.javasteam.steam.steamclient.configuration.ISteamConfigurationBuilder;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.KeyValue;
 import in.dragonbra.javasteam.util.Versions;
-import in.dragonbra.javasteam.util.compat.Consumer;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author lngtr
@@ -37,7 +36,7 @@ public class WebAPITest extends TestBase {
 
     private CountDownLatch lock;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         lock = new CountDownLatch(1);
         server = new MockWebServer();
@@ -52,15 +51,10 @@ public class WebAPITest extends TestBase {
 
         baseUrl = server.url("/");
 
-        config = SteamConfiguration.create(new Consumer<ISteamConfigurationBuilder>() {
-            @Override
-            public void accept(ISteamConfigurationBuilder b) {
-                b.withWebAPIBaseAddress(baseUrl.toString());
-            }
-        });
+        config = SteamConfiguration.create(b -> b.withWebAPIBaseAddress(baseUrl.toString()));
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         server.shutdown();
     }
@@ -78,13 +72,9 @@ public class WebAPITest extends TestBase {
 
     @Test
     public void steamConfigWebApiInterface() {
-        SteamConfiguration config = SteamConfiguration.create(new Consumer<ISteamConfigurationBuilder>() {
-            @Override
-            public void accept(ISteamConfigurationBuilder b) {
-                b.withWebAPIBaseAddress("http://example.com/")
-                        .withWebAPIKey("hello");
-            }
-        });
+        SteamConfiguration config = SteamConfiguration.create(b ->
+                b.withWebAPIBaseAddress("http://example.com/").withWebAPIKey("hello")
+        );
 
         WebAPI api = config.getWebAPI("TestInterface");
 
@@ -111,19 +101,17 @@ public class WebAPITest extends TestBase {
     public void testAsyncCall() throws IOException, InterruptedException {
         WebAPI api = config.getWebAPI("TestInterface");
 
-        api.call("TestFunction", new Consumer<KeyValue>() {
-            @Override
-            public void accept(KeyValue result) {
-                assertEquals("stringvalue", result.get("name").asString());
-                assertEquals("stringvalue", result.get("name").getValue());
-                lock.countDown();
-            }
+        api.call("TestFunction", result -> {
+            assertEquals("stringvalue", result.get("name").asString());
+            assertEquals("stringvalue", result.get("name").getValue());
+            lock.countDown();
         }, null);
 
         RecordedRequest request = server.takeRequest();
         assertEquals("/TestInterface/TestFunction/v1?format=vdf", request.getPath());
         assertEquals("GET", request.getMethod());
 
+        //noinspection ResultOfMethodCallIgnored
         lock.await(2000, TimeUnit.MILLISECONDS);
     }
 
@@ -139,7 +127,7 @@ public class WebAPITest extends TestBase {
         RecordedRequest request = server.takeRequest();
         assertEquals("/TestInterface/TestFunction/v1", request.getPath());
         assertEquals("POST", request.getMethod());
-        assertEquals("format=vdf", request.getBody().readString(Charset.forName("UTF-8")));
+        assertEquals("format=vdf", request.getBody().readString(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -190,18 +178,22 @@ public class WebAPITest extends TestBase {
         RecordedRequest request = server.takeRequest();
         assertEquals("/TestInterface/TestFunction/v1", request.getPath());
         assertEquals("POST", request.getMethod());
-        assertEquals("key1=value1&key2=value2&format=vdf", request.getBody().readString(Charset.forName("UTF-8")));
+        assertEquals("key1=value1&key2=value2&format=vdf", request.getBody().readString(StandardCharsets.UTF_8));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullMethod() throws IOException {
-        WebAPI api = config.getWebAPI("TestInterface");
-        api.call(null, "TestFunction");
+    @Test
+    public void testNullMethod() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            WebAPI api = config.getWebAPI("TestInterface");
+            api.call(null, "TestFunction");
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNullFunction() throws IOException {
-        WebAPI api = config.getWebAPI("TestInterface");
-        api.call("GET", (String) null);
+    @Test
+    public void testNullFunction() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            WebAPI api = config.getWebAPI("TestInterface");
+            api.call("GET", (String) null);
+        });
     }
 }

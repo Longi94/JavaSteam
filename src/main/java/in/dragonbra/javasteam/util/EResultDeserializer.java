@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
  * @since 2018-02-20
  */
 public class EResultDeserializer implements JsonDeserializer<EResult> {
+
     @Override
     public EResult deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         int code = json.getAsInt();

@@ -8,7 +8,7 @@ import in.dragonbra.javasteam.util.compat.ObjectsCompat;
  */
 public class GameID {
 
-    private BitVector64 gameId;
+    private final BitVector64 gameId;
 
     /**
      * Initializes a new instance of the {@link GameID} class.

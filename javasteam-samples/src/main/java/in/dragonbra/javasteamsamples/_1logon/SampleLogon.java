@@ -16,7 +16,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
 // Sample 1: Logon
 //
 // the first act of business before being able to use steamkit2's features is to
-// logon to the steam network
+// log on to the steam network
 //
 // interaction with steamkit is done through client message handlers and the results
 // come back through a callback queue controlled by a steamclient instance
@@ -30,7 +30,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
  * @author lngtr
  * @since 2018-02-23
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleLogon implements Runnable {
 
     private SteamClient steamClient;
@@ -41,9 +41,9 @@ public class SampleLogon implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     public SampleLogon(String user, String pass) {
         this.user = user;

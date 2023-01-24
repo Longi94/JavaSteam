@@ -7,11 +7,11 @@ import in.dragonbra.javasteam.types.JobID;
 
 public class RedeemGuestPassResponseCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private Integer packageID;
+    private final Integer packageID;
 
-    private Integer mustOwnAppID;
+    private final Integer mustOwnAppID;
 
     public RedeemGuestPassResponseCallback(JobID jobID, CMsgClientRedeemGuestPassResponse.Builder msg) {
         setJobID(jobID);

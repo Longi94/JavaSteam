@@ -24,7 +24,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -40,120 +40,25 @@ public class SteamFriends extends ClientMsgHandler {
     public SteamFriends() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientPersonaState, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePersonaState(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientClanState, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleClanState(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientFriendsList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFriendsList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientFriendMsgIncoming, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFriendMsg(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientFriendMsgEchoToSender, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFriendEchoMsg(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatGetFriendMessageHistoryResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFriendMessageHistoryResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientAddFriendResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleFriendResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatEnter, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatEnter(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatMsg, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatMsg(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatMemberInfo, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatMemberInfo(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatRoomInfo, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatRoomInfo(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatActionResult, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatActionResult(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientChatInvite, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleChatInvite(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientSetIgnoreFriendResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleIgnoreFriendResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientFriendProfileInfoResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleProfileInfoResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPersonaChangeResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePersonaChangeResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPlayerNicknameList, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleNicknameList(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.AMClientSetPlayerNicknameResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePlayerNicknameResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientAMGetPersonaNameHistoryResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleAliasHistoryResponse(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientPersonaState, this::handlePersonaState);
+        dispatchMap.put(EMsg.ClientClanState, this::handleClanState);
+        dispatchMap.put(EMsg.ClientFriendsList, this::handleFriendsList);
+        dispatchMap.put(EMsg.ClientFriendMsgIncoming, this::handleFriendMsg);
+        dispatchMap.put(EMsg.ClientFriendMsgEchoToSender, this::handleFriendEchoMsg);
+        dispatchMap.put(EMsg.ClientChatGetFriendMessageHistoryResponse, this::handleFriendMessageHistoryResponse);
+        dispatchMap.put(EMsg.ClientAddFriendResponse, this::handleFriendResponse);
+        dispatchMap.put(EMsg.ClientChatEnter, this::handleChatEnter);
+        dispatchMap.put(EMsg.ClientChatMsg, this::handleChatMsg);
+        dispatchMap.put(EMsg.ClientChatMemberInfo, this::handleChatMemberInfo);
+        dispatchMap.put(EMsg.ClientChatRoomInfo, this::handleChatRoomInfo);
+        dispatchMap.put(EMsg.ClientChatActionResult, this::handleChatActionResult);
+        dispatchMap.put(EMsg.ClientChatInvite, this::handleChatInvite);
+        dispatchMap.put(EMsg.ClientSetIgnoreFriendResponse, this::handleIgnoreFriendResponse);
+        dispatchMap.put(EMsg.ClientFriendProfileInfoResponse, this::handleProfileInfoResponse);
+        dispatchMap.put(EMsg.ClientPersonaChangeResponse, this::handlePersonaChangeResponse);
+        dispatchMap.put(EMsg.ClientPlayerNicknameList, this::handleNicknameList);
+        dispatchMap.put(EMsg.AMClientSetPlayerNicknameResponse, this::handlePlayerNicknameResponse);
+        dispatchMap.put(EMsg.ClientAMGetPersonaNameHistoryResponse, this::handleAliasHistoryResponse);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }
@@ -255,7 +160,7 @@ public class SteamFriends extends ClientMsgHandler {
 
         chatMsg.getBody().setSteamid(target.convertToUInt64());
         chatMsg.getBody().setChatEntryType(type.code());
-        chatMsg.getBody().setMessage(ByteString.copyFrom(message, Charset.forName("UTF-8")));
+        chatMsg.getBody().setMessage(ByteString.copyFrom(message, StandardCharsets.UTF_8));
 
         client.send(chatMsg);
     }
@@ -387,7 +292,7 @@ public class SteamFriends extends ClientMsgHandler {
         chatMsg.getBody().setSteamIdChatter(client.getSteamID());
 
         try {
-            chatMsg.writeNullTermString(message, Charset.forName("UTF-8"));
+            chatMsg.writeNullTermString(message, StandardCharsets.UTF_8);
         } catch (IOException e) {
             logger.debug(e);
         }

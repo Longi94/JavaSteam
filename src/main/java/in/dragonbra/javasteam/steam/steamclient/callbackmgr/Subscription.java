@@ -1,7 +1,6 @@
 package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * @author lngtr
@@ -18,7 +17,7 @@ public class Subscription implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (call != null && manager != null) {
             manager.unregister(call);
             call = null;

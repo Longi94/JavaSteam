@@ -9,13 +9,13 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class WalletInfoCallback extends CallbackMsg {
 
-    private boolean hasWallet;
+    private final boolean hasWallet;
 
-    private ECurrencyCode currency;
+    private final ECurrencyCode currency;
 
-    private int balance;
+    private final int balance;
 
-    private long longBalance;
+    private final long longBalance;
 
     public WalletInfoCallback(CMsgClientWalletInfoUpdate.Builder wallet) {
         hasWallet = wallet.getHasWallet();

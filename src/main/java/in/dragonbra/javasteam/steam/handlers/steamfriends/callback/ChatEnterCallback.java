@@ -10,7 +10,7 @@ import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,21 +20,21 @@ import java.util.List;
  */
 public class ChatEnterCallback extends CallbackMsg {
 
-    private SteamID chatID;
+    private final SteamID chatID;
 
-    private SteamID friendID;
+    private final SteamID friendID;
 
-    private EChatRoomType chatRoomType;
+    private final EChatRoomType chatRoomType;
 
-    private SteamID ownerID;
+    private final SteamID ownerID;
 
-    private SteamID clanID;
+    private final SteamID clanID;
 
-    private byte chatFlags;
+    private final byte chatFlags;
 
-    private EChatRoomEnterResponse enterResponse;
+    private final EChatRoomEnterResponse enterResponse;
 
-    private int numChatMembers;
+    private final int numChatMembers;
 
     private String chatRoomName;
 
@@ -59,7 +59,7 @@ public class ChatEnterCallback extends CallbackMsg {
 
         try (BinaryReader br = new BinaryReader(bais)) {
             // steamclient always attempts to read the chat room name, regardless of the enter response
-            chatRoomName = br.readNullTermString(Charset.forName("UTF-8"));
+            chatRoomName = br.readNullTermString(StandardCharsets.UTF_8);
 
             if (enterResponse != EChatRoomEnterResponse.Success) {
                 // the rest of the payload depends on a successful chat enter

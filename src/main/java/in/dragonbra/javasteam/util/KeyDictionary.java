@@ -10,6 +10,7 @@ import java.util.Map;
  * Contains the public keys that Steam uses for each of the {@link EUniverse}
  */
 public class KeyDictionary {
+
     private static final Map<EUniverse, byte[]> KEYS;
 
     static {

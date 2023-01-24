@@ -23,9 +23,9 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
 
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy_MM_dd_H_m_s_S");
 
-    private AtomicLong messageNumber = new AtomicLong(0L);
+    private final AtomicLong messageNumber = new AtomicLong(0L);
 
-    private File logDirectory;
+    private final File logDirectory;
 
     public NetHookNetworkListener() {
         this("netlogs");
@@ -63,6 +63,6 @@ public class NetHookNetworkListener implements IDebugNetworkListener {
     }
 
     private String getFile(String direction, EMsg msgType) {
-        return String.format("%d_%s_%d_k_EMsg%s.bin", messageNumber.getAndIncrement(), direction, msgType.code(), msgType.toString());
+        return String.format("%d_%s_%d_k_EMsg%s.bin", messageNumber.getAndIncrement(), direction, msgType.code(), msgType);
     }
 }

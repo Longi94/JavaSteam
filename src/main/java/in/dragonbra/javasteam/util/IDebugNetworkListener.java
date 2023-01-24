@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.enums.EMsg;
  * This interface is used for logging network messages sent to and received from the Steam server that the client is connected to.
  */
 public interface IDebugNetworkListener {
+
     /**
      * Called when a packet is received from the Steam server.
      *

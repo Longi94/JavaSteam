@@ -7,11 +7,11 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverApp
  */
 public class PICSChangeData {
 
-    private int id;
+    private final int id;
 
-    private int changeNumber;
+    private final int changeNumber;
 
-    private boolean needsToken;
+    private final boolean needsToken;
 
     public PICSChangeData(CMsgClientPICSChangesSinceResponse.AppChange change) {
         id = change.getAppid();

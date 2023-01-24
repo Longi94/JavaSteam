@@ -15,13 +15,13 @@ import java.util.List;
  */
 public class GuestPassListCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int countGuestPassesToGive;
+    private final int countGuestPassesToGive;
 
-    private int countGuestPassesToRedeem;
+    private final int countGuestPassesToRedeem;
 
-    private List<KeyValue> guestPasses;
+    private final List<KeyValue> guestPasses;
 
     public GuestPassListCallback(MsgClientUpdateGuestPassesList msg, InputStream payload) {
         result = msg.getResult();

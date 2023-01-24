@@ -11,15 +11,15 @@ import java.util.Date;
  */
 public class Event {
 
-    private GlobalID id;
+    private final GlobalID id;
 
-    private Date eventTime;
+    private final Date eventTime;
 
-    private String headline;
+    private final String headline;
 
-    private GameID gameID;
+    private final GameID gameID;
 
-    private boolean justPosted;
+    private final boolean justPosted;
 
     public Event(CMsgClientClanState.Event clanEvent) {
         id = new GlobalID(clanEvent.getGid());

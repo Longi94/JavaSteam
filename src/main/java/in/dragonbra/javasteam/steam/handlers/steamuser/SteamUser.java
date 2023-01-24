@@ -15,7 +15,6 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientPlayingSessionState;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuth;
@@ -45,78 +44,18 @@ public class SteamUser extends ClientMsgHandler {
     public SteamUser() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientLogOnResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleLogOnResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientLoggedOff, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleLoggedOff(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientNewLoginKey, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleLoginKey(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientSessionToken, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleSessionToken(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientUpdateMachineAuth, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleUpdateMachineAuth(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientAccountInfo, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleAccountInfo(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientEmailAddrInfo, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleEmailAddrInfo(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientWalletInfoUpdate, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleWalletInfo(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleWebAPIUserNonce(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientVanityURLChangedNotification, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleVanityURLChangedNotification(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleMarketingMessageUpdate(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientPlayingSessionState, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handlePlayingSessionState(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientLogOnResponse, this::handleLogOnResponse);
+        dispatchMap.put(EMsg.ClientLoggedOff, this::handleLoggedOff);
+        dispatchMap.put(EMsg.ClientNewLoginKey, this::handleLoginKey);
+        dispatchMap.put(EMsg.ClientSessionToken, this::handleSessionToken);
+        dispatchMap.put(EMsg.ClientUpdateMachineAuth, this::handleUpdateMachineAuth);
+        dispatchMap.put(EMsg.ClientAccountInfo, this::handleAccountInfo);
+        dispatchMap.put(EMsg.ClientEmailAddrInfo, this::handleEmailAddrInfo);
+        dispatchMap.put(EMsg.ClientWalletInfoUpdate, this::handleWalletInfo);
+        dispatchMap.put(EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse, this::handleWebAPIUserNonce);
+        dispatchMap.put(EMsg.ClientVanityURLChangedNotification, this::handleVanityURLChangedNotification);
+        dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, this::handleMarketingMessageUpdate);
+        dispatchMap.put(EMsg.ClientPlayingSessionState, this::handlePlayingSessionState);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

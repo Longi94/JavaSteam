@@ -15,6 +15,7 @@ import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ import java.util.Map;
  * @author lngtr
  * @since 2021-10-11
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleWebApi implements Runnable {
 
     private SteamClient steamClient;
@@ -43,9 +44,9 @@ public class SampleWebApi implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     public SampleWebApi(String user, String pass) {
         this.user = user;
@@ -167,10 +168,7 @@ public class SampleWebApi implements Runnable {
 
     // Recursively print out child KeyValues.
     private void printKeyValue(KeyValue keyValue, int depth) {
-        StringBuilder spacePadding = new StringBuilder();
-        for (int x = 0; x < depth; x++) {
-            spacePadding.append("    ");
-        }
+        String spacePadding = String.join("", Collections.nCopies(depth, "    "));
 
         if (keyValue.getChildren().size() == 0) {
             System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());

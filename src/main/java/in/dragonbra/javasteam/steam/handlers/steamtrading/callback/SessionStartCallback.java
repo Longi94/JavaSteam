@@ -9,7 +9,7 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class SessionStartCallback extends CallbackMsg {
 
-    private SteamID otherClient;
+    private final SteamID otherClient;
 
     public SessionStartCallback(CMsgTrading_StartSession.Builder msg) {
         otherClient = new SteamID(msg.getOtherSteamid());
