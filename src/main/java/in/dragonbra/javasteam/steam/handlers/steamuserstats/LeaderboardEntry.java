@@ -16,13 +16,13 @@ import java.util.List;
  */
 public class LeaderboardEntry {
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private int globalRank;
+    private final int globalRank;
 
-    private int score;
+    private final int score;
 
-    private UGCHandle ugcId;
+    private final UGCHandle ugcId;
 
     private List<Integer> details;
 

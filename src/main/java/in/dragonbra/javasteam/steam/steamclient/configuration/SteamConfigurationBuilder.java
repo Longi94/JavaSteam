@@ -16,7 +16,7 @@ import java.util.EnumSet;
  */
 public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
 
-    private SteamConfigurationState state;
+    private final SteamConfigurationState state;
 
     public SteamConfigurationBuilder() {
         state = createDefaultState();

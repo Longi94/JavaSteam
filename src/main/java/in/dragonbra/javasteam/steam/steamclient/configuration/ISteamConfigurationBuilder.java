@@ -105,7 +105,7 @@ public interface ISteamConfigurationBuilder {
     /**
      * Configures this {@link SteamConfiguration} with a Web API key to attach to requests.
      *
-     * @param webApiKey An API key to be used for authorized requests. Keys can be obtained from https://steamcommunity.com/dev or the Steamworks Partner site.
+     * @param webApiKey An API key to be used for authorized requests. Keys can be obtained from <a href="https://steamcommunity.com/dev">Steam Web API Documentation</a> or the Steamworks Partner site.
      * @return A builder with modified configuration.
      */
     ISteamConfigurationBuilder withWebAPIKey(String webApiKey);

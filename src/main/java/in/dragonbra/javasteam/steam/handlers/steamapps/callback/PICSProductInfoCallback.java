@@ -15,17 +15,17 @@ import java.util.Map;
  */
 public class PICSProductInfoCallback extends CallbackMsg {
 
-    private boolean metaDataOnly;
+    private final boolean metaDataOnly;
 
-    private boolean responsePending;
+    private final boolean responsePending;
 
-    private List<Integer> unknownPackages;
+    private final List<Integer> unknownPackages;
 
-    private List<Integer> unknownApps;
+    private final List<Integer> unknownApps;
 
-    private Map<Integer, PICSProductInfo> apps;
+    private final Map<Integer, PICSProductInfo> apps;
 
-    private Map<Integer, PICSProductInfo> packages;
+    private final Map<Integer, PICSProductInfo> packages;
 
     public PICSProductInfoCallback(JobID jobID, CMsgClientPICSProductInfoResponse.Builder msg) {
         setJobID(jobID);

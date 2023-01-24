@@ -30,7 +30,7 @@ import java.util.Scanner;
  * @author lngtr
  * @since 2021-10-11
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleServerList implements Runnable {
 
     private SteamClient steamClient;
@@ -41,9 +41,9 @@ public class SampleServerList implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     private int cellID = 0;
 

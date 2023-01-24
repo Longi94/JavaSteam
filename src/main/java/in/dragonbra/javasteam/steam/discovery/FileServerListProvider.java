@@ -17,7 +17,7 @@ public class FileServerListProvider implements IServerListProvider {
 
     private static final Logger logger = LogManager.getLogger(FileServerListProvider.class);
 
-    private File file;
+    private final File file;
 
     /**
      * Instantiates a {@link FileServerListProvider} object.
@@ -81,7 +81,6 @@ public class FileServerListProvider implements IServerListProvider {
         try (FileOutputStream fos = new FileOutputStream(file, false)) {
             builder.build().writeTo(fos);
             fos.flush();
-            fos.close();
         } catch (IOException e) {
             logger.debug("Failed to write servers to file " + file.getAbsolutePath(), e);
         }

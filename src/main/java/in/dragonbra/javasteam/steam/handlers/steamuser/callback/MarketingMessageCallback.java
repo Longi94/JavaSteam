@@ -10,7 +10,7 @@ import in.dragonbra.javasteam.util.stream.BinaryReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -20,9 +20,9 @@ public class MarketingMessageCallback extends CallbackMsg {
 
     private static final Logger logger = LogManager.getLogger(MarketingMessageCallback.class);
 
-    private Date updateTime;
+    private final Date updateTime;
 
-    private Collection<Message> messages;
+    private final Collection<Message> messages;
 
     public MarketingMessageCallback(MsgClientMarketingMessageUpdate2 body, byte[] payload) {
         updateTime = new Date(body.getMarketingMessageUpdateTime() * 1000L);
@@ -70,7 +70,7 @@ public class MarketingMessageCallback extends CallbackMsg {
         Message(byte[] data) {
             try (BinaryReader br = new BinaryReader(new ByteArrayInputStream(data))) {
                 id = new GlobalID(br.readLong());
-                url = br.readNullTermString(Charset.forName("UTF-8"));
+                url = br.readNullTermString(StandardCharsets.UTF_8);
                 flags = EMarketingMessageFlags.from(br.readInt());
             } catch (IOException e) {
                 logger.debug(e);

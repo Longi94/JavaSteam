@@ -2,11 +2,11 @@
 [![Build Status](https://travis-ci.org/Longi94/JavaSteam.svg?branch=master)](https://travis-ci.org/Longi94/JavaSteam) [![codecov](https://codecov.io/gh/Longi94/JavaSteam/branch/master/graph/badge.svg)](https://codecov.io/gh/Longi94/JavaSteam) 
 [![Discord](https://img.shields.io/discord/420907597906968586.svg)](https://discord.gg/8F2JuTu)
 
-Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 7.
+Work-in-progress Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 8.
 
 ## Download
 
-Version 1.1.0 is available through [Maven](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
+Latest version is available through [Maven](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 
 If you get a `java.security.InvalidKeyException: Illegal key size or default parameters` exception when trying to encrypt a message you need to download the [Unlimited Strength Jurisdiction Policy Files](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html) and place them under `${java.home}/jre/lib/security/`. See [this stackoverflow question](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters).
 
@@ -47,21 +47,25 @@ Maven
 
 Gradle
 ```groovy
-implementation 'org.bouncycastle:bcprov-jdk15on:1.69'  // NON-ANDROID ONLY
-implementation 'com.madgag.spongycastle:prov:1.58.0.0' // ANDROID ONLY
+// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+implementation 'org.bouncycastle:bcprov-jdk15on:x.y.z>'  // NON-ANDROID ONLY
+// https://mvnrepository.com/artifact/com.madgag.spongycastle/prov
+implementation 'com.madgag.spongycastle:prov:x.y.z' // ANDROID ONLY
 ```
 
 Maven
 ```xml
+<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
 <dependency> <!-- NON-ANDROID ONLY -->
   <groupId>org.bouncycastle</groupId>
   <artifactId>bcprov-jdk15on</artifactId>
-  <version>1.69</version>
+  <version>x.y.z</version>
 </dependency>
+<!-- https://mvnrepository.com/artifact/com.madgag.spongycastle/prov -->
 <dependency> <!-- ANDROID ONLY -->
     <groupId>com.madgag.spongycastle</groupId>
     <artifactId>prov</artifactId>
-    <version>1.58.0.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 

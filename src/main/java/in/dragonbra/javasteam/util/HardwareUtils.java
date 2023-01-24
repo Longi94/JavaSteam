@@ -10,6 +10,7 @@ import java.util.Scanner;
  * @since 2018-02-24
  */
 public class HardwareUtils {
+
     // Everything taken from here
     // https://stackoverflow.com/questions/1986732/how-to-get-a-unique-computer-identifier-in-java-like-disk-id-or-motherboard-id
     private static String SERIAL_NUMBER;
@@ -34,7 +35,7 @@ public class HardwareUtils {
         }
 
         // if SERIAL_NUMBER still was null
-        if(SERIAL_NUMBER == null) {
+        if (SERIAL_NUMBER == null) {
             SERIAL_NUMBER = "JavaSteam-SerialNumber";
         }
 

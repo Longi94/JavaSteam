@@ -11,7 +11,7 @@ import java.io.IOException;
  */
 public class PacketClientMsgProtobuf implements IPacketMsg {
 
-    private EMsg msgType;
+    private final EMsg msgType;
 
     private byte[] payload;
 

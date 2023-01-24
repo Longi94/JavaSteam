@@ -12,7 +12,7 @@ public class DefaultLogListener implements LogListener {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
 
     @Override
-    public void onLog(Class clazz, String message, Throwable throwable) {
+    public void onLog(Class<?> clazz, String message, Throwable throwable) {
         if (clazz == null) {
             throw new IllegalArgumentException("class is null");
         }

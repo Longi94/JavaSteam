@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class FriendsListCallback extends CallbackMsg {
 
-    private boolean incremental;
+    private final boolean incremental;
 
-    private List<Friend> friendList;
+    private final List<Friend> friendList;
 
     public FriendsListCallback(CMsgClientFriendsList.Builder msg) {
         incremental = msg.getBincremental();

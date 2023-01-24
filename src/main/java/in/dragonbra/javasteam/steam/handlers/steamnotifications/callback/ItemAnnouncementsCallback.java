@@ -9,7 +9,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class ItemAnnouncementsCallback extends CallbackMsg {
 
-    private int count;
+    private final int count;
 
     public ItemAnnouncementsCallback(CMsgClientItemAnnouncements.Builder msg) {
         count = msg.getCountNewItems();

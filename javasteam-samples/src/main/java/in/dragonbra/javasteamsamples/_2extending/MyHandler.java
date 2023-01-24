@@ -58,6 +58,7 @@ public class MyHandler extends ClientMsgHandler {
         // the SteamClient class will pass the message along to every registered ClientMsgHandler
 
         // the MsgType exposes the EMsg (type) of the message
+        //noinspection SwitchStatementWithTooFewBranches
         switch (packetMsg.getMsgType()) {
             case ClientLogOnResponse:
                 handleLogonResponse(packetMsg);

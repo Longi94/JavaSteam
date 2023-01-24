@@ -28,24 +28,9 @@ public class SteamTrading extends ClientMsgHandler {
     public SteamTrading() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.EconTrading_InitiateTradeProposed, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleTradeProposed(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.EconTrading_InitiateTradeResult, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleTradeResult(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.EconTrading_StartSession, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleStartSession(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.EconTrading_InitiateTradeProposed, this::handleTradeProposed);
+        dispatchMap.put(EMsg.EconTrading_InitiateTradeResult, this::handleTradeResult);
+        dispatchMap.put(EMsg.EconTrading_StartSession, this::handleStartSession);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

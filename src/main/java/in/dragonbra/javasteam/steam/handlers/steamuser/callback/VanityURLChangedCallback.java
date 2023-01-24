@@ -9,7 +9,7 @@ import in.dragonbra.javasteam.types.JobID;
  */
 public class VanityURLChangedCallback extends CallbackMsg {
 
-    private String vanityUrl;
+    private final String vanityUrl;
 
     public VanityURLChangedCallback(JobID jobID, SteammessagesClientserver2.CMsgClientVanityURLChangedNotification.Builder msg) {
         setJobID(jobID);

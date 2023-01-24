@@ -38,7 +38,7 @@ import in.dragonbra.javasteam.util.log.LogManager;
  * @author lngtr
  * @since 2021-10-11
  */
-@SuppressWarnings("Duplicates")
+@SuppressWarnings("FieldCanBeLocal")
 public class SampleDebugLog implements Runnable {
 
     private SteamClient steamClient;
@@ -49,16 +49,16 @@ public class SampleDebugLog implements Runnable {
 
     private boolean isRunning;
 
-    private String user;
+    private final String user;
 
-    private String pass;
+    private final String pass;
 
     // define our debuglog listener
     static class MyListener implements LogListener {
 
         // this function will be called when internal steamkit components write to the debuglog
         @Override
-        public void onLog(Class clazz, String message, Throwable throwable) {
+        public void onLog(Class<?> clazz, String message, Throwable throwable) {
             // for this example, we'll print the output to the console
             System.out.println("MyListener - " + clazz.getName() + ": " + message);
         }

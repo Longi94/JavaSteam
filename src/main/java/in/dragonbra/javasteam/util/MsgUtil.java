@@ -67,6 +67,6 @@ public class MsgUtil {
      * @return <b>true</b> if this message is protobuf flagged; otherwise, <b>false</b>.
      */
     public static boolean isProtoBuf(int msg) {
-        return (msg & 0xffffffffL & PROTO_MASK) > 0;
+        return (msg & 0xffffffffL & (long) PROTO_MASK) > 0;
     }
 }

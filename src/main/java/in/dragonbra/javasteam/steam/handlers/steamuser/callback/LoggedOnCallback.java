@@ -22,7 +22,7 @@ import java.util.EnumSet;
  */
 public class LoggedOnCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
     private EResult extendedResult;
 
@@ -104,7 +104,7 @@ public class LoggedOnCallback extends CallbackMsg {
         outOfGameSecsPerHeartbeat = resp.getOutOfGameHeartbeatRateSec();
         inGameSecsPerHeartbeat = resp.getInGameHeartbeatRateSec();
 
-        publicIP = NetHelpers.getIPAddress((int) resp.getIpPublic());
+        publicIP = NetHelpers.getIPAddress(resp.getIpPublic());
 
         serverTime = new Date(resp.getServerRealTime() * 1000L);
 

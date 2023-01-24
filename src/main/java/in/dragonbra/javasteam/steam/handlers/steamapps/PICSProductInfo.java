@@ -11,21 +11,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents the information for a single app or package
  */
 public class PICSProductInfo extends CallbackMsg {
 
-    private int id;
+    private final int id;
 
-    private int changeNumber;
+    private final int changeNumber;
 
-    private boolean missingToken;
+    private final boolean missingToken;
 
-    private byte[] shaHash;
+    private final byte[] shaHash;
 
-    private KeyValue keyValues;
+    private final KeyValue keyValues;
 
     private boolean onlyPublic;
 
@@ -46,7 +47,7 @@ public class PICSProductInfo extends CallbackMsg {
                 // note: IDK why, but we have to encode this using the default charset
                 String bufferString = appInfo.getBuffer().toString(Charset.defaultCharset());
                 // get the buffer as a byte array using utf-8 as a supported charset
-                byte[] byteBuffer = bufferString.getBytes("UTF-8");
+                byte[] byteBuffer = bufferString.getBytes(StandardCharsets.UTF_8);
                 // we don't want to read the trailing null byte
                 MemoryStream ms = new MemoryStream(byteBuffer, 0, byteBuffer.length - 1);
                 keyValues.readAsText(ms);

@@ -17,11 +17,11 @@ import java.util.List;
  */
 public class LeaderboardEntriesCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int entryCount;
+    private final int entryCount;
 
-    private List<LeaderboardEntry> entries;
+    private final List<LeaderboardEntry> entries;
 
     public LeaderboardEntriesCallback(JobID jobID, CMsgClientLBSGetLBEntriesResponse.Builder resp) {
         setJobID(jobID);

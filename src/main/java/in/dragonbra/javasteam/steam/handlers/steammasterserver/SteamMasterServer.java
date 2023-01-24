@@ -25,12 +25,7 @@ public class SteamMasterServer extends ClientMsgHandler {
     public SteamMasterServer() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.GMSClientServerQueryResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleServerQueryResponse(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.GMSClientServerQueryResponse, this::handleServerQueryResponse);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

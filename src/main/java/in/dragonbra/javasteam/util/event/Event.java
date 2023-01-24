@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.util.event;
 import java.util.HashSet;
 
 public class Event<T extends EventArgs> {
+
     protected final HashSet<EventHandler<T>> handlers = new HashSet<>();
 
     public void addEventHandler(EventHandler<T> handler) {

@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class FreeLicenseCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private List<Integer> grantedApps;
+    private final List<Integer> grantedApps;
 
-    private List<Integer> grantedPackages;
+    private final List<Integer> grantedPackages;
 
     public FreeLicenseCallback(JobID jobID, CMsgClientRequestFreeLicenseResponse.Builder msg) {
         setJobID(jobID);

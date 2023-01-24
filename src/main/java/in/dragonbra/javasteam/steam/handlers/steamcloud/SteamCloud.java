@@ -31,24 +31,9 @@ public class SteamCloud extends ClientMsgHandler {
     public SteamCloud() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ClientUFSGetUGCDetailsResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleUGCDetailsResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientUFSGetSingleFileInfoResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleSingleFileInfoResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ClientUFSShareFileResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleShareFileResponse(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ClientUFSGetUGCDetailsResponse, this::handleUGCDetailsResponse);
+        dispatchMap.put(EMsg.ClientUFSGetSingleFileInfoResponse, this::handleSingleFileInfoResponse);
+        dispatchMap.put(EMsg.ClientUFSShareFileResponse, this::handleShareFileResponse);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

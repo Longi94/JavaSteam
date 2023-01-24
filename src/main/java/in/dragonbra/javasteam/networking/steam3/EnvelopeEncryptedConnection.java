@@ -34,6 +34,7 @@ public class EnvelopeEncryptedConnection extends Connection {
     private EncryptionState state;
     private INetFilterEncryption encryption;
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final EventHandler<EventArgs> onConnected = new EventHandler<EventArgs>() {
         @Override
         public void handleEvent(Object sender, EventArgs e) {
@@ -41,6 +42,7 @@ public class EnvelopeEncryptedConnection extends Connection {
         }
     };
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final EventHandler<DisconnectedEventArgs> onDisconnected = new EventHandler<DisconnectedEventArgs>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
@@ -51,6 +53,7 @@ public class EnvelopeEncryptedConnection extends Connection {
         }
     };
 
+    @SuppressWarnings("FieldCanBeLocal")
     private final EventHandler<NetMsgEventArgs> onNetMsgReceived = new EventHandler<NetMsgEventArgs>() {
         @Override
         public void handleEvent(Object sender, NetMsgEventArgs e) {
@@ -121,7 +124,7 @@ public class EnvelopeEncryptedConnection extends Connection {
         Msg<MsgChannelEncryptResponse> response = new Msg<>(MsgChannelEncryptResponse.class);
 
         byte[] tempSessionKey = CryptoHelper.generateRandomBlock(32);
-        byte[] encryptedHandshakeBlob = null;
+        byte[] encryptedHandshakeBlob;
 
         RSACrypto rsa = new RSACrypto(publicKey);
 

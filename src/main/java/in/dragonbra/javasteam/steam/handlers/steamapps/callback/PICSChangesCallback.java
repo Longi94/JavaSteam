@@ -13,19 +13,19 @@ import java.util.Map;
  */
 public class PICSChangesCallback extends CallbackMsg {
 
-    private int lastChangeNumber;
+    private final int lastChangeNumber;
 
-    private int currentChangeNumber;
+    private final int currentChangeNumber;
 
-    private boolean requiresFullUpdate;
+    private final boolean requiresFullUpdate;
 
-    private boolean requiresFullAppUpdate;
+    private final boolean requiresFullAppUpdate;
 
-    private boolean requiresFullPackageUpdate;
+    private final boolean requiresFullPackageUpdate;
 
-    private Map<Integer, PICSChangeData> packageChanges;
+    private final Map<Integer, PICSChangeData> packageChanges;
 
-    private Map<Integer, PICSChangeData> appChanges;
+    private final Map<Integer, PICSChangeData> appChanges;
 
     public PICSChangesCallback(JobID jobID, CMsgClientPICSChangesSinceResponse.Builder msg) {
         setJobID(jobID);

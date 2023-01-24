@@ -1,11 +1,35 @@
-apply plugin: 'groovy'
+//file:noinspection GroovyAssignabilityCheck
+
+plugins {
+    id 'groovy'
+    id 'java-gradle-plugin'
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
+    implementation gradleApi()
+    implementation localGroovy()
+
+    // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation 'commons-io:commons-io:2.11.0'
+}
+
+gradlePlugin {
+    plugins {
+        create("steamlanguagegen") {
+            id = "steamlanguagegen"
+            implementationClass = "in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin"
+            version = "1.0.0"
+            group = "in.dragonbra.steamlanguagegen"
+        }
+        create("projectversiongen") {
+            id = "projectversiongen"
+            implementationClass = "in.dragonbra.versiongen.VersionGenPlugin"
+            version = "1.0.0"
+            group = "in.dragonbra.versiongen"
+        }
+    }
 }

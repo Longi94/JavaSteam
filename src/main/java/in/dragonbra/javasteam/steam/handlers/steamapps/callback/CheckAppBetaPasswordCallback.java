@@ -14,9 +14,9 @@ import java.util.Map;
  */
 public class CheckAppBetaPasswordCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private Map<String, byte[]> betaPasswords;
+    private final Map<String, byte[]> betaPasswords;
 
     public CheckAppBetaPasswordCallback(JobID jobID, CMsgClientCheckAppBetaPasswordResponse.Builder msg) {
         setJobID(jobID);

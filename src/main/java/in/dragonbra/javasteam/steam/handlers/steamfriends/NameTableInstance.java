@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class NameTableInstance {
 
-    private EResult result;
+    private final EResult result;
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
     private List<NameInstance> names;
 

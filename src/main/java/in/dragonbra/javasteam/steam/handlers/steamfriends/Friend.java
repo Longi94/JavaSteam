@@ -9,9 +9,9 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class Friend {
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private EFriendRelationship relationship;
+    private final EFriendRelationship relationship;
 
     public Friend(CMsgClientFriendsList.Friend friend) {
         steamID = new SteamID(friend.getUlfriendid());

@@ -13,19 +13,19 @@ import java.util.Date;
  */
 public class SingleFileInfoCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private int appID;
+    private final int appID;
 
-    private String fileName;
+    private final String fileName;
 
-    private byte[] shaHash;
+    private final byte[] shaHash;
 
-    private Date timestamp;
+    private final Date timestamp;
 
-    private int fileSize;
+    private final int fileSize;
 
-    private boolean isExplicitDelete;
+    private final boolean isExplicitDelete;
 
     public SingleFileInfoCallback(JobID jobID, CMsgClientUFSGetSingleFileInfoResponse.Builder msg) {
         setJobID(jobID);

@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class OfflineMessageNotificationCallback extends CallbackMsg {
 
-    private int messageCount;
+    private final int messageCount;
 
     private List<SteamID> friendsWithOfflineMessages;
 

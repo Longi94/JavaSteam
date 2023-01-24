@@ -11,17 +11,17 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class TicketAuthCallback extends CallbackMsg {
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private GameID gameID;
+    private final GameID gameID;
 
-    private int state;
+    private final int state;
 
-    private EAuthSessionResponse authSessionResponse;
+    private final EAuthSessionResponse authSessionResponse;
 
-    private int ticketCrc;
+    private final int ticketCrc;
 
-    private int ticketSequence;
+    private final int ticketSequence;
 
     public TicketAuthCallback(CMsgClientTicketAuthComplete.Builder tickAuth) {
         steamID = new SteamID(tickAuth.getSteamId());

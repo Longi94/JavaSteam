@@ -16,11 +16,11 @@ import java.util.List;
  */
 public class ClanStateCallback extends CallbackMsg {
 
-    private SteamID clanID;
+    private final SteamID clanID;
 
-    private EnumSet<EAccountFlags> accountFlags;
+    private final EnumSet<EAccountFlags> accountFlags;
 
-    private boolean chatRoomPrivate;
+    private final boolean chatRoomPrivate;
 
     private String clanName;
 

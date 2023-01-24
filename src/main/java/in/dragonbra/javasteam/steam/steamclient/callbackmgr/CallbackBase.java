@@ -5,7 +5,7 @@ package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
  * This is for internal use only, and shouldn't be used directly.
  */
 abstract class CallbackBase {
-    abstract Class getCallbackType();
+    abstract Class<?> getCallbackType();
 
     abstract void run(Object callback);
 }

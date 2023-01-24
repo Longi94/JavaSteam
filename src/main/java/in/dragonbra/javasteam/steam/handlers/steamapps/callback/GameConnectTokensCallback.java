@@ -13,9 +13,9 @@ import java.util.List;
  */
 public class GameConnectTokensCallback extends CallbackMsg {
 
-    private int tokensToKeep;
+    private final int tokensToKeep;
 
-    private List<byte[]> tokens;
+    private final List<byte[]> tokens;
 
     public GameConnectTokensCallback(CMsgClientGameConnectTokens.Builder msg) {
         tokensToKeep = msg.getMaxTokensToKeep();

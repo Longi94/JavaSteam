@@ -11,13 +11,13 @@ import java.io.IOException;
  */
 public class PacketClientMsg implements IPacketMsg {
 
-    private EMsg msgType;
+    private final EMsg msgType;
 
-    private long targetJobID;
+    private final long targetJobID;
 
-    private long sourceJobID;
+    private final long sourceJobID;
 
-    private byte[] payload;
+    private final byte[] payload;
 
     /**
      * Initializes a new instance of the {@link PacketClientMsg} class.

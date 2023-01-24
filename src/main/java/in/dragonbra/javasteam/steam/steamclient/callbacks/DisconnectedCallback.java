@@ -8,7 +8,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class DisconnectedCallback extends CallbackMsg {
 
-    private boolean userInitiated;
+    private final boolean userInitiated;
 
     public DisconnectedCallback(boolean userInitiated) {
         this.userInitiated = userInitiated;

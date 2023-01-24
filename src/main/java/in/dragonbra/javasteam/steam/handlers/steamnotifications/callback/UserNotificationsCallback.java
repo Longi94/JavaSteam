@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class UserNotificationsCallback extends CallbackMsg {
 
-    private List<Notification> notifications;
+    private final List<Notification> notifications;
 
     public UserNotificationsCallback(CMsgClientUserNotifications.Builder msg) {
         notifications = new ArrayList<>();

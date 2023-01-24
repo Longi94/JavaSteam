@@ -3,13 +3,13 @@ package in.dragonbra.javasteam.util.crypto;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.util.KeyDictionary;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class AsnKeyParserTest extends TestBase {
 

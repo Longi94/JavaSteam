@@ -1,95 +1,95 @@
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
+//file:noinspection GroovyAssignabilityCheck
 
-sourceCompatibility = 1.7
+plugins {
+    id 'com.google.protobuf' version "0.9.1"
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+}
+
+sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'com.google.protobuf:protobuf-java:3.19.3'
-    testImplementation 'junit:junit:4.13.2'
-}
-
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.18.0'
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-        }
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+// https://mvnrepository.com/artifact/com.google.protobuf/protoc
+protobuf.protoc {
+    artifact = 'com.google.protobuf:protoc:3.21.12'
 }
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+test {
+    useJUnitPlatform()
 }
 
-signing {
-    sign configurations.archives
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+dependencies {
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.21.12'
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            pom.project {
-                name 'JavaSteam-tf'
-                packaging 'jar'
-                description 'TF classes for JavaSteam.'
-                url 'https://github.com/Longi94/JavaSteam'
-                inceptionYear '2018'
+    /* Unit Testing */
+
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+}
+
+/* Artifact publishing */
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'JavaSteam-tf'
+                packaging = 'jar'
+                description = 'TF classes for JavaSteam.'
+                url = 'https://github.com/Longi94/JavaSteam'
+                inceptionYear = '2018'
 
                 scm {
-                    connection 'scm:git:git://github.com/Longi94/JavaSteam.git'
-                    developerConnection 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
-                    url 'http://github.com/Longi94/JavaSteam/tree/master'
+                    connection = 'scm:git:git://github.com/Longi94/JavaSteam.git'
+                    developerConnection = 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
+                    url = 'http://github.com/Longi94/JavaSteam/tree/master'
                 }
 
                 licenses {
                     license {
-                        name 'MIT License'
-                        url 'http://www.opensource.org/licenses/mit-license.php'
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
                     }
                 }
 
                 developers {
                     developer {
-                        id 'Longi'
-                        name 'Long Tran'
-                        email 'lngtrn94@gmail.com'
+                        id = 'Longi'
+                        name = 'Long Tran'
+                        email = 'lngtrn94@gmail.com'
                     }
                 }
             }
         }
     }
+    repositories {
+        maven {
+            def stagingRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : stagingRepoUrl
+            credentials {
+                username = ossrhUsername ?: ''
+                password = ossrhPassword ?: ''
+            }
+        }
+    }
+}
+
+signing {
+    sign configurations.archives
 }

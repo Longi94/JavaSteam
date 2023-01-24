@@ -40,19 +40,8 @@ public class SteamGameServer extends ClientMsgHandler {
     public SteamGameServer() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.GSStatusReply, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleStatusReply(packetMsg);
-            }
-        });
-
-        dispatchMap.put(EMsg.ClientTicketAuthComplete, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleAuthComplete(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.GSStatusReply, this::handleStatusReply);
+        dispatchMap.put(EMsg.ClientTicketAuthComplete, this::handleAuthComplete);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

@@ -110,7 +110,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String httpMethod, String function, int version) throws IOException {
-        return call(httpMethod, function, version, (Map<String, String>) null);
+        return call(httpMethod, function, version, null);
     }
 
     /**
@@ -122,7 +122,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String function, int version) throws IOException {
-        return call("GET", function, version, (Map<String, String>) null);
+        return call("GET", function, version, null);
     }
 
     /**
@@ -134,7 +134,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String httpMethod, String function) throws IOException {
-        return call(httpMethod, function, 1, (Map<String, String>) null);
+        return call(httpMethod, function, 1, null);
     }
 
     /**
@@ -145,7 +145,7 @@ public class WebAPI {
      * @throws IOException if the request could not be executed
      */
     public KeyValue call(String function) throws IOException {
-        return call("GET", function, 1, (Map<String, String>) null);
+        return call("GET", function, 1, null);
     }
 
     /**
@@ -157,10 +157,9 @@ public class WebAPI {
      * @param parameters A map of string key value pairs representing arguments to be passed to the API.
      * @param callback   the callback that will be called with the resulting {@link KeyValue} object.
      * @param error      the callback for handling response errors.
-     * @throws IOException if the request could not be executed
      */
     public void call(String httpMethod, String function, int version, Map<String, String> parameters,
-                     final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error) throws IOException {
+                     final Consumer<KeyValue> callback, final Consumer<WebAPIRequestException> error) {
         Request request = buildRequest(httpMethod, function, version, parameters);
         client.newCall(request).enqueue(new Callback() {
             @Override
@@ -338,11 +337,11 @@ public class WebAPI {
     /**
      * Thrown when WebAPI request fails (non success response code).
      */
-    public class WebAPIRequestException extends IOException {
+    public static class WebAPIRequestException extends IOException {
 
-        private int statusCode;
+        private final int statusCode;
 
-        private Map<String, List<String>> headers;
+        private final Map<String, List<String>> headers;
 
         /**
          * Initializes a new instance of the {@link WebAPIRequestException} class.

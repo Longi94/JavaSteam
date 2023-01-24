@@ -1,159 +1,163 @@
-import in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin
+//file:noinspection GroovyAssignabilityCheck
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
-    }
+// https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
+// https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
+plugins {
+    id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
+    id 'com.google.protobuf' version "0.9.1"
+    id 'jacoco'
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+    id 'steamlanguagegen'
+    id 'projectversiongen'
 }
-
-group 'in.dragonbra'
-version '1.1.0'
 
 allprojects {
     group 'in.dragonbra'
-    version '1.1.0'
+    version '1.2.0-SNAPSHOT'
 }
 
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'java'
-apply plugin: 'com.google.protobuf'
-apply plugin: 'jacoco'
-apply plugin: SteamLanguageGenPlugin
-
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
 }
 
-dependencies {
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'com.google.protobuf:protobuf-java:3.19.3'
-    implementation 'com.squareup.okhttp3:okhttp:3.14.9'
-    implementation 'commons-validator:commons-validator:1.7'
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.2'
-    testCompile 'com.squareup.okhttp3:mockwebserver:3.14.9'
-    testCompile 'commons-codec:commons-codec:1.15'
-    testCompile 'commons-io:commons-io:2.11.0'
-    testCompile 'junit:junit:4.13.2'
-    testCompile 'org.bouncycastle:bcprov-jdk15on:1.69'
-    testCompile 'org.mockito:mockito-core:3.12.4'
-    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+// https://mvnrepository.com/artifact/com.google.protobuf/protoc
+protobuf.protoc {
+    artifact = 'com.google.protobuf:protoc:3.21.12'
 }
 
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.18.0'
-    }
+// https://www.eclemma.org/jacoco
+jacoco.toolVersion = "0.8.8"
+
+jacocoTestReport.reports {
+    xml.required = true
+    html.required = false
 }
-
-jacoco {
-    toolVersion = "0.8.7"
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled false
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs += new File(buildDir, 'generated/source/steamd/main/java')
-            srcDirs += new File(buildDir, 'generated/source/proto/main/java')
-            srcDirs += new File(buildDir, 'generated/source/javasteam/main/java')
-        }
-    }
-}
-
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-task generatVersionClass {
-    def generatedDir = file("$buildDir/generated/source/javasteam/main/java")
-    def outputDir = file("$generatedDir/in/dragonbra/javasteam/util")
-    outputs.dir outputDir
-    doFirst {
-        outputDir.exists() || outputDir.mkdirs()
-        new File(outputDir, "Versions.java")
-                .write("""package in.dragonbra.javasteam.util;
-
-public class Versions { 
-    public static final String VERSION = \"$project.version\"; 
-}""")
-    }
-}
-
-compileJava.dependsOn generatVersionClass
-compileJava.dependsOn generateSteamLanguage
-check.dependsOn jacocoTestReport
 
 javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
-artifacts {
-    archives sourcesJar
-    archives javadocJar
+test {
+    useJUnitPlatform()
 }
 
-signing {
-    sign configurations.archives
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
-uploadArchives {
+// Note: Only allow junit 5
+configurations {
+    configureEach {
+        exclude group: 'junit', module: 'junit'
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+// Note: builtBy() fixes gradle warning "Execution optimizations have been disabled for task"
+sourceSets.main {
+    java.srcDirs(
+            files("build/generated/source/steamd/main/java").builtBy(generateSteamLanguage),
+            files("build/generated/source/javasteam/main/java").builtBy(generateProjectVersion)
+    )
+}
+
+check.dependsOn jacocoTestReport
+compileJava.dependsOn(generateSteamLanguage)
+compileJava.dependsOn(generateProjectVersion)
+
+dependencies {
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.21.12'
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    // https://mvnrepository.com/artifact/commons-validator/commons-validator
+    implementation 'commons-validator:commons-validator:1.7'
+    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    // https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+
+    /* Unit Testing */
+
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
+    testImplementation 'com.squareup.okhttp3:mockwebserver3-junit5:5.0.0-alpha.10'
+    // https://mvnrepository.com/artifact/commons-codec/commons-codec
+    testImplementation 'commons-codec:commons-codec:1.15'
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    testImplementation 'commons-io:commons-io:2.11.0'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.9.1'
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
+    testImplementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:4.10.0'
+    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.1'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.10.0'
+}
+
+/* Artifact publishing */
+
+nexusPublishing {
     repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        sonatype()
+    }
+}
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: ossrhUsername, password: ossrhPassword)
-            }
-            pom.project {
-                name 'JavaSteam'
-                packaging 'jar'
-                description 'Java library to interact with Valve\'s Steam network.'
-                url 'https://github.com/Longi94/JavaSteam'
-                inceptionYear '2018'
-
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from(components.java)
+            pom {
+                name = 'JavaSteam'
+                packaging = 'jar'
+                description = 'Java library to interact with Valve\'s Steam network.'
+                url = 'https://github.com/Longi94/JavaSteam'
+                inceptionYear = '2018'
                 scm {
-                    connection 'scm:git:git://github.com/Longi94/JavaSteam.git'
-                    developerConnection 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
-                    url 'http://github.com/Longi94/JavaSteam/tree/master'
+                    connection = 'scm:git:git://github.com/Longi94/JavaSteam.git'
+                    developerConnection = 'scm:git:ssh://github.com:Longi94/JavaSteam.git'
+                    url = 'http://github.com/Longi94/JavaSteam/tree/master'
                 }
-
                 licenses {
                     license {
-                        name 'MIT License'
-                        url 'http://www.opensource.org/licenses/mit-license.php'
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'Longi'
-                        name 'Long Tran'
-                        email 'lngtrn94@gmail.com'
+                        id = 'Longi'
+                        name = 'Long Tran'
+                        email = 'lngtrn94@gmail.com'
                     }
                 }
             }
         }
     }
+    repositories {
+        maven {
+            def stagingRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotRepoUrl : stagingRepoUrl
+            credentials {
+                username = ossrhUsername ?: ''
+                password = ossrhPassword ?: ''
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }

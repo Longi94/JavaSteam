@@ -14,13 +14,13 @@ import java.util.Map;
  */
 public class PICSTokensCallback extends CallbackMsg {
 
-    private List<Integer> packageTokensDenied;
+    private final List<Integer> packageTokensDenied;
 
-    private List<Integer> appTokensDenied;
+    private final List<Integer> appTokensDenied;
 
-    private Map<Integer, Long> packageTokens;
+    private final Map<Integer, Long> packageTokens;
 
-    private Map<Integer, Long> appTokens;
+    private final Map<Integer, Long> appTokens;
 
     public PICSTokensCallback(JobID jobID, CMsgClientPICSAccessTokenResponse.Builder msg) {
         setJobID(jobID);

@@ -9,9 +9,9 @@ import java.util.Date;
  */
 public class NameInstance {
 
-    private String name;
+    private final String name;
 
-    private Date nameSince;
+    private final Date nameSince;
 
     public NameInstance(CMsgClientAMGetPersonaNameHistoryResponse.NameTableInstance.NameInstance instance) {
         name = instance.getName();

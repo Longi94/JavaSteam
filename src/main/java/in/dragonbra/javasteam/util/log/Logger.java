@@ -6,7 +6,7 @@ package in.dragonbra.javasteam.util.log;
  */
 public class Logger {
 
-    private Class<?> clazz;
+    private final Class<?> clazz;
 
     Logger(Class<?> clazz) {
         if (clazz == null) {

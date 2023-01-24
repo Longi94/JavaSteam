@@ -10,11 +10,11 @@ import in.dragonbra.javasteam.types.SteamID;
  */
 public class FriendAddedCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
-    private SteamID steamID;
+    private final SteamID steamID;
 
-    private String personaName;
+    private final String personaName;
 
     public FriendAddedCallback(CMsgClientAddFriendResponse.Builder msg) {
         result = EResult.from(msg.getEresult());

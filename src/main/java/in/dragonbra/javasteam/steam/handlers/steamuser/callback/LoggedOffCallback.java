@@ -8,7 +8,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
  */
 public class LoggedOffCallback extends CallbackMsg {
 
-    private EResult result;
+    private final EResult result;
 
     public LoggedOffCallback(EResult result) {
         this.result = result;
