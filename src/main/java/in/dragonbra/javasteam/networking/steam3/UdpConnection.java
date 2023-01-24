@@ -46,6 +46,7 @@ public class UdpConnection extends Connection {
      * Contains information about the state of the connection, used to filter out packets that are
      * unexpected or not valid given the state of the connection.
      */
+    @SuppressWarnings("FieldMayBeFinal")
     private volatile AtomicReference<State> state;
 
     private Thread netThread;

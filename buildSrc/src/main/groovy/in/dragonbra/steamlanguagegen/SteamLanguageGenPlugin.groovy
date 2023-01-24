@@ -7,6 +7,6 @@ import org.gradle.api.Project
 class SteamLanguageGenPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
-        project.getTasks().create("generateSteamLanguage", SteamLanguageGenTask.class)
+        project.getTasks().register("generateSteamLanguage", SteamLanguageGenTask.class)
     }
 }

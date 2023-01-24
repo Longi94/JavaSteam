@@ -27,7 +27,7 @@ import java.util.Scanner;
 //
 // Sample 5: SteamGuard
 //
-// this sample goes into detail for how to handle steamguard protected accounts and how to login to them
+// this sample goes into detail for how to handle steamguard protected accounts and how to log in to them
 //
 // SteamGuard works by enforcing a two-factor authentication scheme
 // upon first logon to an account with SG enabled, the steam server will email an authcode to the validated address of the account
@@ -35,7 +35,7 @@ import java.util.Scanner;
 //
 // after a client logs on using the authcode, the steam server will generate a blob of random data that the client stores called a "sentry file"
 // this sentry file is then used in all subsequent logons as the second factor
-// ownership of this file provides proof that the machine being used to logon is owned by the client in question
+// ownership of this file provides proof that the machine being used to log-on is owned by the client in question
 //
 // the usual login flow is thus:
 // 1. connect to the server
@@ -251,7 +251,7 @@ public class SampleSteamGuardRememberMe implements Runnable {
     private byte[] calculateSHA1(File file) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
 
-        try (InputStream fis = Files.newInputStream(file.toPath());) {
+        try (InputStream fis = Files.newInputStream(file.toPath())) {
             int n = 0;
             byte[] buffer = new byte[8192];
             while (n != -1) {

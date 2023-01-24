@@ -104,6 +104,7 @@ class TokenAnalyzer {
         return root
     }
 
+    @SuppressWarnings('GroovyUnusedAssignment')
     private static void parseInnerScope(Queue<Token> tokens, Node parent, Node root) {
         expect(tokens, 'operator', '{')
         def scope2 = optional(tokens, 'operator', '}')
