@@ -31,7 +31,7 @@ jobs:
         
     - name: Increase gradle daemon heap size
       run: |
-        sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx2g /" gradle.properties
+        sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
         
     - name: Build with Gradle, skip signing
       uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
