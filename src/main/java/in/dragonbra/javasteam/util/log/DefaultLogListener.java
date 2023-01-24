@@ -31,7 +31,7 @@ public class DefaultLogListener implements LogListener {
         }
     }
 
-    public void onError(Class clazz, String message, Throwable throwable) {
+    public void onError(Class<?> clazz, String message, Throwable throwable) {
         if (clazz == null) {
             throw new IllegalArgumentException("class is null");
         }
