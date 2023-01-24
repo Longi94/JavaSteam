@@ -34,18 +34,8 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
     public SteamUnifiedMessages() {
         dispatchMap = new HashMap<>();
 
-        dispatchMap.put(EMsg.ServiceMethodResponse, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleServiceMethodResponse(packetMsg);
-            }
-        });
-        dispatchMap.put(EMsg.ServiceMethod, new Consumer<IPacketMsg>() {
-            @Override
-            public void accept(IPacketMsg packetMsg) {
-                handleServiceMethod(packetMsg);
-            }
-        });
+        dispatchMap.put(EMsg.ServiceMethodResponse, this::handleServiceMethodResponse);
+        dispatchMap.put(EMsg.ServiceMethod, this::handleServiceMethod);
 
         dispatchMap = Collections.unmodifiableMap(dispatchMap);
     }

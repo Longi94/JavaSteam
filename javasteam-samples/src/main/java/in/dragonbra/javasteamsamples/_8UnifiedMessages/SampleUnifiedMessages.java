@@ -145,7 +145,7 @@ public class SampleUnifiedMessages implements Runnable {
 
         if (callback.getResult() != EResult.OK) {
             if (callback.getResult() == EResult.AccountLogonDenied) {
-                // if we recieve AccountLogonDenied or one of it's flavors (AccountLogonDeniedNoMailSent, etc)
+                // if we recieve AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
                 // then the account we're logging into is SteamGuard protected
                 // see sample 5 for how SteamGuard can be handled
                 System.out.println("Unable to logon to Steam: This account is SteamGuard protected.");

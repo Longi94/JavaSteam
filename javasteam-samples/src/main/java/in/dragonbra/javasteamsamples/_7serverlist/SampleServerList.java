@@ -140,7 +140,7 @@ public class SampleServerList implements Runnable {
     private void onLoggedOn(LoggedOnCallback callback) {
         if (callback.getResult() != EResult.OK) {
             if (callback.getResult() == EResult.AccountLogonDenied) {
-                // if we recieve AccountLogonDenied or one of it's flavors (AccountLogonDeniedNoMailSent, etc)
+                // if we recieve AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
                 // then the account we're logging into is SteamGuard protected
                 // see sample 5 for how SteamGuard can be handled
 

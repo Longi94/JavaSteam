@@ -4,6 +4,6 @@ class WeakSymbol implements Symbol {
     String identifier
 
     WeakSymbol(String ident) {
-        this.identifier = ident;
+        this.identifier = ident
     }
 }

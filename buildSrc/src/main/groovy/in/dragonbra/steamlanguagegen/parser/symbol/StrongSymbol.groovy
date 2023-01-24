@@ -7,11 +7,11 @@ class StrongSymbol implements Symbol {
     Node prop
 
     StrongSymbol(Node classNode) {
-        clazz = classNode;
+        clazz = classNode
     }
 
     StrongSymbol(Node classNode, Node prop) {
-        clazz = classNode;
-        this.prop = prop;
+        clazz = classNode
+        this.prop = prop
     }
 }

@@ -10,13 +10,17 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLog
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
+/**
+ * @author lossy
+ * @since 2021-10-11
+ */
 public class MyHandler extends ClientMsgHandler {
 
     // define our custom callback class
     // this will pass data back to the user of the handler
     static class MyCallback extends CallbackMsg {
 
-        private EResult result;
+        private final EResult result;
 
         // generally we don't want user code to instantiate callback objects,
         // but rather only let handlers create them
@@ -44,6 +48,7 @@ public class MyHandler extends ClientMsgHandler {
     }
 
     // some other useful function
+    @SuppressWarnings("unused")
     public void doSomething() {
         // this function could send some other message or perform some other logic
 

@@ -129,7 +129,7 @@ public class SampleFriends implements Runnable {
     private void onLoggedOn(LoggedOnCallback callback) {
         if (callback.getResult() != EResult.OK) {
             if (callback.getResult() == EResult.AccountLogonDenied) {
-                // if we receive AccountLogonDenied or one of it's flavors (AccountLogonDeniedNoMailSent, etc)
+                // if we receive AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
                 // then the account we're logging into is SteamGuard protected
                 // see sample 5 for how SteamGuard can be handled
                 System.out.println("Unable to logon to Steam: This account is SteamGuard protected.");
@@ -162,12 +162,12 @@ public class SampleFriends implements Runnable {
         // before being able to interact with friends, you must wait for the account info callback
         // this callback is posted shortly after a successful logon
 
-        // at this point, we can go online on friends, so lets do that
+        // at this point, we can go online on friends, so let's do that
         steamFriends.setPersonaState(EPersonaState.Online);
     }
 
     private void onFriendList(FriendsListCallback callback) {
-        // at this point, the client has received it's friends list
+        // at this point, the client has received its friends list
 
         int friendCount = callback.getFriendList().size();
 

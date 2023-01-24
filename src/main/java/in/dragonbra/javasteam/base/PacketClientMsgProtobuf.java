@@ -13,9 +13,9 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
 
     private final EMsg msgType;
 
-    private byte[] payload;
+    private final byte[] payload;
 
-    private MsgHdrProtoBuf header;
+    private final MsgHdrProtoBuf header;
 
     /**
      * Initializes a new instance of the {@link PacketClientMsgProtobuf} class.

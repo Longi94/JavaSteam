@@ -2,29 +2,29 @@ package in.dragonbra.steamlanguagegen.generator
 
 class JavaFileWriter extends FileWriter {
 
-    private static final String INDENTATION = '    ';
+    private static final String INDENTATION = '    '
 
-    private String indent = '';
+    private String indent = ''
 
     JavaFileWriter(File file) throws IOException {
-        super(file);
+        super(file)
     }
 
     void indent() {
-        indent += INDENTATION;
+        indent += INDENTATION
     }
 
     void unindent() {
-        indent = indent.substring(INDENTATION.length());
+        indent = indent.substring(INDENTATION.length())
     }
 
     def writeln = { String line ->
-        write(indent);
-        write(line);
-        writeln();
+        write(indent)
+        write(line)
+        writeln()
     }
 
     void writeln() throws IOException {
-        write('\n');
+        write('\n')
     }
 }

@@ -164,6 +164,7 @@ class JavaGen implements Closeable, Flushable {
         writer.writeln '}'
     }
 
+    @SuppressWarnings('GroovyUnusedAssignment')
     private void writeClassDef(ClassNode node) throws IOException {
         String parent = null
 

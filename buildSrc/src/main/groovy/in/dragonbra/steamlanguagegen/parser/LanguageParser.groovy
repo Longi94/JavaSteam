@@ -21,6 +21,7 @@ class LanguageParser {
         'whitespace', 'terminator', 'string', 'comment', 'identifier', 'preprocess', 'operator', 'invalid'
     ]
 
+    @SuppressWarnings('GroovyUnusedAssignment')
     static Queue<Token> tokenizeString(String buffer, String fileName) {
         def bufferLines = buffer.split("[\\r\\n]+")
 
