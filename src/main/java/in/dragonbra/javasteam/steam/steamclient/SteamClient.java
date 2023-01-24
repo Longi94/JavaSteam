@@ -15,6 +15,7 @@ import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer
 import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
 import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
@@ -81,6 +82,7 @@ public class SteamClient extends CMClient {
         addHandler(new SteamMasterServer());
         addHandler(new SteamGameServer());
         addHandler(new SteamGameCoordinator());
+        addHandler(new SteamUnifiedMessages());
 
         processStartTime = new Date();
 

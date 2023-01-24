@@ -74,6 +74,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
      * @param eMsg           The network message type this client message represents.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
+    @SuppressWarnings("unchecked")
     public ClientMsgProtobuf(Class<? extends AbstractMessage> clazz, EMsg eMsg, int payloadReserve) {
         super(payloadReserve);
         this.clazz = clazz;
@@ -122,6 +123,15 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
         return body;
     }
 
+    /**
+     * Sets the body of this message.
+     *
+     * @param _body the body structure of this message.
+     */
+    public void setBody(BodyType _body) {
+        this.body = _body;
+    }
+
     @Override
     public byte[] serialize() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
@@ -136,6 +146,7 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyT
         return baos.toByteArray();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void deserialize(byte[] data) {
         if (data == null) {

@@ -30,4 +30,20 @@ public class Logger {
             }
         }
     }
+
+    public void error(Throwable throwable) {
+        error(null, throwable);
+    }
+
+    public void error(String message) {
+        error(message, null);
+    }
+
+    public void error(String message, Throwable throwable) {
+        for (LogListener listener : LogManager.LOG_LISTENERS) {
+            if (listener != null) {
+                listener.onError(clazz, message, throwable);
+            }
+        }
+    }
 }

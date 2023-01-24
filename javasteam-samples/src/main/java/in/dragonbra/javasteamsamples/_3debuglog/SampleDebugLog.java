@@ -62,6 +62,12 @@ public class SampleDebugLog implements Runnable {
             // for this example, we'll print the output to the console
             System.out.println("MyListener - " + clazz.getName() + ": " + message);
         }
+
+        @Override
+        public void onError(Class clazz, String message, Throwable throwable) {
+            // for this example, we'll print errors the output to the console
+            System.err.println("MyListener - " + clazz.getName() + ": " + message);
+        }
     }
 
     public SampleDebugLog(String user, String pass) {

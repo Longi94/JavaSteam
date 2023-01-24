@@ -13,11 +13,9 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
 
     private final EMsg msgType;
 
-    private final long targetJobID;
+    private byte[] payload;
 
-    private final long sourceJobID;
-
-    private final byte[] payload;
+    private MsgHdrProtoBuf header;
 
     /**
      * Initializes a new instance of the {@link PacketClientMsgProtobuf} class.
@@ -30,14 +28,20 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
         this.msgType = eMsg;
         this.payload = data;
 
-        MsgHdrProtoBuf protobufHeader = new MsgHdrProtoBuf();
+        header = new MsgHdrProtoBuf();
 
         try (ByteArrayInputStream stream = new ByteArrayInputStream(data)) {
-            protobufHeader.deserialize(stream);
+            header.deserialize(stream);
         }
+    }
 
-        targetJobID = protobufHeader.getProto().getJobidTarget();
-        sourceJobID = protobufHeader.getProto().getJobidSource();
+    /**
+     * Gets the header for this packet message.
+     *
+     * @return The header.
+     */
+    public MsgHdrProtoBuf getHeader() {
+        return header;
     }
 
     @Override
@@ -52,12 +56,12 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
 
     @Override
     public long getTargetJobID() {
-        return targetJobID;
+        return header.getProto().getJobidTarget();
     }
 
     @Override
     public long getSourceJobID() {
-        return sourceJobID;
+        return header.getProto().getJobidSource();
     }
 
     @Override

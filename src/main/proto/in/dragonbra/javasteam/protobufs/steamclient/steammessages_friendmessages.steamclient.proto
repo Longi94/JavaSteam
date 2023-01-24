@@ -2,7 +2,8 @@ import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_unified_base.
 
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
-option java_generic_services = true;
+option optimize_for = SPEED;
+option java_generic_services = false;
 
 enum EMessageReactionType {
     k_EMessageReactionType_Invalid = 0;
