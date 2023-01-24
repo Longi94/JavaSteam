@@ -5,10 +5,12 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.enums.EUniverse;
+import in.dragonbra.javasteam.generated.MsgClientLogon;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHello;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLoggedOff;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
@@ -268,7 +270,10 @@ public abstract class CMClient {
      * Called when the client is securely isConnected to Steam3.
      */
     protected void onClientConnected() {
+        ClientMsgProtobuf<CMsgClientHello.Builder> request = new ClientMsgProtobuf<>(CMsgClientHello.class, EMsg.ClientHello);
+        request.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
 
+        send(request);
     }
 
     /**
