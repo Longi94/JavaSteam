@@ -7,11 +7,13 @@ import in.dragonbra.javasteam.util.stream.MemoryStream;
 import in.dragonbra.javasteam.util.stream.SeekOrigin;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -511,5 +513,17 @@ public class KeyValueTest extends TestBase {
         kv.get("name").setValue("OwnerDefault");
 
         assertEquals(EChatPermission.OwnerDefault, kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
+    }
+
+    @Test
+    public void keyValues_loadAsText_should_read_successfully() {
+        URL file = this.getClass().getClassLoader().getResource("textkeyvalues/appinfo_utf8.txt");
+
+        Assertions.assertNotNull(file, "Resource file was null");
+
+        KeyValue kv = KeyValue.loadAsText(file.getPath());
+
+        Assertions.assertEquals("1234567", kv.get("appid").getValue(), "appid should be 1234567");
+        Assertions.assertEquals(2, kv.getChildren().size(), "Children should be 2");
     }
 }

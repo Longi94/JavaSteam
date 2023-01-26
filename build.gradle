@@ -83,6 +83,8 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     // https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
     implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    implementation 'commons-io:commons-io:2.11.0'
 
     /* Unit Testing */
 
@@ -90,8 +92,6 @@ dependencies {
     testImplementation 'com.squareup.okhttp3:mockwebserver3-junit5:5.0.0-alpha.10'
     // https://mvnrepository.com/artifact/commons-codec/commons-codec
     testImplementation 'commons-codec:commons-codec:1.15'
-    // https://mvnrepository.com/artifact/commons-io/commons-io
-    testImplementation 'commons-io:commons-io:2.11.0'
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine

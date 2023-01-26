@@ -69,3 +69,9 @@ crashlytics-build.properties
 fabric.properties
 
 /netlogs/
+
+# JavaSteam residual files
+cellid.txt
+loginkey.txt
+sentry.bin
+server_list.bin

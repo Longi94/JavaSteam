@@ -5,12 +5,15 @@ import in.dragonbra.javasteam.util.Strings;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.MemoryStream;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -20,6 +23,7 @@ import java.util.Map;
 /**
  * Represents a recursive string key to arbitrary value container.
  */
+@SuppressWarnings("unchecked")
 public class KeyValue {
 
     private static final Logger logger = LogManager.getLogger(KeyValue.class);
@@ -439,20 +443,26 @@ public class KeyValue {
         }
 
         try (FileInputStream fis = new FileInputStream(file)) {
+            // Massage the incoming file to be encoded as UTF-8.
+            String fisString = IOUtils.toString(fis, Charset.defaultCharset());
+            byte[] fisStringToBytes = fisString.getBytes(StandardCharsets.UTF_8);
+            MemoryStream ms = new MemoryStream(fisStringToBytes, 0, fisStringToBytes.length - 1);
+
             KeyValue kv = new KeyValue();
 
             if (asBinary) {
-                if (!kv.tryReadAsBinary(fis)) {
+                if (!kv.tryReadAsBinary(ms)) {
                     return null;
                 }
             } else {
-                if (!kv.readAsText(fis)) {
+                if (!kv.readAsText(ms)) {
                     return null;
                 }
             }
 
             return kv;
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
