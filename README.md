@@ -76,7 +76,7 @@ You can head to the very short [Getting Started](https://github.com/Longi94/Java
 
 ## Build
 
-```./gradlew build -x signArchives```
+```./gradlew build -x signMavenJavaPublication```
 
 ## Contributing
 
