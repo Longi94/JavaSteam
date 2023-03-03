@@ -3,13 +3,15 @@ package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback;
 import com.google.protobuf.AbstractMessage;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
 /**
  * @author Lossy
  * @since 2023-01-04
  * <p>
- * This callback represents a service notification received though {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+ * This callback represents a service notification received though
+ * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
  */
 @SuppressWarnings("unused")
 public class ServiceMethodNotification extends CallbackMsg {
@@ -18,14 +20,33 @@ public class ServiceMethodNotification extends CallbackMsg {
 
     private final Object body;
 
+    private final ClientMsgProtobuf<?> clientMsg;
+
+    private final CMsgProtoBufHeader protoHeader;
+
     public ServiceMethodNotification(Class<? extends AbstractMessage> messageType, IPacketMsg packetMsg) {
         // Bounce into generic-land.
-        ClientMsgProtobuf<?> clientMsg = new ClientMsgProtobuf<>(messageType, packetMsg);
+        clientMsg = new ClientMsgProtobuf<>(messageType, packetMsg);
+        protoHeader = clientMsg.getHeader().getProto().build();
 
         // Note: JobID will be -1
 
         this.methodName = clientMsg.getHeader().getProto().getTargetJobName();
         this.body = clientMsg.getBody().build();
+    }
+
+    /**
+     * @return the client message, See {@link ClientMsgProtobuf}
+     */
+    public ClientMsgProtobuf<?> getClientMsg() {
+        return clientMsg;
+    }
+
+    /**
+     * @return the Proto Header, See {@link CMsgProtoBufHeader}
+     */
+    public CMsgProtoBufHeader getProtoHeader() {
+        return protoHeader;
     }
 
     /**

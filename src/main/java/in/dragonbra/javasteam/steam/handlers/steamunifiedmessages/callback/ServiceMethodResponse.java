@@ -24,8 +24,10 @@ public class ServiceMethodResponse extends CallbackMsg {
 
     private final PacketClientMsgProtobuf packetMsg;
 
+    private final CMsgProtoBufHeader protoHeader;
+
     public ServiceMethodResponse(PacketClientMsgProtobuf packetMsg) {
-        CMsgProtoBufHeader protoHeader = packetMsg.getHeader().getProto().build();
+        protoHeader = packetMsg.getHeader().getProto().build();
 
         JobID jobID = new JobID(protoHeader.getJobidTarget());
         setJobID(jobID);
@@ -33,6 +35,20 @@ public class ServiceMethodResponse extends CallbackMsg {
         this.result = EResult.from(protoHeader.getEresult());
         this.methodName = protoHeader.getTargetJobName();
         this.packetMsg = packetMsg;
+    }
+
+    /**
+     * @return the packet message, See {@link PacketClientMsgProtobuf}
+     */
+    public PacketClientMsgProtobuf getPacketMsg() {
+        return packetMsg;
+    }
+
+    /**
+     * @return the Proto Header, See {@link CMsgProtoBufHeader}
+     */
+    public CMsgProtoBufHeader getProtoHeader() {
+        return protoHeader;
     }
 
     /**
