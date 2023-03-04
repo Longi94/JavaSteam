@@ -18,6 +18,6 @@ public class ChatUsabilityClient extends UnifiedService implements IChatUsabilit
 
     @Override
     public void NotifyRequestClientUsabilityMetrics(CChatUsability_RequestClientUsabilityMetrics_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "NotifyRequestClientUsabilityMetrics");
     }
 }

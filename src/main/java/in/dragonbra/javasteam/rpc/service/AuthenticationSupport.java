@@ -19,21 +19,21 @@ public class AuthenticationSupport extends UnifiedService implements IAuthentica
 
     @Override
     public JobID QueryRefreshTokensByAccount(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokensByAccount_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "QueryRefreshTokensByAccount");
     }
 
     @Override
     public JobID QueryRefreshTokenByID(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokenByID_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "QueryRefreshTokenByID");
     }
 
     @Override
     public JobID RevokeToken(SteammessagesAuthSteamclient.CAuthenticationSupport_RevokeToken_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "RevokeToken");
     }
 
     @Override
     public JobID GetTokenHistory(SteammessagesAuthSteamclient.CAuthenticationSupport_GetTokenHistory_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetTokenHistory");
     }
 }

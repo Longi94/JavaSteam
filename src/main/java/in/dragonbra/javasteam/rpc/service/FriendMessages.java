@@ -19,31 +19,31 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
 
     @Override
     public JobID GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetRecentMessages");
     }
 
     @Override
     public JobID GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetActiveMessageSessions");
     }
 
     @Override
     public JobID SendMessage(CFriendMessages_SendMessage_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "SendMessage");
     }
 
     @Override
     public void AckMessage(CFriendMessages_AckMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "AckMessage");
     }
 
     @Override
     public JobID IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "IsInFriendsUIBeta");
     }
 
     @Override
     public JobID UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "UpdateMessageReaction");
     }
 }

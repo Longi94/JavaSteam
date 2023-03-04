@@ -19,11 +19,11 @@ public class CloudGaming extends UnifiedService implements ICloudGaming {
 
     @Override
     public JobID CreateNonce(SteammessagesAuthSteamclient.CCloudGaming_CreateNonce_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "CreateNonce");
     }
 
     @Override
     public JobID GetTimeRemaining(SteammessagesAuthSteamclient.CCloudGaming_GetTimeRemaining_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetTimeRemaining");
     }
 }

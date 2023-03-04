@@ -18,16 +18,16 @@ public class FriendMessagesClient extends UnifiedService implements IFriendMessa
 
     @Override
     public void IncomingMessage(CFriendMessages_IncomingMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "IncomingMessage");
     }
 
     @Override
     public void NotifyAckMessageEcho(CFriendMessages_AckMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "NotifyAckMessageEcho");
     }
 
     @Override
     public void MessageReaction(CFriendMessages_MessageReaction_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "MessageReaction");
     }
 }

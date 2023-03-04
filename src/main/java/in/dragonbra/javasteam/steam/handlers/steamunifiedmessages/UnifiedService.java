@@ -32,25 +32,16 @@ public abstract class UnifiedService {
     }
 
     /**
-     * Gets the calling method name. ie: GetGameBadgeLevels()...
-     *
-     * @return The calling method name.
-     */
-    public static String getMethodName() {
-        return Thread.currentThread().getStackTrace()[3].getMethodName();
-    }
-
-    /**
      * Sends a message.
      * <p>
      * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
      * @param message The message to send.
+     * @param rpcName The RPC name that's being sent.
      * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public JobID sendMessage(GeneratedMessageV3 message) {
+    public JobID sendMessage(GeneratedMessageV3 message, String rpcName) {
         String serviceName = getClassName();
-        String rpcName = getMethodName();
         String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
         return sendMessageOrNotification(rpcEndpoint, message, false);
@@ -60,10 +51,10 @@ public abstract class UnifiedService {
      * Sends a notification.
      *
      * @param message The message to send.
+     * @param rpcName The RPC name that's being sent.
      */
-    public void sendNotification(GeneratedMessageV3 message) {
+    public void sendNotification(GeneratedMessageV3 message, String rpcName) {
         String serviceName = getClassName();
-        String rpcName = getMethodName();
         String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
 
         sendMessageOrNotification(rpcEndpoint, message, true);
