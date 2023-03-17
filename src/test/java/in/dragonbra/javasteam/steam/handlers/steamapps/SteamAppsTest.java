@@ -14,6 +14,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverApp
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest;
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.*;
+import in.dragonbra.javasteam.types.AsyncJobMultiple;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,35 +43,35 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void getAppOwnershipTicket() {
-        JobID jobID = handler.getAppOwnershipTicket(440);
+        AsyncJobSingle<AppOwnershipTicketCallback> job = handler.getAppOwnershipTicket(440);
 
         ClientMsgProtobuf<CMsgClientGetAppOwnershipTicket.Builder> msg = verifySend(EMsg.ClientGetAppOwnershipTicket);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(440, msg.getBody().getAppId());
     }
 
     @Test
     public void getDepotDecryptionKey() {
-        JobID jobID = handler.getDepotDecryptionKey(731, 730);
+        AsyncJobSingle<DepotKeyCallback> job = handler.getDepotDecryptionKey(731, 730);
 
         ClientMsgProtobuf<CMsgClientGetDepotDecryptionKey.Builder> msg = verifySend(EMsg.ClientGetDepotDecryptionKey);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(731, msg.getBody().getDepotId());
         assertEquals(730, msg.getBody().getAppId());
     }
 
     @Test
     public void picsGetAccessTokens() {
-        JobID jobID = handler.picsGetAccessTokens(440, 420);
+        AsyncJobSingle<PICSTokensCallback> job = handler.picsGetAccessTokens(440, 420);
 
         ClientMsgProtobuf<CMsgClientPICSAccessTokenRequest.Builder> msg = verifySend(EMsg.ClientPICSAccessTokenRequest);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(1, msg.getBody().getAppidsCount());
         assertEquals(1, msg.getBody().getPackageidsCount());
         assertEquals(440, msg.getBody().getAppids(0));
@@ -78,12 +80,12 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void picsGetChangesSince() {
-        JobID jobID = handler.picsGetChangesSince();
+        AsyncJobSingle<PICSChangesCallback> job = handler.picsGetChangesSince();
 
         ClientMsgProtobuf<CMsgClientPICSChangesSinceRequest.Builder> msg = verifySend(EMsg.ClientPICSChangesSinceRequest);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertTrue(msg.getBody().getSendAppInfoChanges());
         assertFalse(msg.getBody().getSendPackageInfoChanges());
         assertEquals(0, msg.getBody().getSinceChangeNumber());
@@ -93,12 +95,12 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
     public void picsGetProductInfo() {
         PICSRequest app = new PICSRequest(440);
         PICSRequest _package = new PICSRequest(420);
-        JobID jobID = handler.picsGetProductInfo(app, _package);
+        AsyncJobMultiple<PICSProductInfoCallback> job = handler.picsGetProductInfo(app, _package);
 
         ClientMsgProtobuf<CMsgClientPICSProductInfoRequest.Builder> msg = verifySend(EMsg.ClientPICSProductInfoRequest);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(1, msg.getBody().getAppsCount());
         assertEquals(1, msg.getBody().getPackagesCount());
         assertEquals(440, msg.getBody().getApps(0).getAppid());
@@ -117,12 +119,12 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void getCDNAuthToken() {
-        JobID jobID = handler.getCDNAuthToken(1, 2, "testhostname");
+        AsyncJobSingle<CDNAuthTokenCallback> job = handler.getCDNAuthToken(1, 2, "testhostname");
 
         ClientMsgProtobuf<CMsgClientGetCDNAuthToken.Builder> msg = verifySend(EMsg.ClientGetCDNAuthToken);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(1, msg.getBody().getAppId());
         assertEquals(2, msg.getBody().getDepotId());
         assertEquals("testhostname", msg.getBody().getHostName());
@@ -130,12 +132,13 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void requestFreeLicense() {
-        JobID jobID = handler.requestFreeLicense(440);
+        //JobID jobID = handler.requestFreeLicense(440);
+        AsyncJobSingle<FreeLicenseCallback> job = handler.requestFreeLicense(440);
 
         ClientMsgProtobuf<CMsgClientRequestFreeLicense.Builder> msg = verifySend(EMsg.ClientRequestFreeLicense);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(1, msg.getBody().getAppidsCount());
         assertEquals(440, msg.getBody().getAppids(0));
     }
@@ -147,12 +150,12 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
 
     @Test
     public void checkAppBetaPassword() {
-        JobID jobID = handler.checkAppBetaPassword(440, "testpassword");
+        AsyncJobSingle<CheckAppBetaPasswordCallback> job = handler.checkAppBetaPassword(440, "testpassword");
 
         ClientMsgProtobuf<CMsgClientCheckAppBetaPassword.Builder> msg = verifySend(EMsg.ClientCheckAppBetaPassword);
 
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(440, msg.getBody().getAppId());
         assertEquals("testpassword", msg.getBody().getBetapassword());
     }

@@ -11,6 +11,7 @@ plugins {
     id 'signing'
     id 'steamlanguagegen'
     id 'projectversiongen'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
 }
 
 allprojects {
@@ -66,11 +67,25 @@ sourceSets.main {
     )
 }
 
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+compileTestKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 check.dependsOn jacocoTestReport
 compileJava.dependsOn(generateSteamLanguage)
 compileJava.dependsOn(generateProjectVersion)
 
 dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta")
+
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.10'
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
