@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient
 import in.dragonbra.javasteam.rpc.ICloudGaming;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,12 +19,12 @@ public class CloudGaming extends UnifiedService implements ICloudGaming {
     }
 
     @Override
-    public JobID CreateNonce(SteammessagesAuthSteamclient.CCloudGaming_CreateNonce_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> CreateNonce(SteammessagesAuthSteamclient.CCloudGaming_CreateNonce_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetTimeRemaining(SteammessagesAuthSteamclient.CCloudGaming_GetTimeRemaining_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetTimeRemaining(SteammessagesAuthSteamclient.CCloudGaming_GetTimeRemaining_Request request) {
         return sendMessage(request);
     }
 }

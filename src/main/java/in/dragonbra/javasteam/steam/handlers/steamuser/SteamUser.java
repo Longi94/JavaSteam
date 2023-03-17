@@ -22,6 +22,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.HardwareUtils;
@@ -257,10 +258,11 @@ public class SteamUser extends ClientMsgHandler {
     /**
      * Requests a new WebAPI authentication user nonce.
      * Results are returned in a {@link WebAPIUserNonceCallback}.
+     * The returned {@link  AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @return The Job ID of the request. This can be used to find the appropriate {@link WebAPIUserNonceCallback}.
      */
-    public JobID requestWebAPIUserNonce() {
+    public AsyncJobSingle<WebAPIUserNonceCallback> requestWebAPIUserNonce() {
         ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> reqMsg =
                 new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonce.class, EMsg.ClientRequestWebAPIAuthenticateUserNonce);
         JobID jobID = client.getNextJobID();
@@ -268,7 +270,7 @@ public class SteamUser extends ClientMsgHandler {
 
         client.send(reqMsg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, reqMsg.getSourceJobID());
     }
 
     /**

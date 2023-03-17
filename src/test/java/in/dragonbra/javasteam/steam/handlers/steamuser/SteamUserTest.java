@@ -11,6 +11,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import org.junit.jupiter.api.Test;
@@ -176,11 +177,11 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
 
     @Test
     public void requestWebNonce() {
-        JobID jobID = handler.requestWebAPIUserNonce();
+        AsyncJobSingle<WebAPIUserNonceCallback> job = handler.requestWebAPIUserNonce();
 
         ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> msg = verifySend(EMsg.ClientRequestWebAPIAuthenticateUserNonce);
 
-        assertEquals(SOURCE_JOB_ID, jobID);
+        assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
     }
 

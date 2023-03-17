@@ -17,6 +17,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.*;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -461,7 +462,7 @@ public class SteamFriends extends ClientMsgHandler {
      * @param steamID The SteamID of the friend to ignore or unignore.
      * @return The Job ID of the request. This can be used to find the appropriate {@link IgnoreFriendCallback}.
      */
-    public JobID ignoreFriend(SteamID steamID) {
+    public AsyncJobSingle<IgnoreFriendCallback> ignoreFriend(SteamID steamID) {
         return ignoreFriend(steamID, true);
     }
 
@@ -473,7 +474,7 @@ public class SteamFriends extends ClientMsgHandler {
      * @param setIgnore if set to <b>true</b>, the friend will be ignored; otherwise, they will be unignored.
      * @return The Job ID of the request. This can be used to find the appropriate {@link IgnoreFriendCallback}.
      */
-    public JobID ignoreFriend(SteamID steamID, boolean setIgnore) {
+    public AsyncJobSingle<IgnoreFriendCallback> ignoreFriend(SteamID steamID, boolean setIgnore) {
         if (steamID == null) {
             throw new IllegalArgumentException("steamID is null");
         }
@@ -488,7 +489,7 @@ public class SteamFriends extends ClientMsgHandler {
 
         client.send(ignore);
 
-        return jobID;
+        return new AsyncJobSingle<IgnoreFriendCallback>( this.client, ignore.getSourceJobID() );
     }
 
     /**
@@ -498,7 +499,7 @@ public class SteamFriends extends ClientMsgHandler {
      * @param steamID The SteamID of the friend to request the details of.
      * @return The Job ID of the request. This can be used to find the appropriate {@link ProfileInfoCallback}.
      */
-    public JobID requestProfileInfo(SteamID steamID) {
+    public AsyncJobSingle<ProfileInfoCallback> requestProfileInfo(SteamID steamID) {
         if (steamID == null) {
             throw new IllegalArgumentException("steamID is null");
         }
@@ -512,7 +513,7 @@ public class SteamFriends extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**

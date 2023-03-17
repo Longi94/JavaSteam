@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesRemoteclientServiceMessages.*;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -11,7 +12,7 @@ import in.dragonbra.javasteam.types.JobID;
 public interface IRemoteClient {
 
     /* CRemoteClient_GetPairingInfo_Response */
-    JobID GetPairingInfo(CRemoteClient_GetPairingInfo_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetPairingInfo(CRemoteClient_GetPairingInfo_Request request);
 
     /* NoResponse */
     void NotifyOnline(CRemoteClient_Online_Notification request);
@@ -20,13 +21,13 @@ public interface IRemoteClient {
     void NotifyReplyPacket(CRemoteClient_ReplyPacket_Notification request);
 
     /* CRemoteClient_AllocateTURNServer_Response */
-    JobID AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request);
+    AsyncJobSingle<ServiceMethodResponse> AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request);
 
     /* CRemoteClient_AllocateRelayServer_Response */
-    JobID AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request);
+    AsyncJobSingle<ServiceMethodResponse> AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request);
 
     /* CRemoteClient_AllocateSDR_Response */
-    JobID AllocateSDR(CRemoteClient_AllocateSDR_Request request);
+    AsyncJobSingle<ServiceMethodResponse> AllocateSDR(CRemoteClient_AllocateSDR_Request request);
 
     /* NoResponse */
     void SendSteamBroadcastPacket(CRemoteClient_SteamBroadcast_Notification request);
@@ -35,7 +36,7 @@ public interface IRemoteClient {
     void SendSteamToSteamPacket(CRemoteClient_SteamToSteam_Notification request);
 
     /* CRemotePlay_SessionStarted_Response */
-    JobID SendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request);
+    AsyncJobSingle<ServiceMethodResponse> SendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request);
 
     /* NoResponse */
     void SendRemotePlaySessionStopped(CRemotePlay_SessionStopped_Notification request);
@@ -44,8 +45,8 @@ public interface IRemoteClient {
     void SendRemotePlayTogetherPacket(CRemotePlayTogether_Notification request);
 
     /* CRemoteClient_CreateRemotePlayTogetherInvitation_Response */
-    JobID CreateRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request);
+    AsyncJobSingle<ServiceMethodResponse> CreateRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request);
 
     /* CRemoteClient_DeleteRemotePlayTogetherInvitation_Response */
-    JobID DeleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request);
+    AsyncJobSingle<ServiceMethodResponse> DeleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request);
 }

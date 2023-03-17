@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgClientGMSServerQuery;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.callback.QueryCallback;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -37,7 +38,7 @@ public class SteamMasterServer extends ClientMsgHandler {
      * @param details The details for the request.
      * @return The Job ID of the request. This can be used to find the appropriate {@link QueryCallback}.
      */
-    public JobID serverQuery(QueryDetails details) {
+    public AsyncJobSingle<QueryCallback> serverQuery(QueryDetails details) {
         if (details == null) {
             throw new IllegalArgumentException("details is null");
         }
@@ -60,7 +61,7 @@ public class SteamMasterServer extends ClientMsgHandler {
 
         client.send(query);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, query.getSourceJobID());
     }
 
     @Override

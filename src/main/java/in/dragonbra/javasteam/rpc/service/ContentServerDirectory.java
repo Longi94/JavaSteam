@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSt
 import in.dragonbra.javasteam.rpc.IContentServerDirectory;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,22 +19,22 @@ public class ContentServerDirectory extends UnifiedService implements IContentSe
     }
 
     @Override
-    public JobID GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
         return sendMessage(request);
     }
 }

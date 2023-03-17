@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.*;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -11,8 +12,8 @@ import in.dragonbra.javasteam.types.JobID;
 public interface IClanChatRooms {
 
     /*  CClanChatRooms_GetClanChatRoomInfo_Response */
-    JobID GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request);
 
     /* CClanChatRooms_SetClanChatRoomPrivate_Response */
-    JobID SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request);
+    AsyncJobSingle<ServiceMethodResponse> SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request);
 }

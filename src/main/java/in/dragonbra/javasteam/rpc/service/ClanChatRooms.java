@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient
 import in.dragonbra.javasteam.rpc.IClanChatRooms;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,12 +19,12 @@ public class ClanChatRooms extends UnifiedService implements IClanChatRooms {
     }
 
     @Override
-    public JobID GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request) {
         return sendMessage(request);
     }
 }

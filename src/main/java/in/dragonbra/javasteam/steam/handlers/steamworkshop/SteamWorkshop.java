@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserAction;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.callback.UserActionPublishedFilesCallback;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
@@ -32,11 +33,12 @@ public class SteamWorkshop extends ClientMsgHandler {
     /**
      * Enumerates the list of published files for the current logged-in user based on user action.
      * Results are returned in a {@link UserActionPublishedFilesCallback}.
+     * The returned {@link in.dragonbra.javasteam.types.AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @param details The specific details of the request.
      * @return The Job ID of the request. This can be used to find the appropriate {@link UserActionPublishedFilesCallback}.
      */
-    public JobID enumeratePublishedFilesByUserAction(EnumerationUserDetails details) {
+    public AsyncJobSingle<UserActionPublishedFilesCallback> enumeratePublishedFilesByUserAction(EnumerationUserDetails details) {
         if (details == null) {
             throw new IllegalArgumentException("details is null");
         }
@@ -52,7 +54,7 @@ public class SteamWorkshop extends ClientMsgHandler {
 
         client.send(enumRequest);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, enumRequest.getSourceJobID());
     }
 
     @Override

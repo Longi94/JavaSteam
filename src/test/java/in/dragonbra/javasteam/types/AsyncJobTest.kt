@@ -397,6 +397,7 @@ class AsyncJobTest {
         Assertions.assertThrows(CancellationException::class.java) { runBlocking { asyncTask.await() } }
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun asyncJobMultipleCompletesOnIncompleteResult() {
         val client = SteamClient().apply {
@@ -441,6 +442,7 @@ class AsyncJobTest {
         Assertions.assertSame(onlyResult, result.results.first())
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun asyncJobMultipleCompletesOnIncompleteResultAndFailure() {
         val client = SteamClient().apply {

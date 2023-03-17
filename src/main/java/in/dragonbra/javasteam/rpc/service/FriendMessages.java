@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesS
 import in.dragonbra.javasteam.rpc.IFriendMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,17 +19,17 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
     }
 
     @Override
-    public JobID GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID SendMessage(CFriendMessages_SendMessage_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> SendMessage(CFriendMessages_SendMessage_Request request) {
         return sendMessage(request);
     }
 
@@ -38,12 +39,12 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
     }
 
     @Override
-    public JobID IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
         return sendMessage(request);
     }
 }

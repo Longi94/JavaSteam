@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesRemoteclientSer
 import in.dragonbra.javasteam.rpc.IRemoteClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,7 +19,7 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public JobID GetPairingInfo(CRemoteClient_GetPairingInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetPairingInfo(CRemoteClient_GetPairingInfo_Request request) {
         return sendMessage(request);
     }
 
@@ -35,17 +36,17 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public JobID AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID AllocateSDR(CRemoteClient_AllocateSDR_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> AllocateSDR(CRemoteClient_AllocateSDR_Request request) {
         return sendMessage(request);
     }
 
@@ -60,7 +61,7 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public JobID SendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> SendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request) {
         return sendMessage(request);
     }
 
@@ -75,12 +76,12 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public JobID CreateRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> CreateRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID DeleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> DeleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request) {
         return sendMessage(request);
     }
 }

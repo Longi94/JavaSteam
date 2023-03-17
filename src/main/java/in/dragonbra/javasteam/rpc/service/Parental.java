@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamcl
 import in.dragonbra.javasteam.rpc.IParental;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,52 +19,52 @@ public class Parental extends UnifiedService implements IParental {
     }
 
     @Override
-    public JobID EnableParentalSettings(CParental_EnableParentalSettings_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> EnableParentalSettings(CParental_EnableParentalSettings_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID DisableParentalSettings(CParental_DisableParentalSettings_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> DisableParentalSettings(CParental_DisableParentalSettings_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetParentalSettings(CParental_GetParentalSettings_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetParentalSettings(CParental_GetParentalSettings_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetSignedParentalSettings(CParental_GetSignedParentalSettings_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetSignedParentalSettings(CParental_GetSignedParentalSettings_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID SetParentalSettings(CParental_SetParentalSettings_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> SetParentalSettings(CParental_SetParentalSettings_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID ValidateToken(CParental_ValidateToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> ValidateToken(CParental_ValidateToken_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID ValidatePassword(CParental_ValidatePassword_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> ValidatePassword(CParental_ValidatePassword_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID LockClient(CParental_LockClient_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> LockClient(CParental_LockClient_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID RequestRecoveryCode(CParental_RequestRecoveryCode_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> RequestRecoveryCode(CParental_RequestRecoveryCode_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID DisableWithRecoveryCode(CParental_DisableWithRecoveryCode_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> DisableWithRecoveryCode(CParental_DisableWithRecoveryCode_Request request) {
         return sendMessage(request);
     }
 }

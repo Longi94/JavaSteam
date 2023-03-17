@@ -16,6 +16,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
@@ -47,7 +48,7 @@ public class SteamUserStats extends ClientMsgHandler {
      * @param appId The app id to request the number of players for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link NumberOfPlayersCallback}.
      */
-    public JobID getNumberOfCurrentPlayers(int appId) {
+    public AsyncJobSingle<NumberOfPlayersCallback> getNumberOfCurrentPlayers(int appId) {
         ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayers.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgDPGetNumberOfCurrentPlayers.class, EMsg.ClientGetNumberOfCurrentPlayersDP);
         JobID jobID = client.getNextJobID();
@@ -57,18 +58,19 @@ public class SteamUserStats extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
     }
 
     /**
      * Asks the Steam back-end for a leaderboard by name for a given appid.
      * Results are returned in a {@link FindOrCreateLeaderboardCallback}.
+     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @param appId The AppID to request a leaderboard for.
      * @param name  Name of the leaderboard to request.
      * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
      */
-    public JobID findLeaderBoard(int appId, String name) {
+    public AsyncJobSingle<FindOrCreateLeaderboardCallback> findLeaderBoard(int appId, String name) {
         ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
         JobID jobID = client.getNextJobID();
@@ -83,12 +85,13 @@ public class SteamUserStats extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
     }
 
     /**
      * Asks the Steam back-end for a leaderboard by name, and will create it if it's not yet.
      * Results are returned in a {@link FindOrCreateLeaderboardCallback}.
+     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @param appId       The AppID to request a leaderboard for.
      * @param name        Name of the leaderboard to create.
@@ -96,7 +99,7 @@ public class SteamUserStats extends ClientMsgHandler {
      * @param displayType Display type for this leaderboard.
      * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
      */
-    public JobID createLeaderboard(int appId, String name, ELeaderboardSortMethod sortMethod, ELeaderboardDisplayType displayType) {
+    public AsyncJobSingle<FindOrCreateLeaderboardCallback> createLeaderboard(int appId, String name, ELeaderboardSortMethod sortMethod, ELeaderboardDisplayType displayType) {
         ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
         JobID jobID = client.getNextJobID();
@@ -113,12 +116,13 @@ public class SteamUserStats extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
     }
 
     /**
      * Asks the Steam back-end for a set of rows in the leaderboard.
      * Results are returned in a {@link LeaderboardEntriesCallback}.
+     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @param appId       The AppID to request leaderboard rows for.
      * @param id          ID of the leaderboard to view.
@@ -127,7 +131,7 @@ public class SteamUserStats extends ClientMsgHandler {
      * @param dataRequest Type of request.
      * @return The Job ID of the request. This can be used to find the appropriate {@link LeaderboardEntriesCallback}.
      */
-    public JobID getLeaderboardEntries(int appId, int id, int rangeStart, int rangeEnd, ELeaderboardDataRequest dataRequest) {
+    public AsyncJobSingle<LeaderboardEntriesCallback> getLeaderboardEntries(int appId, int id, int rangeStart, int rangeEnd, ELeaderboardDataRequest dataRequest) {
         ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientLBSGetLBEntries.class, EMsg.ClientLBSGetLBEntries);
         JobID jobID = client.getNextJobID();
@@ -141,7 +145,7 @@ public class SteamUserStats extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
     }
 
     @Override

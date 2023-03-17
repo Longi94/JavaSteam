@@ -2,7 +2,8 @@ package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CCloudGaming_CreateNonce_Request;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CCloudGaming_GetTimeRemaining_Request;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -12,8 +13,8 @@ import in.dragonbra.javasteam.types.JobID;
 public interface ICloudGaming {
 
     /* CCloudGaming_CreateNonce_Response */
-    JobID CreateNonce(CCloudGaming_CreateNonce_Request request);
+    AsyncJobSingle<ServiceMethodResponse> CreateNonce(CCloudGaming_CreateNonce_Request request);
 
     /* CCloudGaming_GetTimeRemaining_Response */
-    JobID GetTimeRemaining(CCloudGaming_GetTimeRemaining_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetTimeRemaining(CCloudGaming_GetTimeRemaining_Request request);
 }

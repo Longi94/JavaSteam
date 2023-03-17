@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -11,32 +12,32 @@ import in.dragonbra.javasteam.types.JobID;
 public interface IAuthentication {
 
     /* CAuthentication_GetPasswordRSAPublicKey_Response */
-    JobID GetPasswordRSAPublicKey(CAuthentication_GetPasswordRSAPublicKey_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetPasswordRSAPublicKey(CAuthentication_GetPasswordRSAPublicKey_Request request);
 
     /* CAuthentication_BeginAuthSessionViaQR_Response */
-    JobID BeginAuthSessionViaQR(CAuthentication_BeginAuthSessionViaQR_Request request);
+    AsyncJobSingle<ServiceMethodResponse> BeginAuthSessionViaQR(CAuthentication_BeginAuthSessionViaQR_Request request);
 
     /* CAuthentication_BeginAuthSessionViaCredentials_Response */
-    JobID BeginAuthSessionViaCredentials(CAuthentication_BeginAuthSessionViaCredentials_Request request);
+    AsyncJobSingle<ServiceMethodResponse> BeginAuthSessionViaCredentials(CAuthentication_BeginAuthSessionViaCredentials_Request request);
 
     /* CAuthentication_PollAuthSessionStatus_Response */
-    JobID PollAuthSessionStatus(CAuthentication_PollAuthSessionStatus_Request request);
+    AsyncJobSingle<ServiceMethodResponse> PollAuthSessionStatus(CAuthentication_PollAuthSessionStatus_Request request);
 
     /* CAuthentication_GetAuthSessionInfo_Response */
-    JobID GetAuthSessionInfo(CAuthentication_GetAuthSessionInfo_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetAuthSessionInfo(CAuthentication_GetAuthSessionInfo_Request request);
 
     /* CAuthentication_UpdateAuthSessionWithMobileConfirmation_Response */
-    JobID UpdateAuthSessionWithMobileConfirmation(CAuthentication_UpdateAuthSessionWithMobileConfirmation_Request request);
+    AsyncJobSingle<ServiceMethodResponse> UpdateAuthSessionWithMobileConfirmation(CAuthentication_UpdateAuthSessionWithMobileConfirmation_Request request);
 
     /* CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response */
-    JobID UpdateAuthSessionWithSteamGuardCode(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request request);
+    AsyncJobSingle<ServiceMethodResponse> UpdateAuthSessionWithSteamGuardCode(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request request);
 
     /* CAuthentication_AccessToken_GenerateForApp_Response */
-    JobID GenerateAccessTokenForApp(CAuthentication_AccessToken_GenerateForApp_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GenerateAccessTokenForApp(CAuthentication_AccessToken_GenerateForApp_Request request);
 
     /* CAuthentication_GetAuthSessionsForAccount_Response */
-    JobID GetAuthSessionsForAccount(CAuthentication_GetAuthSessionsForAccount_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetAuthSessionsForAccount(CAuthentication_GetAuthSessionsForAccount_Request request);
 
     /* CAuthentication_MigrateMobileSession_Response */
-    JobID MigrateMobileSession(CAuthentication_MigrateMobileSession_Request request);
+    AsyncJobSingle<ServiceMethodResponse> MigrateMobileSession(CAuthentication_MigrateMobileSession_Request request);
 }

@@ -4,7 +4,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient
 import in.dragonbra.javasteam.rpc.IAuthenticationSupport;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -18,22 +19,22 @@ public class AuthenticationSupport extends UnifiedService implements IAuthentica
     }
 
     @Override
-    public JobID QueryRefreshTokensByAccount(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokensByAccount_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokensByAccount(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokensByAccount_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID QueryRefreshTokenByID(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokenByID_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokenByID(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokenByID_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID RevokeToken(SteammessagesAuthSteamclient.CAuthenticationSupport_RevokeToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> RevokeToken(SteammessagesAuthSteamclient.CAuthenticationSupport_RevokeToken_Request request) {
         return sendMessage(request);
     }
 
     @Override
-    public JobID GetTokenHistory(SteammessagesAuthSteamclient.CAuthenticationSupport_GetTokenHistory_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> GetTokenHistory(SteammessagesAuthSteamclient.CAuthenticationSupport_GetTokenHistory_Request request) {
         return sendMessage(request);
     }
 }

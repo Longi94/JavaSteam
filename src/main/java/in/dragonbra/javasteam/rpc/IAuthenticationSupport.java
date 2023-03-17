@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.rpc;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -11,14 +12,14 @@ import in.dragonbra.javasteam.types.JobID;
 public interface IAuthenticationSupport {
 
     /* CAuthenticationSupport_QueryRefreshTokensByAccount_Response */
-    JobID QueryRefreshTokensByAccount(CAuthenticationSupport_QueryRefreshTokensByAccount_Request request);
+    AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokensByAccount(CAuthenticationSupport_QueryRefreshTokensByAccount_Request request);
 
     /* CAuthenticationSupport_QueryRefreshTokenByID_Response */
-    JobID QueryRefreshTokenByID(CAuthenticationSupport_QueryRefreshTokenByID_Request request);
+    AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokenByID(CAuthenticationSupport_QueryRefreshTokenByID_Request request);
 
     /* CAuthenticationSupport_RevokeToken_Response */
-    JobID RevokeToken(CAuthenticationSupport_RevokeToken_Request request);
+    AsyncJobSingle<ServiceMethodResponse> RevokeToken(CAuthenticationSupport_RevokeToken_Request request);
 
     /* CAuthenticationSupport_GetTokenHistory_Response */
-    JobID GetTokenHistory(CAuthenticationSupport_GetTokenHistory_Request request);
+    AsyncJobSingle<ServiceMethodResponse> GetTokenHistory(CAuthenticationSupport_GetTokenHistory_Request request);
 }

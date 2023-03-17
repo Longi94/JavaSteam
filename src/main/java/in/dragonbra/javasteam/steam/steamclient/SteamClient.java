@@ -12,6 +12,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator;
 import in.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;
+import in.dragonbra.javasteam.steam.handlers.steamnetworking.SteamNetworking;
 import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
 import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
@@ -76,17 +77,18 @@ public class SteamClient extends CMClient {
         // notice: SteamFriends should be added before SteamUser due to AccountInfoCallback
         addHandler(new SteamFriends());
         addHandler(new SteamUser());
-        addHandler(new SteamNotifications());
-        addHandler(new SteamTrading());
         addHandler(new SteamApps());
-        addHandler(new SteamCloud());
-        addHandler(new SteamScreenshots());
-        addHandler(new SteamUserStats());
-        addHandler(new SteamWorkshop());
-        addHandler(new SteamMasterServer());
-        addHandler(new SteamGameServer());
         addHandler(new SteamGameCoordinator());
+        addHandler(new SteamGameServer());
+        addHandler(new SteamMasterServer());
+        addHandler(new SteamCloud());
+        addHandler(new SteamWorkshop());
+        addHandler(new SteamTrading());
         addHandler(new SteamUnifiedMessages());
+        addHandler(new SteamScreenshots());
+        addHandler(new SteamNetworking());
+        addHandler(new SteamNotifications());
+        addHandler(new SteamUserStats());
 
         processStartTime = new Date();
 

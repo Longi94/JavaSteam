@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
 
 import com.google.protobuf.GeneratedMessageV3;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -48,7 +49,7 @@ public abstract class UnifiedService {
      * @param message The message to send.
      * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public JobID sendMessage(GeneratedMessageV3 message) {
+    public AsyncJobSingle<ServiceMethodResponse> sendMessage(GeneratedMessageV3 message) {
         String serviceName = getClassName();
         String rpcName = getMethodName();
         String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
@@ -69,7 +70,7 @@ public abstract class UnifiedService {
         sendMessageOrNotification(rpcEndpoint, message, true);
     }
 
-    private JobID sendMessageOrNotification(String rpcName, GeneratedMessageV3 message, Boolean isNotification) {
+    private AsyncJobSingle<ServiceMethodResponse> sendMessageOrNotification(String rpcName, GeneratedMessageV3 message, Boolean isNotification) {
 
         if (isNotification) {
             steamUnifiedMessages.sendNotification(rpcName, message);
