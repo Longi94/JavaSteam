@@ -22,11 +22,17 @@ public class LogOnDetails {
 
     private String twoFactorCode = "";
 
+    /**
+     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
+     */
+    @Deprecated
     private String loginKey = "";
 
     private boolean shouldRememberPassword;
 
     private byte[] sentryFileHash;
+
+    private String accessToken;
 
     private long accountInstance;
 
@@ -164,7 +170,9 @@ public class LogOnDetails {
      * Gets the login key used to login. This is a key that has been received in a previous Steam session by a {@link LoginKeyCallback}.
      *
      * @return the login key.
+     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
      */
+    @Deprecated
     public String getLoginKey() {
         return loginKey;
     }
@@ -173,7 +181,9 @@ public class LogOnDetails {
      * Sets the login key used to login. This is a key that has been received in a previous Steam session by a {@link LoginKeyCallback}.
      *
      * @param loginKey the login key.
+     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
      */
+    @Deprecated
     public void setLoginKey(String loginKey) {
         this.loginKey = loginKey;
     }
@@ -214,6 +224,26 @@ public class LogOnDetails {
      */
     public void setSentryFileHash(byte[] sentryFileHash) {
         this.sentryFileHash = sentryFileHash;
+    }
+
+    /**
+     * Gets the access token used to log in. This a token that has been provided after a successful login using
+     * {@link in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication}.
+     *
+     * @return the access token used to log in.
+     */
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    /**
+     * Sets the access token used to log in. This a token that has been provided after a successful login using
+     * {@link in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication}.
+     *
+     * @param accessToken the access token used to log in.
+     */
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 
     /**

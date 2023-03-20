@@ -232,4 +232,19 @@ public class Utils {
         checksum.update(bytes, 0, bytes.length);
         return checksum.getValue();
     }
+
+    public static byte[] decodeHexString(String hex) {
+        if (hex == null) {
+            return null;
+        }
+
+        int chars = hex.length();
+        byte[] bytes = new byte[chars / 2];
+
+        for (int i = 0; i < chars; i += 2) {
+            bytes[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
+        }
+
+        return bytes;
+    }
 }

@@ -73,7 +73,8 @@ public class SteamUser extends ClientMsgHandler {
             throw new IllegalArgumentException("details is null");
         }
 
-        if (Strings.isNullOrEmpty(details.getUsername()) || Strings.isNullOrEmpty(details.getPassword()) && Strings.isNullOrEmpty(details.getLoginKey())) {
+        if (Strings.isNullOrEmpty(details.getUsername()) || (Strings.isNullOrEmpty(details.getPassword()) &&
+                Strings.isNullOrEmpty(details.getLoginKey()) && Strings.isNullOrEmpty(details.getAccessToken()))) {
             throw new IllegalArgumentException("LogOn requires a username and password to be set in 'details'.");
         }
 
@@ -148,6 +149,10 @@ public class SteamUser extends ClientMsgHandler {
 
         if (!Strings.isNullOrEmpty(details.getLoginKey())) {
             logon.getBody().setLoginKey(details.getLoginKey());
+        }
+
+        if (!Strings.isNullOrEmpty(details.getAccessToken())) {
+            logon.getBody().setLoginKey(details.getAccessToken());
         }
 
         if (details.getSentryFileHash() != null) {
@@ -277,7 +282,9 @@ public class SteamUser extends ClientMsgHandler {
      * Accepts the new Login Key provided by a {@link LoginKeyCallback}.
      *
      * @param callback The callback containing the new Login Key.
+     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
      */
+    @Deprecated
     public void acceptNewLoginKey(LoginKeyCallback callback) {
         if (callback == null) {
             throw new IllegalArgumentException("callback is null");
