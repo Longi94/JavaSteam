@@ -228,7 +228,7 @@ public class SampleSteamGuardRememberMe implements Runnable {
             details.setBytesWritten(callback.getBytesToWrite());
             details.setFileSize((int) sentry.length());
             details.setOffset(callback.getOffset());
-            details.seteResult(EResult.OK);
+            details.setEResult(EResult.OK);
             details.setLastError(0);
             details.setOneTimePassword(otpDetails);
             details.setSentryFileHash(calculateSHA1(sentry));

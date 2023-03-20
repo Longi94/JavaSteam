@@ -148,7 +148,7 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
         details.setBytesWritten(10);
         details.setFileSize(16);
         details.setOffset(69);
-        details.seteResult(EResult.OK);
+        details.setEResult(EResult.OK);
         details.setLastError(1);
         details.setOneTimePassword(otp);
         details.setSentryFileHash(new byte[]{0, 1, 2, 3});

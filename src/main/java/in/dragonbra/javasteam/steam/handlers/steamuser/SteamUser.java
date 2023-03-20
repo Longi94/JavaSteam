@@ -238,7 +238,7 @@ public class SteamUser extends ClientMsgHandler {
         response.getProtoHeader().setJobidTarget(details.getJobID().getValue());
 
         response.getBody().setCubwrote(details.getBytesWritten());
-        response.getBody().setEresult(details.geteResult().code());
+        response.getBody().setEresult(details.getEResult().code());
 
         response.getBody().setFilename(details.getFileName());
         response.getBody().setFilesize(details.getFileSize());

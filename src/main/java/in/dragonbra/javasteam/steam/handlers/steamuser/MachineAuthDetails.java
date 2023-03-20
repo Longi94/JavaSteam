@@ -53,7 +53,7 @@ public class MachineAuthDetails {
      *
      * @return the result as {@link EResult}
      */
-    public EResult geteResult() {
+    public EResult getEResult() {
         return eResult;
     }
 
@@ -62,7 +62,7 @@ public class MachineAuthDetails {
      *
      * @param eResult the result as {@link EResult}
      */
-    public void seteResult(EResult eResult) {
+    public void setEResult(EResult eResult) {
         this.eResult = eResult;
     }
 
