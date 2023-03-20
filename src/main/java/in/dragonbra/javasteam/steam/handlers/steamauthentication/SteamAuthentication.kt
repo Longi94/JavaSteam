@@ -5,7 +5,7 @@ import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
-import `in`.dragonbra.javasteam.protobufs.steamclient.Enums
+import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.ESessionPersistence
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.Authentication
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
@@ -83,7 +83,7 @@ class SteamAuthentication : ClientMsgHandler() {
          * Gets or Sets the session persistence.
          */
         @JvmField
-        var persistentSession: Boolean? = null
+        var persistentSession: Boolean = false
 
         /**
          * Gets or Sets the website id that the login will be performed for.
@@ -492,40 +492,38 @@ class SteamAuthentication : ClientMsgHandler() {
         val authenticationService = Authentication(unifiedMessages)
 
         // Encrypt the password
-        val publicKeyResp = getPasswordRSAPublicKey(details.username, authenticationService)
+        val passwordRSAPublicKey = getPasswordRSAPublicKey(details.username, authenticationService)
 
-        val mod = publicKeyResp.publickeyMod.toByteArray(StandardCharsets.UTF_8)
-        val exp = publicKeyResp.publickeyExp.toByteArray(StandardCharsets.UTF_8)
-        val rsaPublicKey = RSAPublicKeySpec(BigInteger(1, mod), BigInteger(1, exp))
+        val mod = passwordRSAPublicKey.publickeyMod.toByteArray(StandardCharsets.UTF_8)
+        val exp = passwordRSAPublicKey.publickeyExp.toByteArray(StandardCharsets.UTF_8)
+        val publicKeyModulus = BigInteger(1, mod)
+        val publicKeyExponent = BigInteger(1, exp)
 
+        val rsaPublicKeySpec = RSAPublicKeySpec(publicKeyModulus, publicKeyExponent)
         val keyFactory = KeyFactory.getInstance("RSA")
-        val publicKey = keyFactory.generatePublic(rsaPublicKey)
+        val publicKey = keyFactory.generatePublic(rsaPublicKeySpec)
 
         val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        val encryptedPassword = cipher.doFinal(details.password!!.toByteArray())
+        val encryptedPassword = cipher.doFinal(details.password!!.toByteArray(StandardCharsets.UTF_8))
 
         // Create request
-        val deviceDetails = CAuthentication_DeviceDetails.newBuilder().apply {
-            deviceFriendlyName = details.deviceFriendlyName
-            platformType = details.platformType
-            osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
-        }.build()
-
         val request = CAuthentication_BeginAuthSessionViaCredentials_Request.newBuilder().apply {
-            val persistence = if (details.persistentSession!!)
-                Enums.ESessionPersistence.k_ESessionPersistence_Persistent
-            else
-                Enums.ESessionPersistence.k_ESessionPersistence_Ephemeral
-
+            // Kinda Ugly
             details.guardData?.let { guardData = it }
             details.websiteID?.let { websiteId = it }
             accountName = details.username
-            encryptionTimestamp = publicKeyResp.timestamp
-            this.deviceDetails = deviceDetails
+            encryptionTimestamp = passwordRSAPublicKey.timestamp
+            persistence =
+                if (details.persistentSession) ESessionPersistence.k_ESessionPersistence_Persistent
+                else ESessionPersistence.k_ESessionPersistence_Ephemeral
             this.encryptedPassword = Base64.getEncoder().encodeToString(encryptedPassword)
-            this.persistence = persistence
+            this.deviceDetails = CAuthentication_DeviceDetails.newBuilder().apply {
+                deviceFriendlyName = details.deviceFriendlyName
+                osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
+                platformType = details.platformType
+            }.build()
         }.build()
 
         val message: ServiceMethodResponse = runBlocking {
