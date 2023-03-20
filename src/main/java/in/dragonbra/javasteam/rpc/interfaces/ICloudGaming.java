@@ -1,4 +1,4 @@
-package in.dragonbra.javasteam.rpc;
+package in.dragonbra.javasteam.rpc.interfaces;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CCloudGaming_CreateNonce_Request;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CCloudGaming_GetTimeRemaining_Request;

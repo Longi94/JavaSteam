@@ -1,4 +1,4 @@
-package in.dragonbra.javasteam.rpc;
+package in.dragonbra.javasteam.rpc.interfaces;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.*;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;

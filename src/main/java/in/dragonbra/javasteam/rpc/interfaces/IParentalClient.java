@@ -1,4 +1,4 @@
-package in.dragonbra.javasteam.rpc;
+package in.dragonbra.javasteam.rpc.interfaces;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.CParental_ParentalLock_Notification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient.CParental_ParentalSettingsChange_Notification;
