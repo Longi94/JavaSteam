@@ -50,7 +50,7 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_10) {
                 return EOSType.Windows10;
             }
-            if(checkOS("Windows 11", "10.0")){
+            if (checkOS("Windows 11", "10.0")) {
                 return EOSType.Win11;
             }
             // Windows Server
@@ -63,13 +63,13 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_2012) {
                 return EOSType.Win2012;
             }
-            if(checkOS("Windows Server 2016", "10.0")) {
+            if (checkOS("Windows Server 2016", "10.0")) {
                 return EOSType.Win2016;
             }
-            if(checkOS("Windows Server 2019", "10.0")) {
+            if (checkOS("Windows Server 2019", "10.0")) {
                 return EOSType.Win2019;
             }
-            if(checkOS("Windows Server 2022", "10.0")) {
+            if (checkOS("Windows Server 2022", "10.0")) {
                 return EOSType.Win2022;
             }
             // Windows Unknown
@@ -231,20 +231,5 @@ public class Utils {
         byte[] bytes = s.getBytes();
         checksum.update(bytes, 0, bytes.length);
         return checksum.getValue();
-    }
-
-    public static byte[] decodeHexString(String hex) {
-        if (hex == null) {
-            return null;
-        }
-
-        int chars = hex.length();
-        byte[] bytes = new byte[chars / 2];
-
-        for (int i = 0; i < chars; i += 2) {
-            bytes[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
-        }
-
-        return bytes;
     }
 }
