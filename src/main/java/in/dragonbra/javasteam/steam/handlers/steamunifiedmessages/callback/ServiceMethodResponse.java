@@ -13,7 +13,8 @@ import in.dragonbra.javasteam.types.JobID;
  * @author Lossy
  * @since 2023-01-04
  * <p>
- * This callback is returned in response to a service method sent through {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+ * This callback is returned in response to a service method sent through
+ * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
  */
 @SuppressWarnings("unused")
 public class ServiceMethodResponse extends CallbackMsg {
@@ -84,7 +85,8 @@ public class ServiceMethodResponse extends CallbackMsg {
      *
      * @param clazz The message class, type erasure.
      * @param <T>   Protobuf type of the response message.
-     * @return The response to the message sent through {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+     * @return The response to the message sent through
+     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
      */
     public <T extends GeneratedMessageV3.Builder<T>> T getDeserializedResponse(Class<? extends AbstractMessage> clazz) {
         ClientMsgProtobuf<T> msg = new ClientMsgProtobuf<>(clazz, packetMsg);

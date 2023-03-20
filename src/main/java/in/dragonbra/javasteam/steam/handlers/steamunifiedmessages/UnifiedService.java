@@ -35,10 +35,12 @@ public abstract class UnifiedService {
     /**
      * Sends a message.
      * <p>
-     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * Results are returned in a
+     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
      * @param message The message to send.
-     * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * @return The JobID of the message. This can be used to find the appropriate
+     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
     public AsyncJobSingle<ServiceMethodResponse> sendMessage(GeneratedMessageV3 message, String methodName) {
         String serviceName = getClassName();

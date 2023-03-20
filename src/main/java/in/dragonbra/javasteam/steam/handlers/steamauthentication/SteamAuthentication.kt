@@ -157,12 +157,12 @@ class SteamAuthentication : ClientMsgHandler() {
      * Represents an authentication sesssion which can be used to finish the authentication and get access tokens.
      */
     open inner class AuthSession(
-            var authenticationService: Authentication,
-            var authenticator: IAuthenticator?, // Authenticator object which will be used to handle 2-factor authentication if necessary.
-            var clientID: Long, // Unique identifier of requestor, also used for routing, portion of QR code.
-            var requestID: ByteArray, // Unique request ID to be presented by requestor at poll time.
-            var allowedConfirmations: List<CAuthentication_AllowedConfirmation>, // Confirmation types that will be able to confirm the request.
-            var pollingInterval: Float // Refresh interval with which requestor should call PollAuthSessionStatus.
+        var authenticationService: Authentication,
+        var authenticator: IAuthenticator?, // Authenticator object which will be used to handle 2-factor authentication if necessary.
+        var clientID: Long, // Unique identifier of requestor, also used for routing, portion of QR code.
+        var requestID: ByteArray, // Unique request ID to be presented by requestor at poll time.
+        var allowedConfirmations: List<CAuthentication_AllowedConfirmation>, // Confirmation types that will be able to confirm the request.
+        var pollingInterval: Float // Refresh interval with which requestor should call PollAuthSessionStatus.
     ) {
 
         init {
@@ -174,10 +174,16 @@ class SteamAuthentication : ClientMsgHandler() {
          *
          * @return An object containing tokens which can be used to log in to Steam.
          */
-        @Throws(IllegalArgumentException::class, AuthenticationException::class, ExecutionException::class, InterruptedException::class)
+        @Throws(
+            IllegalArgumentException::class,
+            AuthenticationException::class,
+            ExecutionException::class,
+            InterruptedException::class
+        )
         fun startPolling(): AuthPollResult {
             var pollLoop = false
-            var preferredConfirmation: CAuthentication_AllowedConfirmation? = allowedConfirmations.stream().findFirst().orElse(null)
+            var preferredConfirmation: CAuthentication_AllowedConfirmation? =
+                allowedConfirmations.stream().findFirst().orElse(null)
 
             require(!(preferredConfirmation == null || preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown)) {
                 "There are no allowed confirmations"
@@ -191,7 +197,7 @@ class SteamAuthentication : ClientMsgHandler() {
                 if (!prefersToPollForConfirmation) {
                     require(allowedConfirmations.size > 1) {
                         "AcceptDeviceConfirmation returned false which indicates a fallback to another confirmation type, " +
-                                "but there are no other confirmation types available."
+                            "but there are no other confirmation types available."
                     }
 
                     preferredConfirmation = allowedConfirmations[1]
@@ -222,7 +228,10 @@ class SteamAuthentication : ClientMsgHandler() {
                         try {
                             val task: CompletableFuture<String> = when (preferredConfirmation.confirmationType) {
                                 EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode ->
-                                    authenticator!!.provideEmailCode(preferredConfirmation.associatedMessage, previousCodeWasIncorrect)
+                                    authenticator!!.provideEmailCode(
+                                        preferredConfirmation.associatedMessage,
+                                        previousCodeWasIncorrect
+                                    )
 
                                 EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode ->
                                     authenticator!!.provideDeviceCode(previousCodeWasIncorrect)
@@ -303,7 +312,7 @@ class SteamAuthentication : ClientMsgHandler() {
             }
 
             val response: CAuthentication_PollAuthSessionStatus_Response.Builder =
-                    message.getDeserializedResponse(CAuthentication_PollAuthSessionStatus_Response::class.java)
+                message.getDeserializedResponse(CAuthentication_PollAuthSessionStatus_Response::class.java)
 
             if (response.newClientId > 0) {
                 clientID = response.newClientId
@@ -322,16 +331,16 @@ class SteamAuthentication : ClientMsgHandler() {
      * QR code based authentication session.
      */
     inner class QrAuthSession(
-            service: Authentication,
-            authenticator: IAuthenticator?,
-            response: CAuthentication_BeginAuthSessionViaQR_Response.Builder
+        service: Authentication,
+        authenticator: IAuthenticator?,
+        response: CAuthentication_BeginAuthSessionViaQR_Response.Builder
     ) : AuthSession(
-            authenticationService = service,
-            authenticator = authenticator,
-            clientID = response.clientId,
-            requestID = response.requestId.toByteArray(),
-            allowedConfirmations = response.allowedConfirmationsList,
-            pollingInterval = response.interval
+        authenticationService = service,
+        authenticator = authenticator,
+        clientID = response.clientId,
+        requestID = response.requestId.toByteArray(),
+        allowedConfirmations = response.allowedConfirmationsList,
+        pollingInterval = response.interval
     ) {
         // URL based on client ID, which can be rendered as QR code.
         var challengeUrl: String
@@ -348,16 +357,16 @@ class SteamAuthentication : ClientMsgHandler() {
      * Credentials based authentication session.
      */
     inner class CredentialsAuthSession(
-            service: Authentication,
-            authenticator: IAuthenticator?,
-            response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder
+        service: Authentication,
+        authenticator: IAuthenticator?,
+        response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder
     ) : AuthSession(
-            authenticationService = service,
-            authenticator = authenticator,
-            clientID = response.clientId,
-            requestID = response.requestId.toByteArray(),
-            allowedConfirmations = response.allowedConfirmationsList,
-            pollingInterval = response.interval
+        authenticationService = service,
+        authenticator = authenticator,
+        clientID = response.clientId,
+        requestID = response.requestId.toByteArray(),
+        allowedConfirmations = response.allowedConfirmationsList,
+        pollingInterval = response.interval
     ) {
 
         // SteamID of the account logging in, will only be included if the credentials were correct.
@@ -383,7 +392,7 @@ class SteamAuthentication : ClientMsgHandler() {
             }
 
             val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
-                    message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
+                message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
 
             if (message.result != EResult.OK) {
                 throw AuthenticationException("Failed to send steam guard code", message.result)
@@ -404,14 +413,15 @@ class SteamAuthentication : ClientMsgHandler() {
      */
     @Throws(AuthenticationException::class)
     private fun getPasswordRSAPublicKey(
-            accountName: String?,
-            authenticationService: Authentication
+        accountName: String?,
+        authenticationService: Authentication
     ): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
-        val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder()
-        request.accountName = accountName
+        val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder().apply {
+            this.accountName = accountName
+        }.build()
 
         val message: ServiceMethodResponse = runBlocking {
-            authenticationService.GetPasswordRSAPublicKey(request.build()).toAwait()
+            authenticationService.GetPasswordRSAPublicKey(request).toAwait()
         }
 
         if (message.result != EResult.OK) {
@@ -450,7 +460,7 @@ class SteamAuthentication : ClientMsgHandler() {
         }
 
         val response: CAuthentication_BeginAuthSessionViaQR_Response.Builder =
-                message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaQR_Response::class.java)
+            message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaQR_Response::class.java)
 
         return QrAuthSession(authentication, details.authenticator, response)
     }
@@ -462,8 +472,19 @@ class SteamAuthentication : ClientMsgHandler() {
      * @param unifiedMessages
      * @return CredentialsAuthSession
      */
-    @Throws(AuthenticationException::class, NoSuchAlgorithmException::class, InvalidKeySpecException::class, NoSuchPaddingException::class, InvalidKeyException::class, IllegalBlockSizeException::class, BadPaddingException::class)
-    fun beginAuthSessionViaCredentials(details: AuthSessionDetails?, unifiedMessages: SteamUnifiedMessages): CredentialsAuthSession {
+    @Throws(
+        AuthenticationException::class,
+        NoSuchAlgorithmException::class,
+        InvalidKeySpecException::class,
+        NoSuchPaddingException::class,
+        InvalidKeyException::class,
+        IllegalBlockSizeException::class,
+        BadPaddingException::class
+    )
+    fun beginAuthSessionViaCredentials(
+        details: AuthSessionDetails?,
+        unifiedMessages: SteamUnifiedMessages
+    ): CredentialsAuthSession {
         requireNotNull(details) { "details is null" }
 
         require(!Strings.isNullOrEmpty(details.username) || !Strings.isNullOrEmpty(details.password)) {
@@ -492,20 +513,25 @@ class SteamAuthentication : ClientMsgHandler() {
             deviceFriendlyName = details.deviceFriendlyName
             platformType = details.platformType
             osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
-        }
+        }.build()
 
         val request = CAuthentication_BeginAuthSessionViaCredentials_Request.newBuilder().apply {
+            val persistence = if (details.persistentSession!!)
+                Enums.ESessionPersistence.k_ESessionPersistence_Persistent
+            else
+                Enums.ESessionPersistence.k_ESessionPersistence_Ephemeral
+
+            details.guardData?.let { guardData = it }
+            details.websiteID?.let { websiteId = it }
             accountName = details.username
             encryptionTimestamp = publicKeyResp.timestamp
-            persistence = if (details.persistentSession!!) Enums.ESessionPersistence.k_ESessionPersistence_Persistent else Enums.ESessionPersistence.k_ESessionPersistence_Ephemeral
-            details.websiteID?.let { websiteId = it }
-            details.guardData?.let { guardData = it }
-            this.deviceDetails = deviceDetails.build()
+            this.deviceDetails = deviceDetails
             this.encryptedPassword = Base64.getEncoder().encodeToString(encryptedPassword)
-        }
+            this.persistence = persistence
+        }.build()
 
         val message: ServiceMethodResponse = runBlocking {
-            authenticationService.BeginAuthSessionViaCredentials(request.build()).toAwait()
+            authenticationService.BeginAuthSessionViaCredentials(request).toAwait()
         }
 
         if (message.result != EResult.OK) {
@@ -513,7 +539,7 @@ class SteamAuthentication : ClientMsgHandler() {
         }
 
         val response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder =
-                message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaCredentials_Response::class.java)
+            message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaCredentials_Response::class.java)
 
         return CredentialsAuthSession(authenticationService, details.authenticator, response)
     }
@@ -527,25 +553,25 @@ class SteamAuthentication : ClientMsgHandler() {
          */
         private fun sortConfirmations(confirmations: List<CAuthentication_AllowedConfirmation>): List<CAuthentication_AllowedConfirmation> {
             val preferredConfirmationTypes: Array<EAuthSessionGuardType> = arrayOf(
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_None,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_EmailConfirmation,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_MachineToken,
-                    EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown
+                EAuthSessionGuardType.k_EAuthSessionGuardType_None,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_EmailConfirmation,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_MachineToken,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown
             )
 
             val sortOrder: Map<EAuthSessionGuardType, Int> = IntStream.range(0, preferredConfirmationTypes.size)
-                    .boxed()
-                    .collect(Collectors.toMap({ i: Int -> preferredConfirmationTypes[i] }, { i: Int -> i }))
+                .boxed()
+                .collect(Collectors.toMap({ i: Int -> preferredConfirmationTypes[i] }, { i: Int -> i }))
 
             return confirmations.stream()
-                    .sorted { x: CAuthentication_AllowedConfirmation, y: CAuthentication_AllowedConfirmation ->
-                        val xSortIndex = sortOrder[x.confirmationType] ?: Int.MAX_VALUE
-                        val ySortIndex = sortOrder[y.confirmationType] ?: Int.MAX_VALUE
-                        xSortIndex.compareTo(ySortIndex)
-                    }.collect(Collectors.toList())
+                .sorted { x: CAuthentication_AllowedConfirmation, y: CAuthentication_AllowedConfirmation ->
+                    val xSortIndex = sortOrder[x.confirmationType] ?: Int.MAX_VALUE
+                    val ySortIndex = sortOrder[y.confirmationType] ?: Int.MAX_VALUE
+                    xSortIndex.compareTo(ySortIndex)
+                }.collect(Collectors.toList())
         }
     }
 }

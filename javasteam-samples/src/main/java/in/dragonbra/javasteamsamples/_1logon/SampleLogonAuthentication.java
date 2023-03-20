@@ -164,6 +164,7 @@ public class SampleLogonAuthentication implements Runnable {
     }
 
 
+    @SuppressWarnings("unused")
     private void parseJsonWebToken(String token, String name) {
         String[] tokenComponents = token.split("\\.");
 
