@@ -20,6 +20,8 @@ public class FriendMsgEchoCallback extends CallbackMsg {
 
     private String message;
 
+    private final int rTime32ServerTimestamp;
+
     public FriendMsgEchoCallback(CMsgClientFriendMsgIncoming.Builder msg) {
         sender = new SteamID(msg.getSteamidFrom());
         entryType = EChatEntryType.from(msg.getChatEntryType());
@@ -30,6 +32,8 @@ public class FriendMsgEchoCallback extends CallbackMsg {
             message = msg.getMessage().toString(StandardCharsets.UTF_8);
             message = message.replaceAll("\0+$", ""); // trim any extra null chars from the end
         }
+
+        rTime32ServerTimestamp = msg.getRtime32ServerTimestamp();
     }
 
     /**
@@ -60,5 +64,12 @@ public class FriendMsgEchoCallback extends CallbackMsg {
      */
     public String getMessage() {
         return message;
+    }
+
+    /**
+     * @return The timestamp from the server.
+     */
+    public int getRTime32ServerTimestamp() {
+        return rTime32ServerTimestamp;
     }
 }

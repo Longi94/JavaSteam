@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.*;
-import in.dragonbra.javasteam.rpc.IFriendMessages;
+import in.dragonbra.javasteam.rpc.interfaces.IFriendMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
@@ -20,31 +20,31 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetRecentMessages");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetActiveMessageSessions");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> SendMessage(CFriendMessages_SendMessage_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "SendMessage");
     }
 
     @Override
     public void AckMessage(CFriendMessages_AckMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "AckMessage");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "IsInFriendsUIBeta");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "UpdateMessageReaction");
     }
 }

@@ -22,6 +22,7 @@ import java.util.zip.CRC32;
  * @author lngtr
  * @since 2018-02-24
  */
+@SuppressWarnings("unchecked")
 public class CryptoHelper {
 
     private static final Logger logger = LogManager.getLogger(CryptoHelper.class);

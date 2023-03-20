@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.*;
-import in.dragonbra.javasteam.rpc.IFriendMessagesClient;
+import in.dragonbra.javasteam.rpc.interfaces.IFriendMessagesClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
@@ -18,16 +18,16 @@ public class FriendMessagesClient extends UnifiedService implements IFriendMessa
 
     @Override
     public void IncomingMessage(CFriendMessages_IncomingMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "IncomingMessage");
     }
 
     @Override
     public void NotifyAckMessageEcho(CFriendMessages_AckMessage_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "NotifyAckMessageEcho");
     }
 
     @Override
     public void MessageReaction(CFriendMessages_MessageReaction_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "MessageReaction");
     }
 }

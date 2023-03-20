@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient;
-import in.dragonbra.javasteam.rpc.IAuthenticationSupport;
+import in.dragonbra.javasteam.rpc.interfaces.IAuthenticationSupport;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
@@ -20,21 +20,21 @@ public class AuthenticationSupport extends UnifiedService implements IAuthentica
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokensByAccount(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokensByAccount_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "QueryRefreshTokensByAccount");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> QueryRefreshTokenByID(SteammessagesAuthSteamclient.CAuthenticationSupport_QueryRefreshTokenByID_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "QueryRefreshTokenByID");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> RevokeToken(SteammessagesAuthSteamclient.CAuthenticationSupport_RevokeToken_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "RevokeToken");
     }
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> GetTokenHistory(SteammessagesAuthSteamclient.CAuthenticationSupport_GetTokenHistory_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "GetTokenHistory");
     }
 }

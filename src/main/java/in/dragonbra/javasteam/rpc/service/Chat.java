@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.CChat_RequestFriendPersonaStates_Request;
-import in.dragonbra.javasteam.rpc.IChat;
+import in.dragonbra.javasteam.rpc.interfaces.IChat;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
@@ -20,6 +20,6 @@ public class Chat extends UnifiedService implements IChat {
 
     @Override
     public AsyncJobSingle<ServiceMethodResponse> RequestFriendPersonaStates(CChat_RequestFriendPersonaStates_Request request) {
-        return sendMessage(request);
+        return sendMessage(request, "RequestFriendPersonaStates");
     }
 }

@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.CChatUsability_RequestClientUsabilityMetrics_Notification;
-import in.dragonbra.javasteam.rpc.IChatUsabilityClient;
+import in.dragonbra.javasteam.rpc.interfaces.IChatUsabilityClient;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
 
@@ -18,6 +18,6 @@ public class ChatUsabilityClient extends UnifiedService implements IChatUsabilit
 
     @Override
     public void NotifyRequestClientUsabilityMetrics(CChatUsability_RequestClientUsabilityMetrics_Notification request) {
-        sendNotification(request);
+        sendNotification(request, "NotifyRequestClientUsabilityMetrics");
     }
 }
