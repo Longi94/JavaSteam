@@ -12,7 +12,6 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.Strings
-import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.compat.Consumer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -21,7 +20,6 @@ import java.nio.charset.StandardCharsets
 import java.security.InvalidKeyException
 import java.security.KeyFactory
 import java.security.NoSuchAlgorithmException
-import java.security.interfaces.RSAPublicKey
 import java.security.spec.InvalidKeySpecException
 import java.security.spec.RSAPublicKeySpec
 import java.util.*
@@ -496,17 +494,17 @@ class SteamAuthentication : ClientMsgHandler() {
         // Encrypt the password
         val publicKeyResp = getPasswordRSAPublicKey(details.username, authenticationService)
 
-        val modulus = BigInteger(1, Utils.decodeHexString(publicKeyResp.publickeyMod))
-        val exponent = BigInteger(1, Utils.decodeHexString(publicKeyResp.publickeyExp))
+        val mod = publicKeyResp.publickeyMod.toByteArray(StandardCharsets.UTF_8)
+        val exp = publicKeyResp.publickeyExp.toByteArray(StandardCharsets.UTF_8)
+        val rsaPublicKey = RSAPublicKeySpec(BigInteger(1, mod), BigInteger(1, exp))
 
         val keyFactory = KeyFactory.getInstance("RSA")
-        val publicKeySpec = RSAPublicKeySpec(modulus, exponent)
-        val publicKey = keyFactory.generatePublic(publicKeySpec) as RSAPublicKey
+        val publicKey = keyFactory.generatePublic(rsaPublicKey)
 
-        val rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding")
-        rsa.init(Cipher.ENCRYPT_MODE, publicKey)
+        val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        val encryptedPassword = rsa.doFinal(details.password!!.toByteArray(StandardCharsets.UTF_8))
+        val encryptedPassword = cipher.doFinal(details.password!!.toByteArray())
 
         // Create request
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder().apply {
