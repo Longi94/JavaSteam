@@ -6,6 +6,10 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CompletableDeferred
 import java.util.*
 
+/**
+ * @author Lossy
+ * @since 2023-03-17
+ */
 class AsyncJobMultiple<T : CallbackMsg> constructor(
     client: SteamClient,
     jobId: JobID,

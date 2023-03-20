@@ -4,10 +4,13 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.util.event.ScheduledFunction
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
+/**
+ * @author Lossy
+ * @since 2023-03-17
+ */
 class AsyncJobManager {
 
     val asyncJobs: ConcurrentMap<JobID, AsyncJob> = ConcurrentHashMap()

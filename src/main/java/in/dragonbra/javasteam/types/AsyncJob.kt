@@ -2,12 +2,14 @@ package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import java.time.Duration
 import java.time.Instant
 
 /**
  * The base class for awaitable versions of a <see cref="JobID"></see>.
  * Should not be used or constructed directly, but rather with <see cref="AsyncJob{T}"></see>.
+ *
+ * @author Lossy
+ * @since 2023-03-17
  */
 abstract class AsyncJob(val client: SteamClient?, val jobID: JobID?) {
 

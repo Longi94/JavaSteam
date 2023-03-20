@@ -4,9 +4,11 @@ import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * @author Lossy
+ * @since 2023-03-17
+ */
 class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : AsyncJob(client, jobId) {
 
     private val tcs = CompletableDeferred<T>()
@@ -17,6 +19,10 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
 
     fun toDeferred(): CompletableDeferred<T> {
         return tcs
+    }
+
+    suspend fun toAwait(): T {
+        return toDeferred().await()
     }
 
     override fun addResult(callback: CallbackMsg?): Boolean {

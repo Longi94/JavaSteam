@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
+// Note: await() is kotlin only.
 class AsyncJobTest {
 
     internal class Callback : CallbackMsg() {
@@ -21,13 +22,13 @@ class AsyncJobTest {
         val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
 
         Assertions.assertTrue(
-            client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
-            "Async job dictionary should contain the jobid key"
+                client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
+                "Async job dictionary should contain the jobid key"
         )
 
         Assertions.assertTrue(
-            client.jobManager.asyncJobs.containsKey(JobID(123)),
-            "Async job dictionary should contain jobid key as a value type"
+                client.jobManager.asyncJobs.containsKey(JobID(123)),
+                "Async job dictionary should contain jobid key as a value type"
         )
     }
 
@@ -59,12 +60,12 @@ class AsyncJobTest {
         client.postCallback(callback)
 
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
-            "Async job dictionary should no longer contain jobid key after callback is posted"
+                client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
+                "Async job dictionary should no longer contain jobid key after callback is posted"
         )
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(JobID(123)),
-            "Async job dictionary should no longer contain jobid key (as value type) after callback is posted"
+                client.jobManager.asyncJobs.containsKey(JobID(123)),
+                "Async job dictionary should no longer contain jobid key (as value type) after callback is posted"
         )
     }
 
@@ -80,12 +81,12 @@ class AsyncJobTest {
         Thread.sleep(5000)
 
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
-            "Async job dictionary should no longer contain jobid key after timeout"
+                client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
+                "Async job dictionary should no longer contain jobid key after timeout"
         )
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(JobID(123)),
-            "Async job dictionary should no longer contain jobid key (as value type) after timeout"
+                client.jobManager.asyncJobs.containsKey(JobID(123)),
+                "Async job dictionary should no longer contain jobid key (as value type) after timeout"
         )
     }
 
@@ -138,12 +139,12 @@ class AsyncJobTest {
         Thread.sleep(5000L)
 
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "Async job should be completed after 5 seconds of a 1 second job timeout"
+                asyncTask.isCompleted,
+                "Async job should be completed after 5 seconds of a 1 second job timeout"
         )
         Assertions.assertTrue(
-            asyncTask.isCancelled,
-            "Async job should be canceled after 5 seconds of a 1 second job timeout"
+                asyncTask.isCancelled,
+                "Async job should be canceled after 5 seconds of a 1 second job timeout"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -190,16 +191,16 @@ class AsyncJobTest {
         val jobFinished = asyncJob.addResult(Callback().apply { jobID = JobID(123) })
 
         Assertions.assertTrue(
-            jobFinished,
-            "Async job should inform that it is completed when completion predicate is always true and a result is given"
+                jobFinished,
+                "Async job should inform that it is completed when completion predicate is always true and a result is given"
         )
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "Async job should be completed when empty predicate result is given"
+                asyncTask.isCompleted,
+                "Async job should be completed when empty predicate result is given"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "Async job should not be canceled when empty predicate result is given"
+                asyncTask.isCancelled,
+                "Async job should not be canceled when empty predicate result is given"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -220,16 +221,16 @@ class AsyncJobTest {
         })
 
         Assertions.assertFalse(
-            jobFinished,
-            "Async job should not inform that it is finished when completion predicate is false after a result is given"
+                jobFinished,
+                "Async job should not inform that it is finished when completion predicate is false after a result is given"
         )
         Assertions.assertFalse(
-            asyncTask.isCompleted,
-            "Async job should not be completed when completion predicate is false"
+                asyncTask.isCompleted,
+                "Async job should not be completed when completion predicate is false"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "Async job should not be canceled when completion predicate is false"
+                asyncTask.isCancelled,
+                "Async job should not be canceled when completion predicate is false"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -242,13 +243,13 @@ class AsyncJobTest {
         })
 
         Assertions.assertTrue(
-            jobFinished,
-            "Async job should inform completion when completion predicat is passed after a result is given"
+                jobFinished,
+                "Async job should inform completion when completion predicat is passed after a result is given"
         )
         Assertions.assertTrue(asyncTask.isCompleted, "Async job should be completed when completion predicate is true")
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "Async job should not be canceled when completion predicate is true"
+                asyncTask.isCancelled,
+                "Async job should not be canceled when completion predicate is true"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -268,12 +269,12 @@ class AsyncJobTest {
         })
 
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
-            "Async job dictionary should not contain jobid key for AsyncJobMultiple on completion"
+                client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
+                "Async job dictionary should not contain jobid key for AsyncJobMultiple on completion"
         )
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(JobID(123)),
-            "Async job dictionary should not contain jobid key (as value type) for AsyncJobMultiple on completion"
+                client.jobManager.asyncJobs.containsKey(JobID(123)),
+                "Async job dictionary should not contain jobid key (as value type) for AsyncJobMultiple on completion"
         )
     }
 
@@ -289,12 +290,12 @@ class AsyncJobTest {
         runBlocking { delay(5000) }
 
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
-            "Async job dictionary should no longer contain jobid key after timeout"
+                client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
+                "Async job dictionary should no longer contain jobid key after timeout"
         )
         Assertions.assertFalse(
-            client.jobManager.asyncJobs.containsKey(JobID(123)),
-            "Async job dictionary should no longer contain jobid key (as value type) after timeout"
+                client.jobManager.asyncJobs.containsKey(JobID(123)),
+                "Async job dictionary should no longer contain jobid key (as value type) after timeout"
         )
     }
 
@@ -313,12 +314,12 @@ class AsyncJobTest {
         runBlocking { delay(3000) }
 
         Assertions.assertFalse(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should not be completed after 3 seconds of 5 second timeout"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should not be completed after 3 seconds of 5 second timeout"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should not be canceled after 3 seconds of 5 second timeout"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should not be canceled after 3 seconds of 5 second timeout"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -336,12 +337,12 @@ class AsyncJobTest {
 
         // we still shouldn't be completed or canceled (timed out)
         Assertions.assertFalse(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should not be completed 5 seconds after a result was added (result should extend timeout)"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should not be completed 5 seconds after a result was added (result should extend timeout)"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should not be canceled 5 seconds after a result was added (result should extend timeout)"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should not be canceled 5 seconds after a result was added (result should extend timeout)"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -355,12 +356,12 @@ class AsyncJobTest {
 
         // we should be completed but not canceled or faulted
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should be completed when final result is added to set"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should be completed when final result is added to set"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should not be canceled when final result is added to set"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should not be canceled when final result is added to set"
         )
 //        Assertions.assertFalse(
 //            asyncTask.completeExceptionally(Exception()),
@@ -385,12 +386,12 @@ class AsyncJobTest {
         }
 
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should be completed after 5 seconds of a 1 second job timeout"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should be completed after 5 seconds of a 1 second job timeout"
         )
         Assertions.assertTrue(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should be canceled after 5 seconds of a 1 second job timeout"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should be canceled after 5 seconds of a 1 second job timeout"
         )
         // Assertions.assertFalse( asyncTask.IsFaulted, "AsyncJobMultiple should not be faulted after 5 seconds of a 1 second job timeout" )
 
@@ -425,12 +426,12 @@ class AsyncJobTest {
         }
 
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should be completed on partial (timed out) result set"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should be completed on partial (timed out) result set"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should not be canceled on partial (timed out) result set"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should not be canceled on partial (timed out) result set"
         )
         //Assertions.assertFalse( asyncTask.IsFaulted, "AsyncJobMultiple should not be faulted on a partial (failed) result set" )
 
@@ -464,12 +465,12 @@ class AsyncJobTest {
         asyncJob.setFailed(true)
 
         Assertions.assertTrue(
-            asyncTask.isCompleted,
-            "AsyncJobMultiple should be completed on partial (failed) result set"
+                asyncTask.isCompleted,
+                "AsyncJobMultiple should be completed on partial (failed) result set"
         )
         Assertions.assertFalse(
-            asyncTask.isCancelled,
-            "AsyncJobMultiple should not be canceled on partial (failed) result set"
+                asyncTask.isCancelled,
+                "AsyncJobMultiple should not be canceled on partial (failed) result set"
         )
         // Assert.False( asyncTask.IsFaulted, "AsyncJobMultiple should not be faulted on a partial (failed) result set" )
 
