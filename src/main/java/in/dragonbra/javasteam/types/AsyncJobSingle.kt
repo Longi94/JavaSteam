@@ -1,9 +1,11 @@
 package `in`.dragonbra.javasteam.types
 
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
 
 /**
  * @author Lossy
@@ -21,8 +23,8 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
         return tcs
     }
 
-    suspend fun toAwait(): T {
-        return toDeferred().await()
+    fun runBlock(): T {
+        return runBlocking { toDeferred().await() }
     }
 
     override fun addResult(callback: CallbackMsg?): Boolean {

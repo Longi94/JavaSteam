@@ -12,7 +12,6 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.Strings
-import `in`.dragonbra.javasteam.util.compat.Consumer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.math.BigInteger
@@ -44,6 +43,13 @@ class SteamAuthentication : ClientMsgHandler() {
      */
     override fun handleMsg(packetMsg: IPacketMsg) {
         /* Not Used */
+    }
+
+    /**
+     * Interface to tell the listening class that the QR challenge has changed.
+     */
+    interface OnChallengeUrlChanged {
+        fun onChanged(qrAuthSession: QrAuthSession)
     }
 
     /**
@@ -294,15 +300,11 @@ class SteamAuthentication : ClientMsgHandler() {
          */
         @Throws(AuthenticationException::class)
         fun pollAuthSessionStatus(): AuthPollResult? {
-            println("pollAuthSessionStatus")
-
             val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder()
             request.clientId = clientID
             request.requestId = ByteString.copyFrom(requestID)
 
-            val message: ServiceMethodResponse = runBlocking {
-                authenticationService.PollAuthSessionStatus(request.build()).toAwait()
-            }
+            val message: ServiceMethodResponse = authenticationService.PollAuthSessionStatus(request.build()).runBlock()
 
             // eresult can be Expired, FileNotFound, Fail
             if (message.result != EResult.OK) {
@@ -317,8 +319,8 @@ class SteamAuthentication : ClientMsgHandler() {
             }
 
             if (this is QrAuthSession && response.newChallengeUrl.isNotEmpty()) {
-                this.challengeUrl = response.newChallengeUrl
-                // ((QrAuthSession) this).getChallengeUrl().invoke();
+                challengeUrl = response.newChallengeUrl
+                challengeUrlChanged?.onChanged(this)
             }
 
             return if (response.refreshToken.isNotEmpty()) AuthPollResult(response.build()) else null
@@ -344,7 +346,7 @@ class SteamAuthentication : ClientMsgHandler() {
         var challengeUrl: String
 
         // Called whenever the challenge url is refreshed by Steam.
-        val challengeUrlChanged: Consumer<*>? = null
+        var challengeUrlChanged: OnChallengeUrlChanged? = null
 
         init {
             challengeUrl = response.challengeUrl
@@ -385,9 +387,8 @@ class SteamAuthentication : ClientMsgHandler() {
             request.code = code
             request.codeType = codeType
 
-            val message: ServiceMethodResponse = runBlocking {
-                authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).toAwait()
-            }
+            val message: ServiceMethodResponse =
+                authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
 
             val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
                 message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
@@ -418,9 +419,7 @@ class SteamAuthentication : ClientMsgHandler() {
             this.accountName = accountName
         }.build()
 
-        val message: ServiceMethodResponse = runBlocking {
-            authenticationService.GetPasswordRSAPublicKey(request).toAwait()
-        }
+        val message: ServiceMethodResponse = authenticationService.GetPasswordRSAPublicKey(request).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Failed to get password public key", message.result)
@@ -441,17 +440,15 @@ class SteamAuthentication : ClientMsgHandler() {
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder()
         deviceDetails.deviceFriendlyName = deviceDetails.deviceFriendlyName
         deviceDetails.platformType = deviceDetails.platformType
-        deviceDetails.osType = details.clientOSType!!.code()
+        deviceDetails.osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
 
         val request = CAuthentication_BeginAuthSessionViaQR_Request.newBuilder()
-        request.websiteId = details.websiteID
+        request.websiteId = details.websiteID ?: ""
         request.deviceDetails = deviceDetails.build()
 
         val authentication = Authentication(unifiedMessages)
 
-        val message: ServiceMethodResponse = runBlocking {
-            authentication.BeginAuthSessionViaQR(request.build()).toAwait()
-        }
+        val message: ServiceMethodResponse = authentication.BeginAuthSessionViaQR(request.build()).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Failed to begin QR auth session", message.result)
@@ -526,9 +523,7 @@ class SteamAuthentication : ClientMsgHandler() {
             }.build()
         }.build()
 
-        val message: ServiceMethodResponse = runBlocking {
-            authenticationService.BeginAuthSessionViaCredentials(request).toAwait()
-        }
+        val message: ServiceMethodResponse = authenticationService.BeginAuthSessionViaCredentials(request).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Authentication failed", message.result)

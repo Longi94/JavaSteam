@@ -11,6 +11,9 @@ repositories {
 dependencies {
     implementation rootProject
 
+    // https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
+    implementation 'pro.leaco.qrcode:console-qrcode:1.0.1'
+
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation 'com.google.code.gson:gson:2.10'
 
