@@ -1,6 +1,5 @@
 package `in`.dragonbra.javasteam.types
 
-import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
@@ -43,11 +42,9 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
         if (dueToRemoteFailure) {
             // if steam informs us of a remote failure, we cancel with our exception
             tcs.completeExceptionally(AsyncJobFailedException())
-            println("True")
         } else {
             // if we time out, we trigger a normal cancellation
             tcs.cancel()
-            println("False")
         }
     }
 }

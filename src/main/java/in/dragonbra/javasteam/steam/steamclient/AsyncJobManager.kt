@@ -4,6 +4,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.util.event.ScheduledFunction
+import `in`.dragonbra.javasteam.util.log.LogManager
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
@@ -16,6 +17,8 @@ class AsyncJobManager {
     val asyncJobs: ConcurrentMap<JobID, AsyncJob> = ConcurrentHashMap()
 
     private val jobTimeoutFunc: ScheduledFunction = ScheduledFunction(this::cancelTimedOutJobs, 1000)
+
+    private val logger = LogManager.getLogger(AsyncJobManager::class.java)
 
     /**
      * Tracks a job with this manager.
@@ -65,6 +68,8 @@ class AsyncJobManager {
      * @param jobID The job identifier.
      */
     fun failJob(jobID: JobID) {
+        logger.debug("Failing job id: $jobID")
+
         // ignore remote failures for jobs we're not tracking
         val asyncJob: AsyncJob = getJob(jobID, true) ?: return
 

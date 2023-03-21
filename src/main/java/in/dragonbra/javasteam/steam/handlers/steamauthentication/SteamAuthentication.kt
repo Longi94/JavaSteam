@@ -10,6 +10,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 import `in`.dragonbra.javasteam.rpc.service.Authentication
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.Utils
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.math.BigInteger
@@ -31,6 +32,8 @@ import javax.crypto.NoSuchPaddingException
  */
 class SteamAuthentication : ClientMsgHandler() {
 
+    // private val logger = LogManager.getLogger(SteamAuthentication::class.java)
+
     /**
      * Handles a client message. This should not be called directly.
      *
@@ -41,7 +44,7 @@ class SteamAuthentication : ClientMsgHandler() {
     }
 
     /**
-     * Interface to tell the listening class that the QR challenge has changed.
+     * Interface to tell the listening class that the QR Challenge URL has changed.
      */
     interface OnChallengeUrlChanged {
         fun onChanged(qrAuthSession: QrAuthSession)
@@ -65,6 +68,8 @@ class SteamAuthentication : ClientMsgHandler() {
 
         /**
          * Gets or Sets the device name (or user agent).
+         *
+         * Note: Initialized below
          */
         var deviceFriendlyName: String?
 
@@ -78,7 +83,7 @@ class SteamAuthentication : ClientMsgHandler() {
          * Gets or Sets the client operating system type.
          */
         @JvmField
-        var clientOSType: EOSType? = null
+        var clientOSType: EOSType = Utils.getOSType()
 
         /**
          * Gets or Sets the session persistence.
@@ -91,17 +96,17 @@ class SteamAuthentication : ClientMsgHandler() {
          * Known values are "Unknown", "Client", "Mobile", "Website", "Store", "Community", "Partner".
          */
         @JvmField
-        var websiteID: String? = null
+        var websiteID: String? = "Client"
 
         /**
-         * Steam guard data for client login. Provide <see cref="AuthPollResult.NewGuardData"></see> if available.
+         * Steam guard data for client login. Provide [AuthPollResult.newGuardData] if available.
          */
         @JvmField
         var guardData: String? = null
 
         /**
          * Authenticator object which will be used to handle 2-factor authentication if necessary.
-         * Use <see cref="UserConsoleAuthenticator"></see> for a default implementation.
+         * Use [UserConsoleAuthenticator] for a default implementation.
          */
         @JvmField
         var authenticator: IAuthenticator? = null
@@ -123,42 +128,35 @@ class SteamAuthentication : ClientMsgHandler() {
          * Account name of authenticating account.
          */
         @JvmField
-        var accountName: String
+        var accountName: String = response.accountName
 
         /**
          * New refresh token.
          */
         @JvmField
-        var refreshToken: String
+        var refreshToken: String = response.refreshToken
 
         /**
          * Gets or Sets the new token subordinate to refresh_token.
          */
         @JvmField
-        var accessToken: String
+        var accessToken: String = response.accessToken
 
         /**
          * May contain remembered machine ID for future login.
          */
         @JvmField
-        var newGuardData: String
-
-        init {
-            accessToken = response.accessToken
-            accountName = response.accountName
-            newGuardData = response.newGuardData
-            refreshToken = response.refreshToken
-        }
+        var newGuardData: String = response.newGuardData
     }
 
     /**
-     * Represents an authentication sesssion which can be used to finish the authentication and get access tokens.
+     * Represents an authentication session which can be used to finish the authentication and get access tokens.
      */
     open inner class AuthSession(
         var authenticationService: Authentication,
         var authenticator: IAuthenticator?, // Authenticator object which will be used to handle 2-factor authentication if necessary.
         var clientID: Long, // Unique identifier of requestor, also used for routing, portion of QR code.
-        var requestID: ByteArray, // Unique request ID to be presented by requestor at poll time.
+        var requestID: ByteString, // Unique request ID to be presented by requestor at poll time.
         var allowedConfirmations: List<CAuthentication_AllowedConfirmation>, // Confirmation types that will be able to confirm the request.
         var pollingInterval: Float // Refresh interval with which requestor should call PollAuthSessionStatus.
     ) {
@@ -279,7 +277,6 @@ class SteamAuthentication : ClientMsgHandler() {
             }
 
             var pollResponse: AuthPollResult?
-
             runBlocking {
                 while (true) {
                     delay(pollingInterval.toLong())
@@ -296,16 +293,16 @@ class SteamAuthentication : ClientMsgHandler() {
         }
 
         /**
-         * Polls for authentication status once. Prefer using <see cref="StartPolling"></see> instead.
+         * Polls for authentication status once. Prefer using [startPolling] instead.
          *
-         * @return An object containing tokens which can be used to login to Steam, or null if not yet authenticated.
+         * @return An object containing tokens which can be used to log in to Steam, or null if not yet authenticated.
          * @throws AuthenticationException Thrown when polling fails.
          */
         @Throws(AuthenticationException::class)
         fun pollAuthSessionStatus(): AuthPollResult? {
             val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder()
             request.clientId = clientID
-            request.requestId = ByteString.copyFrom(requestID)
+            request.requestId = requestID
 
             val message = authenticationService.PollAuthSessionStatus(request.build()).runBlock()
 
@@ -341,19 +338,15 @@ class SteamAuthentication : ClientMsgHandler() {
         authenticationService = service,
         authenticator = authenticator,
         clientID = response.clientId,
-        requestID = response.requestId.toByteArray(),
+        requestID = response.requestId,
         allowedConfirmations = response.allowedConfirmationsList,
         pollingInterval = response.interval
     ) {
         // URL based on client ID, which can be rendered as QR code.
-        var challengeUrl: String
+        var challengeUrl: String = response.challengeUrl
 
         // Called whenever the challenge url is refreshed by Steam.
         var challengeUrlChanged: OnChallengeUrlChanged? = null
-
-        init {
-            challengeUrl = response.challengeUrl
-        }
     }
 
     /**
@@ -367,7 +360,7 @@ class SteamAuthentication : ClientMsgHandler() {
         authenticationService = service,
         authenticator = authenticator,
         clientID = response.clientId,
-        requestID = response.requestId.toByteArray(),
+        requestID = response.requestId,
         allowedConfirmations = response.allowedConfirmationsList,
         pollingInterval = response.interval
     ) {
@@ -441,10 +434,10 @@ class SteamAuthentication : ClientMsgHandler() {
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder()
         deviceDetails.deviceFriendlyName = deviceDetails.deviceFriendlyName
         deviceDetails.platformType = deviceDetails.platformType
-        deviceDetails.osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
+        deviceDetails.osType = details.clientOSType.code()
 
         val request = CAuthentication_BeginAuthSessionViaQR_Request.newBuilder()
-        request.websiteId = details.websiteID ?: ""
+        request.websiteId = details.websiteID
         request.deviceDetails = deviceDetails.build()
 
         val authentication = Authentication(unifiedMessages)
@@ -515,7 +508,7 @@ class SteamAuthentication : ClientMsgHandler() {
         // Create request
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder()
         deviceDetails.deviceFriendlyName = details.deviceFriendlyName
-        deviceDetails.osType = details.clientOSType?.code() ?: EOSType.Unknown.code()
+        deviceDetails.osType = details.clientOSType.code()
         deviceDetails.platformType = details.platformType
 
         val request = CAuthentication_BeginAuthSessionViaCredentials_Request.newBuilder()
@@ -523,9 +516,12 @@ class SteamAuthentication : ClientMsgHandler() {
         request.deviceDetails = deviceDetails.build()
         request.encryptedPassword = Base64.getEncoder().encodeToString(encryptedPassword)
         request.encryptionTimestamp = passwordRSAPublicKey.timestamp
-        request.guardData = details.guardData
         request.persistence = persistentSession
         request.websiteId = details.websiteID
+
+        if (!details.guardData.isNullOrEmpty()) {
+            request.guardData = details.guardData
+        }
 
         val message = authenticationService.BeginAuthSessionViaCredentials(request.build()).runBlock()
 
