@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamuser;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoginKeyCallback;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.Utils;
@@ -228,7 +229,7 @@ public class LogOnDetails {
 
     /**
      * Gets the access token used to log in. This a token that has been provided after a successful login using
-     * {@link in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication}.
+     * {@link SteamAuthentication}.
      *
      * @return the access token used to log in.
      */
@@ -238,7 +239,7 @@ public class LogOnDetails {
 
     /**
      * Sets the access token used to log in. This a token that has been provided after a successful login using
-     * {@link in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication}.
+     * {@link SteamAuthentication}.
      *
      * @param accessToken the access token used to log in.
      */

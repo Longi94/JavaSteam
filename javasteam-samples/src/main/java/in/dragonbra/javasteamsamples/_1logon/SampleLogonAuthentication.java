@@ -5,8 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication;
-import in.dragonbra.javasteam.steam.handlers.steamauthentication.UserConsoleAuthenticator;
+import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
+import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
+import in.dragonbra.javasteam.steam.authentication.CredentialsAuthSession;
+import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
+import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -31,8 +34,6 @@ public class SampleLogonAuthentication implements Runnable {
     private SteamClient steamClient;
 
     private SteamUnifiedMessages unifiedMessages;
-
-    private SteamAuthentication steamAuthentication;
 
     private CallbackManager manager;
 
@@ -72,9 +73,6 @@ public class SampleLogonAuthentication implements Runnable {
         // get the steam unified messages handler, which is used for sending and receiving responses from the unified service api
         unifiedMessages = steamClient.getHandler(SteamUnifiedMessages.class);
 
-        // get the authentication handler, which used for authenticating with Steam
-        steamAuthentication = steamClient.getHandler(SteamAuthentication.class);
-
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
 
@@ -104,17 +102,19 @@ public class SampleLogonAuthentication implements Runnable {
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
 
-        SteamAuthentication.AuthSessionDetails authDetails = new SteamAuthentication.AuthSessionDetails();
+        AuthSessionDetails authDetails = new AuthSessionDetails();
         authDetails.username = user;
         authDetails.password = pass;
         authDetails.persistentSession = false;
         authDetails.authenticator = new UserConsoleAuthenticator();
 
         try {
-            SteamAuthentication.CredentialsAuthSession authSession =
-                    steamAuthentication.beginAuthSessionViaCredentials(authDetails, unifiedMessages);
+            // get the authentication handler, which used for authenticating with Steam
+            SteamAuthentication auth = new SteamAuthentication(steamClient, unifiedMessages);
 
-            SteamAuthentication.AuthPollResult pollResponse = authSession.startPolling();
+            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
+
+            AuthPollResult pollResponse = authSession.startPolling();
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.accountName);

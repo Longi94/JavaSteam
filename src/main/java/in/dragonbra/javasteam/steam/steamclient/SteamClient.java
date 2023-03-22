@@ -7,7 +7,6 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
-import in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator;
@@ -77,7 +76,6 @@ public class SteamClient extends CMClient {
         // notice: SteamFriends should be added before SteamUser due to AccountInfoCallback
         addHandler(new SteamFriends());
         addHandler(new SteamUser());
-        addHandler(new SteamAuthentication());
         addHandler(new SteamApps());
         addHandler(new SteamGameCoordinator());
         addHandler(new SteamGameServer());

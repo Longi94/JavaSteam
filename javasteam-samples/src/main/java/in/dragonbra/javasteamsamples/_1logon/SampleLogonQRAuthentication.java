@@ -1,8 +1,12 @@
 package in.dragonbra.javasteamsamples._1logon;
 
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.handlers.steamauthentication.AuthenticationException;
-import in.dragonbra.javasteam.steam.handlers.steamauthentication.SteamAuthentication;
+import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
+import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
+import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
+import in.dragonbra.javasteam.steam.authentication.OnChallengeUrlChanged;
+import in.dragonbra.javasteam.steam.authentication.QrAuthSession;
+import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -28,13 +32,11 @@ import java.util.concurrent.ExecutionException;
  * @since 2023-03-19
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleLogonQRAuthentication implements Runnable, SteamAuthentication.OnChallengeUrlChanged {
+public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChanged {
 
     private SteamClient steamClient;
 
     private SteamUnifiedMessages unifiedMessages;
-
-    private SteamAuthentication steamAuthentication;
 
     private CallbackManager manager;
 
@@ -65,9 +67,6 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
         // get the steam unified messages handler, which is used for sending and receiving responses from the unified service api
         unifiedMessages = steamClient.getHandler(SteamUnifiedMessages.class);
 
-        // get the authentication handler, which used for authenticating with Steam
-        steamAuthentication = steamClient.getHandler(SteamAuthentication.class);
-
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
 
@@ -96,8 +95,10 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
 
     private void onConnected(ConnectedCallback callback) {
         try {
-            SteamAuthentication.AuthSessionDetails auth = new SteamAuthentication.AuthSessionDetails();
-            SteamAuthentication.QrAuthSession authSession = steamAuthentication.beginAuthSessionViaQR(auth, unifiedMessages);
+            // get the authentication handler, which used for authenticating with Steam
+            SteamAuthentication auth = new SteamAuthentication(steamClient, unifiedMessages);
+
+            QrAuthSession authSession = auth.beginAuthSessionViaQR(new AuthSessionDetails());
 
             // Steam will periodically refresh the challenge url, this callback allows you to draw a new qr code.
             // Note: Callback is below.
@@ -108,7 +109,7 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
 
             // Starting polling Steam for authentication response
             // This response is later used to log on to Steam after connecting
-            SteamAuthentication.AuthPollResult pollResponse = authSession.startPolling();
+            AuthPollResult pollResponse = authSession.startPolling();
 
             System.out.println("Connected to Steam! Logging in " + pollResponse.accountName + "...");
 
@@ -121,7 +122,7 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
             details.setLoginID(149);
 
             steamUser.logOn(details);
-        } catch (AuthenticationException | ExecutionException | InterruptedException e) {
+        } catch (AuthenticationException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -155,7 +156,7 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
         isRunning = false;
     }
 
-    private void drawQRCode(SteamAuthentication.QrAuthSession authSession) {
+    private void drawQRCode(QrAuthSession authSession) {
         String challengeURL = authSession.getChallengeUrl();
         System.out.println("Challenge URL: " + challengeURL);
         System.out.println();
@@ -166,7 +167,7 @@ public class SampleLogonQRAuthentication implements Runnable, SteamAuthenticatio
     }
 
     @Override
-    public void onChanged(@NotNull SteamAuthentication.QrAuthSession qrAuthSession) {
+    public void onChanged(@NotNull QrAuthSession qrAuthSession) {
         drawQRCode(qrAuthSession);
     }
 }
