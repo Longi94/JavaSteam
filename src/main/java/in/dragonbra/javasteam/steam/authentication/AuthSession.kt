@@ -135,7 +135,7 @@ open class AuthSession(
 //          }
 //          EAuthSessionGuardType.k_EAuthSessionGuardType_MachineToken -> {
 //              // ${u.De.LOGIN_BASE_URL}jwt/checkdevice - with steam machine guard cookie set
-//              throw IllegalArgumentException("Machine token confirmation is not supported by SteamKit at the moment.");
+//              throw IllegalArgumentException("Machine token confirmation is not supported by SteamKit at the moment.")
 //          }
 
             else -> {
@@ -194,14 +194,13 @@ open class AuthSession(
             clientID = response.newClientId
         }
 
-        handlePollAuthSessionStatusResponse(response);
+        handlePollAuthSessionStatusResponse(response)
 
         if (response.refreshToken.isNotEmpty()) {
             return AuthPollResult(response)
         }
 
         return null
-
     }
 
     internal open fun handlePollAuthSessionStatusResponse(response: CAuthentication_PollAuthSessionStatus_Response.Builder) {

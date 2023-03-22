@@ -69,23 +69,23 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
     /**
      * Start the authentication process using QR codes.
      *
-     * @param details The details to use for logging on.
+     * @param authSessionDetails The details to use for logging on.
      * @return QrAuthSession
      * @throws AuthenticationException .
      */
     @Throws(AuthenticationException::class)
-    fun beginAuthSessionViaQR(details: AuthSessionDetails): QrAuthSession {
+    fun beginAuthSessionViaQR(authSessionDetails: AuthSessionDetails): QrAuthSession {
         if (!steamClient.isConnected) {
             throw IllegalArgumentException("The SteamClient instance must be connected.")
         }
 
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder()
-        deviceDetails.deviceFriendlyName = deviceDetails.deviceFriendlyName
-        deviceDetails.platformType = deviceDetails.platformType
-        deviceDetails.osType = details.clientOSType.code()
+        deviceDetails.deviceFriendlyName = authSessionDetails.deviceFriendlyName
+        deviceDetails.platformType = authSessionDetails.platformType
+        deviceDetails.osType = authSessionDetails.clientOSType.code()
 
         val request = CAuthentication_BeginAuthSessionViaQR_Request.newBuilder()
-        request.websiteId = details.websiteID
+        request.websiteId = authSessionDetails.websiteID
         request.deviceDetails = deviceDetails.build()
 
         val message = authentication.BeginAuthSessionViaQR(request.build()).runBlock()
@@ -100,20 +100,20 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val response: CAuthentication_BeginAuthSessionViaQR_Response.Builder =
             message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaQR_Response::class.java)
 
-        return QrAuthSession(authentication, details.authenticator, response)
+        return QrAuthSession(authentication, authSessionDetails.authenticator, response)
     }
 
     /**
      * Start the authentication process by providing username and password.
      *
-     * @param details         The details to use for logging on.
+     * @param authSessionDetails The details to use for logging on.
      * @return CredentialsAuthSession
      */
     @Throws(AuthenticationException::class)
-    fun beginAuthSessionViaCredentials(details: AuthSessionDetails?): CredentialsAuthSession {
-        requireNotNull(details) { "details is null" }
+    fun beginAuthSessionViaCredentials(authSessionDetails: AuthSessionDetails?): CredentialsAuthSession {
+        requireNotNull(authSessionDetails) { "authSessionDetails is null" }
 
-        require(!details.username.isNullOrEmpty() || !details.password.isNullOrEmpty()) {
+        require(!authSessionDetails.username.isNullOrEmpty() || !authSessionDetails.password.isNullOrEmpty()) {
             "BeginAuthSessionViaCredentials requires a username and password to be set in 'details'."
         }
 
@@ -122,23 +122,20 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         }
 
         // Encrypt the password
-        val passwordRSAPublicKey = getPasswordRSAPublicKey(details.username, authentication)
+        val passwordRSAPublicKey = getPasswordRSAPublicKey(authSessionDetails.username, authentication)
 
-        val mod = passwordRSAPublicKey.publickeyMod.toByteArray(StandardCharsets.UTF_8)
-        val exp = passwordRSAPublicKey.publickeyExp.toByteArray(StandardCharsets.UTF_8)
-        val publicKeyModulus = BigInteger(1, mod)
-        val publicKeyExponent = BigInteger(1, exp)
+        val publicModulus = BigInteger(passwordRSAPublicKey.publickeyMod, 16)
+        val publicExponent = BigInteger(passwordRSAPublicKey.publickeyExp, 16)
 
-        val rsaPublicKeySpec = RSAPublicKeySpec(publicKeyModulus, publicKeyExponent)
-        val keyFactory = KeyFactory.getInstance("RSA")
-        val publicKey = keyFactory.generatePublic(rsaPublicKeySpec)
+        val rsaPublicKeySpec = RSAPublicKeySpec(publicModulus, publicExponent)
+        val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
 
-        val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        val cipher = Cipher.getInstance("RSA/None/PKCS1Padding")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        val encryptedPassword = cipher.doFinal(details.password!!.toByteArray(StandardCharsets.UTF_8))
+        val encryptedPassword = cipher.doFinal(authSessionDetails.password?.toByteArray(StandardCharsets.UTF_8))
 
-        val persistentSession = if (details.persistentSession) {
+        val persistentSession = if (authSessionDetails.persistentSession) {
             ESessionPersistence.k_ESessionPersistence_Persistent
         } else {
             ESessionPersistence.k_ESessionPersistence_Ephemeral
@@ -146,20 +143,20 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
 
         // Create request
         val deviceDetails = CAuthentication_DeviceDetails.newBuilder()
-        deviceDetails.deviceFriendlyName = details.deviceFriendlyName
-        deviceDetails.osType = details.clientOSType.code()
-        deviceDetails.platformType = details.platformType
+        deviceDetails.deviceFriendlyName = authSessionDetails.deviceFriendlyName
+        deviceDetails.osType = authSessionDetails.clientOSType.code()
+        deviceDetails.platformType = authSessionDetails.platformType
 
         val request = CAuthentication_BeginAuthSessionViaCredentials_Request.newBuilder()
-        request.accountName = details.username
+        request.accountName = authSessionDetails.username
         request.deviceDetails = deviceDetails.build()
         request.encryptedPassword = Base64.getEncoder().encodeToString(encryptedPassword)
         request.encryptionTimestamp = passwordRSAPublicKey.timestamp
         request.persistence = persistentSession
-        request.websiteId = details.websiteID
+        request.websiteId = authSessionDetails.websiteID
 
-        if (!details.guardData.isNullOrEmpty()) {
-            request.guardData = details.guardData
+        if (!authSessionDetails.guardData.isNullOrEmpty()) {
+            request.guardData = authSessionDetails.guardData
         }
 
         val message = authentication.BeginAuthSessionViaCredentials(request.build()).runBlock()
@@ -171,6 +168,6 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder =
             message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaCredentials_Response::class.java)
 
-        return CredentialsAuthSession(authentication, details.authenticator, response)
+        return CredentialsAuthSession(authentication, authSessionDetails.authenticator, response)
     }
 }
