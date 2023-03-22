@@ -133,7 +133,9 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val cipher = Cipher.getInstance("RSA/None/PKCS1Padding")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        val encryptedPassword = cipher.doFinal(authSessionDetails.password?.toByteArray(StandardCharsets.UTF_8))
+        val encryptedPassword = Base64.getEncoder().encodeToString(
+            cipher.doFinal(authSessionDetails.password?.toByteArray(StandardCharsets.UTF_8))
+        ).dropLast(1) // Drop the "=" symbol
 
         val persistentSession = if (authSessionDetails.persistentSession) {
             ESessionPersistence.k_ESessionPersistence_Persistent
@@ -150,7 +152,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val request = CAuthentication_BeginAuthSessionViaCredentials_Request.newBuilder()
         request.accountName = authSessionDetails.username
         request.deviceDetails = deviceDetails.build()
-        request.encryptedPassword = Base64.getEncoder().encodeToString(encryptedPassword)
+        request.encryptedPassword = encryptedPassword
         request.encryptionTimestamp = passwordRSAPublicKey.timestamp
         request.persistence = persistentSession
         request.websiteId = authSessionDetails.websiteID
