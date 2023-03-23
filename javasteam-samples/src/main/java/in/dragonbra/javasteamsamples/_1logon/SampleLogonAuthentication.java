@@ -114,11 +114,11 @@ public class SampleLogonAuthentication implements Runnable {
 
             CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
 
-            AuthPollResult pollResponse = authSession.startPolling();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult();
 
             LogOnDetails details = new LogOnDetails();
-            details.setUsername(pollResponse.accountName);
-            details.setAccessToken(pollResponse.refreshToken);
+            details.setUsername(pollResponse.getAccountName());
+            details.setAccessToken(pollResponse.getRefreshToken());
 
             // Set LoginID to a non-zero value if you have another client connected using the same account,
             // the same private ip, and same public ip.

@@ -31,7 +31,7 @@ class AuthSessionDetails {
      * Gets or sets the platform type that the login will be performed for.
      */
     @JvmField
-    var platformType: SteammessagesAuthSteamclient.EAuthTokenPlatformType? =
+    var platformType: SteammessagesAuthSteamclient.EAuthTokenPlatformType =
         SteammessagesAuthSteamclient.EAuthTokenPlatformType.k_EAuthTokenPlatformType_SteamClient
 
     /**
@@ -51,7 +51,7 @@ class AuthSessionDetails {
      * Known values are "Unknown", "Client", "Mobile", "Website", "Store", "Community", "Partner", "SteamStats".
      */
     @JvmField
-    var websiteID: String? = "Client"
+    var websiteID: String = "Client"
 
     /**
      * Steam guard data for client login. Provide [AuthPollResult.newGuardData] if available.

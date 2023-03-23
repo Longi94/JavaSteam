@@ -1,25 +1,21 @@
 package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Response
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
-import `in`.dragonbra.javasteam.rpc.service.Authentication
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
 import `in`.dragonbra.javasteam.types.SteamID
 
 /**
  * Credentials based authentication session.
  */
 class CredentialsAuthSession(
-    service: Authentication,
+    authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
     response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder
 ) : AuthSession(
-    authenticationService = service,
+    authentication = authentication,
     authenticator = authenticator,
-    clientID = response.clientId,
-    requestID = response.requestId,
+    clientId = response.clientId,
+    requestId = response.requestId.toByteArray(),
     allowedConfirmations = response.allowedConfirmationsList,
     pollingInterval = response.interval
 ) {
@@ -42,7 +38,7 @@ class CredentialsAuthSession(
         request.code = code
         request.codeType = codeType
 
-        val message = authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
+        val message = authentication.authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
 
         val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
             message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)

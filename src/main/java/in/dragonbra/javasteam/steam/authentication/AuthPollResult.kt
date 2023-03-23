@@ -9,26 +9,26 @@ class AuthPollResult(response: CAuthentication_PollAuthSessionStatus_Response.Bu
     /**
      * Account name of authenticating account.
      */
-    @JvmField
     var accountName: String = response.accountName
+        private set
 
     /**
      * New refresh token.
      */
-    @JvmField
     var refreshToken: String = response.refreshToken
+        private set
 
     /**
      * Gets or Sets the new token subordinate to [refreshToken].
      */
-    @JvmField
     var accessToken: String = response.accessToken
+        private set
 
     /**
      * May contain remembered machine ID for future login, usually when account uses email based Steam Guard.
      * Supply it in [AuthSessionDetails.guardData] for future logins to avoid resending an email.
      * This value should be stored per account.
      */
-    @JvmField
     var newGuardData: String = response.newGuardData
+        private set
 }

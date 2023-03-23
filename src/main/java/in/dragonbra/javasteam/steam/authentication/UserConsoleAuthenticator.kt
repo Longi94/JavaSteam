@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture
  */
 class UserConsoleAuthenticator : IAuthenticator {
 
-    override fun provideDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
+    override fun getDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
         if (previousCodeWasIncorrect) {
             println("The previous 2-factor auth code you have provided is incorrect.")
         }
@@ -22,7 +22,7 @@ class UserConsoleAuthenticator : IAuthenticator {
         return CompletableFuture.completedFuture(code)
     }
 
-    override fun provideEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
+    override fun getEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
         if (previousCodeWasIncorrect) {
             println("The previous 2-factor auth code you have provided is incorrect.")
         }

@@ -21,8 +21,6 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import org.jetbrains.annotations.NotNull;
 import pro.leaco.console.qrcode.ConsoleQrcode;
 
-import java.util.concurrent.ExecutionException;
-
 // TODO: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
 //  CM will kick you in 60 seconds if you don't auth.
 //  Steam client also has this issue, but it will reconnect and just continue polling.
@@ -109,13 +107,13 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
 
             // Starting polling Steam for authentication response
             // This response is later used to log on to Steam after connecting
-            AuthPollResult pollResponse = authSession.startPolling();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult();
 
-            System.out.println("Connected to Steam! Logging in " + pollResponse.accountName + "...");
+            System.out.println("Connected to Steam! Logging in " + pollResponse.getAccountName() + "...");
 
             LogOnDetails details = new LogOnDetails();
-            details.setUsername(pollResponse.accountName);
-            details.setAccessToken(pollResponse.refreshToken);
+            details.setUsername(pollResponse.getAccountName());
+            details.setAccessToken(pollResponse.getRefreshToken());
 
             // Set LoginID to a non-zero value if you have another client connected using the same account,
             // the same private ip, and same public ip.

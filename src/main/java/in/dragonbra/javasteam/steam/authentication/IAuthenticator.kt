@@ -12,7 +12,7 @@ interface IAuthenticator {
      * @param previousCodeWasIncorrect True when previously provided code was incorrect.
      * @return The 2-factor auth code used to log in. This is the code that can be received from the authenticator app.
      */
-    fun provideDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String>
+    fun getDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String>
 
     /**
      * This method is called when the account being logged into uses Steam Guard email authentication. This code is sent to the user's email.
@@ -21,7 +21,7 @@ interface IAuthenticator {
      * @param previousCodeWasIncorrect True when previously provided code was incorrect.
      * @return The Steam Guard auth code used to log in.
      */
-    fun provideEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String>
+    fun getEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String>
 
     /**
      * This method is called when the account being logged has the Steam Mobile App and accepts authentication notification prompts.

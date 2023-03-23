@@ -4,41 +4,66 @@ import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.Authentication
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit
 
 /**
  * Represents an authentication session which can be used to finish the authentication and get access tokens.
  */
+@Suppress("MemberVisibilityCanBePrivate")
 open class AuthSession(
+    authentication: SteamAuthentication,
+    authenticator: IAuthenticator?,
+    clientId: Long,
+    requestId: ByteArray,
+    allowedConfirmations: List<CAuthentication_AllowedConfirmation>,
+    pollingInterval: Float,
+) {
+
+    // private val logger = LogManager.getLogger(AuthSession::class.java)
+
     /**
      * Unified messages class for Authentication related messages, see [Authentication].
      */
-    var authenticationService: Authentication,
+    var authentication: SteamAuthentication
+        private set
+
     /**
      * Confirmation types that will be able to confirm the request.
      */
-    var allowedConfirmations: List<CAuthentication_AllowedConfirmation>,
+    var allowedConfirmations: List<CAuthentication_AllowedConfirmation>
+        private set
+
     /**
      * Authenticator object which will be used to handle 2-factor authentication if necessary.
      */
-    var authenticator: IAuthenticator?,
+    var authenticator: IAuthenticator?
+        private set
+
     /**
      * Unique identifier of requestor, also used for routing, portion of QR code.
      */
-    var clientID: Long,
+    var clientID: Long
+        private set
+
     /**
      * Unique request ID to be presented by requestor at poll time.
      */
-    var requestID: ByteString,
+    var requestID: ByteArray
+        private set
+
     /**
      * Refresh interval with which requestor should call PollAuthSessionStatus.
      */
     var pollingInterval: Float
-) {
+        private set
 
     init {
         this.allowedConfirmations = sortConfirmations(allowedConfirmations)
+        this.authentication = authentication
+        this.authenticator = authenticator
+        this.clientID = clientId
+        this.pollingInterval = pollingInterval
+        this.requestID = requestId
     }
 
     /**
@@ -46,23 +71,29 @@ open class AuthSession(
      *
      * @return An object containing tokens which can be used to log in to Steam.
      */
-    fun startPolling(): AuthPollResult {
+    fun pollingWaitForResult(): AuthPollResult {
         var pollLoop = false
-        var preferredConfirmation: CAuthentication_AllowedConfirmation? = allowedConfirmations.firstOrNull()
+        var preferredConfirmation = allowedConfirmations.firstOrNull()
 
-        require(!(preferredConfirmation == null || preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown)) {
-            "There are no allowed confirmations"
+        if (preferredConfirmation == null ||
+            preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown
+        ) {
+            throw IllegalStateException("There are no allowed confirmations");
         }
 
         // If an authenticator is provided and the device confirmation is available, allow consumers to choose whether they want to
         // simply poll until confirmation is accepted, or whether they want to fall back to the next preferred confirmation type.
-        if (authenticator != null && preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation) {
+        if (authenticator != null &&
+            preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation
+        ) {
             val prefersToPollForConfirmation = authenticator!!.acceptDeviceConfirmation().get()
 
             if (!prefersToPollForConfirmation) {
-                require(allowedConfirmations.size > 1) {
-                    "AcceptDeviceConfirmation returned false which indicates a fallback to another confirmation type, " +
-                        "but there are no other confirmation types available."
+                if (allowedConfirmations.size <= 1) {
+                    throw IllegalStateException(
+                        "AcceptDeviceConfirmation returned false which indicates a fallback to another confirmation type, " +
+                            "but there are no other confirmation types available."
+                    )
                 }
 
                 preferredConfirmation = allowedConfirmations[1]
@@ -70,50 +101,48 @@ open class AuthSession(
         }
 
         when (preferredConfirmation.confirmationType) {
+            // No steam guard
             EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit
+            // 2-factor code from the authenticator app or sent to an email
             EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
             EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> {
-                require(this is CredentialsAuthSession) {
-                    "Got ${preferredConfirmation.confirmationType} confirmation type in a session that is not CredentialsAuthSession."
-                }
+                val credentialsAuthSession = this as? CredentialsAuthSession
+                    ?: throw IllegalStateException("Got ${preferredConfirmation.confirmationType} confirmation type " +
+                        "in a session that is not CredentialsAuthSession.")
 
-                requireNotNull(authenticator) {
-                    "This account requires an authenticator for login, but none was provided in AuthSessionDetails."
+                if (authenticator == null) {
+                    throw NullPointerException(
+                        "This account requires an authenticator for login, " +
+                            "but none was provided in 'AuthSessionDetails'."
+                    )
                 }
 
                 val expectedInvalidCodeResult = when (preferredConfirmation.confirmationType) {
                     EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode -> EResult.InvalidLoginAuthCode
                     EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> EResult.TwoFactorCodeMismatch
-                    else -> {
-                        throw IllegalArgumentException("${preferredConfirmation.confirmationType} not implemented")
-                    }
+                    else -> throw NotImplementedError()
                 }
 
                 var previousCodeWasIncorrect = false
                 var waitingForValidCode = true
 
-                do {
+                while (waitingForValidCode) {
                     try {
                         val task = when (preferredConfirmation.confirmationType) {
-                            EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode -> {
-                                authenticator!!.provideEmailCode(
-                                    preferredConfirmation.associatedMessage,
-                                    previousCodeWasIncorrect
-                                )
-                            }
+                            EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode ->
+                                authenticator!!.getEmailCode(preferredConfirmation.associatedMessage, previousCodeWasIncorrect).get()
 
-                            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> {
-                                authenticator!!.provideDeviceCode(previousCodeWasIncorrect)
-                            }
+                            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode ->
+                                authenticator!!.getDeviceCode(previousCodeWasIncorrect).get()
 
-                            else -> throw IllegalArgumentException()
+                            else -> throw NotImplementedError()
                         }
 
-                        val code = task.get()
+                        if (task.isNullOrEmpty()) {
+                            throw IllegalStateException("No code was provided by the authenticator.")
+                        }
 
-                        require(!code.isNullOrEmpty()) { "No code was provided by the authenticator." }
-
-                        this.sendSteamGuardCode(code, preferredConfirmation.confirmationType)
+                        credentialsAuthSession.sendSteamGuardCode(task, preferredConfirmation.confirmationType)
 
                         waitingForValidCode = false
                     } catch (e: AuthenticationException) {
@@ -121,7 +150,7 @@ open class AuthSession(
                             previousCodeWasIncorrect = true
                         }
                     }
-                } while (waitingForValidCode)
+                }
             }
 
             // This is a prompt that appears in the Steam mobile app
@@ -138,36 +167,29 @@ open class AuthSession(
 //              throw IllegalArgumentException("Machine token confirmation is not supported by SteamKit at the moment.")
 //          }
 
-            else -> {
-                throw IllegalArgumentException("Unsupported confirmation type ${preferredConfirmation.confirmationType}.")
-            }
-        }
-
-        if (!pollLoop) {
-            return pollAuthSessionStatus() ?: throw AuthenticationException(
-                "Authentication failed",
-                EResult.Fail
+            else -> throw UnsupportedOperationException(
+                "Unsupported confirmation type ${preferredConfirmation.confirmationType}."
             )
         }
 
-        var pollResponse: AuthPollResult?
-        runBlocking {
-            while (true) {
-                delay(pollingInterval.toLong())
-
-                pollResponse = pollAuthSessionStatus()
-
-                if (pollResponse != null) {
-                    return@runBlocking pollResponse
-                }
-            }
+        if (!pollLoop) {
+            return pollAuthSessionStatus() ?: throw AuthenticationException("Authentication failed", EResult.Fail)
         }
 
-        return pollResponse!!
+
+        while (true) {
+            val pollResponse = pollAuthSessionStatus()
+
+            TimeUnit.SECONDS.sleep(pollingInterval.toLong())
+
+            if (pollResponse != null) {
+                return pollResponse
+            }
+        }
     }
 
     /**
-     * Polls for authentication status once. Prefer using [startPolling] instead.
+     * Polls for authentication status once. Prefer using [pollingWaitForResult] instead.
      *
      * @return An object containing tokens which can be used to log in to Steam, or null if not yet authenticated.
      * @throws AuthenticationException Thrown when polling fails.
@@ -175,16 +197,13 @@ open class AuthSession(
     private fun pollAuthSessionStatus(): AuthPollResult? {
         val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder()
         request.clientId = clientID
-        request.requestId = requestID
+        request.requestId = ByteString.copyFrom(requestID)
 
-        val message = authenticationService.PollAuthSessionStatus(request.build()).runBlock()
+        val message = authentication.authenticationService.PollAuthSessionStatus(request.build()).runBlock()
 
         // eresult can be Expired, FileNotFound, Fail
         if (message.result != EResult.OK) {
-            throw AuthenticationException(
-                "Failed to poll status",
-                message.result
-            )
+            throw AuthenticationException("Failed to poll status", message.result)
         }
 
         val response: CAuthentication_PollAuthSessionStatus_Response.Builder =
