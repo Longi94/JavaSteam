@@ -152,7 +152,7 @@ public class SteamUser extends ClientMsgHandler {
         }
 
         if (!Strings.isNullOrEmpty(details.getAccessToken())) {
-            logon.getBody().setLoginKey(details.getAccessToken());
+            logon.getBody().setAccessToken(details.getAccessToken());
         }
 
         if (details.getSentryFileHash() != null) {
