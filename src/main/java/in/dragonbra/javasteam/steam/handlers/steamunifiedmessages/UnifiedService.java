@@ -38,7 +38,8 @@ public abstract class UnifiedService {
      * Results are returned in a
      * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
-     * @param message The message to send.
+     * @param message    The message to send.
+     * @param methodName The Target Job Name.
      * @return The JobID of the message. This can be used to find the appropriate
      * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
@@ -52,7 +53,8 @@ public abstract class UnifiedService {
     /**
      * Sends a notification.
      *
-     * @param message The message to send.
+     * @param message    The message to send.
+     * @param methodName The Target Job Name.
      */
     public void sendNotification(GeneratedMessageV3 message, String methodName) {
         String serviceName = getClassName();
