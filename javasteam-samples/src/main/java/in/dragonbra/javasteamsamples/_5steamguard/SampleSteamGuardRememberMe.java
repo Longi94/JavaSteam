@@ -7,16 +7,19 @@ import in.dragonbra.javasteam.steam.handlers.steamuser.OTPDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoginKeyCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.UpdateMachineAuthCallback;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
+import in.dragonbra.javasteam.util.crypto.CryptoHelper;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -113,8 +116,8 @@ public class SampleSteamGuardRememberMe implements Runnable {
         manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
         manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
 
+        // this callback is triggered when the steam servers wish for the client to store the sentry file
         manager.subscribe(UpdateMachineAuthCallback.class, this::onMachineAuth);
-        manager.subscribe(LoginKeyCallback.class, this::onLoginKey);
 
         isRunning = true;
 
@@ -133,23 +136,32 @@ public class SampleSteamGuardRememberMe implements Runnable {
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
 
-        LogOnDetails details = new LogOnDetails();
-        details.setUsername(user);
-
-        File loginKeyFile = new File("loginkey.txt");
-        if (loginKeyFile.exists()) {
-            try (Scanner s = new Scanner(loginKeyFile)) {
-                details.setLoginKey(s.nextLine());
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+        byte[] sentryHash = null;
+        File sentry = new File("sentry.bin");
+        if (sentry.exists()) {
+            try {
+                byte[] fileBytes = Files.readAllBytes(sentry.toPath());
+                sentryHash = CryptoHelper.shaHash(fileBytes);
+            } catch (IOException | NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
             }
-        } else {
-            details.setPassword(pass);
         }
 
-        details.setTwoFactorCode(twoFactorAuth);
+        LogOnDetails details = new LogOnDetails();
+        details.setUsername(user);
+        details.setPassword(pass);
+
+        // in this sample, we pass in an additional authcode
+        // this value will be null (which is the default) for our first logon attempt
         details.setAuthCode(authCode);
-        details.setShouldRememberPassword(true);
+
+        // if the account is using 2-factor auth, we'll provide the two-factor code instead
+        // this will also be null on our first logon attempt
+        details.setTwoFactorCode(twoFactorAuth);
+
+        // our subsequent logons use the hash of the sentry file as proof of ownership of the file
+        // this will also be null for our first (no authcode) and second (authcode only) logon attempts
+        details.setSentryFileHash(sentryHash);
 
         // Set LoginID to a non-zero value if you have another client connected using the same account,
         // the same private ip, and same public ip.
@@ -212,6 +224,13 @@ public class SampleSteamGuardRememberMe implements Runnable {
     }
 
     private void onMachineAuth(UpdateMachineAuthCallback callback) {
+        System.out.println("Updating sentry file...");
+
+        // write out our sentry file
+        // ideally we'd want to write to the filename specified in the callback
+        // but then this sample would require more code to find the correct sentry file to read during logon
+        // for the sake of simplicity, we'll just use "sentry.bin"
+
         File sentry = new File("sentry.bin");
         try (FileOutputStream fos = new FileOutputStream(sentry)) {
             FileChannel channel = fos.getChannel();
@@ -235,15 +254,6 @@ public class SampleSteamGuardRememberMe implements Runnable {
 
             steamUser.sendMachineAuthResponse(details);
         } catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void onLoginKey(LoginKeyCallback callback) {
-        try (FileWriter fw = new FileWriter("loginkey.txt")) {
-            fw.write(callback.getLoginKey());
-            steamUser.acceptNewLoginKey(callback);
-        } catch (IOException e) {
             e.printStackTrace();
         }
     }

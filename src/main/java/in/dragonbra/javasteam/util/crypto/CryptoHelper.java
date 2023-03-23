@@ -47,6 +47,15 @@ public class CryptoHelper {
         }
     }
 
+    public static byte[] shaHash(byte[] input) throws NoSuchAlgorithmException {
+        if (input == null) {
+            throw new IllegalArgumentException("input is null");
+        }
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-1");
+        return sha.digest(input);
+    }
+
     /**
      * Generate an array of random bytes given the input length
      *
