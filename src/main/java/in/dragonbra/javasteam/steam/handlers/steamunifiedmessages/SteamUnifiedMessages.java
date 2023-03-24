@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodNotification;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.Strings;
 import in.dragonbra.javasteam.util.compat.Consumer;
@@ -61,7 +62,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param <TRequest> The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> JobID sendMessage(String rpcName, GeneratedMessageV3 message) {
+    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> AsyncJobSingle<ServiceMethodResponse> sendMessage(String rpcName, GeneratedMessageV3 message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -76,7 +77,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(client, jobID);
     }
 
     /**

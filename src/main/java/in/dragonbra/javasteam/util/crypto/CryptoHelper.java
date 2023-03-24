@@ -22,6 +22,7 @@ import java.util.zip.CRC32;
  * @author lngtr
  * @since 2018-02-24
  */
+@SuppressWarnings("unchecked")
 public class CryptoHelper {
 
     private static final Logger logger = LogManager.getLogger(CryptoHelper.class);
@@ -44,6 +45,15 @@ public class CryptoHelper {
         } catch (Exception e) {
             throw new SecurityException("Couldn't create security provider", e);
         }
+    }
+
+    public static byte[] shaHash(byte[] input) throws NoSuchAlgorithmException {
+        if (input == null) {
+            throw new IllegalArgumentException("input is null");
+        }
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-1");
+        return sha.digest(input);
     }
 
     /**

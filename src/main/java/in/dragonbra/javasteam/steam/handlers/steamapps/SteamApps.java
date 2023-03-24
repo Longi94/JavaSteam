@@ -20,6 +20,8 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverApp
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoResponse;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.*;
+import in.dragonbra.javasteam.types.AsyncJobMultiple;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
@@ -61,7 +63,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param appId The appid to request the ownership ticket of.
      * @return The Job ID of the request. This can be used to find the appropriate {@link AppOwnershipTicketCallback}.
      */
-    public JobID getAppOwnershipTicket(int appId) {
+    public AsyncJobSingle<AppOwnershipTicketCallback> getAppOwnershipTicket(int appId) {
         ClientMsgProtobuf<CMsgClientGetAppOwnershipTicket.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientGetAppOwnershipTicket.class, EMsg.ClientGetAppOwnershipTicket);
         JobID jobID = client.getNextJobID();
@@ -71,7 +73,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -82,7 +84,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param appId   The AppID parent of the DepotID.
      * @return The Job ID of the request. This can be used to find the appropriate {@link DepotKeyCallback}.
      */
-    public JobID getDepotDecryptionKey(int depotId, int appId) {
+    public AsyncJobSingle<DepotKeyCallback> getDepotDecryptionKey(int depotId, int appId) {
         ClientMsgProtobuf<CMsgClientGetDepotDecryptionKey.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientGetDepotDecryptionKey.class, EMsg.ClientGetDepotDecryptionKey);
         JobID jobID = client.getNextJobID();
@@ -93,7 +95,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -104,7 +106,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param _package Package id to request access token for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSTokensCallback}.
      */
-    public JobID picsGetAccessTokens(Integer app, Integer _package) {
+    public AsyncJobSingle<PICSTokensCallback> picsGetAccessTokens(Integer app, Integer _package) {
         List<Integer> apps = new ArrayList<>();
         List<Integer> packages = new ArrayList<>();
 
@@ -127,7 +129,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param packageIds List of package ids to request access tokens for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSTokensCallback}.
      */
-    public JobID picsGetAccessTokens(Iterable<Integer> appIds, Iterable<Integer> packageIds) {
+    public AsyncJobSingle<PICSTokensCallback> picsGetAccessTokens(Iterable<Integer> appIds, Iterable<Integer> packageIds) {
         ClientMsgProtobuf<CMsgClientPICSAccessTokenRequest.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientPICSAccessTokenRequest.class, EMsg.ClientPICSAccessTokenRequest);
         JobID jobID = client.getNextJobID();
@@ -138,7 +140,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -147,7 +149,7 @@ public class SteamApps extends ClientMsgHandler {
      *
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSChangesCallback}.
      */
-    public JobID picsGetChangesSince() {
+    public AsyncJobSingle<PICSChangesCallback> picsGetChangesSince() {
         return picsGetChangesSince(0, true, false);
     }
 
@@ -158,7 +160,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param lastChangeNumber Last change number seen.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSChangesCallback}.
      */
-    public JobID picsGetChangesSince(int lastChangeNumber) {
+    public AsyncJobSingle<PICSChangesCallback> picsGetChangesSince(int lastChangeNumber) {
         return picsGetChangesSince(lastChangeNumber, true, false);
     }
 
@@ -170,7 +172,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param sendAppChangeList Whether to send app changes.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSChangesCallback}.
      */
-    public JobID picsGetChangesSince(int lastChangeNumber, boolean sendAppChangeList) {
+    public AsyncJobSingle<PICSChangesCallback> picsGetChangesSince(int lastChangeNumber, boolean sendAppChangeList) {
         return picsGetChangesSince(lastChangeNumber, sendAppChangeList, false);
     }
 
@@ -183,7 +185,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param sendPackageChangelist Whether to send package changes.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSChangesCallback}.
      */
-    public JobID picsGetChangesSince(int lastChangeNumber, boolean sendAppChangeList, boolean sendPackageChangelist) {
+    public AsyncJobSingle<PICSChangesCallback> picsGetChangesSince(int lastChangeNumber, boolean sendAppChangeList, boolean sendPackageChangelist) {
         ClientMsgProtobuf<CMsgClientPICSChangesSinceRequest.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientPICSChangesSinceRequest.class, EMsg.ClientPICSChangesSinceRequest);
         JobID jobID = client.getNextJobID();
@@ -195,7 +197,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -206,7 +208,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param _package Package id requested.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(PICSRequest app, PICSRequest _package) {
+    public AsyncJobMultiple<PICSProductInfoCallback> picsGetProductInfo(PICSRequest app, PICSRequest _package) {
         return picsGetProductInfo(app, _package, false);
     }
 
@@ -219,7 +221,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param metaDataOnly Whether to send only meta data.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(PICSRequest app, PICSRequest _package, boolean metaDataOnly) {
+    public AsyncJobMultiple<PICSProductInfoCallback> picsGetProductInfo(PICSRequest app, PICSRequest _package, boolean metaDataOnly) {
         List<PICSRequest> apps = new ArrayList<>();
         List<PICSRequest> packages = new ArrayList<>();
 
@@ -242,7 +244,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param packages List of package ids requested.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages) {
+    public AsyncJobMultiple<PICSProductInfoCallback> picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages) {
         return picsGetProductInfo(apps, packages, false);
     }
 
@@ -255,7 +257,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param metaDataOnly Whether to send only metadata.
      * @return The Job ID of the request. This can be used to find the appropriate {@link PICSProductInfoCallback}.
      */
-    public JobID picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages, boolean metaDataOnly) {
+    public AsyncJobMultiple<PICSProductInfoCallback> picsGetProductInfo(Iterable<PICSRequest> apps, Iterable<PICSRequest> packages, boolean metaDataOnly) {
         if (apps == null) {
             throw new IllegalArgumentException("apps is null");
         }
@@ -292,7 +294,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobMultiple<>(this.client, request.getSourceJobID(), cb -> !cb.isResponsePending());
     }
 
     /**
@@ -304,7 +306,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param hostName CDN host name being requested.
      * @return The Job ID of the request. This can be used to find the appropriate {@link CDNAuthTokenCallback}.
      */
-    public JobID getCDNAuthToken(int app, int depot, String hostName) {
+    public AsyncJobSingle<CDNAuthTokenCallback> getCDNAuthToken(int app, int depot, String hostName) {
         ClientMsgProtobuf<CMsgClientGetCDNAuthToken.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientGetCDNAuthToken.class, EMsg.ClientGetCDNAuthToken);
         JobID jobID = client.getNextJobID();
@@ -316,7 +318,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
 
@@ -327,7 +329,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param app The app to request a free license for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link FreeLicenseCallback}.
      */
-    public JobID requestFreeLicense(int app) {
+    public AsyncJobSingle<FreeLicenseCallback> requestFreeLicense(int app) {
         List<Integer> apps = new ArrayList<>();
         apps.add(app);
         return requestFreeLicense(apps);
@@ -340,7 +342,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param apps The apps to request a free license for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link FreeLicenseCallback}.
      */
-    public JobID requestFreeLicense(Iterable<Integer> apps) {
+    public AsyncJobSingle<FreeLicenseCallback> requestFreeLicense(Iterable<Integer> apps) {
         if (apps == null) {
             throw new IllegalArgumentException("apps is null");
         }
@@ -354,7 +356,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -365,7 +367,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param password Password to check.
      * @return The Job ID of the request. This can be used to find the appropriate {@link CheckAppBetaPasswordCallback}.
      */
-    public JobID checkAppBetaPassword(int app, String password) {
+    public AsyncJobSingle<CheckAppBetaPasswordCallback> checkAppBetaPassword(int app, String password) {
         ClientMsgProtobuf<CMsgClientCheckAppBetaPassword.Builder> request =
                 new ClientMsgProtobuf<>(CMsgClientCheckAppBetaPassword.class, EMsg.ClientCheckAppBetaPassword);
         JobID jobID = client.getNextJobID();
@@ -376,7 +378,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     /**
@@ -385,7 +387,7 @@ public class SteamApps extends ClientMsgHandler {
      * @param appId The AppID to request game keys for.
      * @return The Job ID of the request. This can be used to find the appropriate {@link LegacyGameKeyCallback}
      */
-    public JobID getLegacyGameKey(int appId) {
+    public AsyncJobSingle<LegacyGameKeyCallback> getLegacyGameKey(int appId) {
         ClientMsg<MsgClientGetLegacyGameKey> request = new ClientMsg<>(MsgClientGetLegacyGameKey.class);
         JobID jobID = client.getNextJobID();
         request.setSourceJobID(jobID);
@@ -395,7 +397,7 @@ public class SteamApps extends ClientMsgHandler {
 
         client.send(request);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
     }
 
     @Override

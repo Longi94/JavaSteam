@@ -14,3 +14,4 @@ Most of the time reformatting the code in IntelliJ with default settings will su
  - Break a statement into multiple lines if it's too long (120 char width)
  - Try to include javadoc where applicable
  - You can use the existing codebase as a style guide
+ - Kotlin classes use Tab, Indent, and Continuation at 4

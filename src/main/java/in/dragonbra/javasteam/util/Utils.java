@@ -50,7 +50,7 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_10) {
                 return EOSType.Windows10;
             }
-            if(checkOS("Windows 11", "10.0")){
+            if (checkOS("Windows 11", "10.0")) {
                 return EOSType.Win11;
             }
             // Windows Server
@@ -63,13 +63,13 @@ public class Utils {
             if (SystemUtils.IS_OS_WINDOWS_2012) {
                 return EOSType.Win2012;
             }
-            if(checkOS("Windows Server 2016", "10.0")) {
+            if (checkOS("Windows Server 2016", "10.0")) {
                 return EOSType.Win2016;
             }
-            if(checkOS("Windows Server 2019", "10.0")) {
+            if (checkOS("Windows Server 2019", "10.0")) {
                 return EOSType.Win2019;
             }
-            if(checkOS("Windows Server 2022", "10.0")) {
+            if (checkOS("Windows Server 2022", "10.0")) {
                 return EOSType.Win2022;
             }
             // Windows Unknown

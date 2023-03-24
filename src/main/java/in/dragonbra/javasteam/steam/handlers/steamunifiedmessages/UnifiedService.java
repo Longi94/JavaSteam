@@ -1,7 +1,8 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
 
 import com.google.protobuf.GeneratedMessageV3;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 
 /**
  * @author Lossy
@@ -32,26 +33,19 @@ public abstract class UnifiedService {
     }
 
     /**
-     * Gets the calling method name. ie: GetGameBadgeLevels()...
-     *
-     * @return The calling method name.
-     */
-    public static String getMethodName() {
-        return Thread.currentThread().getStackTrace()[3].getMethodName();
-    }
-
-    /**
      * Sends a message.
      * <p>
-     * Results are returned in a {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * Results are returned in a
+     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      *
-     * @param message The message to send.
-     * @return The JobID of the message. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * @param message    The message to send.
+     * @param methodName The Target Job Name.
+     * @return The JobID of the message. This can be used to find the appropriate
+     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public JobID sendMessage(GeneratedMessageV3 message) {
+    public AsyncJobSingle<ServiceMethodResponse> sendMessage(GeneratedMessageV3 message, String methodName) {
         String serviceName = getClassName();
-        String rpcName = getMethodName();
-        String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
+        String rpcEndpoint = getRpcEndpoint(serviceName, methodName);
 
         return sendMessageOrNotification(rpcEndpoint, message, false);
     }
@@ -59,17 +53,17 @@ public abstract class UnifiedService {
     /**
      * Sends a notification.
      *
-     * @param message The message to send.
+     * @param message    The message to send.
+     * @param methodName The Target Job Name.
      */
-    public void sendNotification(GeneratedMessageV3 message) {
+    public void sendNotification(GeneratedMessageV3 message, String methodName) {
         String serviceName = getClassName();
-        String rpcName = getMethodName();
-        String rpcEndpoint = getRpcEndpoint(serviceName, rpcName);
+        String rpcEndpoint = getRpcEndpoint(serviceName, methodName);
 
         sendMessageOrNotification(rpcEndpoint, message, true);
     }
 
-    private JobID sendMessageOrNotification(String rpcName, GeneratedMessageV3 message, Boolean isNotification) {
+    private AsyncJobSingle<ServiceMethodResponse> sendMessageOrNotification(String rpcName, GeneratedMessageV3 message, Boolean isNotification) {
 
         if (isNotification) {
             steamUnifiedMessages.sendNotification(rpcName, message);

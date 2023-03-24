@@ -1,7 +1,7 @@
 //file:noinspection GroovyAssignabilityCheck
 
 plugins {
-    id 'com.google.protobuf' version "0.9.1"
+    id 'com.google.protobuf' version "0.9.2"
     id 'java'
     id 'maven-publish'
     id 'signing'
@@ -15,7 +15,7 @@ repositories {
 
 // https://mvnrepository.com/artifact/com.google.protobuf/protoc
 protobuf.protoc {
-    artifact = 'com.google.protobuf:protoc:3.21.12'
+    artifact = 'com.google.protobuf:protoc:3.22.2'
 }
 
 javadoc {
@@ -33,12 +33,12 @@ java {
 
 dependencies {
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-    implementation 'com.google.protobuf:protobuf-java:3.21.12'
+    implementation 'com.google.protobuf:protobuf-java:3.22.2'
 
     /* Unit Testing */
 
     // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
 }
 
 /* Artifact publishing */

@@ -1,10 +1,12 @@
 package in.dragonbra.javasteam.rpc.service;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient;
-import in.dragonbra.javasteam.rpc.IAuthentication;
+import in.dragonbra.javasteam.rpc.interfaces.IAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.UnifiedService;
-import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
+
 
 /**
  * @author Lossy
@@ -18,52 +20,52 @@ public class Authentication extends UnifiedService implements IAuthentication {
     }
 
     @Override
-    public JobID GetPasswordRSAPublicKey(SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> GetPasswordRSAPublicKey(SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Request request) {
+        return sendMessage(request, "GetPasswordRSAPublicKey");
     }
 
     @Override
-    public JobID BeginAuthSessionViaQR(SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> BeginAuthSessionViaQR(SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Request request) {
+        return sendMessage(request, "BeginAuthSessionViaQR");
     }
 
     @Override
-    public JobID BeginAuthSessionViaCredentials(SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> BeginAuthSessionViaCredentials(SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Request request) {
+        return sendMessage(request, "BeginAuthSessionViaCredentials");
     }
 
     @Override
-    public JobID PollAuthSessionStatus(SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> PollAuthSessionStatus(SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Request request) {
+        return sendMessage(request, "PollAuthSessionStatus");
     }
 
     @Override
-    public JobID GetAuthSessionInfo(SteammessagesAuthSteamclient.CAuthentication_GetAuthSessionInfo_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> GetAuthSessionInfo(SteammessagesAuthSteamclient.CAuthentication_GetAuthSessionInfo_Request request) {
+        return sendMessage(request, "GetAuthSessionInfo");
     }
 
     @Override
-    public JobID UpdateAuthSessionWithMobileConfirmation(SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithMobileConfirmation_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> UpdateAuthSessionWithMobileConfirmation(SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithMobileConfirmation_Request request) {
+        return sendMessage(request, "UpdateAuthSessionWithMobileConfirmation");
     }
 
     @Override
-    public JobID UpdateAuthSessionWithSteamGuardCode(SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> UpdateAuthSessionWithSteamGuardCode(SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request request) {
+        return sendMessage(request, "UpdateAuthSessionWithSteamGuardCode");
     }
 
     @Override
-    public JobID GenerateAccessTokenForApp(SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> GenerateAccessTokenForApp(SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Request request) {
+        return sendMessage(request, "GenerateAccessTokenForApp");
     }
 
     @Override
-    public JobID GetAuthSessionsForAccount(SteammessagesAuthSteamclient.CAuthentication_GetAuthSessionsForAccount_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> GetAuthSessionsForAccount(SteammessagesAuthSteamclient.CAuthentication_GetAuthSessionsForAccount_Request request) {
+        return sendMessage(request, "GetAuthSessionsForAccount");
     }
 
     @Override
-    public JobID MigrateMobileSession(SteammessagesAuthSteamclient.CAuthentication_MigrateMobileSession_Request request) {
-        return sendMessage(request);
+    public AsyncJobSingle<ServiceMethodResponse> MigrateMobileSession(SteammessagesAuthSteamclient.CAuthentication_MigrateMobileSession_Request request) {
+        return sendMessage(request, "MigrateMobileSession");
     }
 }

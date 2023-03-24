@@ -22,6 +22,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.C
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.HardwareUtils;
@@ -72,7 +73,8 @@ public class SteamUser extends ClientMsgHandler {
             throw new IllegalArgumentException("details is null");
         }
 
-        if (Strings.isNullOrEmpty(details.getUsername()) || Strings.isNullOrEmpty(details.getPassword()) && Strings.isNullOrEmpty(details.getLoginKey())) {
+        if (Strings.isNullOrEmpty(details.getUsername()) || (Strings.isNullOrEmpty(details.getPassword()) &&
+                Strings.isNullOrEmpty(details.getLoginKey()) && Strings.isNullOrEmpty(details.getAccessToken()))) {
             throw new IllegalArgumentException("LogOn requires a username and password to be set in 'details'.");
         }
 
@@ -147,6 +149,10 @@ public class SteamUser extends ClientMsgHandler {
 
         if (!Strings.isNullOrEmpty(details.getLoginKey())) {
             logon.getBody().setLoginKey(details.getLoginKey());
+        }
+
+        if (!Strings.isNullOrEmpty(details.getAccessToken())) {
+            logon.getBody().setAccessToken(details.getAccessToken());
         }
 
         if (details.getSentryFileHash() != null) {
@@ -237,7 +243,7 @@ public class SteamUser extends ClientMsgHandler {
         response.getProtoHeader().setJobidTarget(details.getJobID().getValue());
 
         response.getBody().setCubwrote(details.getBytesWritten());
-        response.getBody().setEresult(details.geteResult().code());
+        response.getBody().setEresult(details.getEResult().code());
 
         response.getBody().setFilename(details.getFileName());
         response.getBody().setFilesize(details.getFileSize());
@@ -257,10 +263,11 @@ public class SteamUser extends ClientMsgHandler {
     /**
      * Requests a new WebAPI authentication user nonce.
      * Results are returned in a {@link WebAPIUserNonceCallback}.
+     * The returned {@link  AsyncJobSingle} can also be awaited to retrieve the callback result.
      *
      * @return The Job ID of the request. This can be used to find the appropriate {@link WebAPIUserNonceCallback}.
      */
-    public JobID requestWebAPIUserNonce() {
+    public AsyncJobSingle<WebAPIUserNonceCallback> requestWebAPIUserNonce() {
         ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> reqMsg =
                 new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonce.class, EMsg.ClientRequestWebAPIAuthenticateUserNonce);
         JobID jobID = client.getNextJobID();
@@ -268,14 +275,16 @@ public class SteamUser extends ClientMsgHandler {
 
         client.send(reqMsg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, reqMsg.getSourceJobID());
     }
 
     /**
      * Accepts the new Login Key provided by a {@link LoginKeyCallback}.
      *
      * @param callback The callback containing the new Login Key.
+     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
      */
+    @Deprecated
     public void acceptNewLoginKey(LoginKeyCallback callback) {
         if (callback == null) {
             throw new IllegalArgumentException("callback is null");

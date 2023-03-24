@@ -12,6 +12,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator;
 import in.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;
+import in.dragonbra.javasteam.steam.handlers.steamnetworking.SteamNetworking;
 import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
 import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
@@ -25,6 +26,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.CMListCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
+import in.dragonbra.javasteam.types.AsyncJob;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 import in.dragonbra.javasteam.util.log.LogManager;
@@ -42,6 +44,8 @@ public class SteamClient extends CMClient {
     private static final Logger logger = LogManager.getLogger(SteamClient.class);
 
     private final Map<Class<? extends ClientMsgHandler>, ClientMsgHandler> handlers = new HashMap<>();
+
+    private final AsyncJobManager jobManager;
 
     private final AtomicLong currentJobId = new AtomicLong(0L);
 
@@ -72,23 +76,26 @@ public class SteamClient extends CMClient {
         // notice: SteamFriends should be added before SteamUser due to AccountInfoCallback
         addHandler(new SteamFriends());
         addHandler(new SteamUser());
-        addHandler(new SteamNotifications());
-        addHandler(new SteamTrading());
         addHandler(new SteamApps());
-        addHandler(new SteamCloud());
-        addHandler(new SteamScreenshots());
-        addHandler(new SteamUserStats());
-        addHandler(new SteamWorkshop());
-        addHandler(new SteamMasterServer());
-        addHandler(new SteamGameServer());
         addHandler(new SteamGameCoordinator());
+        addHandler(new SteamGameServer());
+        addHandler(new SteamMasterServer());
+        addHandler(new SteamCloud());
+        addHandler(new SteamWorkshop());
+        addHandler(new SteamTrading());
         addHandler(new SteamUnifiedMessages());
+        addHandler(new SteamScreenshots());
+        addHandler(new SteamNetworking());
+        addHandler(new SteamNotifications());
+        addHandler(new SteamUserStats());
 
         processStartTime = new Date();
 
         dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
         dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
         dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
+
+        jobManager = new AsyncJobManager();
     }
 
     /**
@@ -97,6 +104,10 @@ public class SteamClient extends CMClient {
      * @param handler The handler to add.
      */
     public void addHandler(ClientMsgHandler handler) {
+        if (handler == null) {
+            throw new IllegalArgumentException("handler is null");
+        }
+
         if (handlers.containsKey(handler.getClass())) {
             throw new IllegalArgumentException("A handler of type " + handler.getClass() + " is already registered.");
         }
@@ -301,6 +312,8 @@ public class SteamClient extends CMClient {
             callbackQueue.offer(msg);
             callbackLock.notify();
         }
+
+        jobManager.tryCompleteJob(msg.getJobID(), msg);
     }
 
     /**
@@ -318,6 +331,14 @@ public class SteamClient extends CMClient {
         jobID.setStartTime(processStartTime);
 
         return jobID;
+    }
+
+    public void startJob(AsyncJob job) {
+        jobManager.startJob(job);
+    }
+
+    public AsyncJobManager getJobManager() {
+        return jobManager;
     }
 
     @Override
@@ -349,12 +370,21 @@ public class SteamClient extends CMClient {
     protected void onClientConnected() {
         super.onClientConnected();
 
+        jobManager.setTimeoutsEnabled(true);
+
         postCallback(new ConnectedCallback());
     }
 
     @Override
     protected void onClientDisconnected(boolean userInitiated) {
         super.onClientDisconnected(userInitiated);
+
+        // if we are disconnected, cancel all pending jobs
+        jobManager.cancelPendingJobs();
+
+        jobManager.setTimeoutsEnabled(false);
+
+        // clearHandlerCaches();
 
         postCallback(new DisconnectedCallback(userInitiated));
     }
@@ -366,10 +396,12 @@ public class SteamClient extends CMClient {
     }
 
     private void handleJobHeartbeat(IPacketMsg packetMsg) {
-        // TODO: 2018-02-23  
+        JobID jobID = new JobID(packetMsg.getTargetJobID());
+        jobManager.heartbeatJob(jobID);
     }
 
     private void handleJobFailed(IPacketMsg packetMsg) {
-        // TODO: 2018-02-23
+        JobID jobID = new JobID(packetMsg.getTargetJobID());
+        jobManager.failJob(jobID);
     }
 }

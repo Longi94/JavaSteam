@@ -1,4 +1,4 @@
-package in.dragonbra.javasteam.rpc;
+package in.dragonbra.javasteam.rpc.interfaces;
 
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.CFriendMessages_AckMessage_Notification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.CFriendMessages_IncomingMessage_Notification;

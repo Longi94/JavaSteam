@@ -5,7 +5,10 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 
 /**
  * This callback is returned some time after logging onto the network.
+ *
+ * @deprecated Steam no longer sends new login keys as of March 2023, use SteamAuthentication.
  */
+@Deprecated
 public class LoginKeyCallback extends CallbackMsg {
 
     private final String loginKey;

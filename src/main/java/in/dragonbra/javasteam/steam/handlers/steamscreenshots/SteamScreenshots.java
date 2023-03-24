@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshot;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshotResponse;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.callback.ScreenshotAddedCallback;
+import in.dragonbra.javasteam.types.AsyncJobSingle;
 import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.util.compat.Consumer;
 
@@ -37,11 +38,12 @@ public class SteamScreenshots extends ClientMsgHandler {
     /**
      * Adds a screenshot to the user's screenshot library. The screenshot image and thumbnail must already exist on the UFS.
      * Results are returned in a {@link ScreenshotAddedCallback}.
+     * The returned {@link in.dragonbra.javasteam.types.AsyncJob} can also be awaited to retrieve the callback result.
      *
      * @param details The details of the screenshot.
      * @return The Job ID of the request. This can be used to find the appropriate {@link ScreenshotAddedCallback}.
      */
-    public JobID addScreenshot(ScreenshotDetails details) {
+    public AsyncJobSingle<ScreenshotAddedCallback> addScreenshot(ScreenshotDetails details) {
         if (details == null) {
             throw new IllegalArgumentException("details is null");
         }
@@ -65,7 +67,7 @@ public class SteamScreenshots extends ClientMsgHandler {
 
         client.send(msg);
 
-        return jobID;
+        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
     }
 
     @Override
