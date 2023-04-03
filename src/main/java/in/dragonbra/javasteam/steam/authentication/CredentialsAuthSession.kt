@@ -38,13 +38,16 @@ class CredentialsAuthSession(
         request.code = code
         request.codeType = codeType
 
-        val message = authentication.authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
+        val message =
+            authentication.authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
 
         val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
             message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
 
-        // can be InvalidLoginAuthCode, TwoFactorCodeMismatch, Expired
-        if (message.result != EResult.OK) {
+        // Observed results can be InvalidLoginAuthCode, TwoFactorCodeMismatch, Expired, DuplicateRequest.
+        // DuplicateRequest happens when accepting the prompt in the mobile app, and then trying to send guard code here,
+        // we do not throw on it here because authentication will succeed on the next poll.
+        if (message.result != EResult.OK && message.result != EResult.DuplicateRequest) {
             throw AuthenticationException("Failed to send steam guard code", message.result)
         }
 
