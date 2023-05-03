@@ -5,11 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
-import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
-import in.dragonbra.javasteam.steam.authentication.CredentialsAuthSession;
-import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
-import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
+import in.dragonbra.javasteam.steam.authentication.*;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -23,6 +19,7 @@ import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
 import java.util.Base64;
+import java.util.concurrent.CancellationException;
 
 /**
  * @author lossy
@@ -114,7 +111,8 @@ public class SampleLogonAuthentication implements Runnable {
 
             CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
 
-            AuthPollResult pollResponse = authSession.pollingWaitForResult();
+            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
+            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat();
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());
@@ -131,7 +129,15 @@ public class SampleLogonAuthentication implements Runnable {
             // parseJsonWebToken(pollResponse.refreshToken, "RefreshToken");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
+
+            // List a couple of exceptions that could be important to handle.
+            if (e instanceof AuthenticationException) {
+                System.out.println("An Authentication error has occurred.");
+            }
+
+            if (e instanceof CancellationException) {
+                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred");
+            }
         }
     }
 

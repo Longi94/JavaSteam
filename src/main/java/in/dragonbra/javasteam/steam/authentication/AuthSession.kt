@@ -71,7 +71,15 @@ open class AuthSession(
      *
      * @return An object containing tokens which can be used to log in to Steam.
      */
-    fun pollingWaitForResult(): AuthPollResult {
+    @Throws(
+        AuthenticationException::class,
+        CancellationException::class,
+        IllegalStateException::class,
+        NotImplementedError::class,
+        NullPointerException::class,
+        UnsupportedOperationException::class,
+    )
+    suspend fun pollingWaitForResult(): AuthPollResult {
         var pollLoop = false
         var preferredConfirmation = allowedConfirmations.firstOrNull()
 

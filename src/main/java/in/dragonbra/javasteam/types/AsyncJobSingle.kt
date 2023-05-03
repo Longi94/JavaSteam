@@ -3,8 +3,10 @@ package `in`.dragonbra.javasteam.types
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
+import kotlin.jvm.Throws
 
 /**
  * @author Lossy
@@ -22,6 +24,7 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
         return tcs
     }
 
+    @Throws(CancellationException::class)
     fun runBlock(): T {
         return runBlocking { toDeferred().await() }
     }
