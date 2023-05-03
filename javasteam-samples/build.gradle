@@ -1,11 +1,17 @@
 plugins {
-    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
 }
 
 sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+}
+
+compileKotlin {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
