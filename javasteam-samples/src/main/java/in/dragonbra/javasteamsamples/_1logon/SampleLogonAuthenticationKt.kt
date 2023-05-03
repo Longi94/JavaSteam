@@ -15,6 +15,8 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.util.log.DefaultLogListener
 import `in`.dragonbra.javasteam.util.log.LogManager
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.util.*
 import java.util.concurrent.CancellationException
 
@@ -86,27 +88,45 @@ class SampleLogonAuthenticationKt(private val user: String, private val pass: St
             val auth = SteamAuthentication(steamClient, unifiedMessages)
             val authSession: CredentialsAuthSession = auth.beginAuthSessionViaCredentials(authDetails)
 
-            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
-            val pollResponse: AuthPollResult = authSession.pollingWaitForResultCompat()
-            val details = LogOnDetails().apply {
-                username = pollResponse.accountName
-                accessToken = pollResponse.refreshToken
+            runBlocking {
+                supervisorScope {
+                    val deferredPolling = async {
+                        authSession.pollingWaitForResult(this)
+                    }
+
+                    /**
+                     * This demonstrates that we can cancel polling
+                     */
+                    delay(20000L)
+                    deferredPolling.cancel(CancellationException("Forced Cancel from sample!"))
+                    deferredPolling.join()
+
+                    val pollResponse: AuthPollResult = deferredPolling.await()
+
+                    val details = LogOnDetails().apply {
+                        username = pollResponse.accountName
+                        accessToken = pollResponse.refreshToken
+                    }
+
+                    // Set LoginID to a non-zero value if you have another client connected using the same account,
+                    // the same private ip, and same public ip.
+                    details.loginID = 149
+
+                    steamUser.logOn(details)
+
+                    // This is not required, but it is possible to parse the JWT access token to see the scope and expiration date.
+                    // parseJsonWebToken(pollResponse.accessToken, "AccessToken");
+                    // parseJsonWebToken(pollResponse.refreshToken, "RefreshToken");
+                }
             }
-
-            // Set LoginID to a non-zero value if you have another client connected using the same account,
-            // the same private ip, and same public ip.
-            details.loginID = 149
-            steamUser.logOn(details)
-
-            // This is not required, but it is possible to parse the JWT access token to see the scope and expiration date.
-            // parseJsonWebToken(pollResponse.accessToken, "AccessToken");
-            // parseJsonWebToken(pollResponse.refreshToken, "RefreshToken");
         } catch (e: Exception) {
+            e.printStackTrace()
             when (e) {
                 is AuthenticationException -> println("An Authentication error has occurred.")
                 is CancellationException -> println("An Cancellation exception was raised. Usually means a timeout occurred")
-                else -> e.printStackTrace()
             }
+
+            steamClient.disconnect()
         }
     }
 

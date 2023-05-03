@@ -17,6 +17,9 @@ compileKotlin {
 dependencies {
     implementation rootProject
 
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-Beta'
+
     // https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
     implementation 'pro.leaco.qrcode:console-qrcode:1.0.1'
 

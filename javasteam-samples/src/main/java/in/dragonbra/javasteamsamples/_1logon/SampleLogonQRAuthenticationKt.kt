@@ -13,7 +13,9 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.util.log.DefaultLogListener
 import `in`.dragonbra.javasteam.util.log.LogManager
+import kotlinx.coroutines.*
 import pro.leaco.console.qrcode.ConsoleQrcode.print
+import java.lang.Runnable
 import java.util.concurrent.CancellationException
 
 // TODO: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
@@ -90,26 +92,41 @@ class SampleLogonQRAuthenticationKt : Runnable, OnChallengeUrlChanged {
 
             // Starting polling Steam for authentication response
             // This response is later used to log on to Steam after connecting
-            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
-            val pollResponse: AuthPollResult = authSession.pollingWaitForResultCompat()
-            println("Connected to Steam! Logging in " + pollResponse.accountName + "...")
+            runBlocking(Dispatchers.IO) {
+                supervisorScope {
+                    val deferredPolling = async {
+                        authSession.pollingWaitForResult(this)
+                    }
 
-            val details = LogOnDetails().apply {
-                username = pollResponse.accountName
-                accessToken = pollResponse.refreshToken
+                    /**
+                     * This demonstrates that we can cancel polling
+                     */
+                    delay(20000L)
+                    deferredPolling.cancel(CancellationException("Forced Cancel from sample!"))
+                    deferredPolling.join()
+
+                    val pollResponse = deferredPolling.await()
+
+                    println("Connected to Steam! Logging in " + pollResponse.accountName + "...")
+
+                    val details = LogOnDetails().apply {
+                        username = pollResponse.accountName
+                        accessToken = pollResponse.refreshToken
+                    }
+
+                    details.loginID = 149
+
+                    steamUser.logOn(details)
+                }
             }
-
-            // Set LoginID to a non-zero value if you have another client connected using the same account,
-            // the same private ip, and same public ip.
-            details.loginID = 149
-
-            steamUser.logOn(details)
         } catch (e: Exception) {
+            e.printStackTrace()
             when (e) {
                 is CancellationException -> println("An Cancellation exception was raised. Usually means a timeout occurred")
                 is AuthenticationException -> println("An Authentication error has occurred.")
-                else -> e.printStackTrace()
             }
+
+            steamClient.disconnect()
         }
     }
 

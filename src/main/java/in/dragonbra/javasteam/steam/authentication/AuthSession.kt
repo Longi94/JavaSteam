@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.Authentication
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
 
 /**
  * Represents an authentication session which can be used to finish the authentication and get access tokens.
@@ -67,6 +67,24 @@ open class AuthSession(
     }
 
     /**
+     * Blocking, compat function for Java mostly:
+     * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
+     *
+     * @return An object containing tokens which can be used to log in to Steam.
+     */
+    @Throws(
+        UnsupportedOperationException::class,
+        AuthenticationException::class,
+        NotImplementedError::class,
+        NullPointerException::class,
+        IllegalStateException::class,
+        CancellationException::class,
+    )
+    fun pollingWaitForResultCompat(): AuthPollResult {
+        return runBlocking { pollingWaitForResult(this) }
+    }
+
+    /**
      * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
      *
      * @return An object containing tokens which can be used to log in to Steam.
@@ -79,7 +97,7 @@ open class AuthSession(
         NullPointerException::class,
         UnsupportedOperationException::class,
     )
-    suspend fun pollingWaitForResult(): AuthPollResult {
+    suspend fun pollingWaitForResult(coroutineScope: CoroutineScope): AuthPollResult {
         var pollLoop = false
         var preferredConfirmation = allowedConfirmations.firstOrNull()
 
@@ -185,15 +203,16 @@ open class AuthSession(
         }
 
 
-        while (true) {
-            val pollResponse = pollAuthSessionStatus()
+        var pollResponse: AuthPollResult? = null
+        while (pollResponse == null) {
+            coroutineScope.ensureActive()
 
-            TimeUnit.SECONDS.sleep(pollingInterval.toLong())
+            pollResponse = pollAuthSessionStatus()
 
-            if (pollResponse != null) {
-                return pollResponse
-            }
+            delay(pollingInterval.toLong())
         }
+
+        return pollResponse
     }
 
     /**
