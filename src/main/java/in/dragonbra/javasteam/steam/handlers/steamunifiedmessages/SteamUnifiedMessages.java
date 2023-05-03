@@ -126,7 +126,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
             String serviceName = splitByDot[0];
             String methodName = splitByHash[0];
 
-            String serviceInterfaceName = "in.dragonbra.javasteam.rpc.I" + serviceName;
+            String serviceInterfaceName = "in.dragonbra.javasteam.rpc.interfaces.I" + serviceName;
             try {
                 logger.debug("Handling Service Method: " + serviceInterfaceName);
 
