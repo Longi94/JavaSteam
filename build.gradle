@@ -7,7 +7,7 @@ plugins {
     id 'com.google.protobuf' version "0.9.4"
     id 'jacoco'
     id 'maven-publish'
-    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
     id 'projectversiongen'
     id 'signing'
     id 'steamlanguagegen'
@@ -64,17 +64,6 @@ sourceSets.main {
             files("build/generated/source/steamd/main/java").builtBy(generateSteamLanguage),
             files("build/generated/source/javasteam/main/java").builtBy(generateProjectVersion)
     )
-}
-
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
 }
 
 check.dependsOn jacocoTestReport
