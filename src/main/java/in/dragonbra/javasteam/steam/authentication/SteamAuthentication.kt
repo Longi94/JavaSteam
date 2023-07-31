@@ -13,6 +13,7 @@ import java.security.KeyFactory
 import java.security.spec.RSAPublicKeySpec
 import java.util.*
 import javax.crypto.Cipher
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * This handler is used for authenticating on Steam.
@@ -56,7 +57,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
      * @return QrAuthSession
      * @throws AuthenticationException .
      */
-    @Throws(AuthenticationException::class)
+    @Throws(AuthenticationException::class, CancellationException::class)
     fun beginAuthSessionViaQR(authSessionDetails: AuthSessionDetails): QrAuthSession {
         if (!steamClient.isConnected) {
             throw IllegalArgumentException("The SteamClient instance must be connected.")

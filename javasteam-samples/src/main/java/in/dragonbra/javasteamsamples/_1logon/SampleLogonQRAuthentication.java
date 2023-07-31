@@ -21,6 +21,8 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import org.jetbrains.annotations.NotNull;
 import pro.leaco.console.qrcode.ConsoleQrcode;
 
+import java.util.concurrent.CancellationException;
+
 // TODO: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
 //  CM will kick you in 60 seconds if you don't auth.
 //  Steam client also has this issue, but it will reconnect and just continue polling.
@@ -107,7 +109,8 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
 
             // Starting polling Steam for authentication response
             // This response is later used to log on to Steam after connecting
-            AuthPollResult pollResponse = authSession.pollingWaitForResult();
+            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
+            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat();
 
             System.out.println("Connected to Steam! Logging in " + pollResponse.getAccountName() + "...");
 
@@ -120,9 +123,16 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
             details.setLoginID(149);
 
             steamUser.logOn(details);
-        } catch (AuthenticationException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e);
+
+            if (e instanceof AuthenticationException) {
+                System.out.println("An Authentication error has occurred.");
+            }
+
+            if (e instanceof CancellationException) {
+                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred");
+            }
         }
     }
 
