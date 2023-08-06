@@ -15,14 +15,20 @@ public class WalletInfoCallback extends CallbackMsg {
 
     private final int balance;
 
+    private final int balanceDelayed;
+
     private final long longBalance;
+
+    private final long longBalanceDelayed;
 
     public WalletInfoCallback(CMsgClientWalletInfoUpdate.Builder wallet) {
         hasWallet = wallet.getHasWallet();
 
         currency = ECurrencyCode.from(wallet.getCurrency());
         balance = wallet.getBalance();
+        balanceDelayed = wallet.getBalanceDelayed();
         longBalance = wallet.getBalance64();
+        longBalanceDelayed = wallet.getBalance64Delayed();
     }
 
     /**
@@ -47,9 +53,23 @@ public class WalletInfoCallback extends CallbackMsg {
     }
 
     /**
+     * @return Gets the delayed (pending) balance of the wallet as a 32-bit integer, in cents.
+     */
+    public int getBalanceDelayed() {
+        return balanceDelayed;
+    }
+
+    /**
      * @return the balance of the wallet as a 64-bit integer, in cents.
      */
     public long getLongBalance() {
         return longBalance;
+    }
+
+    /**
+     * @return Gets the delayed (pending) balance of the wallet as a 64-bit integer, in cents.
+     */
+    public long getLongBalanceDelayed() {
+        return longBalanceDelayed;
     }
 }
