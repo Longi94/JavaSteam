@@ -1,8 +1,8 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.0'
+    alias(libs.plugins.kotlin.jvm)
 }
 
-sourceCompatibility = 1.8
+sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
 
 repositories {
     mavenCentral()
@@ -11,22 +11,11 @@ repositories {
 dependencies {
     implementation rootProject
 
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+    implementation libs.bouncyCastle
+    implementation libs.gson
+    implementation libs.kotlin.coroutines
+    implementation libs.protobufJava // To access protobufs directly as shown in Sample #2
+    implementation libs.qrCode
 
-    // https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
-    implementation 'pro.leaco.qrcode:console-qrcode:1.0.1'
-
-    // https://mvnrepository.com/artifact/com.google.code.gson/gson
-    implementation 'com.google.code.gson:gson:2.10.1'
-
-    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-
-    // To access protobufs directly as shown in Sample #2
-    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-    implementation 'com.google.protobuf:protobuf-java:3.22.4'
-
-    // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation libs.test.jupiterApi
 }
