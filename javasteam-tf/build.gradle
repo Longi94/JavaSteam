@@ -1,7 +1,7 @@
 //file:noinspection GroovyAssignabilityCheck
 
 plugins {
-    alias(libs.plugins.protobuf)
+    alias(libs.plugins.protobuf.gradle)
     id 'java'
     id 'maven-publish'
     id 'signing'
@@ -13,7 +13,6 @@ repositories {
     mavenCentral()
 }
 
-//
 protobuf.protoc {
     artifact = libs.protoc.get()
 }
@@ -22,19 +21,13 @@ javadoc {
     exclude "**/in/dragonbra/javasteam/protobufs/**"
 }
 
-test {
-    useJUnitPlatform()
-}
-
 java {
     withSourcesJar()
     withJavadocJar()
 }
 
 dependencies {
-    implementation libs.protobufJava
-
-    testImplementation libs.test.jupiterApi
+    implementation libs.protobuf.java
 }
 
 /* Artifact publishing */
