@@ -14,7 +14,7 @@ dependencies {
     implementation localGroovy()
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation 'commons-io:commons-io:2.13.0'
+    implementation 'commons-io:commons-io:2.14.0'
 }
 
 gradlePlugin {
