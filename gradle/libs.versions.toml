@@ -34,7 +34,7 @@ kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", 
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
+protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 webSocket = { module = "org.java-websocket:Java-WebSocket", version.ref = "javaWebSocket" }
 

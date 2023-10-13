@@ -23,7 +23,7 @@ repositories {
 }
 
 protobuf.protoc {
-    artifact = libs.protoc.get()
+    artifact = libs.protobuf.protoc.get()
 }
 
 jacoco.toolVersion = libs.versions.jacoco.get()

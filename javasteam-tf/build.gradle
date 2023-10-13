@@ -14,7 +14,7 @@ repositories {
 }
 
 protobuf.protoc {
-    artifact = libs.protoc.get()
+    artifact = libs.protobuf.protoc.get()
 }
 
 javadoc {
