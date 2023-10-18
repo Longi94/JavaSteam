@@ -33,7 +33,6 @@ jobs:
         with:
           arguments: build -x signMavenJavaPublication
       - uses: actions/upload-artifact@v3
-        if: github.event_name != 'pull_request'
         with:
           name: JavaSteam
           path: build/libs
