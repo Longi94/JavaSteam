@@ -7,6 +7,7 @@ import `in`.dragonbra.javasteam.rpc.service.Authentication
 import `in`.dragonbra.javasteam.steam.authentication.*
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
+import `in`.dragonbra.javasteam.types.SteamID
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
@@ -48,6 +49,32 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         }
 
         return message.getDeserializedResponse(CAuthentication_GetPasswordRSAPublicKey_Response::class.java)
+    }
+
+    /**
+     * Given a refresh token for a client app audience (e.g. desktop client / mobile client), generate an access token.
+     *
+     * @param steamID the SteamID this token belongs to.
+     * @param refreshToken the refresh token.
+     * @return A [AccessTokenGenerateResult] containing the new token
+     */
+    fun generateAccessTokenForApp(steamID: SteamID, refreshToken: String): AccessTokenGenerateResult {
+        val request = CAuthentication_AccessToken_GenerateForApp_Request.newBuilder().apply {
+            this.refreshToken = refreshToken
+            this.steamid = steamID.convertToUInt64()
+            this.renewalType = ETokenRenewalType.k_ETokenRenewalType_Allow
+        }
+
+        val message = authenticationService.GenerateAccessTokenForApp(request.build()).runBlock()
+
+        if (message.result != EResult.OK) {
+            throw IllegalArgumentException("Failed to generate token ${message.result}")
+        }
+
+        val response: CAuthentication_AccessToken_GenerateForApp_Response.Builder =
+            message.getDeserializedResponse(CAuthentication_AccessToken_GenerateForApp_Response::class.java)
+
+        return AccessTokenGenerateResult(response)
     }
 
     /**
