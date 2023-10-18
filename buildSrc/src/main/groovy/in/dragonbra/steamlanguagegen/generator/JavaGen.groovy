@@ -325,7 +325,7 @@ class JavaGen implements Closeable, Flushable {
             writer.writeln '    return this.header;'
             writer.writeln '}'
             writer.writeln()
-            writer.writeln "public void getHeader($parentType header) {"
+            writer.writeln "public void setHeader($parentType header) {"
             writer.writeln '    this.header = header;'
             writer.writeln('}')
         }
