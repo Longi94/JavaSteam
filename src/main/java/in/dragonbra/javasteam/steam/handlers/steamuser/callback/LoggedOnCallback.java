@@ -46,6 +46,7 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private byte[] steam2Ticket;
 
+    @Deprecated
     private String webAPIUserNonce;
 
     private String ipCountryCode;
@@ -204,8 +205,10 @@ public class LoggedOnCallback extends CallbackMsg {
     }
 
     /**
+     * @deprecated Steam no longer sends webapi nonce as of October 2023, use SteamAuthentication.
      * @return the WebAPI authentication user nonce.
      */
+    @Deprecated
     public String getWebAPIUserNonce() {
         return webAPIUserNonce;
     }

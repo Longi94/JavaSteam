@@ -57,6 +57,11 @@ import java.util.Scanner;
 // 2. logon to account using username, password, and sha-1 hash of the sentry file
 
 /**
+ * This sample is obsolete. Check out
+ * {@link in.dragonbra.javasteamsamples._1logon.SampleLogonAuthentication }
+ * and {@link in.dragonbra.javasteamsamples._1logon.SampleLogonQRAuthentication}
+ * Reference: <a href="https://github.com/SteamRE/SteamKit/pull/1270#issuecomment-1768359942">SteamKit issue</a>
+ *
  * @author lngtr
  * @since 2018-02-28
  */
