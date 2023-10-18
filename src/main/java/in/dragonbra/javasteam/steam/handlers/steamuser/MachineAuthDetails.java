@@ -6,8 +6,11 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.Callback;
 import in.dragonbra.javasteam.types.JobID;
 
 /**
+ * @deprecated Steam no longer sends machine auth as of 2023, use SteamAuthentication.
+ *
  * Represents details required to complete a machine auth request.
  */
+@Deprecated
 public class MachineAuthDetails {
 
     private JobID jobID;

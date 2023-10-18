@@ -231,7 +231,9 @@ public class SteamUser extends ClientMsgHandler {
      * This should normally be used in response to a {@link UpdateMachineAuthCallback}.
      *
      * @param details The details pertaining to the response.
+     * @deprecated Steam no longer sends machine auth as of 2023, use SteamAuthentication.
      */
+    @Deprecated
     public void sendMachineAuthResponse(MachineAuthDetails details) {
         if (details == null) {
             throw new IllegalArgumentException("details is null");
