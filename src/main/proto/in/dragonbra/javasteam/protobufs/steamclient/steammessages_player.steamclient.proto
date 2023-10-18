@@ -35,6 +35,56 @@ enum ETextFilterSetting {
   k_ETextFilterSettingDisabled = 3;
 }
 
+message CPlayer_GetPlayerLinkDetails_Request {
+  repeated uint64 steamids = 1;
+}
+
+message CPlayer_GetPlayerLinkDetails_Response {
+  message PlayerLinkDetails {
+    message AccountPublicData {
+      required fixed64 steamid = 1;
+      optional int32 visibility_state = 2;
+      optional int32 privacy_state = 3;
+      optional int32 profile_state = 4;
+      optional uint32 ban_expires_time = 7;
+      optional uint32 account_flags = 8;
+      optional bytes sha_digest_avatar = 9;
+      optional string persona_name = 10;
+      optional string profile_url = 11;
+      optional bool content_country_restricted = 12;
+    }
+
+    message AccountPrivateData {
+      optional int32 persona_state = 1;
+      optional uint32 persona_state_flags = 2;
+      optional uint32 time_created = 3;
+      optional fixed64 game_id = 4;
+      optional fixed64 game_server_steam_id = 5;
+      optional uint32 game_server_ip_address = 6;
+      optional uint32 game_server_port = 7;
+      optional string game_extra_info = 8;
+      optional string account_name = 9;
+      optional fixed64 lobby_steam_id = 10;
+      optional string rich_presence_kv = 11;
+      optional fixed64 broadcast_session_id = 12;
+      optional uint32 watching_broadcast_accountid = 13;
+      optional uint32 watching_broadcast_appid = 14;
+      optional uint32 watching_broadcast_viewers = 15;
+      optional string watching_broadcast_title = 16;
+      optional uint32 last_logoff_time = 17;
+      optional uint32 last_seen_online = 18;
+      optional int32 game_os_type = 19;
+      optional int32 game_device_type = 20;
+      optional string game_device_name = 21;
+    }
+
+    optional .CPlayer_GetPlayerLinkDetails_Response.PlayerLinkDetails.AccountPublicData public_data = 1;
+    optional .CPlayer_GetPlayerLinkDetails_Response.PlayerLinkDetails.AccountPrivateData private_data = 2;
+  }
+
+  repeated .CPlayer_GetPlayerLinkDetails_Response.PlayerLinkDetails accounts = 1;
+}
+
 message CPlayer_GetMutualFriendsForIncomingInvites_Request {
 }
 
@@ -76,6 +126,8 @@ message CPlayer_GetOwnedGames_Response {
     optional bool has_market = 15;
     optional bool has_dlc = 16;
     optional bool has_leaderboards = 17;
+    repeated uint32 content_descriptorids = 18;
+    optional int32 playtime_disconnected = 19;
   }
 
   optional uint32 game_count = 1;
@@ -398,6 +450,7 @@ message ProfileCustomizationSlot {
   optional uint64 item_classid = 11;
   optional uint64 item_instanceid = 12;
   optional .EBanContentCheckResult ban_check_result = 13 [default = k_EBanContentCheckResult_NotScanned];
+  optional uint32 replay_year = 14;
 }
 
 message ProfileCustomization {
@@ -534,6 +587,7 @@ message CPlayer_GetLastPlayedTimes_Response {
     optional uint32 last_windows_playtime = 12;
     optional uint32 last_mac_playtime = 13;
     optional uint32 last_linux_playtime = 14;
+    optional uint32 playtime_disconnected = 15;
   }
 
   repeated .CPlayer_GetLastPlayedTimes_Response.Game games = 1;
@@ -625,8 +679,6 @@ message CPlayer_GetCommunityPreferences_Request {
 }
 
 message CPlayer_CommunityPreferences {
-  optional bool hide_adult_content_violence = 1 [default = true];
-  optional bool hide_adult_content_sex = 2 [default = true];
   optional bool parenthesize_nicknames = 4 [default = false];
   optional .ETextFilterSetting text_filter_setting = 5 [default = k_ETextFilterSettingSteamLabOptedOut];
   optional bool text_filter_ignore_friends = 6 [default = true];
@@ -636,6 +688,7 @@ message CPlayer_CommunityPreferences {
 
 message CPlayer_GetCommunityPreferences_Response {
   optional .CPlayer_CommunityPreferences preferences = 1;
+  optional .UserContentDescriptorPreferences content_descriptor_preferences = 2;
 }
 
 message CPlayer_SetCommunityPreferences_Request {
@@ -709,6 +762,21 @@ message CPlayer_GetDurationControl_Response {
   optional bool block_minors = 8;
 }
 
+message CPlayer_RecordDisconnectedPlaytime_Request {
+  message PlayHistory {
+    optional uint32 appid = 1;
+    optional uint32 session_time_start = 2;
+    optional uint32 seconds = 3;
+    optional bool offline = 4;
+    optional uint32 owner = 5;
+  }
+
+  repeated .CPlayer_RecordDisconnectedPlaytime_Request.PlayHistory play_sessions = 3;
+}
+
+message CPlayer_RecordDisconnectedPlaytime_Response {
+}
+
 message CPlayer_LastPlayedTimes_Notification {
   repeated .CPlayer_GetLastPlayedTimes_Response.Game games = 1;
 }
@@ -733,6 +801,7 @@ message CPlayer_NewSteamAnnouncementState_Notification {
 
 message CPlayer_CommunityPreferencesChanged_Notification {
   optional .CPlayer_CommunityPreferences preferences = 1;
+  optional .UserContentDescriptorPreferences content_descriptor_preferences = 2;
 }
 
 message CPlayer_TextFilterWordsChanged_Notification {
@@ -750,6 +819,10 @@ message CPlayer_PrivacySettingsChanged_Notification {
 
 service Player {
   option (service_description) = "A service for accessing Steam player data";
+
+  rpc GetPlayerLinkDetails (.CPlayer_GetPlayerLinkDetails_Request) returns (.CPlayer_GetPlayerLinkDetails_Response) {
+    option (method_description) = "Replacement for WG GetPlayerLinkDetails";
+  }
 
   rpc GetMutualFriendsForIncomingInvites (.CPlayer_GetMutualFriendsForIncomingInvites_Request) returns (.CPlayer_GetMutualFriendsForIncomingInvites_Response) {
     option (method_description) = "Get me the mutual friends for each of my pending incoming invites (individuals and clans).";
@@ -945,6 +1018,10 @@ service Player {
 
   rpc GetDurationControl (.CPlayer_GetDurationControl_Request) returns (.CPlayer_GetDurationControl_Response) {
     option (method_description) = "Get gameplay duration control settings.";
+  }
+
+  rpc RecordDisconnectedPlaytime (.CPlayer_RecordDisconnectedPlaytime_Request) returns (.CPlayer_RecordDisconnectedPlaytime_Response) {
+    option (method_description) = "Submit playtime records that happened while the client was disconnected from steam (whether marked offline or not)";
   }
 }
 

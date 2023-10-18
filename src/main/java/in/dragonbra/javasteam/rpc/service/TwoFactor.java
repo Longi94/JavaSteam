@@ -19,6 +19,11 @@ public class TwoFactor extends UnifiedService implements ITwoFactor {
     }
 
     @Override
+    public AsyncJobSingle<ServiceMethodResponse> QueryTime(SteammessagesTwofactorSteamclient.CTwoFactor_Time_Request request) {
+        return sendMessage(request, "QueryTime");
+    }
+
+    @Override
     public AsyncJobSingle<ServiceMethodResponse> QueryStatus(SteammessagesTwofactorSteamclient.CTwoFactor_Status_Request request) {
         return sendMessage(request, "QueryStatus");
     }
@@ -46,21 +51,6 @@ public class TwoFactor extends UnifiedService implements ITwoFactor {
     @Override
     public AsyncJobSingle<ServiceMethodResponse> RemoveAuthenticator(SteammessagesTwofactorSteamclient.CTwoFactor_RemoveAuthenticator_Request request) {
         return sendMessage(request, "RemoveAuthenticator");
-    }
-
-    @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateEmergencyCodes(SteammessagesTwofactorSteamclient.CTwoFactor_CreateEmergencyCodes_Request request) {
-        return sendMessage(request, "CreateEmergencyCodes");
-    }
-
-    @Override
-    public AsyncJobSingle<ServiceMethodResponse> DestroyEmergencyCodes(SteammessagesTwofactorSteamclient.CTwoFactor_DestroyEmergencyCodes_Request request) {
-        return sendMessage(request, "DestroyEmergencyCodes");
-    }
-
-    @Override
-    public AsyncJobSingle<ServiceMethodResponse> ValidateToken(SteammessagesTwofactorSteamclient.CTwoFactor_ValidateToken_Request request) {
-        return sendMessage(request, "ValidateToken");
     }
 
     @Override

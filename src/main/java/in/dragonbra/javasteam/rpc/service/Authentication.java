@@ -68,4 +68,14 @@ public class Authentication extends UnifiedService implements IAuthentication {
     public AsyncJobSingle<ServiceMethodResponse> MigrateMobileSession(SteammessagesAuthSteamclient.CAuthentication_MigrateMobileSession_Request request) {
         return sendMessage(request, "MigrateMobileSession");
     }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> RevokeToken(SteammessagesAuthSteamclient.CAuthentication_Token_Revoke_Request request) {
+        return sendMessage(request, "RevokeToken");
+    }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> RevokeRefreshToken(SteammessagesAuthSteamclient.CAuthentication_RefreshToken_Revoke_Request request) {
+        return sendMessage(request, "RevokeRefreshToken");
+    }
 }

@@ -37,4 +37,19 @@ public class ContentServerDirectory extends UnifiedService implements IContentSe
     public AsyncJobSingle<ServiceMethodResponse> GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
         return sendMessage(request, "GetManifestRequestCode");
     }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> GetCDNAuthToken(CContentServerDirectory_GetCDNAuthToken_Request request) {
+        return sendMessage(request, "GetCDNAuthToken");
+    }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> RequestPeerContentServer(CContentServerDirectory_RequestPeerContentServer_Request request) {
+        return sendMessage(request, "RequestPeerContentServer");
+    }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> GetPeerContentInfo(CContentServerDirectory_GetPeerContentInfo_Request request) {
+        return sendMessage(request, "GetPeerContentInfo");
+    }
 }

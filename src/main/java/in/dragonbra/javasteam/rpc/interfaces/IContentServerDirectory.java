@@ -22,4 +22,13 @@ public interface IContentServerDirectory {
 
     /* CContentServerDirectory_GetManifestRequestCode_Response */
     AsyncJobSingle<ServiceMethodResponse> GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request);
+
+    /* CContentServerDirectory_GetCDNAuthToken_Response */
+    AsyncJobSingle<ServiceMethodResponse> GetCDNAuthToken(CContentServerDirectory_GetCDNAuthToken_Request request);
+
+    /* CContentServerDirectory_RequestPeerContentServer_Response */
+    AsyncJobSingle<ServiceMethodResponse> RequestPeerContentServer(CContentServerDirectory_RequestPeerContentServer_Request request);
+
+    /* CContentServerDirectory_GetPeerContentInfo_Response */
+    AsyncJobSingle<ServiceMethodResponse> GetPeerContentInfo(CContentServerDirectory_GetPeerContentInfo_Request request);
 }

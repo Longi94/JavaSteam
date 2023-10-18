@@ -36,11 +36,6 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request) {
-        return sendMessage(request, "AllocateTURNServer");
-    }
-
-    @Override
     public AsyncJobSingle<ServiceMethodResponse> AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request) {
         return sendMessage(request, "AllocateRelayServer");
     }

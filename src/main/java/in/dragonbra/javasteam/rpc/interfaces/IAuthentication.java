@@ -40,4 +40,10 @@ public interface IAuthentication {
 
     /* CAuthentication_MigrateMobileSession_Response */
     AsyncJobSingle<ServiceMethodResponse> MigrateMobileSession(CAuthentication_MigrateMobileSession_Request request);
+
+    /* CAuthentication_Token_Revoke_Response */
+    AsyncJobSingle<ServiceMethodResponse> RevokeToken(CAuthentication_Token_Revoke_Request request);
+
+    /* CAuthentication_RefreshToken_Revoke_Response */
+    AsyncJobSingle<ServiceMethodResponse> RevokeRefreshToken(CAuthentication_RefreshToken_Revoke_Request request);
 }

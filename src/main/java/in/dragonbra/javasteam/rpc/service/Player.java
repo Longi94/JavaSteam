@@ -19,6 +19,11 @@ public class Player extends UnifiedService implements IPlayer {
     }
 
     @Override
+    public AsyncJobSingle<ServiceMethodResponse> GetPlayerLinkDetails(CPlayer_GetPlayerLinkDetails_Request request) {
+        return sendMessage(request, "GetPlayerLinkDetails");
+    }
+
+    @Override
     public AsyncJobSingle<ServiceMethodResponse> GetMutualFriendsForIncomingInvites(CPlayer_GetMutualFriendsForIncomingInvites_Request request) {
         return sendMessage(request, "GetMutualFriendsForIncomingInvites");
     }
@@ -251,5 +256,10 @@ public class Player extends UnifiedService implements IPlayer {
     @Override
     public AsyncJobSingle<ServiceMethodResponse> GetDurationControl(CPlayer_GetDurationControl_Request request) {
         return sendMessage(request, "GetDurationControl");
+    }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> RecordDisconnectedPlaytime(CPlayer_RecordDisconnectedPlaytime_Request request) {
+        return sendMessage(request, "RecordDisconnectedPlaytime");
     }
 }

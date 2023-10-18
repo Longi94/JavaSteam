@@ -158,6 +158,7 @@ message CMsgClientAuthList {
 	repeated .CMsgAuthTicket tickets = 4;
 	repeated uint32 app_ids = 5;
 	optional uint32 message_sequence = 6;
+	optional bool filtered = 7;
 }
 
 message CMsgClientAuthListAck {
@@ -281,7 +282,6 @@ message CMsgClientConnectionStats {
 		optional uint32 micro_sec_avg_latency = 17;
 		optional uint32 micro_sec_min_latency = 18;
 		optional uint32 micro_sec_max_latency = 19;
-		optional uint32 mem_pool_msg_in_use = 20;
 	}
 
 	optional .CMsgClientConnectionStats.Stats_Logon stats_logon = 1;
