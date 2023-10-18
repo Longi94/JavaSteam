@@ -6,12 +6,19 @@ option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 option optimize_for = SPEED;
 option java_generic_services = false;
 
+message CContentServerDirectory_ConnectedSteamPipeServerInfo {
+  optional string type = 1;
+  optional int32 source_id = 2;
+  optional string hostname = 3;
+}
+
 message CContentServerDirectory_GetServersForSteamPipe_Request {
   optional uint32 cell_id = 1 [(description) = "client Cell ID"];
   optional uint32 max_servers = 2 [default = 20, (description) = "max servers in response list"];
   optional string ip_override = 3 [(description) = "client IP address"];
   optional int32 launcher_type = 4 [default = 0, (description) = "launcher type"];
   optional string ipv6_public = 5 [(description) = "client public ipv6 address if it knows it"];
+  repeated .CContentServerDirectory_ConnectedSteamPipeServerInfo current_connections = 6 [(description) = "what sources is the client currently using"];
 }
 
 message CContentServerDirectory_ServerInfo {
@@ -33,6 +40,7 @@ message CContentServerDirectory_ServerInfo {
 
 message CContentServerDirectory_GetServersForSteamPipe_Response {
   repeated .CContentServerDirectory_ServerInfo servers = 1;
+  optional bool no_change = 2 [(description) = "server list is empty because client current list is still good"];
 }
 
 message CContentServerDirectory_GetDepotPatchInfo_Request {
@@ -83,13 +91,26 @@ message CContentServerDirectory_GetCDNAuthToken_Response {
 
 message CContentServerDirectory_RequestPeerContentServer_Request {
   optional uint64 remote_client_id = 1;
-  optional uint64 server_steam_id = 2;
+  optional uint64 steamid = 2;
   optional uint64 server_remote_client_id = 3;
   optional uint32 app_id = 4;
+  optional uint32 current_build_id = 5;
 }
 
 message CContentServerDirectory_RequestPeerContentServer_Response {
   optional uint32 server_port = 1;
+  repeated uint32 installed_depots = 2;
+}
+
+message CContentServerDirectory_GetPeerContentInfo_Request {
+  optional uint64 remote_client_id = 1;
+  optional uint64 steamid = 2;
+  optional uint64 server_remote_client_id = 3;
+}
+
+message CContentServerDirectory_GetPeerContentInfo_Response {
+  repeated uint32 appids = 1;
+  optional string ip_public = 2;
 }
 
 service ContentServerDirectory {
@@ -101,4 +122,5 @@ service ContentServerDirectory {
   rpc GetManifestRequestCode (.CContentServerDirectory_GetManifestRequestCode_Request) returns (.CContentServerDirectory_GetManifestRequestCode_Response);
   rpc GetCDNAuthToken (.CContentServerDirectory_GetCDNAuthToken_Request) returns (.CContentServerDirectory_GetCDNAuthToken_Response);
   rpc RequestPeerContentServer (.CContentServerDirectory_RequestPeerContentServer_Request) returns (.CContentServerDirectory_RequestPeerContentServer_Response);
+  rpc GetPeerContentInfo (.CContentServerDirectory_GetPeerContentInfo_Request) returns (.CContentServerDirectory_GetPeerContentInfo_Response);
 }

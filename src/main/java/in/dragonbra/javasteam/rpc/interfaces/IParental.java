@@ -40,4 +40,10 @@ public interface IParental {
 
     /* CParental_DisableWithRecoveryCode_Response */
     AsyncJobSingle<ServiceMethodResponse> DisableWithRecoveryCode(CParental_DisableWithRecoveryCode_Request request);
+
+    /* CParental_RequestFeatureAccess_Response */
+    AsyncJobSingle<ServiceMethodResponse> RequestFeatureAccess(CParental_RequestFeatureAccess_Request request);
+
+    /* CParental_ApproveFeatureAccess_Response */
+    AsyncJobSingle<ServiceMethodResponse> ApproveFeatureAccess(CParental_ApproveFeatureAccess_Request request);
 }

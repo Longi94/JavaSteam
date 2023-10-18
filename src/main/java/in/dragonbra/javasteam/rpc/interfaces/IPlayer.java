@@ -10,6 +10,9 @@ import in.dragonbra.javasteam.types.AsyncJobSingle;
  */
 @SuppressWarnings("unused")
 public interface IPlayer {
+    /* CPlayer_GetPlayerLinkDetails_Response */
+    AsyncJobSingle<ServiceMethodResponse> GetPlayerLinkDetails(CPlayer_GetPlayerLinkDetails_Request request);
+
     /* CPlayer_GetMutualFriendsForIncomingInvites_Response  */
     AsyncJobSingle<ServiceMethodResponse> GetMutualFriendsForIncomingInvites(CPlayer_GetMutualFriendsForIncomingInvites_Request request);
 
@@ -150,4 +153,7 @@ public interface IPlayer {
 
     /* CPlayer_GetDurationControl_Response  */
     AsyncJobSingle<ServiceMethodResponse> GetDurationControl(CPlayer_GetDurationControl_Request request);
+
+    /* CPlayer_RecordDisconnectedPlaytime_Response */
+    AsyncJobSingle<ServiceMethodResponse> RecordDisconnectedPlaytime(CPlayer_RecordDisconnectedPlaytime_Request request);
 }

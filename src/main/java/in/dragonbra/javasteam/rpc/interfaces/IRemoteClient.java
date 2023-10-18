@@ -20,9 +20,6 @@ public interface IRemoteClient {
     /* NoResponse */
     void NotifyReplyPacket(CRemoteClient_ReplyPacket_Notification request);
 
-    /* CRemoteClient_AllocateTURNServer_Response */
-    AsyncJobSingle<ServiceMethodResponse> AllocateTURNServer(CRemoteClient_AllocateTURNServer_Request request);
-
     /* CRemoteClient_AllocateRelayServer_Response */
     AsyncJobSingle<ServiceMethodResponse> AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request);
 

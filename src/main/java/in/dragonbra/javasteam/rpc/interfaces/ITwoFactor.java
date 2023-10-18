@@ -11,6 +11,9 @@ import in.dragonbra.javasteam.types.AsyncJobSingle;
 @SuppressWarnings("unused")
 public interface ITwoFactor {
 
+    /* CTwoFactor_Time_Response */
+    AsyncJobSingle<ServiceMethodResponse> QueryTime(CTwoFactor_Time_Request request);
+
     /* CTwoFactor_Status_Response */
     AsyncJobSingle<ServiceMethodResponse> QueryStatus(CTwoFactor_Status_Request request);
 
@@ -28,15 +31,6 @@ public interface ITwoFactor {
 
     /* CTwoFactor_RemoveAuthenticator_Response */
     AsyncJobSingle<ServiceMethodResponse> RemoveAuthenticator(CTwoFactor_RemoveAuthenticator_Request request);
-
-    /* CTwoFactor_CreateEmergencyCodes_Response */
-    AsyncJobSingle<ServiceMethodResponse> CreateEmergencyCodes(CTwoFactor_CreateEmergencyCodes_Request request);
-
-    /* CTwoFactor_DestroyEmergencyCodes_Response */
-    AsyncJobSingle<ServiceMethodResponse> DestroyEmergencyCodes(CTwoFactor_DestroyEmergencyCodes_Request request);
-
-    /* CTwoFactor_ValidateToken_Response */
-    AsyncJobSingle<ServiceMethodResponse> ValidateToken(CTwoFactor_ValidateToken_Request request);
 
     /* CTwoFactor_RemoveAuthenticatorViaChallengeStart_Response */
     AsyncJobSingle<ServiceMethodResponse> RemoveAuthenticatorViaChallengeStart(CTwoFactor_RemoveAuthenticatorViaChallengeStart_Request request);

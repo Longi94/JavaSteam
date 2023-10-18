@@ -67,4 +67,14 @@ public class Parental extends UnifiedService implements IParental {
     public AsyncJobSingle<ServiceMethodResponse> DisableWithRecoveryCode(CParental_DisableWithRecoveryCode_Request request) {
         return sendMessage(request, "DisableWithRecoveryCode");
     }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> RequestFeatureAccess(CParental_RequestFeatureAccess_Request request) {
+        return sendMessage(request, "RequestFeatureAccess");
+    }
+
+    @Override
+    public AsyncJobSingle<ServiceMethodResponse> ApproveFeatureAccess(CParental_ApproveFeatureAccess_Request request) {
+        return sendMessage(request, "ApproveFeatureAccess");
+    }
 }

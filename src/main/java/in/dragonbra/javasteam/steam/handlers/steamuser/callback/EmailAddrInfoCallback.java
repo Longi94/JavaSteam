@@ -18,8 +18,6 @@ public class EmailAddrInfoCallback extends CallbackMsg {
 
     private final boolean passwordOrSecretqaChangeRequiresCode;
 
-    private final boolean remindUserAboutEmail;
-
     public EmailAddrInfoCallback(CMsgClientEmailAddrInfo.Builder msg) {
         emailAddress = msg.getEmailAddress();
 
@@ -30,8 +28,6 @@ public class EmailAddrInfoCallback extends CallbackMsg {
         credentialChangeRequiresCode = msg.getCredentialChangeRequiresCode();
 
         passwordOrSecretqaChangeRequiresCode = msg.getPasswordOrSecretqaChangeRequiresCode();
-
-        remindUserAboutEmail = msg.getRemindUserAboutEmail();
     }
 
     /**
@@ -67,12 +63,5 @@ public class EmailAddrInfoCallback extends CallbackMsg {
      */
     public boolean isPasswordOrSecretqaChangeRequiresCode() {
         return passwordOrSecretqaChangeRequiresCode;
-    }
-
-    /**
-     * @return ???
-     */
-    public boolean isRemindUserAboutEmail() {
-        return remindUserAboutEmail;
     }
 }
