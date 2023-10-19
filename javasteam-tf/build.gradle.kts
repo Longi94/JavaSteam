@@ -70,8 +70,8 @@ publishing {
             credentials {
                 val ossrhUsername: String by project
                 val ossrhPassword: String by project
-                username = ossrhUsername ?: ""
-                password = ossrhPassword ?: ""
+                username = ossrhUsername
+                password = ossrhPassword
             }
         }
     }
