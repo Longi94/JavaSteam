@@ -41,6 +41,14 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
     @Override
     public void send(byte[] data) {
         try {
+            if (client.get() == null) {
+                // If we're in the process of being disconnected using WebSocket,
+                // and our client is still sending data to steam during that process.
+                // Our `client` reference is most likely null and the exception doesn't handle it right.
+                logger.debug("WebSocket client is null");
+                return;
+            }
+
             client.get().send(data);
         } catch (Exception e) {
             logger.debug("Exception while sending data", e);
