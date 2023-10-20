@@ -9,10 +9,10 @@ commons-io = "2.14.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.13.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 commons-validator = "1.7" # https://mvnrepository.com/artifact/commons-validator/commons-validator
 gson = "2.10.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
-jacoco = "0.8.10" # https://www.eclemma.org/jacoco
+jacoco = "0.8.11" # https://www.eclemma.org/jacoco
 javaWebSocket = "1.5.4" # https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
 kotlin-coroutines = "1.7.3" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-okHttp = "4.11.0" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+okHttp = "5.0.0-alpha.11" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 protobuf = "3.23.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 publishPlugin = "1.1.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
@@ -50,6 +50,7 @@ test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.r
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
+kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
 
 [bundles]
 testing = [
