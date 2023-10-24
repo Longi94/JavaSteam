@@ -1,5 +1,5 @@
 # JavaSteam
-[![Java CI/CD](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build.yml/badge.svg)](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build.yml)
+[![Java CI/CD](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build-push.yml/badge.svg)](https://github.com/Longi94/JavaSteam/actions/workflows/javasteam-build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/in.dragonbra/javasteam)](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 [![Discord](https://img.shields.io/discord/420907597906968586.svg)](https://discord.gg/8F2JuTu)
 
@@ -46,37 +46,28 @@ Maven
 
 **3. Add the appropriate cryptography dependency to your project. JavaSteam depends on this.**
 
-Gradle
-```groovy
-// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
-implementation 'org.bouncycastle:bcprov-jdk15on:x.y.z>'  // NON-ANDROID ONLY
-// https://mvnrepository.com/artifact/com.madgag.spongycastle/prov
-implementation 'com.madgag.spongycastle:prov:w.x.y.z' // ANDROID ONLY
-```
+[Android | Spongy Castle](https://mvnrepository.com/artifact/com.madgag.spongycastle/prov)
 
-Maven
-```xml
-<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
-<dependency> <!-- NON-ANDROID ONLY -->
-  <groupId>org.bouncycastle</groupId>
-  <artifactId>bcprov-jdk15on</artifactId>
-  <version>x.y.z</version>
-</dependency>
-<!-- https://mvnrepository.com/artifact/com.madgag.spongycastle/prov -->
-<dependency> <!-- ANDROID ONLY -->
-    <groupId>com.madgag.spongycastle</groupId>
-    <artifactId>prov</artifactId>
-    <version>w.x.y.z</version>
-</dependency>
-```
+[Non-Android | Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
+
 
 ## Getting Started
 
-You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library. There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples) too you can check out.
+You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library. 
+
+There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples) too you can check out.
+
+The [wiki](https://github.com/Longi94/JavaSteam/wiki) may also be useful to check out for other info.
 
 ## Build
 
+Full build:<br>
+
 ```./gradlew build -x signMavenJavaPublication```
+
+Generated classes:<br>
+
+```./gradlew generateProto generateSteamLanguage generateProjectVersion```
 
 ## Contributing
 
