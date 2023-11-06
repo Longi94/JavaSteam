@@ -120,6 +120,7 @@ class SampleWebCookieKt(private val user: String, private val pass: String) : Ru
     @Suppress("UNUSED_PARAMETER")
     private fun onDisconnected(callback: DisconnectedCallback) {
         println("Disconnected from Steam")
+
         isRunning = false
     }
 
@@ -137,7 +138,7 @@ class SampleWebCookieKt(private val user: String, private val pass: String) : Ru
         // This is how you concatenate the cookie, you can set it on the Steam domains, and it should work
         // but actual usage of this will be left as an exercise for the reader
         @Suppress("UNUSED_VARIABLE")
-        val steamLoginSecure: String = callback.clientSteamID.convertToUInt64().toString() + "||" + accessToken
+        val steamLoginSecure = "${callback.clientSteamID.convertToUInt64()}||$accessToken"
 
         // The access token expires in 24 hours (at the time of writing) so you will have to renew it.
         // Parse this token with a JWT library to get the expiration date and set up a timer to renew it.
