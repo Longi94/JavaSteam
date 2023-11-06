@@ -56,13 +56,22 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
      *
      * @param steamID the SteamID this token belongs to.
      * @param refreshToken the refresh token.
+     * @param allowRenewal If true, allow renewing the token.
      * @return A [AccessTokenGenerateResult] containing the new token
      */
-    fun generateAccessTokenForApp(steamID: SteamID, refreshToken: String): AccessTokenGenerateResult {
+    @JvmOverloads
+    fun generateAccessTokenForApp(
+        steamID: SteamID,
+        refreshToken: String,
+        allowRenewal: Boolean = false
+    ): AccessTokenGenerateResult {
         val request = CAuthentication_AccessToken_GenerateForApp_Request.newBuilder().apply {
             this.refreshToken = refreshToken
             this.steamid = steamID.convertToUInt64()
-            this.renewalType = ETokenRenewalType.k_ETokenRenewalType_Allow
+
+            if (allowRenewal) {
+                this.renewalType = ETokenRenewalType.k_ETokenRenewalType_Allow
+            }
         }
 
         val message = authenticationService.GenerateAccessTokenForApp(request.build()).runBlock()
