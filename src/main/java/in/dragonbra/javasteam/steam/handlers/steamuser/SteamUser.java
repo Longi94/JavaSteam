@@ -136,6 +136,7 @@ public class SteamUser extends ClientMsgHandler {
         // we're now using the latest steamclient package version, this is required to get a proper sentry file for steam guard
         logon.getBody().setClientPackageVersion(1771); // todo: determine if this is still required
         logon.getBody().setSupportsRateLimitResponse(true);
+        logon.getBody().setMachineName(details.getMachineName());
         logon.getBody().setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()));
 
         // steam guard

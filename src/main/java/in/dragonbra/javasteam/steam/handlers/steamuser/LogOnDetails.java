@@ -45,12 +45,20 @@ public class LogOnDetails {
 
     private String clientLanguage;
 
+    private String machineName;
+
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
         accountID = 0L;
 
         clientOSType = Utils.getOSType();
         clientLanguage = "english";
+
+        String envName = System.getenv("COMPUTERNAME");
+        if (envName == null) {
+            envName = System.getenv("HOSTNAME");
+        }
+        machineName = envName + " (JavaSteam)";
     }
 
     /**
@@ -343,5 +351,23 @@ public class LogOnDetails {
      */
     public void setClientLanguage(String clientLanguage) {
         this.clientLanguage = clientLanguage;
+    }
+
+    /**
+     * Gets the machine name
+     *
+     * @return the machine name
+     */
+    public String getMachineName() {
+        return machineName;
+    }
+
+    /**
+     * Sets the machine name
+     *
+     * @param machineName the machine name
+     */
+    public void setMachineName(String machineName) {
+        this.machineName = machineName;
     }
 }
