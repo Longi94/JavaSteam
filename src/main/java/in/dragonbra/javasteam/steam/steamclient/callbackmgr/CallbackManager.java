@@ -77,7 +77,7 @@ public class CallbackManager implements ICallbackMgrInternals {
      *
      * @param timeout The length of time to block.
      */
-    public void runWaitAllCallbacks(int timeout) {
+    public void runWaitAllCallbacks(long timeout) {
         List<ICallbackMsg> calls = steamClient.getAllCallbacks(true, timeout);
         for (ICallbackMsg call : calls) {
             handle(call);

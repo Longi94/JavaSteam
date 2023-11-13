@@ -189,10 +189,10 @@ public class CallbackManagerTest extends TestBase {
                 client.postCallback(callback);
             }
 
-            mgr.runWaitAllCallbacks(1);
+            mgr.runWaitAllCallbacks(1000L);
             assertEquals(10, numCallbacksRun[0]);
 
-            mgr.runWaitAllCallbacks(1);
+            mgr.runWaitAllCallbacks(1000L);
             assertEquals(10, numCallbacksRun[0]);
         } catch (IOException e) {
             e.printStackTrace();
