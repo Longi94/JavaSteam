@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.protobuf.gradle)
     id("jacoco")
-    id("projectversiongen")
+    projectversiongen
     id("signing")
     id("steamlanguagegen")
 }

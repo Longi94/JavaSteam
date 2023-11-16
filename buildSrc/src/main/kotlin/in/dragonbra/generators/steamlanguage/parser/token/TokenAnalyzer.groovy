@@ -1,16 +1,11 @@
-package in.dragonbra.steamlanguagegen.parser.token
+package in.dragonbra.generators.steamlanguage.parser.token
 
-import in.dragonbra.steamlanguagegen.parser.LanguageParser
-import in.dragonbra.steamlanguagegen.parser.node.ClassNode
-import in.dragonbra.steamlanguagegen.parser.node.EnumNode
-import in.dragonbra.steamlanguagegen.parser.node.Node
-import in.dragonbra.steamlanguagegen.parser.node.PropNode
-import in.dragonbra.steamlanguagegen.parser.symbol.SymbolLocator
+
 import org.apache.commons.io.IOUtils
 
 class TokenAnalyzer {
-    static Node analyze(Queue<Token> tokens, String dir) throws IOException {
-        def root = new Node()
+    static in.dragonbra.generators.steamlanguage.parser.node.Node analyze(Queue<Token> tokens, String dir) throws IOException {
+        def root = new in.dragonbra.generators.steamlanguage.parser.node.Node()
 
         while (!tokens.isEmpty()) {
             def cur = tokens.poll()
@@ -22,10 +17,10 @@ class TokenAnalyzer {
                     def text = expect(tokens, 'string')
 
                     if ('import' == cur.value) {
-                        Queue<Token> parentTokens = LanguageParser
+                        Queue<Token> parentTokens = in.dragonbra.generators.steamlanguage.parser.LanguageParser
                                 .tokenizeString(IOUtils.toString(new FileInputStream(new File("$dir/$text.value")), 'utf-8'), text.value)
 
-                        Node newRoot = analyze(parentTokens, dir)
+                        in.dragonbra.generators.steamlanguage.parser.node.Node newRoot = analyze(parentTokens, dir)
 
                         newRoot.childNodes.forEach({ child -> root.childNodes << child })
                     }
@@ -55,15 +50,15 @@ class TokenAnalyzer {
                                 optional(tokens, 'terminator')
                             }
 
-                            def classNode = new ClassNode()
+                            def classNode = new in.dragonbra.generators.steamlanguage.parser.node.ClassNode()
                             classNode.name = name.value
 
                             if (ident != null) {
-                                classNode.ident = SymbolLocator.lookupSymbol(root, ident.value, false)
+                                classNode.ident = in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, ident.value, false)
                             }
 
                             if (parent != null) {
-                                classNode.parent = SymbolLocator.lookupSymbol(root, parent.value, true)
+                                classNode.parent = in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, parent.value, true)
                             }
 
                             classNode.emit = removed == null
@@ -83,7 +78,7 @@ class TokenAnalyzer {
 
                             def flag = optional(tokens, 'identifier', 'flags')
 
-                            def enode = new EnumNode()
+                            def enode = new in.dragonbra.generators.steamlanguage.parser.node.EnumNode()
                             enode.name = name.value
 
                             if (flag != null) {
@@ -91,7 +86,7 @@ class TokenAnalyzer {
                             }
 
                             if (datatype != null) {
-                                enode.type = SymbolLocator.lookupSymbol(root, datatype.value, false)
+                                enode.type = in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, datatype.value, false)
                             }
 
                             root.childNodes << enode
@@ -105,12 +100,12 @@ class TokenAnalyzer {
     }
 
     @SuppressWarnings('GroovyUnusedAssignment')
-    private static void parseInnerScope(Queue<Token> tokens, Node parent, Node root) {
+    private static void parseInnerScope(Queue<Token> tokens, in.dragonbra.generators.steamlanguage.parser.node.Node parent, in.dragonbra.generators.steamlanguage.parser.node.Node root) {
         expect(tokens, 'operator', '{')
         def scope2 = optional(tokens, 'operator', '}')
 
         while (scope2 == null) {
-            def pnode = new PropNode()
+            def pnode = new in.dragonbra.generators.steamlanguage.parser.node.PropNode()
 
             def t1 = tokens.poll()
 
@@ -129,11 +124,11 @@ class TokenAnalyzer {
 
             if (t3 != null) {
                 pnode.name = t3.value
-                pnode.type = SymbolLocator.lookupSymbol(root, t2.value, false)
+                pnode.type = in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, t2.value, false)
                 pnode.flags = t1.value
             } else if (t2 != null) {
                 pnode.name = t2.value
-                pnode.type = SymbolLocator.lookupSymbol(root, t1.value, false)
+                pnode.type = in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, t1.value, false)
             } else {
                 pnode.name = t1.value
             }
@@ -143,7 +138,7 @@ class TokenAnalyzer {
             if (defop != null) {
                 while (true) {
                     def value = tokens.poll()
-                    pnode._default << SymbolLocator.lookupSymbol(root, value.value, false)
+                    pnode._default << in.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator.lookupSymbol(root, value.value, false)
 
                     if (optional(tokens, 'operator', '|') != null)
                         continue
