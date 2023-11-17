@@ -13,12 +13,11 @@ import java.io.Flushable
 import java.io.IOException
 import java.util.*
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 import kotlin.collections.HashSet
 
 class JavaGen(
     private var node: Node,
-    private var `package`: String,
+    private var pkg: String,
     private var destination: File,
     private var flagEnums: MutableSet<String>
 ) : Closeable, Flushable {
@@ -54,7 +53,7 @@ class JavaGen(
         val file = File(destination, "${node.name}.java")
 
         writer = JavaFileWriter(file)
-        writePackage(`package`)
+        writePackage(pkg)
 
         writer?.writeln()
         writeImports()
@@ -233,13 +232,13 @@ class JavaGen(
             writer?.writeln()
         } else if (node.name.contains("Hdr")) {
             if (node.name.contains("MsgGC")) {
-                if (node.childNodes.stream().anyMatch { childNode -> "msg" == childNode.name }) {
+                if (node.childNodes.any { childNode -> "msg" == childNode.name }) {
                     writer?.writeln("@Override")
                     writer?.writeln("public void setEMsg(int msg) {")
                     writer?.writeln("    this.msg = msg;")
                     writer?.writeln("}")
                 } else {
-                    // this is required for a gc header which doesn"t have an emsg
+                    // this is required for a gc header which doesn't have an eMsg
                     writer?.writeln("@Override")
                     writer?.writeln("public void setEMsg(int msg) {}")
                 }
@@ -430,7 +429,10 @@ class JavaGen(
         writer?.writeln("public void serialize(OutputStream stream) throws IOException {")
         writer?.indent()
         writer?.writeln("BinaryWriter bw = new BinaryWriter(stream);")
-        writer?.writeln()
+
+        if (node.childNodes.isNotEmpty()) {
+            writer?.writeln()
+        }
 
         for (child in node.childNodes) {
             val prop = child as PropNode
@@ -527,7 +529,10 @@ class JavaGen(
         writer?.writeln("public void deserialize(InputStream stream) throws IOException {")
         writer?.indent()
         writer?.writeln("BinaryReader br = new BinaryReader(stream);")
-        writer?.writeln()
+
+        if(node.childNodes.isNotEmpty()) {
+            writer?.writeln()
+        }
 
         for (child in node.childNodes) {
             val prop = child as PropNode
@@ -728,8 +733,11 @@ class JavaGen(
         writer?.writeln()
 
         statics.forEach { p ->
-            val defaults: List<String> = p.default.stream().map { defa -> getType(defa) }.collect(Collectors.toList())
-            writer?.writeln("public static final EnumSet<${this.node.name}> ${p.name} = EnumSet.of(${defaults.joinToString(", ")});")
+            val defaults = p.default.map(::getType)
+            writer?.writeln(
+                "public static final EnumSet<${this.node.name}> ${p.name} = " +
+                    "EnumSet.of(${defaults.joinToString(", ")});"
+            )
             writer?.writeln()
         }
     }
@@ -750,7 +758,7 @@ class JavaGen(
             return if (symbol.prop == null) {
                 symbol.clazz.name
             } else {
-                symbol.clazz.name + "." + symbol.prop.name
+                "${symbol.clazz.name}.${symbol.prop.name}"
             }
         }
 

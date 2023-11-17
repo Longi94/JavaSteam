@@ -71,7 +71,6 @@ class TokenAnalyzer {
                                 }
 
                                 val classNode = ClassNode()
-
                                 classNode.name = name.value
 
                                 if (ident != null) {
@@ -82,7 +81,7 @@ class TokenAnalyzer {
                                     classNode.parent = SymbolLocator.lookupSymbol(root, parent.value, true)
                                 }
 
-                                classNode.emit = removed == null
+                                classNode.emit = (removed == null)
 
                                 root.childNodes.add(classNode)
 
@@ -131,11 +130,8 @@ class TokenAnalyzer {
 
             while (scope2 == null) {
                 val pnode = PropNode()
-
                 val t1 = tokens.poll()
-
                 val t1op1 = optional(tokens, "operator", "<")
-
                 var flagop: Token?
 
                 if (t1op1 != null) {
@@ -161,7 +157,6 @@ class TokenAnalyzer {
                 }
 
                 val defop = optional(tokens, "operator", "=")
-
                 if (defop != null) {
                     while (true) {
                         val value = tokens.poll()

@@ -22,7 +22,7 @@ open class SteamLanguageGenTask : DefaultTask() {
 
     private val inputFile = project.file("src/main/steamd/in/dragonbra/javasteam/steammsg.steamd")
 
-    private val `package` = "in.dragonbra.javasteam"
+    private val pkg = "in.dragonbra.javasteam"
 
     @InputDirectory
     fun getInputDirectory(): File = project.file("src/main/steamd/")
@@ -45,7 +45,7 @@ open class SteamLanguageGenTask : DefaultTask() {
         enums.forEach { enum ->
             JavaGen(
                 node = enum,
-                `package` = "${`package`}.enums",
+                pkg = "$pkg.enums",
                 destination = File(outputDir, "enums"),
                 flagEnums = flagEnums
             ).run {
@@ -59,7 +59,7 @@ open class SteamLanguageGenTask : DefaultTask() {
         classes.forEach { clazz ->
             JavaGen(
                 node = clazz,
-                `package` = "${`package`}.generated",
+                pkg = "$pkg.generated",
                 destination = File(outputDir, "generated"),
                 flagEnums = flagEnums
             ).run {

@@ -48,9 +48,9 @@ class SymbolLocator {
                 return if (classNode == null) {
                     if (strongOnly) {
                         throw IllegalStateException("Invalid weak symbol $identifier")
-                    } else {
-                        WeakSymbol(identifier)
                     }
+
+                    WeakSymbol(identifier)
                 } else {
                     StrongSymbol(classNode)
                 }
