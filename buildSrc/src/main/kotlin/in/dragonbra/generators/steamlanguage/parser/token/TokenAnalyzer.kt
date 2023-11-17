@@ -1,6 +1,5 @@
 package `in`.dragonbra.generators.steamlanguage.parser.token
 
-
 import `in`.dragonbra.generators.steamlanguage.parser.LanguageParser
 import `in`.dragonbra.generators.steamlanguage.parser.node.ClassNode
 import `in`.dragonbra.generators.steamlanguage.parser.node.EnumNode
@@ -15,7 +14,6 @@ import java.util.*
 
 class TokenAnalyzer {
     companion object {
-
         @Throws(IOException::class)
         fun analyze(tokens: Queue<Token>, dir: String): Node {
             val root = Node()
@@ -27,18 +25,15 @@ class TokenAnalyzer {
                     "EOF" -> Unit
                     "preprocess" -> {
                         val text = expect(tokens, "string")
-                        if ("import" == cur.value) {
-                            val parentTokens: Queue<Token> = LanguageParser.tokenizeString(
-                                IOUtils.toString(
-                                    FileInputStream(File("$dir/${text.value}")),
-                                    "utf-8"
-                                ),
-                                text.value
-                            )
 
-                            val newRoot: Node = analyze(parentTokens, dir)
-                            newRoot.childNodes.forEach(root.childNodes::add)
+                        if ("import" == cur.value) {
+                            val parentTokens = LanguageParser.tokenizeString(IOUtils.toString(FileInputStream(File("$dir/${text.value}")), "utf-8"), text.value)
+
+                            val newRoot = analyze(parentTokens, dir)
+
+                            newRoot.childNodes.forEach { child -> root.childNodes.add(child) }
                         }
+
                     }
 
                     "identifier" -> {
@@ -48,6 +43,7 @@ class TokenAnalyzer {
                         when (cur.value) {
                             "class" -> {
                                 name = expect(tokens, "identifier")
+
                                 var ident: Token? = null
                                 var parent: Token? = null
 
@@ -63,12 +59,14 @@ class TokenAnalyzer {
                                 }
 
                                 val removed = optional(tokens, "identifier", "removed")
+
                                 if (removed != null) {
                                     optional(tokens, "string")
                                     optional(tokens, "terminator")
                                 }
 
                                 val classNode = ClassNode()
+
                                 classNode.name = name.value
 
                                 if (ident != null) {
@@ -82,8 +80,8 @@ class TokenAnalyzer {
                                 classNode.emit = removed == null
 
                                 root.childNodes.add(classNode)
+
                                 parseInnerScope(tokens, classNode, root)
-                                break
                             }
 
                             "enum" -> {
@@ -120,8 +118,7 @@ class TokenAnalyzer {
             return root
         }
 
-        @SuppressWarnings("GroovyUnusedAssignment")
-        fun parseInnerScope(tokens: Queue<Token>, parent: Node, root: Node) {
+        private fun parseInnerScope(tokens: Queue<Token>, parent: Node, root: Node) {
             expect(tokens, "operator", "{")
             var scope2 = optional(tokens, "operator", "}")
 
@@ -154,9 +151,9 @@ class TokenAnalyzer {
                     pnode.name = t1.value
                 }
 
-                val valop = optional(tokens, "operator", "=")
+                val defop = optional(tokens, "operator", "=")
 
-                if (valop != null) {
+                if (defop != null) {
                     while (true) {
                         val value = tokens.poll()
                         pnode.default.add(SymbolLocator.lookupSymbol(root, value.value, false))
@@ -210,9 +207,9 @@ class TokenAnalyzer {
             if (peek.name != name || peek.value != value) {
                 if (peek.source != null) {
                     val source = peek.source
-                    throw IllegalStateException("Expecting {$name} \'{ $value }\', but got \'${peek.value}\' at ${source.fileName} ${source.startLineNumber}, ${source.startColumnNumber}-${source.endLineNumber}, ${source.endColumnNumber}")
+                    throw IllegalStateException("Expecting {$name} '{$value}', but got '${peek.value}' at ${source.fileName} ${source.startLineNumber}, ${source.startColumnNumber}-${source.endLineNumber}, ${source.endColumnNumber}")
                 } else {
-                    throw IllegalStateException("Expecting $name \'$value\', but got \'${peek.value}\'")
+                    throw IllegalStateException("Expecting $name '$value', but got '${peek.value}'")
                 }
             }
 
@@ -228,7 +225,6 @@ class TokenAnalyzer {
 
             return tokens.poll()
         }
-
 
         private fun optional(tokens: Queue<Token>, name: String, value: String): Token? {
             val peek = tokens.peek() ?: return Token("EOF", "")

@@ -13,8 +13,8 @@ import java.io.File
 import java.io.Flushable
 import java.io.IOException
 import java.util.*
+import java.util.regex.Pattern
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 class JavaGen(
@@ -24,8 +24,10 @@ class JavaGen(
     private var flagEnums: MutableSet<String>
 ) : Closeable, Flushable {
 
+    private var writer: JavaFileWriter? = null
+
     companion object {
-        private val NUMBER_PATTERN = """^-?[0-9].*?L?""".toRegex()
+        private val NUMBER_PATTERN: Pattern = Pattern.compile("^-?[0-9].*?L?")
 
         private const val DEFAULT_TYPE = "uint"
 
@@ -38,10 +40,7 @@ class JavaGen(
             "long" to TypeInfo(8, "long"),
             "ulong" to TypeInfo(8, "long")
         )
-
     }
-
-    private lateinit var writer: JavaFileWriter
 
     @Throws(IOException::class)
     fun emit() {
@@ -55,11 +54,11 @@ class JavaGen(
 
         val file = File(destination, "${node.name}.java")
 
-        this.writer = JavaFileWriter(file)
+        writer = JavaFileWriter(file)
         writePackage(`package`)
-        writer.writeln()
+        writer?.writeln()
         writeImports()
-        writer.writeln()
+        writer?.writeln()
         writeClass(node)
     }
 
@@ -126,25 +125,25 @@ class JavaGen(
 
                 if (group != currentGroup) {
                     if (currentGroup != null) {
-                        writer.writeln()
+                        writer?.writeln()
                     }
 
                     currentGroup = group
                 }
 
-                writer.writeln("import $imp;")
+                writer?.writeln("import $imp;")
             }
 
         } else if (node is EnumNode) {
             if ("flags" == (node as EnumNode).flags) {
-                writer.writeln("import java.util.EnumSet;")
+                writer?.writeln("import java.util.EnumSet;")
             }
         }
     }
 
     @Throws(IOException::class)
     private fun writePackage(`package`: String) {
-        writer.writeln("package ${`package`};")
+        writer?.writeln("package ${`package`};")
     }
 
     @Throws(IOException::class)
@@ -160,7 +159,7 @@ class JavaGen(
     private fun writeMessageClass(node: ClassNode) {
         writeClassDef(node)
 
-        writer.indent()
+        writer?.indent()
 
         writeClassConstructor(node)
         writeClassProperties(node)
@@ -168,8 +167,8 @@ class JavaGen(
         writeSetterGetter(node)
         writeSerializationMethods(node)
 
-        writer.unindent()
-        writer.writeln("}")
+        writer?.unindent()
+        writer?.writeln("}")
     }
 
     @Throws(IOException::class)
@@ -193,12 +192,12 @@ class JavaGen(
         // TODO why null check
         @Suppress("SENSELESS_COMPARISON")
         if (parent != null) {
-            writer.writeln("public class ${node.name} implements $parent {")
+            writer?.writeln("public class ${node.name} implements $parent {")
         } else {
-            writer.writeln("public class ${node.name} {")
+            writer?.writeln("public class ${node.name} {")
         }
 
-        writer.writeln()
+        writer?.writeln()
     }
 
     @Throws(IOException::class)
@@ -222,37 +221,37 @@ class JavaGen(
             }
 
             if (node.name.contains("MsgGC")) {
-                writer.writeln("@Override")
-                writer.writeln("public int getEMsg() {")
-                writer.writeln("    return ${getType(node.ident)};")
-                writer.writeln("}")
+                writer?.writeln("@Override")
+                writer?.writeln("public int getEMsg() {")
+                writer?.writeln("    return ${getType(node.ident)};")
+                writer?.writeln("}")
             } else {
-                writer.writeln("@Override")
-                writer.writeln("public EMsg getEMsg() {")
-                writer.writeln("    return ${getType(node.ident)};")
-                writer.writeln("}")
+                writer?.writeln("@Override")
+                writer?.writeln("public EMsg getEMsg() {")
+                writer?.writeln("    return ${getType(node.ident)};")
+                writer?.writeln("}")
             }
 
-            writer.writeln()
+            writer?.writeln()
         } else if (node.name.contains("Hdr")) {
             if (node.name.contains("MsgGC")) {
                 if (node.childNodes.stream().anyMatch { childNode -> "msg" == childNode.name }) {
-                    writer.writeln("@Override")
-                    writer.writeln("public void setEMsg(int msg) {")
-                    writer.writeln("    this.msg = msg;")
-                    writer.writeln("}")
+                    writer?.writeln("@Override")
+                    writer?.writeln("public void setEMsg(int msg) {")
+                    writer?.writeln("    this.msg = msg;")
+                    writer?.writeln("}")
                 } else {
                     // this is required for a gc header which doesn"t have an emsg
-                    writer.writeln("@Override")
-                    writer.writeln("public void setEMsg(int msg) {}")
+                    writer?.writeln("@Override")
+                    writer?.writeln("public void setEMsg(int msg) {}")
                 }
             } else {
-                writer.writeln("@Override")
-                writer.writeln("public void setEMsg(EMsg msg) {")
-                writer.writeln("    this.msg = msg;")
-                writer.writeln("}")
+                writer?.writeln("@Override")
+                writer?.writeln("public void setEMsg(EMsg msg) {")
+                writer?.writeln("    this.msg = msg;")
+                writer?.writeln("}")
             }
-            writer.writeln()
+            writer?.writeln()
         }
     }
 
@@ -261,8 +260,8 @@ class JavaGen(
 
         if (node.parent != null) {
             val parentType = getType(node.parent)
-            writer.writeln("private $parentType header;")
-            writer.writeln()
+            writer?.writeln("private $parentType header;")
+            writer?.writeln()
         }
 
         for (child in node.childNodes) {
@@ -288,7 +287,7 @@ class JavaGen(
                 typeStr = "EnumSet<$typeStr>"
             }
 
-            if (NUMBER_PATTERN.matches(ctor)) {
+            if (NUMBER_PATTERN.matcher(ctor).matches()) {
                 when (typeStr) {
                     "long" -> ctor += "L"
                     "byte" -> ctor = "(byte) $ctor"
@@ -304,28 +303,28 @@ class JavaGen(
             }
 
             if ("const" == prop.flags) {
-                writer.writeln("public static final $typeStr $propName = ${getType(prop.default[0])};")
-                writer.writeln()
+                writer?.writeln("public static final $typeStr $propName = ${getType(prop.default[0])};")
+                writer?.writeln()
                 continue
             }
 
             if ("steamidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("private long $propName = $ctor;")
+                writer?.writeln("private long $propName = $ctor;")
             } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
-                writer.writeln("private boolean $propName = false;")
+                writer?.writeln("private boolean $propName = false;")
             } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("private long $propName = $ctor;")
+                writer?.writeln("private long $propName = $ctor;")
             } else {
                 if (!prop.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matches(prop.flagsOpt!!)
+                    NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
                 ) {
                     typeStr += "[]"
                 }
 
-                writer.writeln("private $typeStr $propName = $ctor;")
+                writer?.writeln("private $typeStr $propName = $ctor;")
             }
 
-            writer.writeln()
+            writer?.writeln()
         }
     }
 
@@ -334,13 +333,13 @@ class JavaGen(
 
         if (node.parent != null) {
             val parentType = getType(node.parent)
-            writer.writeln("public $parentType getHeader() {")
-            writer.writeln("    return this.header;")
-            writer.writeln("}")
-            writer.writeln()
-            writer.writeln("public void setHeader($parentType header) {")
-            writer.writeln("    this.header = header;")
-            writer.writeln("}")
+            writer?.writeln("public $parentType getHeader() {")
+            writer?.writeln("    return this.header;")
+            writer?.writeln("}")
+            writer?.writeln()
+            writer?.writeln("public void setHeader($parentType header) {")
+            writer?.writeln("    this.header = header;")
+            writer?.writeln("}")
         }
 
         for (child in node.childNodes) {
@@ -361,55 +360,55 @@ class JavaGen(
             }
 
             if ("steamidmarshal" == propNode.flags && "long" == typeStr) {
-                writer.writeln("public SteamID get${capitalize(propName)}() {")
-                writer.writeln("    return new SteamID(this.$propName);")
-                writer.writeln("}")
-                writer.writeln()
-                writer.writeln("public void set${capitalize(propName)}(SteamID steamId) {")
-                writer.writeln("    this.$propName = steamId.convertToUInt64();")
-                writer.writeln("}")
+                writer?.writeln("public SteamID get${capitalize(propName)}() {")
+                writer?.writeln("    return new SteamID(this.$propName);")
+                writer?.writeln("}")
+                writer?.writeln()
+                writer?.writeln("public void set${capitalize(propName)}(SteamID steamId) {")
+                writer?.writeln("    this.$propName = steamId.convertToUInt64();")
+                writer?.writeln("}")
             } else if ("boolmarshal" == propNode.flags && "byte" == typeStr) {
-                writer.writeln("public boolean get${capitalize(propName)}() {")
-                writer.writeln("    return this.$propName;")
-                writer.writeln("}")
-                writer.writeln()
-                writer.writeln("public void set${capitalize(propName)}(boolean $propName) {")
-                writer.writeln("    this.$propName = $propName;")
-                writer.writeln("}")
+                writer?.writeln("public boolean get${capitalize(propName)}() {")
+                writer?.writeln("    return this.$propName;")
+                writer?.writeln("}")
+                writer?.writeln()
+                writer?.writeln("public void set${capitalize(propName)}(boolean $propName) {")
+                writer?.writeln("    this.$propName = $propName;")
+                writer?.writeln("}")
             } else if ("gameidmarshal" == propNode.flags && "long" == typeStr) {
-                writer.writeln("public GameID get${capitalize(propName)}() {")
-                writer.writeln("    return new GameID(this.$propName);")
-                writer.writeln("}")
-                writer.writeln()
-                writer.writeln("public void set${capitalize(propName)}(GameID gameId) {")
-                writer.writeln("    this.$propName = gameId.convertToUInt64();")
-                writer.writeln("}")
+                writer?.writeln("public GameID get${capitalize(propName)}() {")
+                writer?.writeln("    return new GameID(this.$propName);")
+                writer?.writeln("}")
+                writer?.writeln()
+                writer?.writeln("public void set${capitalize(propName)}(GameID gameId) {")
+                writer?.writeln("    this.$propName = gameId.convertToUInt64();")
+                writer?.writeln("}")
             } else {
                 if (!propNode.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matches(propNode.flagsOpt!!)
+                    NUMBER_PATTERN.matcher(propNode.flagsOpt!!).matches()
                 ) {
                     typeStr += "[]"
                 }
 
-                writer.writeln("public $typeStr get${capitalize(propName)}() {")
-                writer.writeln("    return this.$propName;")
-                writer.writeln("}")
-                writer.writeln()
-                writer.writeln("public void set${capitalize(propName)}($typeStr $propName) {")
-                writer.writeln("    this.$propName = $propName;")
-                writer.writeln("}")
+                writer?.writeln("public $typeStr get${capitalize(propName)}() {")
+                writer?.writeln("    return this.$propName;")
+                writer?.writeln("}")
+                writer?.writeln()
+                writer?.writeln("public void set${capitalize(propName)}($typeStr $propName) {")
+                writer?.writeln("    this.$propName = $propName;")
+                writer?.writeln("}")
             }
-            writer.writeln()
+            writer?.writeln()
         }
     }
 
     @Throws(IOException::class)
     private fun writeClassConstructor(node: ClassNode) {
         if (node.parent != null) {
-            writer.writeln("public ${node.name}() {")
-            writer.writeln("    this.header = new ${getType(node.parent)}();")
-            writer.writeln("    header.setMsg(getEMsg());")
-            writer.writeln("}")
+            writer?.writeln("public ${node.name}() {")
+            writer?.writeln("    this.header = new ${getType(node.parent)}();")
+            writer?.writeln("    header.setMsg(getEMsg());")
+            writer?.writeln("}")
         }
     }
 
@@ -424,12 +423,12 @@ class JavaGen(
             }
         }
 
-        writer.writeln("@Override")
-        writer.writeln("public void serialize(OutputStream stream) throws IOException {")
-        writer.indent()
+        writer?.writeln("@Override")
+        writer?.writeln("public void serialize(OutputStream stream) throws IOException {")
+        writer?.indent()
 
-        writer.writeln("BinaryWriter bw = new BinaryWriter(stream);")
-        writer.writeln()
+        writer?.writeln("BinaryWriter bw = new BinaryWriter(stream);")
+        writer?.writeln()
 
         for (child in node.childNodes) {
             val prop = child as PropNode
@@ -441,19 +440,19 @@ class JavaGen(
             }
 
             if (prop.flags == "protomask") {
-                writer.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
+                writer?.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
                 continue
             }
 
             if (prop.flags == "proto") {
-                writer.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
+                writer?.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
                 if (prop.flagsOpt != null) {
-                    writer.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
-                    writer.writeln("bw.writeInt(${prop.flagsOpt});")
+                    writer?.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
+                    writer?.writeln("bw.writeInt(${prop.flagsOpt});")
                 } else {
-                    writer.writeln("bw.writeInt(${propName}Buffer.length);")
+                    writer?.writeln("bw.writeInt(${propName}Buffer.length);")
                 }
-                writer.writeln("bw.write(${propName}Buffer);")
+                writer?.writeln("bw.write(${propName}Buffer);")
                 continue
             }
 
@@ -468,17 +467,17 @@ class JavaGen(
 
                     if (flagEnums.contains(typeStr)) {
                         when (enumType) {
-                            "long" -> writer.writeln("bw.writeLong(${typeStr}.code($propName));")
-                            "byte" -> writer.writeln("bw.writeByte(${typeStr}.code($propName));")
-                            "short" -> writer.writeln("bw.writeShort(${typeStr}.code($propName));")
-                            else -> writer.writeln("bw.writeInt(${typeStr}.code($propName));")
+                            "long" -> writer?.writeln("bw.writeLong(${typeStr}.code($propName));")
+                            "byte" -> writer?.writeln("bw.writeByte(${typeStr}.code($propName));")
+                            "short" -> writer?.writeln("bw.writeShort(${typeStr}.code($propName));")
+                            else -> writer?.writeln("bw.writeInt(${typeStr}.code($propName));")
                         }
                     } else {
                         when (enumType) {
-                            "long" -> writer.writeln("bw.writeLong(${propName}.code());")
-                            "byte" -> writer.writeln("bw.writeByte(${propName}.code());")
-                            "short" -> writer.writeln("bw.writeShort(${propName}.code());")
-                            else -> writer.writeln("bw.writeInt(${propName}.code());")
+                            "long" -> writer?.writeln("bw.writeLong(${propName}.code());")
+                            "byte" -> writer?.writeln("bw.writeByte(${propName}.code());")
+                            "short" -> writer?.writeln("bw.writeShort(${propName}.code());")
+                            else -> writer?.writeln("bw.writeInt(${propName}.code());")
                         }
                     }
 
@@ -487,40 +486,42 @@ class JavaGen(
             }
 
             if ("steamidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("bw.writeLong($propName);")
+                writer?.writeln("bw.writeLong($propName);")
             } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
-                writer.writeln("bw.writeBoolean($propName);")
+                writer?.writeln("bw.writeBoolean($propName);")
             } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("bw.writeLong($propName);")
+                writer?.writeln("bw.writeLong($propName);")
             } else {
                 var isArray = false
-                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt!!)) {
+                if (!prop.flagsOpt.isNullOrEmpty() &&
+                    NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
+                ) {
                     isArray = true
                 }
 
                 if (isArray) {
-                    writer.writeln("bw.writeInt(${propName}.length);")
-                    writer.writeln("bw.write($propName);")
+                    writer?.writeln("bw.writeInt(${propName}.length);")
+                    writer?.writeln("bw.write($propName);")
                 } else {
                     when (typeStr) {
-                        "long" -> writer.writeln("bw.writeLong($propName);")
-                        "byte" -> writer.writeln("bw.writeByte($propName);")
-                        "short" -> writer.writeln("bw.writeShort($propName);")
-                        else -> writer.writeln("bw.writeInt($propName);")
+                        "long" -> writer?.writeln("bw.writeLong($propName);")
+                        "byte" -> writer?.writeln("bw.writeByte($propName);")
+                        "short" -> writer?.writeln("bw.writeShort($propName);")
+                        else -> writer?.writeln("bw.writeInt($propName);")
                     }
                 }
             }
         }
 
-        writer.unindent()
-        writer.writeln("}")
-        writer.writeln()
-        writer.writeln("@Override")
-        writer.writeln("public void deserialize(InputStream stream) throws IOException {")
-        writer.indent()
+        writer?.unindent()
+        writer?.writeln("}")
+        writer?.writeln()
+        writer?.writeln("@Override")
+        writer?.writeln("public void deserialize(InputStream stream) throws IOException {")
+        writer?.indent()
 
-        writer.writeln("BinaryReader br = new BinaryReader(stream);")
-        writer.writeln()
+        writer?.writeln("BinaryReader br = new BinaryReader(stream);")
+        writer?.writeln()
 
         for (child in node.childNodes) {
             val prop = child as PropNode
@@ -533,18 +534,18 @@ class JavaGen(
 
             if (prop.flags != null) {
                 if (prop.flags == "protomask") {
-                    writer.writeln("$propName = MsgUtil.getMsg(br.readInt());")
+                    writer?.writeln("$propName = MsgUtil.getMsg(br.readInt());")
                     continue
                 }
 
                 if (prop.flags == "proto") {
                     if (prop.flagsOpt != null) {
-                        writer.writeln("${prop.flagsOpt} = br.readInt();")
-                        writer.writeln("byte[] ${propName}Buffer = br.readBytes(${prop.flagsOpt});")
+                        writer?.writeln("${prop.flagsOpt} = br.readInt();")
+                        writer?.writeln("byte[] ${propName}Buffer = br.readBytes(${prop.flagsOpt});")
                     } else {
-                        writer.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
+                        writer?.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
                     }
-                    writer.writeln("$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);")
+                    writer?.writeln("$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);")
                     continue
                 }
 
@@ -559,42 +560,44 @@ class JavaGen(
                     val enumType = getType((strongSymbol.clazz).type)
                     val className = strongSymbol.clazz.name
                     when (enumType) {
-                        "long" -> writer.writeln("$propName = ${className}.from(br.readLong());")
-                        "byte" -> writer.writeln("$propName = ${className}.from(br.readByte());")
-                        "short" -> writer.writeln("$propName = ${className}.from(br.readShort());")
-                        else -> writer.writeln("$propName = ${className}.from(br.readInt());")
+                        "long" -> writer?.writeln("$propName = ${className}.from(br.readLong());")
+                        "byte" -> writer?.writeln("$propName = ${className}.from(br.readByte());")
+                        "short" -> writer?.writeln("$propName = ${className}.from(br.readShort());")
+                        else -> writer?.writeln("$propName = ${className}.from(br.readInt());")
                     }
                     continue
                 }
             }
 
             if ("steamidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("$propName = br.readLong();")
+                writer?.writeln("$propName = br.readLong();")
             } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
-                writer.writeln("$propName = br.readBoolean();")
+                writer?.writeln("$propName = br.readBoolean();")
             } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
-                writer.writeln("$propName = br.readLong();")
+                writer?.writeln("$propName = br.readLong();")
             } else {
                 var isArray = false
-                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt!!)) {
+                if (!prop.flagsOpt.isNullOrEmpty() &&
+                    NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
+                ) {
                     isArray = true
                 }
 
                 if (isArray) {
-                    writer.writeln("$propName = br.readBytes(br.readInt());")
+                    writer?.writeln("$propName = br.readBytes(br.readInt());")
                 } else {
                     when (typeStr) {
-                        "long" -> writer.writeln("$propName = br.readLong();")
-                        "byte" -> writer.writeln("$propName = br.readByte();")
-                        "short" -> writer.writeln("$propName = br.readShort();")
-                        else -> writer.writeln("$propName = br.readInt();")
+                        "long" -> writer?.writeln("$propName = br.readLong();")
+                        "byte" -> writer?.writeln("$propName = br.readByte();")
+                        "short" -> writer?.writeln("$propName = br.readShort();")
+                        else -> writer?.writeln("$propName = br.readInt();")
                     }
                 }
             }
         }
 
-        writer.unindent()
-        writer.writeln("}")
+        writer?.unindent()
+        writer?.writeln("}")
     }
 
     @Throws(IOException::class)
@@ -605,10 +608,10 @@ class JavaGen(
             flagEnums.add(node.name)
         }
 
-        writer.writeln("public enum ${node.name} {")
-        writer.writeln()
+        writer?.writeln("public enum ${node.name} {")
+        writer?.writeln()
 
-        writer.indent()
+        writer?.indent()
 
         val type: String = if (node.type == null) "int" else getType(node.type)
 
@@ -616,51 +619,51 @@ class JavaGen(
 
         writeEnumCode(type, flags)
 
-        writer.unindent()
+        writer?.unindent()
 
-        writer.writeln("}")
+        writer?.writeln("}")
     }
 
     @Throws(IOException::class)
     private fun writeEnumCode(type: String, flags: Boolean) {
-        writer.writeln("private final $type code;")
-        writer.writeln()
-        writer.writeln("${this.node.name}($type code) {")
-        writer.writeln("    this.code = code;")
-        writer.writeln("}")
-        writer.writeln()
-        writer.writeln("public $type code() {")
-        writer.writeln("    return this.code;")
-        writer.writeln("}")
-        writer.writeln()
+        writer?.writeln("private final $type code;")
+        writer?.writeln()
+        writer?.writeln("${this.node.name}($type code) {")
+        writer?.writeln("    this.code = code;")
+        writer?.writeln("}")
+        writer?.writeln()
+        writer?.writeln("public $type code() {")
+        writer?.writeln("    return this.code;")
+        writer?.writeln("}")
+        writer?.writeln()
 
         if (flags) {
-            writer.writeln("public static EnumSet<${this.node.name}> from($type code) {")
-            writer.writeln("    EnumSet<${this.node.name}> set = EnumSet.noneOf(${this.node.name}.class);")
-            writer.writeln("    for (${this.node.name} e : ${this.node.name}.values()) {")
-            writer.writeln("        if ((e.code & code) == e.code) {")
-            writer.writeln("            set.add(e);")
-            writer.writeln("        }")
-            writer.writeln("    }")
-            writer.writeln("    return set;")
-            writer.writeln("}")
-            writer.writeln()
-            writer.writeln("public static $type code(EnumSet<${this.node.name}> flags) {")
-            writer.writeln("    $type code = 0;")
-            writer.writeln("    for (${this.node.name} flag : flags) {")
-            writer.writeln("        code |= flag.code;")
-            writer.writeln("    }")
-            writer.writeln("    return code;")
-            writer.writeln("}")
+            writer?.writeln("public static EnumSet<${this.node.name}> from($type code) {")
+            writer?.writeln("    EnumSet<${this.node.name}> set = EnumSet.noneOf(${this.node.name}.class);")
+            writer?.writeln("    for (${this.node.name} e : ${this.node.name}.values()) {")
+            writer?.writeln("        if ((e.code & code) == e.code) {")
+            writer?.writeln("            set.add(e);")
+            writer?.writeln("        }")
+            writer?.writeln("    }")
+            writer?.writeln("    return set;")
+            writer?.writeln("}")
+            writer?.writeln()
+            writer?.writeln("public static $type code(EnumSet<${this.node.name}> flags) {")
+            writer?.writeln("    $type code = 0;")
+            writer?.writeln("    for (${this.node.name} flag : flags) {")
+            writer?.writeln("        code |= flag.code;")
+            writer?.writeln("    }")
+            writer?.writeln("    return code;")
+            writer?.writeln("}")
         } else {
-            writer.writeln("public static ${this.node.name} from($type code) {")
-            writer.writeln("    for (${this.node.name} e : ${this.node.name}.values()) {")
-            writer.writeln("        if (e.code == code) {")
-            writer.writeln("            return e;")
-            writer.writeln("        }")
-            writer.writeln("    }")
-            writer.writeln("    return null;")
-            writer.writeln("}")
+            writer?.writeln("public static ${this.node.name} from($type code) {")
+            writer?.writeln("    for (${this.node.name} e : ${this.node.name}.values()) {")
+            writer?.writeln("        if (e.code == code) {")
+            writer?.writeln("            return e;")
+            writer?.writeln("        }")
+            writer?.writeln("    }")
+            writer?.writeln("    return null;")
+            writer?.writeln("}")
         }
     }
 
@@ -673,24 +676,32 @@ class JavaGen(
                 if (prop.obsolete != null) {
                     // including obsolete items can introduce duplicates
                     continue
-                    // writer.writeln("/**")
-                    // writer.writeln(" * @deprecated $prop.obsolete")
-                    // writer.writeln(" */")
-                    // writer.writeln("@Deprecated")
+                    // writer?.writeln("/**")
+                    // writer?.writeln(" * @deprecated $prop.obsolete")
+                    // writer?.writeln(" */")
+                    // writer?.writeln("@Deprecated")
                 }
 
-                if (flags && !NUMBER_PATTERN.matches(getType(prop.default[0]))) {
+                if (flags && !NUMBER_PATTERN.matcher(getType(prop.default[0])).matches()) {
                     statics.add(prop)
                 } else {
                     val types = prop.default.map { symbol ->
                         val temp = getType(symbol)
 
-                        if (NUMBER_PATTERN.matches(temp)) {
+                        println()
+
+                        if (NUMBER_PATTERN.matcher(temp).matches()) {
                             when (type) {
                                 "long" -> if (temp.startsWith("-")) "$temp L" else "${temp.toLong()} L"
                                 "byte" -> "(byte) $temp"
                                 "short" -> "(short) $temp"
-                                else -> if (temp.startsWith('-') || temp.contains('x')) temp else temp.toULong().toUInt().toString()
+                                else ->
+                                    if (temp.startsWith('-') || temp.contains('x'))
+                                        temp else
+                                        temp.toLongOrNull()?.takeIf {
+                                            it in Int.MIN_VALUE..Int.MAX_VALUE
+                                        }?.toInt() ?: -1
+
                             }
                         } else {
                             "$temp.code"
@@ -699,18 +710,18 @@ class JavaGen(
 
                     val value: String = types.joinToString(" | ")
 
-                    writer.writeln("${prop.name}($value),\n")
+                    writer?.writeln("${prop.name}($value),\n")
                 }
             }
         }
 
-        writer.writeln(";")
-        writer.writeln()
+        writer?.writeln(";")
+        writer?.writeln()
 
         statics.forEach { p ->
             val defaults: List<String> = p.default.stream().map { defa -> getType(defa) }.collect(Collectors.toList())
-            writer.writeln("public static final EnumSet<${this.node.name}> ${p.name} = EnumSet.of(${defaults.joinToString(", ")});")
-            writer.writeln()
+            writer?.writeln("public static final EnumSet<${this.node.name}> ${p.name} = EnumSet.of(${defaults.joinToString(", ")});")
+            writer?.writeln()
         }
     }
 
@@ -776,12 +787,12 @@ class JavaGen(
 
     @Throws(IOException::class)
     override fun close() {
-        writer.close()
+        writer?.close()
     }
 
     @Throws(IOException::class)
     override fun flush() {
-        writer.flush()
+        writer?.flush()
     }
 
     private data class TypeInfo(val size: Int, val name: String)

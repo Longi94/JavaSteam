@@ -2,7 +2,6 @@ package `in`.dragonbra.generators.steamlanguage.parser
 
 import java.util.ArrayDeque
 import java.util.Queue
-import kotlin.text.Regex
 import `in`.dragonbra.generators.steamlanguage.parser.token.TokenSourceInfo
 import `in`.dragonbra.generators.steamlanguage.parser.token.Token
 import java.util.regex.Pattern

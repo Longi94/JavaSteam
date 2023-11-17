@@ -42,10 +42,11 @@ open class SteamLanguageGenTask : DefaultTask() {
         FileUtils.deleteDirectory(outputDir)
 
         enums.forEach { enum ->
-            JavaGen(enum,
-                "${`package`}.enums",
-                File(outputDir, "enums"),
-                flagEnums
+            JavaGen(
+                node = enum,
+                `package` = "${`package`}.enums",
+                destination = File(outputDir, "enums"),
+                flagEnums = flagEnums
             ).run {
                 emit()
                 flush()
@@ -53,12 +54,12 @@ open class SteamLanguageGenTask : DefaultTask() {
             }
         }
 
-        println("Classes size ${classes.size}") // TODO should be 53
         classes.forEach { clazz ->
-            JavaGen(clazz,
-                "${`package`}.generated",
-                File(outputDir, "generated"),
-                flagEnums
+            JavaGen(
+                node = clazz,
+                `package` = "${`package`}.generated",
+                destination = File(outputDir, "generated"),
+                flagEnums = flagEnums
             ).run {
                 emit()
                 flush()
