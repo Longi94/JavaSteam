@@ -44,7 +44,9 @@ class LanguageParser {
 
                     for (tempName in GROUP_NAMES) {
                         matchValue = matcher.group(tempName)
+
                         groupName = tempName
+
                         if (matchValue != null) {
                             break
                         }

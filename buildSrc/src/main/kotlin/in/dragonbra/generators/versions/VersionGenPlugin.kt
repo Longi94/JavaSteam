@@ -5,6 +5,6 @@ import org.gradle.api.Project
 
 class VersionGenPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.tasks.create("generateProjectVersion", VersionGenTask::class.java)
+        project.tasks.register("generateProjectVersion", VersionGenTask::class.java)
     }
 }

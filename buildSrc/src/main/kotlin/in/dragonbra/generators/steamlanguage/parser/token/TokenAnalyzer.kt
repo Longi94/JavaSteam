@@ -27,11 +27,17 @@ class TokenAnalyzer {
                         val text = expect(tokens, "string")
 
                         if ("import" == cur.value) {
-                            val parentTokens = LanguageParser.tokenizeString(IOUtils.toString(FileInputStream(File("$dir/${text.value}")), "utf-8"), text.value)
+                            val parentTokens = LanguageParser.tokenizeString(
+                                buffer = IOUtils.toString(
+                                    FileInputStream(File("$dir/${text.value}")),
+                                    "utf-8"
+                                ),
+                                fileName = text.value
+                            )
 
                             val newRoot = analyze(parentTokens, dir)
 
-                            newRoot.childNodes.forEach { child -> root.childNodes.add(child) }
+                            newRoot.childNodes.forEach(root.childNodes::add)
                         }
                     }
 
@@ -95,19 +101,20 @@ class TokenAnalyzer {
 
                                 val flag = optional(tokens, "identifier", "flags")
 
-                                val enode = EnumNode()
-                                enode.name = name.value
+                                val eNode = EnumNode()
+                                eNode.name = name.value
 
                                 if (flag != null) {
-                                    enode.flags = flag.value
+                                    eNode.flags = flag.value
                                 }
 
                                 if (datatype != null) {
-                                    enode.type = SymbolLocator.lookupSymbol(root, datatype.value, false)
+                                    eNode.type = SymbolLocator.lookupSymbol(root, datatype.value, false)
                                 }
 
-                                root.childNodes.add(enode)
-                                parseInnerScope(tokens, enode, root)
+                                root.childNodes.add(eNode)
+
+                                parseInnerScope(tokens, eNode, root)
                             }
                         }
                     }
@@ -119,6 +126,7 @@ class TokenAnalyzer {
 
         private fun parseInnerScope(tokens: Queue<Token>, parent: Node, root: Node) {
             expect(tokens, "operator", "{")
+
             var scope2 = optional(tokens, "operator", "}")
 
             while (scope2 == null) {
@@ -127,10 +135,12 @@ class TokenAnalyzer {
                 val t1 = tokens.poll()
 
                 val t1op1 = optional(tokens, "operator", "<")
+
                 var flagop: Token?
 
                 if (t1op1 != null) {
                     flagop = expect(tokens, "identifier")
+
                     expect(tokens, "operator", ">")
 
                     pnode.flagsOpt = flagop.value
@@ -155,6 +165,7 @@ class TokenAnalyzer {
                 if (defop != null) {
                     while (true) {
                         val value = tokens.poll()
+
                         pnode.default.add(SymbolLocator.lookupSymbol(root, value.value, false))
 
                         if (optional(tokens, "operator", "|") != null) {
@@ -162,6 +173,7 @@ class TokenAnalyzer {
                         }
 
                         expect(tokens, "terminator", ";")
+
                         break
                     }
                 } else {
@@ -208,7 +220,11 @@ class TokenAnalyzer {
             if (peek.name != name || peek.value != value) {
                 if (peek.source != null) {
                     val source = peek.source
-                    throw IllegalStateException("Expecting {$name} '{$value}', but got '${peek.value}' at ${source.fileName} ${source.startLineNumber}, ${source.startColumnNumber}-${source.endLineNumber}, ${source.endColumnNumber}")
+                    throw IllegalStateException(
+                        "Expecting {$name} '{$value}', but got '${peek.value}' " +
+                            "at ${source.fileName} ${source.startLineNumber}, " +
+                            "${source.startColumnNumber}-${source.endLineNumber}, ${source.endColumnNumber}"
+                    )
                 } else {
                     throw IllegalStateException("Expecting $name '$value', but got '${peek.value}'")
                 }

@@ -55,8 +55,10 @@ class JavaGen(
 
         writer = JavaFileWriter(file)
         writePackage(`package`)
+
         writer?.writeln()
         writeImports()
+
         writer?.writeln()
         writeClass(node)
     }
@@ -114,9 +116,7 @@ class JavaGen(
                 }
             }
 
-            val sortedImports = imports.stream().map { s -> s.toString() }.collect(Collectors.toList())
-            sortedImports.sort()
-
+            val sortedImports = imports.map { it }.sorted()
             var currentGroup: String? = null
 
             sortedImports.forEach { imp ->
@@ -171,7 +171,7 @@ class JavaGen(
 
     @Throws(IOException::class)
     private fun writeClassDef(node: ClassNode) {
-        val parent: String = if (node.ident != null) {
+        val parent = if (node.ident != null) {
             if (node.name.contains("MsgGC")) {
                 "IGCSerializableMessage"
             } else {
@@ -249,6 +249,7 @@ class JavaGen(
                 writer?.writeln("    this.msg = msg;")
                 writer?.writeln("}")
             }
+
             writer?.writeln()
         }
     }
@@ -257,6 +258,7 @@ class JavaGen(
     private fun writeClassProperties(node: ClassNode) {
         if (node.parent != null) {
             val parentType = getType(node.parent)
+
             writer?.writeln("private $parentType header;")
             writer?.writeln()
         }
@@ -293,6 +295,7 @@ class JavaGen(
 
                 if (prop.type is StrongSymbol) {
                     val strongSymbol = prop.type as StrongSymbol
+
                     if (strongSymbol.clazz is EnumNode) {
                         ctor = "${strongSymbol.clazz.name}.from($ctor)"
                     }
@@ -302,6 +305,7 @@ class JavaGen(
             if ("const" == prop.flags) {
                 writer?.writeln("public static final $typeStr $propName = ${getType(prop.default[0])};")
                 writer?.writeln()
+
                 continue
             }
 
@@ -329,6 +333,7 @@ class JavaGen(
     private fun writeSetterGetter(node: ClassNode) {
         if (node.parent != null) {
             val parentType = getType(node.parent)
+
             writer?.writeln("public $parentType getHeader() {")
             writer?.writeln("    return this.header;")
             writer?.writeln("}")
@@ -394,6 +399,7 @@ class JavaGen(
                 writer?.writeln("    this.$propName = $propName;")
                 writer?.writeln("}")
             }
+
             writer?.writeln()
         }
     }
@@ -414,6 +420,7 @@ class JavaGen(
 
         node.childNodes.forEach { child ->
             val prop = child as PropNode
+
             if (prop.flags == "proto") {
                 skip.add(prop.flagsOpt!!)
             }
@@ -422,7 +429,6 @@ class JavaGen(
         writer?.writeln("@Override")
         writer?.writeln("public void serialize(OutputStream stream) throws IOException {")
         writer?.indent()
-
         writer?.writeln("BinaryWriter bw = new BinaryWriter(stream);")
         writer?.writeln()
 
@@ -437,18 +443,22 @@ class JavaGen(
 
             if (prop.flags == "protomask") {
                 writer?.writeln("bw.writeInt(MsgUtil.makeMsg($propName.code(), true));")
+
                 continue
             }
 
             if (prop.flags == "proto") {
                 writer?.writeln("byte[] ${propName}Buffer = $propName.build().toByteArray();")
+
                 if (prop.flagsOpt != null) {
                     writer?.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
                     writer?.writeln("bw.writeInt(${prop.flagsOpt});")
                 } else {
                     writer?.writeln("bw.writeInt(${propName}Buffer.length);")
                 }
+
                 writer?.writeln("bw.write(${propName}Buffer);")
+
                 continue
             }
 
@@ -489,6 +499,7 @@ class JavaGen(
                 writer?.writeln("bw.writeLong($propName);")
             } else {
                 var isArray = false
+
                 if (!prop.flagsOpt.isNullOrEmpty() &&
                     NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
                 ) {
@@ -515,7 +526,6 @@ class JavaGen(
         writer?.writeln("@Override")
         writer?.writeln("public void deserialize(InputStream stream) throws IOException {")
         writer?.indent()
-
         writer?.writeln("BinaryReader br = new BinaryReader(stream);")
         writer?.writeln()
 
@@ -531,6 +541,7 @@ class JavaGen(
             if (prop.flags != null) {
                 if (prop.flags == "protomask") {
                     writer?.writeln("$propName = MsgUtil.getMsg(br.readInt());")
+
                     continue
                 }
 
@@ -541,7 +552,9 @@ class JavaGen(
                     } else {
                         writer?.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
                     }
+
                     writer?.writeln("$propName = $typeStr.newBuilder().mergeFrom(${propName}Buffer);")
+
                     continue
                 }
 
@@ -552,15 +565,18 @@ class JavaGen(
 
             if (prop.type is StrongSymbol) {
                 val strongSymbol = prop.type as StrongSymbol
+
                 if (strongSymbol.clazz is EnumNode) {
                     val enumType = getType((strongSymbol.clazz).type)
                     val className = strongSymbol.clazz.name
+
                     when (enumType) {
                         "long" -> writer?.writeln("$propName = $className.from(br.readLong());")
                         "byte" -> writer?.writeln("$propName = $className.from(br.readByte());")
                         "short" -> writer?.writeln("$propName = $className.from(br.readShort());")
                         else -> writer?.writeln("$propName = $className.from(br.readInt());")
                     }
+
                     continue
                 }
             }
@@ -573,6 +589,7 @@ class JavaGen(
                 writer?.writeln("$propName = br.readLong();")
             } else {
                 var isArray = false
+
                 if (!prop.flagsOpt.isNullOrEmpty() &&
                     NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
                 ) {
@@ -598,7 +615,7 @@ class JavaGen(
 
     @Throws(IOException::class)
     private fun writeEnumClass(node: EnumNode) {
-        val flags: Boolean = "flags" == node.flags
+        val flags = ("flags" == node.flags)
 
         if (flags) {
             flagEnums.add(node.name)
@@ -606,17 +623,14 @@ class JavaGen(
 
         writer?.writeln("public enum ${node.name} {")
         writer?.writeln()
-
         writer?.indent()
 
         val type: String = if (node.type == null) "int" else getType(node.type)
 
         writeEnumProperties(node, type, flags)
-
         writeEnumCode(type, flags)
 
         writer?.unindent()
-
         writer?.writeln("}")
     }
 
@@ -749,7 +763,6 @@ class JavaGen(
         }
 
         val sym: Symbol? = prop.type
-
         if (sym is WeakSymbol) {
             var key = sym.identifier
 
