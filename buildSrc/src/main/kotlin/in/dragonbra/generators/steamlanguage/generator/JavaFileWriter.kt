@@ -4,25 +4,25 @@ import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 
-class JavaFileWriter(private val file: File) : FileWriter(file) {
+class JavaFileWriter(file: File) : FileWriter(file) {
 
     companion object {
-        private const val INDENT_SIZE = 4
+        private const val INDENTATION = "    "
     }
 
-    private var indent: Int = 0
+    private var indent: String = ""
 
     fun indent() {
-        indent += INDENT_SIZE
+        indent += INDENTATION
     }
 
     fun unindent() {
-        indent -= INDENT_SIZE
+        indent = indent.substring(INDENTATION.length)
     }
 
     @Throws(IOException::class)
     fun writeln(string: String) {
-        write("    ".repeat(indent))
+        write(indent)
         write(string)
         writeln()
     }

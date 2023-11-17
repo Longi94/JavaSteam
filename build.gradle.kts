@@ -9,7 +9,7 @@ plugins {
     id("jacoco")
     projectversiongen
     id("signing")
-    id("steamlanguagegen")
+    steamlanguagegen
 }
 
 allprojects {

@@ -5,12 +5,20 @@ import java.util.Queue
 import kotlin.text.Regex
 import `in`.dragonbra.generators.steamlanguage.parser.token.TokenSourceInfo
 import `in`.dragonbra.generators.steamlanguage.parser.token.Token
+import java.util.regex.Pattern
 
 class LanguageParser {
     companion object {
-        private val PATTERN: Regex = Regex(
-            """(\s+)|(;)|"(.+?)"|//(.*)$|(-?[a-zA-Z_0-9][a-zA-Z0-9_:.]*)|(#[a-zA-Z]*)|([{}<>\]=|])|(\S+)""",
-            RegexOption.MULTILINE
+        private val PATTERN: Pattern = Pattern.compile(
+            """(?<whitespace>\s+)|""" +
+                """(?<terminator>[;])|""" +
+                """["](?<string>.+?)["]|""" +
+                """//(?<comment>.*)$|""" +
+                """(?<identifier>-?[a-zA-Z_0-9][a-zA-Z0-9_:.]*)|""" +
+                """[#](?<preprocess>[a-zA-Z]*)|""" +
+                """(?<operator>[{}<>\]=|])|""" +
+                """(?<invalid>[^\s]+)""",
+            Pattern.MULTILINE
         )
 
         private val GROUP_NAMES = listOf(
@@ -25,24 +33,26 @@ class LanguageParser {
         )
 
         fun tokenizeString(buffer: String, fileName: String): Queue<Token> {
-            val bufferLines = buffer.split("\\r?\\n".toRegex())
+            val bufferLines = buffer.split("[\\r\\n]+")
             val tokens = ArrayDeque<Token>()
 
             bufferLines.forEachIndexed { index, line ->
-                val matcher = PATTERN.findAll(line)
+                val matcher = PATTERN.matcher(line)
 
-                matcher.forEach { matchResult ->
+                while (matcher.find()) {
                     var matchValue: String? = null
                     var groupName: String? = null
 
                     for (tempName in GROUP_NAMES) {
-                        matchValue = matchResult.groups[tempName]?.value
+                        matchValue = matcher.group(tempName)
                         groupName = tempName
-                        if (matchValue != null) break
+                        if (matchValue != null) {
+                            break
+                        }
                     }
 
                     if (matchValue == null || groupName == "comment" || groupName == "whitespace") {
-                        return@forEach
+                        continue
                     }
 
                     val startColumnNumber = line.indexOf(matchValue)

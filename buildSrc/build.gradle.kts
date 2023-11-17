@@ -26,7 +26,7 @@ gradlePlugin {
     plugins {
         create("steamlanguagegen") {
             id = "steamlanguagegen"
-            implementationClass = "in.dragonbra.steamlanguagegen.SteamLanguageGenPlugin"
+            implementationClass = "in.dragonbra.generators.steamlanguage.SteamLanguageGenPlugin"
         }
         create("projectversiongen") {
             id = "projectversiongen"

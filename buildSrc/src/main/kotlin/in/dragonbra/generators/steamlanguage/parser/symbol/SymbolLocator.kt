@@ -19,14 +19,14 @@ class SymbolLocator {
         )
 
         private fun findNode(tree: Node, symbol: String?): Node? =
-            tree.childNodes.stream().filter { child -> child.name.equals(symbol) }.findFirst().orElse(null)
+            tree.childNodes.stream().filter { child -> child.name == symbol }.findFirst().orElse(null)
 
         fun lookupSymbol(tree: Node, identifier: String, strongOnly: Boolean): Symbol {
             var ident: MatchResult? = IDENTIFIER_REGEX.matchEntire(identifier)
                 ?: throw IllegalArgumentException("Invalid identifier specified $identifier")
 
             if (identifier.contains(".")) {
-                val split = identifier.split("\\.")
+                val split = identifier.split(".")
 
                 if (split[0] == "ulong") {
                     when (split[1]) {

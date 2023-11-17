@@ -3,10 +3,10 @@ package `in`.dragonbra.generators.steamlanguage.parser.node
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.Symbol
 
 class PropNode(
-    val flags: String,
-    val flagsOpt: String? = null,
-    val type: Symbol,
-    val default: List<Symbol> = listOf(),
-    val obsolete: String? = null,
-    val emit: Boolean = true
+        var flags: String? = null,
+        var flagsOpt: String? = null,
+        var type: Symbol? = null,
+        var default: MutableList<Symbol> = mutableListOf(),
+        var obsolete: String? = null,
+        var emit: Boolean = true
 ) : Node()

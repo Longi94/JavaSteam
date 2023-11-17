@@ -17,7 +17,7 @@ import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
-abstract class JavaGen(
+class JavaGen(
     private var node: Node,
     private var `package`: String,
     private var destination: File,
@@ -110,8 +110,8 @@ abstract class JavaGen(
                 }
 
                 if (prop.type is StrongSymbol) {
-                    if (prop.type.clazz is EnumNode) {
-                        imports.add("in.dragonbra.javasteam.enums.${prop.type.clazz.name}")
+                    if ((prop.type as StrongSymbol).clazz is EnumNode) {
+                        imports.add("in.dragonbra.javasteam.enums.${(prop.type as StrongSymbol).clazz.name}")
                     }
                 }
             }
@@ -193,9 +193,9 @@ abstract class JavaGen(
         // TODO why null check
         @Suppress("SENSELESS_COMPARISON")
         if (parent != null) {
-            writer.writeln("public class $node.name implements $parent {")
+            writer.writeln("public class ${node.name} implements $parent {")
         } else {
-            writer.writeln("public class $node.name {")
+            writer.writeln("public class ${node.name} {")
         }
 
         writer.writeln()
@@ -265,7 +265,7 @@ abstract class JavaGen(
             writer.writeln()
         }
 
-        node.childNodes.forEach { child ->
+        for (child in node.childNodes) {
             val prop = child as PropNode
             var typeStr = getType(prop.type)
             val propName = prop.name
@@ -296,7 +296,7 @@ abstract class JavaGen(
                 }
 
                 if (prop.type is StrongSymbol) {
-                    val strongSymbol = prop.type
+                    val strongSymbol = prop.type as StrongSymbol
                     if (strongSymbol.clazz is EnumNode) {
                         ctor = "${strongSymbol.clazz.name}.from($ctor)"
                     }
@@ -306,7 +306,7 @@ abstract class JavaGen(
             if ("const" == prop.flags) {
                 writer.writeln("public static final $typeStr $propName = ${getType(prop.default[0])};")
                 writer.writeln()
-                return@forEach
+                continue
             }
 
             if ("steamidmarshal" == prop.flags && "long" == typeStr) {
@@ -317,7 +317,7 @@ abstract class JavaGen(
                 writer.writeln("private long $propName = $ctor;")
             } else {
                 if (!prop.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matches(prop.flagsOpt)
+                    NUMBER_PATTERN.matches(prop.flagsOpt!!)
                 ) {
                     typeStr += "[]"
                 }
@@ -343,7 +343,7 @@ abstract class JavaGen(
             writer.writeln("}")
         }
 
-        node.childNodes.forEach { child ->
+        for (child in node.childNodes) {
             val propNode = child as PropNode
             var typeStr = getType(propNode.type)
             val propName = propNode.name
@@ -353,7 +353,7 @@ abstract class JavaGen(
             }
 
             if ("const" == propNode.flags) {
-                return@forEach
+                continue
             }
 
             if (propNode.flags == "proto") {
@@ -386,7 +386,7 @@ abstract class JavaGen(
                 writer.writeln("}")
             } else {
                 if (!propNode.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matches(propNode.flagsOpt)
+                    NUMBER_PATTERN.matches(propNode.flagsOpt!!)
                 ) {
                     typeStr += "[]"
                 }
@@ -406,7 +406,7 @@ abstract class JavaGen(
     @Throws(IOException::class)
     private fun writeClassConstructor(node: ClassNode) {
         if (node.parent != null) {
-            writer.writeln("public $node.name() {")
+            writer.writeln("public ${node.name}() {")
             writer.writeln("    this.header = new ${getType(node.parent)}();")
             writer.writeln("    header.setMsg(getEMsg());")
             writer.writeln("}")
@@ -431,38 +431,38 @@ abstract class JavaGen(
         writer.writeln("BinaryWriter bw = new BinaryWriter(stream);")
         writer.writeln()
 
-        node.childNodes.forEach { child ->
+        for (child in node.childNodes) {
             val prop = child as PropNode
             val typeStr = getType(prop.type)
             val propName = prop.name
 
             if (skip.contains(propName)) {
-                return@forEach
+                continue
             }
 
             if (prop.flags == "protomask") {
                 writer.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
-                return@forEach
+                continue
             }
 
             if (prop.flags == "proto") {
                 writer.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
                 if (prop.flagsOpt != null) {
-                    writer.writeln("$prop.flagsOpt = ${propName}Buffer.length;")
-                    writer.writeln("bw.writeInt($prop.flagsOpt);")
+                    writer.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
+                    writer.writeln("bw.writeInt(${prop.flagsOpt});")
                 } else {
                     writer.writeln("bw.writeInt(${propName}Buffer.length);")
                 }
                 writer.writeln("bw.write(${propName}Buffer);")
-                return@forEach
+                continue
             }
 
             if (prop.flags == "const") {
-                return@forEach
+                continue
             }
 
             if (prop.type is StrongSymbol) {
-                val strongSymbol = prop.type
+                val strongSymbol = prop.type as StrongSymbol
                 if (strongSymbol.clazz is EnumNode) {
                     val enumType = getType(strongSymbol.clazz.type)
 
@@ -482,7 +482,7 @@ abstract class JavaGen(
                         }
                     }
 
-                    return@forEach
+                    continue
                 }
             }
 
@@ -494,7 +494,7 @@ abstract class JavaGen(
                 writer.writeln("bw.writeLong($propName);")
             } else {
                 var isArray = false
-                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt)) {
+                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt!!)) {
                     isArray = true
                 }
 
@@ -522,39 +522,39 @@ abstract class JavaGen(
         writer.writeln("BinaryReader br = new BinaryReader(stream);")
         writer.writeln()
 
-        node.childNodes.forEach { child ->
+        for (child in node.childNodes) {
             val prop = child as PropNode
             val typeStr = getType(prop.type)
             val propName = prop.name
 
             if (skip.contains(propName)) {
-                return@forEach
+                continue
             }
 
             if (prop.flags != null) {
                 if (prop.flags == "protomask") {
                     writer.writeln("$propName = MsgUtil.getMsg(br.readInt());")
-                    return@forEach
+                    continue
                 }
 
                 if (prop.flags == "proto") {
                     if (prop.flagsOpt != null) {
-                        writer.writeln("$prop.flagsOpt = br.readInt();")
-                        writer.writeln("byte[] ${propName}Buffer = br.readBytes($prop.flagsOpt);")
+                        writer.writeln("${prop.flagsOpt} = br.readInt();")
+                        writer.writeln("byte[] ${propName}Buffer = br.readBytes(${prop.flagsOpt});")
                     } else {
                         writer.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
                     }
                     writer.writeln("$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);")
-                    return@forEach
+                    continue
                 }
 
                 if (prop.flags == "const") {
-                    return@forEach
+                    continue
                 }
             }
 
             if (prop.type is StrongSymbol) {
-                val strongSymbol = prop.type
+                val strongSymbol = prop.type as StrongSymbol
                 if (strongSymbol.clazz is EnumNode) {
                     val enumType = getType((strongSymbol.clazz).type)
                     val className = strongSymbol.clazz.name
@@ -564,7 +564,7 @@ abstract class JavaGen(
                         "short" -> writer.writeln("$propName = ${className}.from(br.readShort());")
                         else -> writer.writeln("$propName = ${className}.from(br.readInt());")
                     }
-                    return@forEach
+                    continue
                 }
             }
 
@@ -576,7 +576,7 @@ abstract class JavaGen(
                 writer.writeln("$propName = br.readLong();")
             } else {
                 var isArray = false
-                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt)) {
+                if (!prop.flagsOpt.isNullOrEmpty() && NUMBER_PATTERN.matches(prop.flagsOpt!!)) {
                     isArray = true
                 }
 
@@ -605,7 +605,7 @@ abstract class JavaGen(
             flagEnums.add(node.name)
         }
 
-        writer.writeln("public enum $node.name {")
+        writer.writeln("public enum ${node.name} {")
         writer.writeln()
 
         writer.indent()
@@ -666,15 +666,13 @@ abstract class JavaGen(
 
     @Throws(IOException::class)
     private fun writeEnumProperties(node: EnumNode, type: String, flags: Boolean) {
-        val statics = ArrayList<PropNode>()
-
-        node.childNodes.forEach { child ->
+        val statics = mutableListOf<PropNode>()
+        for (child in node.childNodes) {
             val prop = child as PropNode
-
             if (prop.emit) {
                 if (prop.obsolete != null) {
                     // including obsolete items can introduce duplicates
-                    return@forEach
+                    continue
                     // writer.writeln("/**")
                     // writer.writeln(" * @deprecated $prop.obsolete")
                     // writer.writeln(" */")
@@ -684,47 +682,34 @@ abstract class JavaGen(
                 if (flags && !NUMBER_PATTERN.matches(getType(prop.default[0]))) {
                     statics.add(prop)
                 } else {
-                    val types: List<String> = prop.default.stream().map { symbol ->
-                        var temp = getType(symbol)
+                    val types = prop.default.map { symbol ->
+                        val temp = getType(symbol)
 
                         if (NUMBER_PATTERN.matches(temp)) {
                             when (type) {
-                                "long" -> {
-                                    if (temp.startsWith("-")) {
-                                        return "${temp}L"
-                                    }
-                                    return "${Long.parseUnsignedLong(temp)}L"
-                                }
-
-                                "byte" -> return "(byte) $temp"
-                                "short" -> return "(short) $temp"
-                                else -> {
-                                    if (temp.startsWith("-") || temp.contains("x")) {
-                                        return temp
-                                    }
-                                    return String.valueOf(Integer.parseUnsignedInt(temp))
-                                }
+                                "long" -> if (temp.startsWith("-")) "$temp L" else "${temp.toLong()} L"
+                                "byte" -> "(byte) $temp"
+                                "short" -> "(short) $temp"
+                                else -> if (temp.startsWith('-') || temp.contains('x')) temp else temp.toULong().toUInt().toString()
                             }
+                        } else {
+                            "$temp.code"
                         }
+                    }
 
-                        return "${temp}.code"
-                    }.collect(Collectors.toList())
+                    val value: String = types.joinToString(" | ")
 
-                    val value = String.join(" | ", types)
-
-                    writer.writeln("$prop.name($value),")
+                    writer.writeln("${prop.name}($value),\n")
                 }
             }
         }
 
-        writer.writeln()
-        writer.writeln ";"
+        writer.writeln(";")
         writer.writeln()
 
-        for (PropNode p : statics) {
-            List<String> defaults = p . _default . stream ().map({ defa -> return getType(defa) })
-                .collect(Collectors.toList())
-            writer.writeln "public static final EnumSet<${this.node.name}> $p.name = EnumSet.of(${String.join(", ", defaults)});"
+        statics.forEach { p ->
+            val defaults: List<String> = p.default.stream().map { defa -> getType(defa) }.collect(Collectors.toList())
+            writer.writeln("public static final EnumSet<${this.node.name}> ${p.name} = EnumSet.of(${defaults.joinToString(", ")});")
             writer.writeln()
         }
     }
@@ -757,7 +742,7 @@ abstract class JavaGen(
             return 0
         }
 
-        val sym: Symbol = prop.type
+        val sym: Symbol? = prop.type
 
         if (sym is WeakSymbol) {
             var key = sym.identifier
@@ -776,7 +761,7 @@ abstract class JavaGen(
                 val eNode = sym.clazz
 
                 return if (eNode.type is WeakSymbol) {
-                    WEAK_TYPES[eNode.type.identifier]!!.size
+                    WEAK_TYPES[(eNode.type as WeakSymbol).identifier]!!.size
                 } else {
                     WEAK_TYPES[DEFAULT_TYPE]!!.size
                 }
