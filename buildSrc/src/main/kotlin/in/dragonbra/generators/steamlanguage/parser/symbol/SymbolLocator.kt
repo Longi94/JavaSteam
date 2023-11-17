@@ -2,7 +2,6 @@ package `in`.dragonbra.generators.steamlanguage.parser.symbol
 
 import `in`.dragonbra.generators.steamlanguage.parser.node.Node
 
-
 class SymbolLocator {
     companion object {
         private val IDENTIFIER_REGEX = "(?<identifier>-?[a-zA-Z0-9_:.]*)".toRegex()
@@ -15,7 +14,7 @@ class SymbolLocator {
             "int" to "Integer",
             "uint" to "Long",
             "long" to "Long",
-            "ulong" to "Long",
+            "ulong" to "Long"
         )
 
         private fun findNode(tree: Node, symbol: String?): Node? =

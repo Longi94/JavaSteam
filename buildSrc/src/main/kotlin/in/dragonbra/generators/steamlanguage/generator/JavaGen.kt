@@ -1,13 +1,12 @@
 package `in`.dragonbra.generators.steamlanguage.generator
 
-
-import `in`.dragonbra.generators.steamlanguage.parser.node.Node
 import `in`.dragonbra.generators.steamlanguage.parser.node.ClassNode
 import `in`.dragonbra.generators.steamlanguage.parser.node.EnumNode
+import `in`.dragonbra.generators.steamlanguage.parser.node.Node
 import `in`.dragonbra.generators.steamlanguage.parser.node.PropNode
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.StrongSymbol
-import `in`.dragonbra.generators.steamlanguage.parser.symbol.WeakSymbol
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.Symbol
+import `in`.dragonbra.generators.steamlanguage.parser.symbol.WeakSymbol
 import java.io.Closeable
 import java.io.File
 import java.io.Flushable
@@ -133,7 +132,6 @@ class JavaGen(
 
                 writer?.writeln("import $imp;")
             }
-
         } else if (node is EnumNode) {
             if ("flags" == (node as EnumNode).flags) {
                 writer?.writeln("import java.util.EnumSet;")
@@ -257,7 +255,6 @@ class JavaGen(
 
     @Throws(IOException::class)
     private fun writeClassProperties(node: ClassNode) {
-
         if (node.parent != null) {
             val parentType = getType(node.parent)
             writer?.writeln("private $parentType header;")
@@ -330,7 +327,6 @@ class JavaGen(
 
     @Throws(IOException::class)
     private fun writeSetterGetter(node: ClassNode) {
-
         if (node.parent != null) {
             val parentType = getType(node.parent)
             writer?.writeln("public $parentType getHeader() {")
@@ -440,12 +436,12 @@ class JavaGen(
             }
 
             if (prop.flags == "protomask") {
-                writer?.writeln("bw.writeInt(MsgUtil.makeMsg(${propName}.code(), true));")
+                writer?.writeln("bw.writeInt(MsgUtil.makeMsg($propName.code(), true));")
                 continue
             }
 
             if (prop.flags == "proto") {
-                writer?.writeln("byte[] ${propName}Buffer = ${propName}.build().toByteArray();")
+                writer?.writeln("byte[] ${propName}Buffer = $propName.build().toByteArray();")
                 if (prop.flagsOpt != null) {
                     writer?.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
                     writer?.writeln("bw.writeInt(${prop.flagsOpt});")
@@ -467,17 +463,17 @@ class JavaGen(
 
                     if (flagEnums.contains(typeStr)) {
                         when (enumType) {
-                            "long" -> writer?.writeln("bw.writeLong(${typeStr}.code($propName));")
-                            "byte" -> writer?.writeln("bw.writeByte(${typeStr}.code($propName));")
-                            "short" -> writer?.writeln("bw.writeShort(${typeStr}.code($propName));")
-                            else -> writer?.writeln("bw.writeInt(${typeStr}.code($propName));")
+                            "long" -> writer?.writeln("bw.writeLong($typeStr.code($propName));")
+                            "byte" -> writer?.writeln("bw.writeByte($typeStr.code($propName));")
+                            "short" -> writer?.writeln("bw.writeShort($typeStr.code($propName));")
+                            else -> writer?.writeln("bw.writeInt($typeStr.code($propName));")
                         }
                     } else {
                         when (enumType) {
-                            "long" -> writer?.writeln("bw.writeLong(${propName}.code());")
-                            "byte" -> writer?.writeln("bw.writeByte(${propName}.code());")
-                            "short" -> writer?.writeln("bw.writeShort(${propName}.code());")
-                            else -> writer?.writeln("bw.writeInt(${propName}.code());")
+                            "long" -> writer?.writeln("bw.writeLong($propName.code());")
+                            "byte" -> writer?.writeln("bw.writeByte($propName.code());")
+                            "short" -> writer?.writeln("bw.writeShort($propName.code());")
+                            else -> writer?.writeln("bw.writeInt($propName.code());")
                         }
                     }
 
@@ -500,7 +496,7 @@ class JavaGen(
                 }
 
                 if (isArray) {
-                    writer?.writeln("bw.writeInt(${propName}.length);")
+                    writer?.writeln("bw.writeInt($propName.length);")
                     writer?.writeln("bw.write($propName);")
                 } else {
                     when (typeStr) {
@@ -545,7 +541,7 @@ class JavaGen(
                     } else {
                         writer?.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
                     }
-                    writer?.writeln("$propName = ${typeStr}.newBuilder().mergeFrom(${propName}Buffer);")
+                    writer?.writeln("$propName = $typeStr.newBuilder().mergeFrom(${propName}Buffer);")
                     continue
                 }
 
@@ -560,10 +556,10 @@ class JavaGen(
                     val enumType = getType((strongSymbol.clazz).type)
                     val className = strongSymbol.clazz.name
                     when (enumType) {
-                        "long" -> writer?.writeln("$propName = ${className}.from(br.readLong());")
-                        "byte" -> writer?.writeln("$propName = ${className}.from(br.readByte());")
-                        "short" -> writer?.writeln("$propName = ${className}.from(br.readShort());")
-                        else -> writer?.writeln("$propName = ${className}.from(br.readInt());")
+                        "long" -> writer?.writeln("$propName = $className.from(br.readLong());")
+                        "byte" -> writer?.writeln("$propName = $className.from(br.readByte());")
+                        "short" -> writer?.writeln("$propName = $className.from(br.readShort());")
+                        else -> writer?.writeln("$propName = $className.from(br.readInt());")
                     }
                     continue
                 }
@@ -688,20 +684,19 @@ class JavaGen(
                     val types = prop.default.map { symbol ->
                         val temp = getType(symbol)
 
-                        println()
-
                         if (NUMBER_PATTERN.matcher(temp).matches()) {
                             when (type) {
                                 "long" -> if (temp.startsWith("-")) "$temp L" else "${temp.toLong()} L"
                                 "byte" -> "(byte) $temp"
                                 "short" -> "(short) $temp"
                                 else ->
-                                    if (temp.startsWith('-') || temp.contains('x'))
-                                        temp else
+                                    if (temp.startsWith('-') || temp.contains('x')) {
+                                        temp
+                                    } else {
                                         temp.toLongOrNull()?.takeIf {
                                             it in Int.MIN_VALUE..Int.MAX_VALUE
                                         }?.toInt() ?: -1
-
+                                    }
                             }
                         } else {
                             "$temp.code"

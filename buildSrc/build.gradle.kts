@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-     groovy
+    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
 }
 
 version = "1.0.0"
@@ -12,9 +12,6 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
-    implementation(localGroovy())
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io:commons-io:2.14.0")

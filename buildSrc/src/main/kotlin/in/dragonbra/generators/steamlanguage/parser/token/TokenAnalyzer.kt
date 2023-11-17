@@ -3,10 +3,10 @@ package `in`.dragonbra.generators.steamlanguage.parser.token
 import `in`.dragonbra.generators.steamlanguage.parser.LanguageParser
 import `in`.dragonbra.generators.steamlanguage.parser.node.ClassNode
 import `in`.dragonbra.generators.steamlanguage.parser.node.EnumNode
-import org.apache.commons.io.IOUtils
 import `in`.dragonbra.generators.steamlanguage.parser.node.Node
 import `in`.dragonbra.generators.steamlanguage.parser.node.PropNode
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.SymbolLocator
+import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
@@ -33,7 +33,6 @@ class TokenAnalyzer {
 
                             newRoot.childNodes.forEach { child -> root.childNodes.add(child) }
                         }
-
                     }
 
                     "identifier" -> {
@@ -158,8 +157,9 @@ class TokenAnalyzer {
                         val value = tokens.poll()
                         pnode.default.add(SymbolLocator.lookupSymbol(root, value.value, false))
 
-                        if (optional(tokens, "operator", "|") != null)
+                        if (optional(tokens, "operator", "|") != null) {
                             continue
+                        }
 
                         expect(tokens, "terminator", ";")
                         break
@@ -174,8 +174,9 @@ class TokenAnalyzer {
 
                     val obsoleteReason = optional(tokens, "string")
 
-                    if (obsoleteReason != null)
+                    if (obsoleteReason != null) {
                         pnode.obsolete = obsoleteReason.value
+                    }
                 }
 
                 val removed = optional(tokens, "identifier", "removed")

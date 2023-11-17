@@ -1,9 +1,9 @@
 package `in`.dragonbra.generators.steamlanguage.parser
 
+import `in`.dragonbra.generators.steamlanguage.parser.token.Token
+import `in`.dragonbra.generators.steamlanguage.parser.token.TokenSourceInfo
 import java.util.ArrayDeque
 import java.util.Queue
-import `in`.dragonbra.generators.steamlanguage.parser.token.TokenSourceInfo
-import `in`.dragonbra.generators.steamlanguage.parser.token.Token
 import java.util.regex.Pattern
 
 class LanguageParser {

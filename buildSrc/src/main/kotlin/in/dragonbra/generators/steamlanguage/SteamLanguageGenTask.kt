@@ -41,6 +41,7 @@ open class SteamLanguageGenTask : DefaultTask() {
 
         FileUtils.deleteDirectory(outputDir)
 
+        println("Steam Language Gen: ${enums.size} enums to process")
         enums.forEach { enum ->
             JavaGen(
                 node = enum,
@@ -54,6 +55,7 @@ open class SteamLanguageGenTask : DefaultTask() {
             }
         }
 
+        println("Steam Language Gen: ${classes.size} classes to process")
         classes.forEach { clazz ->
             JavaGen(
                 node = clazz,
