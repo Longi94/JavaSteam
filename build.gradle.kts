@@ -125,7 +125,7 @@ publishing {
             pom {
                 name = "JavaSteam"
                 packaging = "jar"
-                description = "Java library to interact with Valve\"s Steam network."
+                description = "Java library to interact with Valve's Steam network."
                 url = "https://github.com/Longi94/JavaSteam"
                 inceptionYear = "2018"
                 scm {
