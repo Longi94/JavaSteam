@@ -7,6 +7,7 @@ import `in`.dragonbra.generators.steamlanguage.parser.node.PropNode
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.StrongSymbol
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.Symbol
 import `in`.dragonbra.generators.steamlanguage.parser.symbol.WeakSymbol
+import `in`.dragonbra.generators.util.JavaFileWriter
 import java.io.Closeable
 import java.io.File
 import java.io.Flushable
@@ -530,7 +531,7 @@ class JavaGen(
         writer?.indent()
         writer?.writeln("BinaryReader br = new BinaryReader(stream);")
 
-        if(node.childNodes.isNotEmpty()) {
+        if (node.childNodes.isNotEmpty()) {
             writer?.writeln()
         }
 

@@ -1,4 +1,4 @@
-package `in`.dragonbra.generators.steamlanguage.generator
+package `in`.dragonbra.generators.util
 
 import java.io.File
 import java.io.FileWriter
