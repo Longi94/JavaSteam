@@ -799,8 +799,9 @@ class JavaGen(
         return 0
     }
 
-    private fun capitalize(string: String): String =
-        string.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+    private fun capitalize(string: String): String = string.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+    }
 
     @Throws(IOException::class)
     override fun close() {
