@@ -7,14 +7,14 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.protobuf.gradle)
     id("jacoco")
-    id("projectversiongen")
     id("signing")
-    id("steamlanguagegen")
+    projectversiongen
+    steamlanguagegen
 }
 
 allprojects {
     group = "in.dragonbra"
-    version = "1.3.0"
+    version = "1.4.0-SNAPSHOT"
 }
 
 repositories {

@@ -296,7 +296,7 @@ public class WebAPI {
         }
 
         Request.Builder builder = new Request.Builder();
-        builder.header("User-Agent", "JavaSteam-" + Versions.VERSION);
+        builder.header("User-Agent", "JavaSteam-" + Versions.getVersion());
 
         HttpUrl.Builder urlBuilder = baseAddress.newBuilder()
                 .addPathSegment(_interface)

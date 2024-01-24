@@ -2,6 +2,7 @@
 # Java / Kotlin versions
 java = "1.8"
 kotlin = "1.9.10" # https://kotlinlang.org/docs/releases.html#release-details
+ktlint = "11.6.1"
 
 # Standard Library versions
 bouncyCastle = "1.70" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
@@ -47,10 +48,11 @@ test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockit
 test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockitoVersion" }
 
 [plugins]
+kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-lint = { id = "org.jlleitschuh.gradle.ktlint", version.ref ="ktlint" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
-kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
 
 [bundles]
 testing = [

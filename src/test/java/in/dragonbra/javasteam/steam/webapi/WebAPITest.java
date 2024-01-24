@@ -67,7 +67,7 @@ public class WebAPITest extends TestBase {
 
         RecordedRequest request = server.takeRequest();
 
-        assertEquals("JavaSteam-" + Versions.VERSION, request.getHeaders().get("User-Agent"));
+        assertEquals("JavaSteam-" + Versions.getVersion(), request.getHeaders().get("User-Agent"));
     }
 
     @Test
