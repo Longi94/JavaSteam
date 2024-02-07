@@ -1,7 +1,7 @@
 package `in`.dragonbra.generators.versions.generator
 
-import com.sun.xml.internal.ws.Closeable
 import `in`.dragonbra.generators.util.JavaFileWriter
+import java.io.Closeable
 import java.io.File
 import java.io.Flushable
 import java.io.IOException
