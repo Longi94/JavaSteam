@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.types.JobID;
 /**
  * Represents a unified interface into client messages.
  */
+@SuppressWarnings("unused")
 public interface IClientGCMsg {
 
     /**

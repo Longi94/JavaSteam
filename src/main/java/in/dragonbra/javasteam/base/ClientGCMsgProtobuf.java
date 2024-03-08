@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
  *
  * @param <BodyType> The body type of this message.
  */
+@SuppressWarnings("unused")
 public class ClientGCMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyType>> extends GCMsgBase<MsgGCHdrProtoBuf> {
 
     private static final Logger logger = LogManager.getLogger(ClientGCMsgProtobuf.class);

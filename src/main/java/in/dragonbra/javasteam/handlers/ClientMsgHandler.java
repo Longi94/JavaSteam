@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 /**
  * This class implements the base requirements every message handler should inherit from.
  */
+@SuppressWarnings("unused")
 public abstract class ClientMsgHandler {
 
     protected SteamClient client;
@@ -33,6 +34,7 @@ public abstract class ClientMsgHandler {
      *
      * @param expectDisconnection whether or not the related {@link SteamClient} should imminently expect the server to close the connection.
      */
+    @SuppressWarnings("SameParameterValue")
     protected void setExpectDisconnection(boolean expectDisconnection) {
         client.setExpectDisconnection(expectDisconnection);
     }

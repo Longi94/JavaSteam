@@ -559,6 +559,7 @@ public class UdpConnection extends Connection {
                         receivePacket(udpPacket);
                         try {
                             sock.receive(packet);
+                            //noinspection DataFlowIssue
                             received = true;
                         } catch (SocketTimeoutException e) {
                             received = false;

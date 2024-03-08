@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.types.SteamID;
 /**
  * Represents a unified interface into client messages.
  */
+@SuppressWarnings("unused")
 public interface IClientMsg {
 
     /**

@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.util.log.Logger;
  * This is the abstract base class for all available client messages.
  * It's used to maintain packet payloads and provide a header for all client messages.
  */
+@SuppressWarnings("unused")
 public abstract class MsgBase<HdrType extends ISteamSerializable> extends AbstractMsgBase implements IClientMsg {
 
     private static final Logger logger = LogManager.getLogger(MsgBase.class);

@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.util.log.Logger;
  *
  * @param <HdrType> The header type for this gc message.
  */
+@SuppressWarnings("unused")
 public abstract class GCMsgBase<HdrType extends IGCSerializableHeader> extends AbstractMsgBase implements IClientGCMsg {
 
     private static final Logger logger = LogManager.getLogger(MsgBase.class);
