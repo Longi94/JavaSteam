@@ -16,7 +16,6 @@ import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.*;
 import in.dragonbra.javasteam.types.AsyncJobMultiple;
 import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;

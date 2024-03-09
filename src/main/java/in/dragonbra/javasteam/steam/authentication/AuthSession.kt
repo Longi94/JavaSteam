@@ -104,7 +104,7 @@ open class AuthSession(
         if (preferredConfirmation == null ||
             preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown
         ) {
-            throw IllegalStateException("There are no allowed confirmations");
+            throw IllegalStateException("There are no allowed confirmations")
         }
 
         // If an authenticator is provided and the device confirmation is available, allow consumers to choose whether they want to
@@ -112,7 +112,9 @@ open class AuthSession(
         if (authenticator != null &&
             preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation
         ) {
-            val prefersToPollForConfirmation = authenticator!!.acceptDeviceConfirmation().get()
+            val prefersToPollForConfirmation = withContext(Dispatchers.IO) {
+                authenticator!!.acceptDeviceConfirmation().get()
+            }
 
             if (!prefersToPollForConfirmation) {
                 if (allowedConfirmations.size <= 1) {
@@ -156,10 +158,17 @@ open class AuthSession(
                     try {
                         val task = when (preferredConfirmation.confirmationType) {
                             EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode ->
-                                authenticator!!.getEmailCode(preferredConfirmation.associatedMessage, previousCodeWasIncorrect).get()
+                                withContext(Dispatchers.IO) {
+                                    authenticator!!.getEmailCode(
+                                        preferredConfirmation.associatedMessage,
+                                        previousCodeWasIncorrect
+                                    ).get()
+                                }
 
                             EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode ->
-                                authenticator!!.getDeviceCode(previousCodeWasIncorrect).get()
+                                withContext(Dispatchers.IO) {
+                                    authenticator!!.getDeviceCode(previousCodeWasIncorrect).get()
+                                }
 
                             else -> throw NotImplementedError()
                         }

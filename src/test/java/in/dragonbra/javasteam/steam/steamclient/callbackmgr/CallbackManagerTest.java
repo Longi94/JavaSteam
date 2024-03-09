@@ -52,7 +52,7 @@ public class CallbackManagerTest extends TestBase {
         final boolean[] didCall = {false};
 
         Consumer<CallbackMsg> action = cb -> {
-            assertTrue(cb instanceof CallbackForTest);
+            assertInstanceOf(CallbackForTest.class, cb);
             CallbackForTest cft = (CallbackForTest) cb;
             assertEquals(callback.getUuid(), cft.getUuid());
             didCall[0] = true;

@@ -132,7 +132,7 @@ public class SmartCMServerList {
             markServerCore(serverInfo, quality);
         }
 
-        return serverInfos.size() > 0;
+        return !serverInfos.isEmpty();
     }
 
     private void markServerCore(ServerInfo serverInfo, ServerQuality quality) {
