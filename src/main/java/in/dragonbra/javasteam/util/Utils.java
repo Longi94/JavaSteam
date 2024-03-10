@@ -116,9 +116,14 @@ public class Utils {
             if (SystemUtils.IS_OS_MAC_OSX_BIG_SUR) {
                 return EOSType.MacOS11;
             }
-            // TODO: Apache Commons missing: macOS Monterey
-            // TODO: Apache Commons missing: macOS Ventura
-            // Mac OS Unknown
+            if (SystemUtils.IS_OS_MAC_OSX_MONTEREY) {
+                return EOSType.MacOS12;
+            }
+            if (SystemUtils.IS_OS_MAC_OSX_VENTURA) {
+                return EOSType.MacOS13;
+            }
+            // Missing: Sonoma
+            // macOS Unknown
             return EOSType.MacOSUnknown;
         }
         // Android
