@@ -23,7 +23,7 @@ import pro.leaco.console.qrcode.ConsoleQrcode;
 
 import java.util.concurrent.CancellationException;
 
-// TODO: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
+// NOTE: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
 //  CM will kick you in 60 seconds if you don't auth.
 //  Steam client also has this issue, but it will reconnect and just continue polling.
 
