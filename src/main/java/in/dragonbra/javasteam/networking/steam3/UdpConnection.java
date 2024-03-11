@@ -593,9 +593,7 @@ public class UdpConnection extends Connection {
                 }
             }
 
-            if (sock != null) {
-                sock.close();
-            }
+            sock.close();
 
             logger.debug("Calling onDisconnected");
             onDisconnected(userRequestDisconnect);

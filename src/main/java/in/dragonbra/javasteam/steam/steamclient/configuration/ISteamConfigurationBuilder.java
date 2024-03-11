@@ -12,6 +12,7 @@ import java.util.EnumSet;
  * Interface to configure a {@link SteamConfiguration} before it is created.
  * A reference to the underlying object should not be live beyond the configurator function's scope.
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface ISteamConfigurationBuilder {
 
     /**

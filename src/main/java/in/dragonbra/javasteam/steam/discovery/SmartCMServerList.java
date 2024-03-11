@@ -13,6 +13,7 @@ import java.util.*;
 /**
  * Smart list of CM servers.
  */
+@SuppressWarnings("unused")
 public class SmartCMServerList {
 
     private static final Logger logger = LogManager.getLogger(SmartCMServerList.class);

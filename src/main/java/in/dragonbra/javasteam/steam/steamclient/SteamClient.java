@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Represents a single client that connects to the Steam3 network.
  * This class is also responsible for handling the registration of client message handlers and callbacks.
  */
+@SuppressWarnings("unused")
 public class SteamClient extends CMClient {
 
     private static final Logger logger = LogManager.getLogger(SteamClient.class);

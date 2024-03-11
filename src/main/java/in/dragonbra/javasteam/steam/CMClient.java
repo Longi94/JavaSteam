@@ -42,6 +42,7 @@ import java.util.zip.GZIPInputStream;
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
  * the {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} class.
  */
+@SuppressWarnings("unused")
 public abstract class CMClient {
 
     private static final Logger logger = LogManager.getLogger(CMClient.class);
@@ -384,7 +385,7 @@ public abstract class CMClient {
 
     private void handleLogOnResponse(IPacketMsg packetMsg) {
         if (!packetMsg.isProto()) {
-            // a non proto ClientLogonResponse can come in as a result of connecting but never sending a ClientLogon
+            // a non-proto ClientLogonResponse can come in as a result of connecting but never sending a ClientLogon
             // in this case, it always fails, so we don't need to do anything special here
             logger.debug("Got non-proto logon response, this is indicative of no logon attempt after connecting.");
             return;
