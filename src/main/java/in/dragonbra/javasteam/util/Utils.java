@@ -3,6 +3,8 @@ package in.dragonbra.javasteam.util;
 import in.dragonbra.javasteam.enums.EOSType;
 import org.apache.commons.lang3.SystemUtils;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -14,199 +16,136 @@ public class Utils {
 
     private static final String JAVA_RUNTIME = getSystemProperty("java.runtime.name");
 
+    private static final Map<Boolean, EOSType> WIN_OS_MAP = new LinkedHashMap<>();
+
+    private static final Map<Boolean, EOSType> OSX_OS_MAP = new LinkedHashMap<>();
+
+    private static final Map<String, EOSType> LINUX_OS_MAP = new LinkedHashMap<>();
+
+    private static final Map<String, EOSType> GENERIC_LINUX_OS_MAP = new LinkedHashMap<>();
+
+    static {
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_95, EOSType.Win95);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_98, EOSType.Win98);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_ME, EOSType.WinME);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_NT, EOSType.WinNT);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_2000, EOSType.Win2000);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_XP, EOSType.WinXP);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_VISTA, EOSType.WinVista);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_7, EOSType.Windows7);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_8, EOSType.Windows8);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_10, EOSType.Windows10);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_11, EOSType.Win11);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_2003, EOSType.Win2003);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_2008, EOSType.Win2008);
+        WIN_OS_MAP.put(SystemUtils.IS_OS_WINDOWS_2012, EOSType.Win2012);
+        WIN_OS_MAP.put(checkOS("Windows Server 2016", "10.0"), EOSType.Win2016);
+        WIN_OS_MAP.put(checkOS("Windows Server 2019", "10.0"), EOSType.Win2019);
+        WIN_OS_MAP.put(checkOS("Windows Server 2022", "10.0"), EOSType.Win2022);
+
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_TIGER, EOSType.MacOS104);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_LEOPARD, EOSType.MacOS105);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_SNOW_LEOPARD, EOSType.MacOS106);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_LION, EOSType.MacOS107);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_MOUNTAIN_LION, EOSType.MacOS108);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_MAVERICKS, EOSType.MacOS109);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_YOSEMITE, EOSType.MacOS1010);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_EL_CAPITAN, EOSType.MacOS1011);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_SIERRA, EOSType.MacOS1012);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_HIGH_SIERRA, EOSType.Macos1013);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_MOJAVE, EOSType.Macos1014);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_CATALINA, EOSType.Macos1015);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_BIG_SUR, EOSType.MacOS11);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_MONTEREY, EOSType.MacOS12);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_VENTURA, EOSType.MacOS13);
+        OSX_OS_MAP.put(checkOS("Mac OS X", "14"), EOSType.MacOS14);
+
+        LINUX_OS_MAP.put("2.2", EOSType.Linux22);
+        LINUX_OS_MAP.put("2.4", EOSType.Linux24);
+        LINUX_OS_MAP.put("2.6", EOSType.Linux26);
+        LINUX_OS_MAP.put("3.2", EOSType.Linux32);
+        LINUX_OS_MAP.put("3.5", EOSType.Linux35);
+        LINUX_OS_MAP.put("3.6", EOSType.Linux36);
+        LINUX_OS_MAP.put("3.10", EOSType.Linux310);
+        LINUX_OS_MAP.put("3.16", EOSType.Linux316);
+        LINUX_OS_MAP.put("3.18", EOSType.Linux318);
+        LINUX_OS_MAP.put("4.1", EOSType.Linux41);
+        LINUX_OS_MAP.put("4.4", EOSType.Linux44);
+        LINUX_OS_MAP.put("4.9", EOSType.Linux49);
+        LINUX_OS_MAP.put("4.14", EOSType.Linux414);
+        LINUX_OS_MAP.put("4.19", EOSType.Linux419);
+        LINUX_OS_MAP.put("5.4", EOSType.Linux54);
+        LINUX_OS_MAP.put("5.10", EOSType.Linux510);
+
+        GENERIC_LINUX_OS_MAP.put("3x", EOSType.Linux3x);
+        GENERIC_LINUX_OS_MAP.put("4x", EOSType.Linux4x);
+        GENERIC_LINUX_OS_MAP.put("5x", EOSType.Linux5x);
+        GENERIC_LINUX_OS_MAP.put("6x", EOSType.Linux6x);
+        GENERIC_LINUX_OS_MAP.put("7x", EOSType.Linux7x);
+    }
+
     // Sorted in history order by each OS release.
     public static EOSType getOSType() {
         // Windows
         if (SystemUtils.IS_OS_WINDOWS) {
-            // Windows 9x
-            if (SystemUtils.IS_OS_WINDOWS_95) {
-                return EOSType.Win95;
+            for (Map.Entry<Boolean, EOSType> winEntry : WIN_OS_MAP.entrySet()) {
+                if (winEntry.getKey()) {
+                    return winEntry.getValue();
+                }
             }
-            if (SystemUtils.IS_OS_WINDOWS_98) {
-                return EOSType.Win98;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_ME) {
-                return EOSType.WinME;
-            }
-            // Windows NT
-            if (SystemUtils.IS_OS_WINDOWS_NT) {
-                return EOSType.WinNT;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_2000) {
-                return EOSType.Win2000;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_XP) {
-                return EOSType.WinXP;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_VISTA) {
-                return EOSType.WinVista;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_7) {
-                return EOSType.Windows7;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_8) {
-                return EOSType.Windows8;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_10) {
-                return EOSType.Windows10;
-            }
-            if (checkOS("Windows 11", "10.0")) {
-                return EOSType.Win11;
-            }
-            // Windows Server
-            if (SystemUtils.IS_OS_WINDOWS_2003) {
-                return EOSType.Win2003;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_2008) {
-                return EOSType.Win2008;
-            }
-            if (SystemUtils.IS_OS_WINDOWS_2012) {
-                return EOSType.Win2012;
-            }
-            if (checkOS("Windows Server 2016", "10.0")) {
-                return EOSType.Win2016;
-            }
-            if (checkOS("Windows Server 2019", "10.0")) {
-                return EOSType.Win2019;
-            }
-            if (checkOS("Windows Server 2022", "10.0")) {
-                return EOSType.Win2022;
-            }
-            // Windows Unknown
+
             return EOSType.WinUnknown;
         }
+
         // Mac OS
         if (SystemUtils.IS_OS_MAC) {
-            if (SystemUtils.IS_OS_MAC_OSX_TIGER) {
-                return EOSType.MacOS104;
+            for (Map.Entry<Boolean, EOSType> osxEntry : OSX_OS_MAP.entrySet()) {
+                if (osxEntry.getKey()) {
+                    return osxEntry.getValue();
+                }
             }
-            if (SystemUtils.IS_OS_MAC_OSX_LEOPARD) {
-                return EOSType.MacOS105;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_SNOW_LEOPARD) {
-                return EOSType.MacOS106;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_LION) {
-                return EOSType.MacOS107;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_MOUNTAIN_LION) {
-                return EOSType.MacOS108;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_MAVERICKS) {
-                return EOSType.MacOS109;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_YOSEMITE) {
-                return EOSType.MacOS1010;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_EL_CAPITAN) {
-                return EOSType.MacOS1011;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_SIERRA) {
-                return EOSType.MacOS1012;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_HIGH_SIERRA) {
-                return EOSType.Macos1013;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_MOJAVE) {
-                return EOSType.Macos1014;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_CATALINA) {
-                return EOSType.Macos1015;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_BIG_SUR) {
-                return EOSType.MacOS11;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_MONTEREY) {
-                return EOSType.MacOS12;
-            }
-            if (SystemUtils.IS_OS_MAC_OSX_VENTURA) {
-                return EOSType.MacOS13;
-            }
-            // Missing: Sonoma
-            // macOS Unknown
+
             return EOSType.MacOSUnknown;
         }
+
         // Android
         if (JAVA_RUNTIME != null && JAVA_RUNTIME.startsWith("Android")) {
             return EOSType.AndroidUnknown;
         }
+
         // Linux
         if (SystemUtils.IS_OS_LINUX) {
             String linuxOsVersion = getSystemProperty("os.version");
-            String[] osVersion;
 
             if (linuxOsVersion == null) {
-                return EOSType.Unknown;
+                return EOSType.LinuxUnknown;
             }
 
-            osVersion = linuxOsVersion.split("\\.");
+            String[] osVersion = linuxOsVersion.split("\\.");
 
-            // Major
-            switch (osVersion[0]) {
-                case "2":
-                    // Minor
-                    switch (osVersion[1]) {
-                        case "2":
-                            return EOSType.Linux22;
-                        case "4":
-                            return EOSType.Linux24;
-                        case "6":
-                            return EOSType.Linux26;
-                        default:
-                            return EOSType.LinuxUnknown;
-                    }
-                case "3":
-                    // Minor
-                    switch (osVersion[1]) {
-                        case "2":
-                            return EOSType.Linux32;
-                        case "5":
-                            return EOSType.Linux35;
-                        case "6":
-                            return EOSType.Linux36;
-                        case "10":
-                            return EOSType.Linux310;
-                        case "16":
-                            return EOSType.Linux316;
-                        case "18":
-                            return EOSType.Linux318;
-                        default:
-                            return EOSType.Linux3x;
-                    }
-                case "4":
-                    // Minor
-                    switch (osVersion[1]) {
-                        case "1":
-                            return EOSType.Linux41;
-                        case "4":
-                            return EOSType.Linux44;
-                        case "9":
-                            return EOSType.Linux49;
-                        case "14":
-                            return EOSType.Linux414;
-                        case "19":
-                            return EOSType.Linux419;
-                        default:
-                            return EOSType.Linux4x;
-                    }
-                case "5":
-                    // Minor
-                    switch (osVersion[1]) {
-                        case "4":
-                            return EOSType.Linux54;
-                        case "10":
-                            return EOSType.Linux510;
-                        default:
-                            return EOSType.Linux5x;
-                    }
-                case "6":
-                    return EOSType.Linux6x;
-                case "7":
-                    return EOSType.Linux7x;
-                default:
-                    return EOSType.LinuxUnknown;
+            if (osVersion.length < 2) {
+                return EOSType.LinuxUnknown;
             }
+
+            String version = osVersion[0] + "." + osVersion[1];
+
+            EOSType linuxVersion = LINUX_OS_MAP.get(version);
+            if (linuxVersion != null) {
+                // Found Major/Minor version
+                return linuxVersion;
+            }
+
+            String majorVersion = osVersion[0] + "x";
+            for (Map.Entry<String, EOSType> linuxEntry : GENERIC_LINUX_OS_MAP.entrySet()) {
+                if (linuxEntry.getKey().equals(majorVersion)) {
+                    // Found generic Linux version
+                    return linuxEntry.getValue();
+                }
+            }
+
+            return EOSType.LinuxUnknown;
         }
+
         // Unknown OS
         return EOSType.Unknown;
     }

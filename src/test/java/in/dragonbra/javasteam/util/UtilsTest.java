@@ -10,6 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class UtilsTest {
 
+    // Note: We can only set the "os.name" once, but "os.version" can be changed on the fly.
+    // This breaks testing for EOSTypes.
+    // If you create an EOSType test and run it individually after setting the properties above, it passes.
+
     @Test
     public void crc32() {
         long result = Utils.crc32("test_string");
