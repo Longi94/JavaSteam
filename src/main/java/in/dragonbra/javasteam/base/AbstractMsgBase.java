@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 /**
  * This class provides a payload backing to client messages.
  */
+@SuppressWarnings("unused")
 public abstract class AbstractMsgBase {
 
     protected MemoryStream payload;

@@ -489,7 +489,7 @@ public class SteamFriends extends ClientMsgHandler {
 
         client.send(ignore);
 
-        return new AsyncJobSingle<IgnoreFriendCallback>( this.client, ignore.getSourceJobID() );
+        return new AsyncJobSingle<>(this.client, ignore.getSourceJobID());
     }
 
     /**

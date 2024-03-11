@@ -21,7 +21,7 @@ class WebSocketCMClient extends WebSocketClient {
     }
 
     @Override
-    public void onOpen(ServerHandshake handshakedata) {
+    public void onOpen(ServerHandshake handshakeData) {
         if (listener != null) {
             listener.onOpen();
         }

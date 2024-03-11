@@ -30,7 +30,9 @@ public class SteamDirectoryTest extends TestBase {
                 WebAPITest.class.getClassLoader().getResource("testresponses/GetCMList.vdf"),
                 StandardCharsets.UTF_8
         );
-        server.enqueue(new MockResponse().setBody(resource));
+
+        MockResponse resp = new MockResponse().newBuilder().body(resource).build();
+        server.enqueue(resp);
 
         server.start();
 

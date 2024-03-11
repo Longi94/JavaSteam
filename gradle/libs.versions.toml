@@ -1,32 +1,32 @@
 [versions]
 # Java / Kotlin versions
 java = "1.8"
-kotlin = "1.9.10" # https://kotlinlang.org/docs/releases.html#release-details
-ktlint = "11.6.1"
+kotlin = "1.9.20" # https://kotlinlang.org/docs/releases.html#release-details || https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
+ktlint = "12.1.0" # https://github.com/JLLeitschuh/ktlint-gradle/releases
 
 # Standard Library versions
-bouncyCastle = "1.70" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on
-commons-io = "2.14.0" # https://mvnrepository.com/artifact/commons-io/commons-io
-commons-lang3 = "3.13.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-validator = "1.7" # https://mvnrepository.com/artifact/commons-validator/commons-validator
+bouncyCastle = "1.77" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
+commons-io = "2.15.1" # https://mvnrepository.com/artifact/commons-io/commons-io
+commons-lang3 = "3.14.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+commons-validator = "1.8.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
 gson = "2.10.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
 jacoco = "0.8.11" # https://www.eclemma.org/jacoco
-javaWebSocket = "1.5.4" # https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
-kotlin-coroutines = "1.7.3" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-okHttp = "5.0.0-alpha.11" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-protobuf = "3.23.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+javaWebSocket = "1.5.6" # https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
+kotlin-coroutines = "1.8.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+okHttp = "5.0.0-alpha.12" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+protobuf = "3.25.3" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 publishPlugin = "1.1.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
 qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
 
 # Testing Lib versions
-commonsCodec = "1.16.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
-jupiterVersion = "5.10.0" # https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-mockWebServer = "5.0.0-alpha.11" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
+commonsCodec = "1.16.1" # https://mvnrepository.com/artifact/commons-codec/commons-codec
+junit5 = "5.10.2" # https://mvnrepository.com/artifact/org.junit/junit-bom
+mockWebServer = "5.0.0-alpha.12" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
 mockitoVersion = "4.11.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
 
 [libraries]
-bouncyCastle = { module = "org.bouncycastle:bcprov-jdk15on", version.ref = "bouncyCastle" }
+bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 commons-validator = { module = "commons-validator:commons-validator", version.ref = "commons-validator" }
@@ -40,9 +40,9 @@ qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 webSocket = { module = "org.java-websocket:Java-WebSocket", version.ref = "javaWebSocket" }
 
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
-test-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "jupiterVersion" }
-test-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "jupiterVersion" }
-test-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "jupiterVersion" }
+test-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
+test-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit5" }
+test-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit5" }
 test-mock-webserver3 = { module = "com.squareup.okhttp3:mockwebserver3-junit5", version.ref = "mockWebServer" }
 test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoVersion" }
 test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockitoVersion" }
@@ -50,7 +50,7 @@ test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.r
 [plugins]
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-lint = { id = "org.jlleitschuh.gradle.ktlint", version.ref ="ktlint" }
+kotlin-lint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
 
@@ -61,7 +61,7 @@ testing = [
     "test-jupiter-api",
     "test-jupiter-engine",
     "test-jupiter-params",
+    "test-mock-webserver3",
     "test-mockito-core",
     "test-mockito-jupiter",
-    "test-mock-webserver3"
 ]

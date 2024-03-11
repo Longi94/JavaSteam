@@ -66,7 +66,7 @@ public class SteamConfigurationTest {
 
     @Test
     public void serverListProviderIsNothingFancy() {
-        assertTrue(defaultConfig.getServerListProvider() instanceof MemoryServerListProvider);
+        assertInstanceOf(MemoryServerListProvider.class, defaultConfig.getServerListProvider());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class SteamConfigurationTest {
 
     @Test
     public void serverListProviderConfigured() {
-        assertTrue(modifiedConfig.getServerListProvider() instanceof CustomServerListProvider);
+        assertInstanceOf(CustomServerListProvider.class, modifiedConfig.getServerListProvider());
     }
 
     @Test

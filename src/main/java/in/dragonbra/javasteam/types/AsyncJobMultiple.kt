@@ -1,4 +1,4 @@
-package `in`.dragonbra.javasteam.types;
+package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
@@ -10,7 +10,7 @@ import java.util.*
  * @author Lossy
  * @since 2023-03-17
  */
-class AsyncJobMultiple<T : CallbackMsg> constructor(
+class AsyncJobMultiple<T : CallbackMsg>(
     client: SteamClient,
     jobId: JobID,
     private val finishCondition: (T) -> Boolean?

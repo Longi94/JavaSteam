@@ -22,11 +22,7 @@ public class LogManager {
      * @return the logger instance.
      */
     public static Logger getLogger(Class<?> clazz) {
-        Logger logger = LOGGERS.get(clazz);
-        if (logger == null) {
-            logger = new Logger(clazz);
-            LOGGERS.put(clazz, logger);
-        }
+        Logger logger = LOGGERS.computeIfAbsent(clazz, k -> new Logger(clazz));
         return logger;
     }
 

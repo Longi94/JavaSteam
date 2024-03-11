@@ -41,12 +41,15 @@ public class WebAPITest extends TestBase {
         lock = new CountDownLatch(1);
         server = new MockWebServer();
 
-        server.enqueue(new MockResponse().setBody("" +
-                "\"root\"" +
-                "{" +
-                "    \"name\" \"stringvalue\"" +
-                "}"));
+        MockResponse resp = new MockResponse().newBuilder().body("" +
+                        "\"root\"" +
+                        "{" +
+                        "    \"name\" \"stringvalue\"" +
+                        "}"
+                )
+                .build();
 
+        server.enqueue(resp);
         server.start();
 
         baseUrl = server.url("/");

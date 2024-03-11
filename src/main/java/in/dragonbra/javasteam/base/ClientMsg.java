@@ -17,6 +17,7 @@ import java.io.IOException;
  *
  * @param <BodyType> The body type of this message.
  */
+@SuppressWarnings("unused")
 public class ClientMsg<BodyType extends ISteamSerializableMessage> extends MsgBase<ExtendedClientMsgHdr> {
 
     private static final Logger logger = LogManager.getLogger(ClientMsg.class);

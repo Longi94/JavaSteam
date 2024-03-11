@@ -13,6 +13,7 @@ import java.util.*;
 /**
  * Smart list of CM servers.
  */
+@SuppressWarnings("unused")
 public class SmartCMServerList {
 
     private static final Logger logger = LogManager.getLogger(SmartCMServerList.class);
@@ -132,7 +133,7 @@ public class SmartCMServerList {
             markServerCore(serverInfo, quality);
         }
 
-        return serverInfos.size() > 0;
+        return !serverInfos.isEmpty();
     }
 
     private void markServerCore(ServerInfo serverInfo, ServerQuality quality) {

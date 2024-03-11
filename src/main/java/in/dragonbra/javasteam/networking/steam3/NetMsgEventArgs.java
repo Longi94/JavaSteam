@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
  * @author lngtr
  * @since 2018-02-20
  */
+@SuppressWarnings("unused")
 public class NetMsgEventArgs extends EventArgs {
 
     private final byte[] data;

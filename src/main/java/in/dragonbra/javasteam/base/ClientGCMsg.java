@@ -15,6 +15,7 @@ import java.io.IOException;
  *
  * @param <BodyType> The body type of this message.
  */
+@SuppressWarnings("unused")
 public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgBase<MsgGCHdr> {
 
     private static final Logger logger = LogManager.getLogger(ClientGCMsg.class);

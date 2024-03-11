@@ -5,6 +5,7 @@ import in.dragonbra.javasteam.util.compat.Consumer;
 
 import java.io.Closeable;
 
+@SuppressWarnings("unused")
 public class Callback<TCall extends ICallbackMsg> extends CallbackBase implements Closeable {
 
     ICallbackMgrInternals mgr;

@@ -15,6 +15,7 @@ import java.io.IOException;
 /**
  * Represents a struct backed message without session or client info.
  */
+@SuppressWarnings("unused")
 public class Msg<BodyType extends ISteamSerializableMessage> extends MsgBase<MsgHdr> {
 
     private static final Logger logger = LogManager.getLogger(Msg.class);

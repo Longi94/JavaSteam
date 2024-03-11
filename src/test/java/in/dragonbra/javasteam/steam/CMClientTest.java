@@ -14,8 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
@@ -37,7 +36,7 @@ public class CMClientTest extends TestBase {
             byte[] data = serialize(msgHdr);
 
             IPacketMsg packetMsg = CMClient.getPacketMsg(data);
-            assertTrue(packetMsg instanceof PacketMsg);
+            assertInstanceOf(PacketMsg.class, packetMsg);
         }
     }
 
@@ -48,7 +47,7 @@ public class CMClientTest extends TestBase {
 
         byte[] data = serialize(msgHdr);
         IPacketMsg packetMsg = CMClient.getPacketMsg(data);
-        assertTrue(packetMsg instanceof PacketClientMsgProtobuf);
+        assertInstanceOf(PacketClientMsgProtobuf.class, packetMsg);
     }
 
     @Test

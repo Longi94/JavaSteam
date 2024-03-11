@@ -14,6 +14,7 @@ import java.io.IOException;
 /**
  * Represents a protobuf backed client message. Only contains the header information.
  */
+@SuppressWarnings("unused")
 public class AClientMsgProtobuf extends MsgBase<MsgHdrProtoBuf> {
 
     private static final Logger logger = LogManager.getLogger(AClientMsgProtobuf.class);
