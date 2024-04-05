@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="javasteam [wrapper --gradle-version 8.6]" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
+  <configuration default="false" name="javasteam [wrapper --gradle-version 8.7]" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -12,7 +12,7 @@
         <list>
           <option value="wrapper" />
           <option value="--gradle-version" />
-          <option value="8.6" />
+          <option value="8.7" />
         </list>
       </option>
       <option name="vmOptions" />
