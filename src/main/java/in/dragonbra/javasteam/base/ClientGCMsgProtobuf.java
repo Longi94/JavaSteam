@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.base;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import in.dragonbra.javasteam.generated.MsgGCHdrProtoBuf;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
 import in.dragonbra.javasteam.types.JobID;
@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
  * @param <BodyType> The body type of this message.
  */
 @SuppressWarnings("unused")
-public class ClientGCMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyType>> extends GCMsgBase<MsgGCHdrProtoBuf> {
+public class ClientGCMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyType>> extends GCMsgBase<MsgGCHdrProtoBuf> {
 
     private static final Logger logger = LogManager.getLogger(ClientGCMsgProtobuf.class);
 

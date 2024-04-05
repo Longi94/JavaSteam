@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.base.PacketClientMsgProtobuf;
@@ -62,7 +62,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param <TRequest> The type of protobuf object.
      * @return The JobID of the request. This can be used to find the appropriate {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> AsyncJobSingle<ServiceMethodResponse> sendMessage(String rpcName, GeneratedMessageV3 message) {
+    public <TRequest extends GeneratedMessage.Builder<TRequest>> AsyncJobSingle<ServiceMethodResponse> sendMessage(String rpcName, GeneratedMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
@@ -87,7 +87,7 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
      * @param message    The message to send.
      * @param <TRequest> The type of protobuf object.
      */
-    public <TRequest extends GeneratedMessageV3.Builder<TRequest>> void sendNotification(String rpcName, GeneratedMessageV3 message) {
+    public <TRequest extends GeneratedMessage.Builder<TRequest>> void sendNotification(String rpcName, GeneratedMessage message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }

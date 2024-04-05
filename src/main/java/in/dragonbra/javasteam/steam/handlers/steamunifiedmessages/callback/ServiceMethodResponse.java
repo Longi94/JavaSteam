@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.PacketClientMsgProtobuf;
 import in.dragonbra.javasteam.enums.EResult;
@@ -88,7 +88,7 @@ public class ServiceMethodResponse extends CallbackMsg {
      * @return The response to the message sent through
      * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
      */
-    public <T extends GeneratedMessageV3.Builder<T>> T getDeserializedResponse(Class<? extends AbstractMessage> clazz) {
+    public <T extends GeneratedMessage.Builder<T>> T getDeserializedResponse(Class<? extends AbstractMessage> clazz) {
         ClientMsgProtobuf<T> msg = new ClientMsgProtobuf<>(clazz, packetMsg);
         return msg.getBody();
     }
