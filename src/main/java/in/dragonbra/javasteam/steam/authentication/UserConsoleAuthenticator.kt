@@ -5,6 +5,10 @@ import java.util.concurrent.CompletableFuture
 
 /**
  * This is a default implementation of [IAuthenticator] to ease of use.
+ *
+ * This implementation will prompt user to enter 2-factor authentication codes in the console.
+ *
+ * Note: This can be replaced with your own method
  */
 class UserConsoleAuthenticator : IAuthenticator {
 
