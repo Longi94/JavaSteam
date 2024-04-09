@@ -124,7 +124,7 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
 
             steamUser.logOn(details);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
 
             if (e instanceof AuthenticationException) {
                 System.out.println("An Authentication error has occurred.");

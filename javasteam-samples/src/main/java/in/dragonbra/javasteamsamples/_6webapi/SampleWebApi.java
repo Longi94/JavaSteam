@@ -153,7 +153,7 @@ public class SampleWebApi implements Runnable {
             printKeyValue(result, 1);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
 
         // for this sample we'll just log off
@@ -170,7 +170,7 @@ public class SampleWebApi implements Runnable {
     private void printKeyValue(KeyValue keyValue, int depth) {
         String spacePadding = String.join("", Collections.nCopies(depth, "    "));
 
-        if (keyValue.getChildren().size() == 0) {
+        if (keyValue.getChildren().isEmpty()) {
             System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());
         } else {
             System.out.println(spacePadding + keyValue.getName() + ":");

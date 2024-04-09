@@ -180,8 +180,8 @@ public class SampleSteamGuardRememberMe implements Runnable {
 
         try {
             Thread.sleep(5000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ignored) {
+            // Sleep Interrupted
         }
 
         steamClient.connect();
@@ -259,7 +259,7 @@ public class SampleSteamGuardRememberMe implements Runnable {
 
             steamUser.sendMachineAuthResponse(details);
         } catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 
