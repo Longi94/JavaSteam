@@ -2,9 +2,18 @@ package `in`.dragonbra.javasteam.steam.authentication
 
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_AllowedConfirmation
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
 import `in`.dragonbra.javasteam.rpc.service.Authentication
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Represents an authentication session which can be used to finish the authentication and get access tokens.
@@ -131,12 +140,16 @@ open class AuthSession(
         when (preferredConfirmation.confirmationType) {
             // No steam guard
             EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit
+
             // 2-factor code from the authenticator app or sent to an email
             EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
-            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> {
+            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
+            -> {
                 val credentialsAuthSession = this as? CredentialsAuthSession
-                    ?: throw IllegalStateException("Got ${preferredConfirmation.confirmationType} confirmation type " +
-                        "in a session that is not CredentialsAuthSession.")
+                    ?: throw IllegalStateException(
+                        "Got ${preferredConfirmation.confirmationType} confirmation type " +
+                            "in a session that is not CredentialsAuthSession."
+                    )
 
                 if (authenticator == null) {
                     throw NullPointerException(
@@ -210,7 +223,6 @@ open class AuthSession(
         if (!pollLoop) {
             return pollAuthSessionStatus() ?: throw AuthenticationException("Authentication failed", EResult.Fail)
         }
-
 
         var pollResponse: AuthPollResult? = null
         while (pollResponse == null) {

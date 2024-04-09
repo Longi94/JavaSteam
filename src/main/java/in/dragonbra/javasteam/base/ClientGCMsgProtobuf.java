@@ -64,6 +64,7 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyT
      * @param eMsg           The network message type this client message represents.
      * @param payloadReserve The number of bytes to initialize the payload capacity to.
      */
+    @SuppressWarnings("unchecked")
     public ClientGCMsgProtobuf(Class<? extends AbstractMessage> clazz, int eMsg, int payloadReserve) {
         super(MsgGCHdrProtoBuf.class, payloadReserve);
         this.clazz = clazz;
@@ -160,6 +161,7 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyT
         return baos.toByteArray();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void deserialize(byte[] data) {
         if (data == null) {

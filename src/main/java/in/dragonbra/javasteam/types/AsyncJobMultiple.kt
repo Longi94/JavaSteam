@@ -13,13 +13,13 @@ import java.util.*
 class AsyncJobMultiple<T : CallbackMsg>(
     client: SteamClient,
     jobId: JobID,
-    private val finishCondition: (T) -> Boolean?
+    private val finishCondition: (T) -> Boolean?,
 ) : AsyncJob(client, jobId) {
 
     class ResultSet(
         var complete: Boolean = false,
         var failed: Boolean = false,
-        var results: List<CallbackMsg> = listOf()
+        var results: List<CallbackMsg> = listOf(),
     )
 
     private val tcs = CompletableDeferred<ResultSet>()

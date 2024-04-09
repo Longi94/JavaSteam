@@ -1,7 +1,10 @@
 package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
 import `in`.dragonbra.javasteam.types.SteamID
 
 /**
@@ -10,7 +13,7 @@ import `in`.dragonbra.javasteam.types.SteamID
 class CredentialsAuthSession(
     authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
-    response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder
+    response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder,
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,

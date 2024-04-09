@@ -2,9 +2,17 @@ package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.ESessionPersistence
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_DeviceDetails
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.ETokenRenewalType
 import `in`.dragonbra.javasteam.rpc.service.Authentication
-import `in`.dragonbra.javasteam.steam.authentication.*
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.SteamID
@@ -63,7 +71,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
     fun generateAccessTokenForApp(
         steamID: SteamID,
         refreshToken: String,
-        allowRenewal: Boolean = false
+        allowRenewal: Boolean = false,
     ): AccessTokenGenerateResult {
         val request = CAuthentication_AccessToken_GenerateForApp_Request.newBuilder().apply {
             this.refreshToken = refreshToken

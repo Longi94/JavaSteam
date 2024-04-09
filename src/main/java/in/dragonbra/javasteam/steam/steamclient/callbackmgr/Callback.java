@@ -46,6 +46,7 @@ public class Callback<TCall extends ICallbackMsg> extends CallbackBase implement
         return callbackType;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     void run(Object callback) {
         if (callbackType.isAssignableFrom(callback.getClass())) {

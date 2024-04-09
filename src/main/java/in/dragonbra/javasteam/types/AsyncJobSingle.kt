@@ -13,7 +13,6 @@ import kotlin.jvm.Throws
  * @since 2023-03-17
  */
 class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : AsyncJob(client, jobId) {
-
     private val tcs = CompletableDeferred<T>()
 
     init {
@@ -37,7 +36,7 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
         tcs.complete(callback as T)
 
         // inform steamclient that this job wishes to be removed from tracking since
-        // we've recieved the single callback we were waiting for
+        // we've received the single callback we were waiting for
         return true
     }
 

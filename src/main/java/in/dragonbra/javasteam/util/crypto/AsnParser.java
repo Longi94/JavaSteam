@@ -8,6 +8,7 @@ import java.util.List;
  * @author lngtr
  * @since 2018-02-24
  */
+@SuppressWarnings("unused")
 class AsnParser {
     private final int initialCount;
     private final List<Byte> octets = new ArrayList<>();
@@ -166,7 +167,7 @@ class AsnParser {
 
         int length = getLength();
 
-        // We need to consume unused bits, which is the first octet of the remaing values
+        // We need to consume unused bits, which is the first octet of the remaining values
         b = octets.get(0);
         octets.remove(0);
         length--;
