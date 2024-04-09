@@ -1,3 +1,8 @@
+# ****
+# Don't forget to update dependencies in buildSrc
+# toml doesn't support buildSrc yet
+# ****
+
 [versions]
 # Java / Kotlin versions
 java = "11"
@@ -6,7 +11,7 @@ dokka = "1.9.20" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-
 ktlint = "12.1.0" # https://github.com/JLLeitschuh/ktlint-gradle/releases
 
 # Standard Library versions
-bouncyCastle = "1.77" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
+bouncyCastle = "1.78" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
 commons-io = "2.16.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.14.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 commons-validator = "1.8.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
