@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.util.stream.SeekOrigin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Represents a struct backed game coordinator message.
@@ -43,8 +44,11 @@ public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgB
         super(MsgGCHdr.class, payloadReserve);
 
         try {
-            body = bodyType.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            body = bodyType.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException |
+                 InstantiationException |
+                 IllegalAccessException |
+                 InvocationTargetException e) {
             logger.debug(e);
         }
 

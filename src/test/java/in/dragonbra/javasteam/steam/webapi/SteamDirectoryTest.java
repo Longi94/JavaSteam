@@ -10,11 +10,12 @@ import okhttp3.HttpUrl;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author lngtr
@@ -23,31 +24,37 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SteamDirectoryTest extends TestBase {
 
     @Test
-    public void load() throws IOException, InterruptedException {
-        MockWebServer server = new MockWebServer();
+    public void load() {
+        try (MockWebServer server = new MockWebServer()) {
 
-        String resource = IOUtils.toString(
-                WebAPITest.class.getClassLoader().getResource("testresponses/GetCMList.vdf"),
-                StandardCharsets.UTF_8
-        );
+            URL vdf = WebAPITest.class.getClassLoader().getResource("testresponses/GetCMList.vdf");
 
-        MockResponse resp = new MockResponse().newBuilder().body(resource).build();
-        server.enqueue(resp);
+            if (vdf == null) {
+                fail("finding 'testresponses/GetCMList.vdf' was null");
+            }
 
-        server.start();
+            String resource = IOUtils.toString(vdf, StandardCharsets.UTF_8);
 
-        final HttpUrl baseUrl = server.url("/");
+            MockResponse resp = new MockResponse().newBuilder().body(resource).build();
+            server.enqueue(resp);
 
-        SteamConfiguration config = SteamConfiguration.create(b -> b.withWebAPIBaseAddress(baseUrl.toString()));
+            server.start();
 
-        List<ServerRecord> servers = SteamDirectory.load(config);
+            final HttpUrl baseUrl = server.url("/");
 
-        assertEquals(200, servers.size());
+            SteamConfiguration config = SteamConfiguration.create(b -> b.withWebAPIBaseAddress(baseUrl.toString()));
 
-        RecordedRequest request = server.takeRequest();
-        assertEquals("/ISteamDirectory/GetCMList/v1?format=vdf&cellid=0", request.getPath());
-        assertEquals("GET", request.getMethod());
+            List<ServerRecord> servers = SteamDirectory.load(config);
 
-        server.shutdown();
+            assertEquals(200, servers.size());
+
+            RecordedRequest request = server.takeRequest();
+            assertEquals("/ISteamDirectory/GetCMList/v1?format=vdf&cellid=0", request.getPath());
+            assertEquals("GET", request.getMethod());
+
+            server.shutdown();
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 }

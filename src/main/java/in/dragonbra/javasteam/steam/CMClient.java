@@ -81,7 +81,7 @@ public abstract class CMClient {
         onClientConnected();
     };
 
-    private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<DisconnectedEventArgs>() {
+    private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
             isConnected = false;

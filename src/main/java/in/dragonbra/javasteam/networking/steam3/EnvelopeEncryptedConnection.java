@@ -35,7 +35,7 @@ public class EnvelopeEncryptedConnection extends Connection {
     private INetFilterEncryption encryption;
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final EventHandler<EventArgs> onConnected = new EventHandler<EventArgs>() {
+    private final EventHandler<EventArgs> onConnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, EventArgs e) {
             state = EncryptionState.CONNECTED;
@@ -43,7 +43,7 @@ public class EnvelopeEncryptedConnection extends Connection {
     };
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final EventHandler<DisconnectedEventArgs> onDisconnected = new EventHandler<DisconnectedEventArgs>() {
+    private final EventHandler<DisconnectedEventArgs> onDisconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
             state = EncryptionState.DISCONNECTED;
@@ -54,7 +54,7 @@ public class EnvelopeEncryptedConnection extends Connection {
     };
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final EventHandler<NetMsgEventArgs> onNetMsgReceived = new EventHandler<NetMsgEventArgs>() {
+    private final EventHandler<NetMsgEventArgs> onNetMsgReceived = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, NetMsgEventArgs e) {
             if (state == EncryptionState.ENCRYPTED) {

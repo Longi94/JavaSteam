@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -169,7 +170,7 @@ public class KVTextReader extends PushbackInputStream {
             read();
 
             // convert the output stream as an utf-8 supported string.
-            return baos.toString("UTF-8");
+            return baos.toString(StandardCharsets.UTF_8);
         }
 
         if (next == '{' || next == '}') {
