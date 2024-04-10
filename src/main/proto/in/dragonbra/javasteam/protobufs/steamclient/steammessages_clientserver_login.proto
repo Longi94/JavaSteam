@@ -101,7 +101,6 @@ message CMsgClientLogonResponse {
 	optional string email_domain = 8;
 	optional bytes steam2_ticket = 9;
 	optional int32 eresult_extended = 10;
-	optional string webapi_authenticate_user_nonce = 11;
 	optional uint32 cell_id_ping_threshold = 12;
 	optional bool deprecated_use_pics = 13;
 	optional string vanity_url = 14;
@@ -118,6 +117,7 @@ message CMsgClientLogonResponse {
 	optional bool force_client_update_check = 28;
 	optional string agreement_session_url = 29;
 	optional uint64 token_id = 30;
+	optional uint64 family_group_id = 31;
 }
 
 message CMsgClientRequestWebAPIAuthenticateUserNonce {

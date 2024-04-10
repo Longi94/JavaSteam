@@ -13,12 +13,12 @@ message CContentServerDirectory_ConnectedSteamPipeServerInfo {
 }
 
 message CContentServerDirectory_GetServersForSteamPipe_Request {
-  optional uint32 cell_id = 1 [(description) = "client Cell ID"];
-  optional uint32 max_servers = 2 [default = 20, (description) = "max servers in response list"];
-  optional string ip_override = 3 [(description) = "client IP address"];
-  optional int32 launcher_type = 4 [default = 0, (description) = "launcher type"];
-  optional string ipv6_public = 5 [(description) = "client public ipv6 address if it knows it"];
-  repeated .CContentServerDirectory_ConnectedSteamPipeServerInfo current_connections = 6 [(description) = "what sources is the client currently using"];
+  optional uint32 cell_id = 1;
+  optional uint32 max_servers = 2 [default = 20];
+  optional string ip_override = 3;
+  optional int32 launcher_type = 4 [default = 0];
+  optional string ipv6_public = 5;
+  repeated .CContentServerDirectory_ConnectedSteamPipeServerInfo current_connections = 6;
 }
 
 message CContentServerDirectory_ServerInfo {
@@ -35,12 +35,13 @@ message CContentServerDirectory_ServerInfo {
   optional string proxy_request_path_template = 11;
   optional string https_support = 12;
   repeated uint32 allowed_app_ids = 13;
-  optional bool preferred_server = 14;
+  optional uint32 priority_class = 15;
+  repeated string bypass_proxies_of_type = 16;
 }
 
 message CContentServerDirectory_GetServersForSteamPipe_Response {
   repeated .CContentServerDirectory_ServerInfo servers = 1;
-  optional bool no_change = 2 [(description) = "server list is empty because client current list is still good"];
+  optional bool no_change = 2;
 }
 
 message CContentServerDirectory_GetDepotPatchInfo_Request {
@@ -100,6 +101,7 @@ message CContentServerDirectory_RequestPeerContentServer_Request {
 message CContentServerDirectory_RequestPeerContentServer_Response {
   optional uint32 server_port = 1;
   repeated uint32 installed_depots = 2;
+  optional uint64 access_token = 3;
 }
 
 message CContentServerDirectory_GetPeerContentInfo_Request {
@@ -114,8 +116,6 @@ message CContentServerDirectory_GetPeerContentInfo_Response {
 }
 
 service ContentServerDirectory {
-  option (service_description) = "Content Server and CDN directory";
-
   rpc GetServersForSteamPipe (.CContentServerDirectory_GetServersForSteamPipe_Request) returns (.CContentServerDirectory_GetServersForSteamPipe_Response);
   rpc GetDepotPatchInfo (.CContentServerDirectory_GetDepotPatchInfo_Request) returns (.CContentServerDirectory_GetDepotPatchInfo_Response);
   rpc GetClientUpdateHosts (.CContentServerDirectory_GetClientUpdateHosts_Request) returns (.CContentServerDirectory_GetClientUpdateHosts_Response);

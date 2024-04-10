@@ -20,6 +20,7 @@ import java.util.EnumSet;
 /**
  * This callback is returned in response to an attempt to log on to the Steam3 network through {@link SteamUser}.
  */
+@SuppressWarnings("unused")
 public class LoggedOnCallback extends CallbackMsg {
 
     private final EResult result;
@@ -82,7 +83,7 @@ public class LoggedOnCallback extends CallbackMsg {
 
         ipCountryCode = resp.getIpCountryCode();
 
-        webAPIUserNonce = resp.getWebapiAuthenticateUserNonce();
+        // webAPIUserNonce = resp.getWebapiAuthenticateUserNonce(); // TODO remove
 
         vanityURL = resp.getVanityUrl();
 
