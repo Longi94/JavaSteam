@@ -230,7 +230,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesWritesBinaryToStream() throws IOException {
+    public void keyValuesWritesBinaryToStream() {
         String expectedHexValue = "00525000017374617475730023444F54415F52505F424F54505241435449434500016E756D5F706172616D730030000" +
                 "17761746368696E675F736572766572005B413A313A323130383933353136393A353431325D00017761746368696E675F66726F6D5F73" +
                 "6572766572005B413A313A3836343436383939343A353431325D000808";
@@ -374,7 +374,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesSavesTextToStream() throws IOException {
+    public void keyValuesSavesTextToStream() {
         String expected = "\"RootNode\"\n{\n\t\"key1\"\t\t\"value1\"\n\t\"key2\"\n\t{\n\t\t\"ChildKey\"\t\t\"ChildValue\"\n\t}\n}\n";
 
         KeyValue kv = new KeyValue("RootNode");
@@ -422,7 +422,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesEscapesTextWhenSerializing() throws IOException {
+    public void keyValuesEscapesTextWhenSerializing() {
         KeyValue kv = new KeyValue("key");
         kv.getChildren().add(new KeyValue("slashes", "\\o/"));
         kv.getChildren().add(new KeyValue("newline", "\r\n"));
@@ -444,7 +444,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesTextPreserveEmptyObjects() throws IOException {
+    public void keyValuesTextPreserveEmptyObjects() {
         KeyValue kv = new KeyValue("key");
         kv.getChildren().add(new KeyValue("emptyObj"));
         kv.getChildren().add(new KeyValue("emptyString", ""));

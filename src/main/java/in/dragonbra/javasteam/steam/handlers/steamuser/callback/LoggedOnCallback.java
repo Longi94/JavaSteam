@@ -47,9 +47,6 @@ public class LoggedOnCallback extends CallbackMsg {
 
     private byte[] steam2Ticket;
 
-    @Deprecated
-    private String webAPIUserNonce;
-
     private String ipCountryCode;
 
     private String vanityURL;
@@ -82,8 +79,6 @@ public class LoggedOnCallback extends CallbackMsg {
         steam2Ticket = resp.getSteam2Ticket().toByteArray();
 
         ipCountryCode = resp.getIpCountryCode();
-
-        // webAPIUserNonce = resp.getWebapiAuthenticateUserNonce(); // TODO remove
 
         vanityURL = resp.getVanityUrl();
 
@@ -203,15 +198,6 @@ public class LoggedOnCallback extends CallbackMsg {
      */
     public byte[] getSteam2Ticket() {
         return steam2Ticket;
-    }
-
-    /**
-     * @deprecated Steam no longer sends webapi nonce as of October 2023, use SteamAuthentication.
-     * @return the WebAPI authentication user nonce.
-     */
-    @Deprecated
-    public String getWebAPIUserNonce() {
-        return webAPIUserNonce;
     }
 
     /**

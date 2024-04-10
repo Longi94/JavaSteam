@@ -17,13 +17,9 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CM
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientPlayingSessionState;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuth;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuthResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.HardwareUtils;
 import in.dragonbra.javasteam.util.NetHelpers;
@@ -45,11 +41,11 @@ public class SteamUser extends ClientMsgHandler {
     public SteamUser() {
         dispatchMap = new HashMap<>();
 
+        // EMsg.ClientNewLoginKey and EMsg.ClientUpdateMachineAuth are removed - April 10, 2024
+
         dispatchMap.put(EMsg.ClientLogOnResponse, this::handleLogOnResponse);
         dispatchMap.put(EMsg.ClientLoggedOff, this::handleLoggedOff);
-        dispatchMap.put(EMsg.ClientNewLoginKey, this::handleLoginKey);
         dispatchMap.put(EMsg.ClientSessionToken, this::handleSessionToken);
-        dispatchMap.put(EMsg.ClientUpdateMachineAuth, this::handleUpdateMachineAuth);
         dispatchMap.put(EMsg.ClientAccountInfo, this::handleAccountInfo);
         dispatchMap.put(EMsg.ClientEmailAddrInfo, this::handleEmailAddrInfo);
         dispatchMap.put(EMsg.ClientWalletInfoUpdate, this::handleWalletInfo);
@@ -73,16 +69,9 @@ public class SteamUser extends ClientMsgHandler {
             throw new IllegalArgumentException("details is null");
         }
 
-        if (Strings.isNullOrEmpty(details.getUsername()) || (Strings.isNullOrEmpty(details.getPassword()) &&
-                Strings.isNullOrEmpty(details.getLoginKey()) && Strings.isNullOrEmpty(details.getAccessToken()))) {
-            throw new IllegalArgumentException("LogOn requires a username and password to be set in 'details'.");
-        }
-
-        if (!Strings.isNullOrEmpty(details.getLoginKey()) && !details.isShouldRememberPassword()) {
-            // Prevent consumers from screwing this up.
-            // If should_remember_password is false, the login_key is ignored server-side.
-            // The inverse is not applicable (you can log in with should_remember_password and no login_key).
-            throw new IllegalArgumentException("ShouldRememberPassword is required to be set to true in order to use LoginKey.");
+        if (Strings.isNullOrEmpty(details.getUsername()) ||
+                (Strings.isNullOrEmpty(details.getPassword()) && Strings.isNullOrEmpty(details.getAccessToken()))) {
+            throw new IllegalArgumentException("LogOn requires a username and password or access token to be set in 'details'.");
         }
 
         if (!client.isConnected()) {
@@ -148,18 +137,9 @@ public class SteamUser extends ClientMsgHandler {
             logon.getBody().setTwoFactorCode(details.getTwoFactorCode());
         }
 
-        if (!Strings.isNullOrEmpty(details.getLoginKey())) {
-            logon.getBody().setLoginKey(details.getLoginKey());
-        }
-
         if (!Strings.isNullOrEmpty(details.getAccessToken())) {
             logon.getBody().setAccessToken(details.getAccessToken());
         }
-
-        if (details.getSentryFileHash() != null) {
-            logon.getBody().setShaSentryfile(ByteString.copyFrom(details.getSentryFileHash()));
-        }
-        logon.getBody().setEresultSentryfile(details.getSentryFileHash() != null ? EResult.OK.code() : EResult.FileNotFound.code());
 
         client.send(logon);
     }
@@ -227,78 +207,6 @@ public class SteamUser extends ClientMsgHandler {
         client.disconnect();
     }
 
-    /**
-     * Sends a machine auth response.
-     * This should normally be used in response to a {@link UpdateMachineAuthCallback}.
-     *
-     * @param details The details pertaining to the response.
-     * @deprecated Steam no longer sends machine auth as of 2023, use SteamAuthentication.
-     */
-    @Deprecated
-    public void sendMachineAuthResponse(MachineAuthDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
-        }
-
-        ClientMsgProtobuf<CMsgClientUpdateMachineAuthResponse.Builder> response = new ClientMsgProtobuf<>(CMsgClientUpdateMachineAuthResponse.class, EMsg.ClientUpdateMachineAuthResponse);
-
-        // so we respond to the correct message
-        response.getProtoHeader().setJobidTarget(details.getJobID().getValue());
-
-        response.getBody().setCubwrote(details.getBytesWritten());
-        response.getBody().setEresult(details.getEResult().code());
-
-        response.getBody().setFilename(details.getFileName());
-        response.getBody().setFilesize(details.getFileSize());
-
-        response.getBody().setGetlasterror(details.getLastError());
-        response.getBody().setOffset(details.getOffset());
-
-        response.getBody().setShaFile(ByteString.copyFrom(details.getSentryFileHash()));
-
-        response.getBody().setOtpIdentifier(details.getOneTimePassword().getIdentifier());
-        response.getBody().setOtpType(details.getOneTimePassword().getType());
-        response.getBody().setOtpValue(details.getOneTimePassword().getValue());
-
-        client.send(response);
-    }
-
-    /**
-     * Requests a new WebAPI authentication user nonce.
-     * Results are returned in a {@link WebAPIUserNonceCallback}.
-     * The returned {@link  AsyncJobSingle} can also be awaited to retrieve the callback result.
-     *
-     * @return The Job ID of the request. This can be used to find the appropriate {@link WebAPIUserNonceCallback}.
-     */
-    public AsyncJobSingle<WebAPIUserNonceCallback> requestWebAPIUserNonce() {
-        ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> reqMsg =
-                new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonce.class, EMsg.ClientRequestWebAPIAuthenticateUserNonce);
-        JobID jobID = client.getNextJobID();
-        reqMsg.setSourceJobID(jobID);
-
-        client.send(reqMsg);
-
-        return new AsyncJobSingle<>(this.client, reqMsg.getSourceJobID());
-    }
-
-    /**
-     * Accepts the new Login Key provided by a {@link LoginKeyCallback}.
-     *
-     * @param callback The callback containing the new Login Key.
-     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
-     */
-    @Deprecated
-    public void acceptNewLoginKey(LoginKeyCallback callback) {
-        if (callback == null) {
-            throw new IllegalArgumentException("callback is null");
-        }
-
-        ClientMsgProtobuf<CMsgClientNewLoginKeyAccepted.Builder> acceptance = new ClientMsgProtobuf<>(CMsgClientNewLoginKeyAccepted.class, EMsg.ClientNewLoginKeyAccepted);
-        acceptance.getBody().setUniqueId(callback.getUniqueID());
-
-        client.send(acceptance);
-    }
-
     @Override
     public void handleMsg(IPacketMsg packetMsg) {
         if (packetMsg == null) {
@@ -344,19 +252,9 @@ public class SteamUser extends ClientMsgHandler {
         client.disconnect();
     }
 
-    private void handleLoginKey(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientNewLoginKey.Builder> loginKey = new ClientMsgProtobuf<>(CMsgClientNewLoginKey.class, packetMsg);
-        client.postCallback(new LoginKeyCallback(loginKey.getBody()));
-    }
-
     private void handleSessionToken(IPacketMsg packetMsg) {
         ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<>(CMsgClientSessionToken.class, packetMsg);
         client.postCallback(new SessionTokenCallback(sessToken.getBody()));
-    }
-
-    private void handleUpdateMachineAuth(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUpdateMachineAuth.Builder> machineAuth = new ClientMsgProtobuf<>(CMsgClientUpdateMachineAuth.class, packetMsg);
-        client.postCallback(new UpdateMachineAuthCallback(new JobID(packetMsg.getSourceJobID()), machineAuth.getBody()));
     }
 
     private void handleAccountInfo(IPacketMsg packetMsg) {

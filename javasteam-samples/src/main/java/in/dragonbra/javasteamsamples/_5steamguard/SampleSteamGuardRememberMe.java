@@ -2,43 +2,30 @@ package in.dragonbra.javasteamsamples._5steamguard;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
-import in.dragonbra.javasteam.steam.handlers.steamuser.MachineAuthDetails;
-import in.dragonbra.javasteam.steam.handlers.steamuser.OTPDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.UpdateMachineAuthCallback;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.util.crypto.CryptoHelper;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 //
 // Sample 5: SteamGuard
 //
-// this sample goes into detail for how to handle steamguard protected accounts and how to log in to them
+// this sample goes into detail for how to handle steamguard protected accounts and how to login to them
 //
-// SteamGuard works by enforcing a two-factor authentication scheme
+// SteamGuard works by enforcing a two factor authentication scheme
 // upon first logon to an account with SG enabled, the steam server will email an authcode to the validated address of the account
 // this authcode token can be used as the second factor during logon, but the token has a limited time span in which it is valid
 //
 // after a client logs on using the authcode, the steam server will generate a blob of random data that the client stores called a "sentry file"
 // this sentry file is then used in all subsequent logons as the second factor
-// ownership of this file provides proof that the machine being used to log-on is owned by the client in question
+// ownership of this file provides proof that the machine being used to logon is owned by the client in question
 //
 // the usual login flow is thus:
 // 1. connect to the server
@@ -57,12 +44,16 @@ import java.util.Scanner;
 // 2. logon to account using username, password, and sha-1 hash of the sentry file
 
 /**
- * This sample is obsolete. Check out
+ * WARNING!
+ * This the old login flow, which may still work, but you will not receive machine auth.
+ * This sample will be removed in the future.
+ * <p>
+ * See:
  * {@link in.dragonbra.javasteamsamples._1logon.SampleLogonAuthentication }
- * and {@link in.dragonbra.javasteamsamples._1logon.SampleLogonQRAuthentication}
- * Reference: <a href="https://github.com/SteamRE/SteamKit/pull/1270#issuecomment-1768359942">SteamKit issue</a>
+ * {@link in.dragonbra.javasteamsamples._1logon.SampleLogonQRAuthentication}
  *
  * @author lngtr
+ * @see <a href="https://github.com/SteamRE/SteamKit/pull/1270#issuecomment-1768359942">SteamKit issue</a>
  * @since 2018-02-28
  */
 @SuppressWarnings("FieldCanBeLocal")
@@ -121,9 +112,6 @@ public class SampleSteamGuardRememberMe implements Runnable {
         manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
         manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
 
-        // this callback is triggered when the steam servers wish for the client to store the sentry file
-        manager.subscribe(UpdateMachineAuthCallback.class, this::onMachineAuth);
-
         isRunning = true;
 
         System.out.println("Connecting to steam...");
@@ -141,16 +129,16 @@ public class SampleSteamGuardRememberMe implements Runnable {
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
 
-        byte[] sentryHash = null;
-        File sentry = new File("sentry.bin");
-        if (sentry.exists()) {
-            try {
-                byte[] fileBytes = Files.readAllBytes(sentry.toPath());
-                sentryHash = CryptoHelper.shaHash(fileBytes);
-            } catch (IOException | NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        // byte[] sentryHash = null;
+        // File sentry = new File("sentry.bin");
+        // if (sentry.exists()) {
+        //     try {
+        //         byte[] fileBytes = Files.readAllBytes(sentry.toPath());
+        //         sentryHash = CryptoHelper.shaHash(fileBytes);
+        //     } catch (IOException | NoSuchAlgorithmException e) {
+        //         throw new RuntimeException(e);
+        //     }
+        // }
 
         LogOnDetails details = new LogOnDetails();
         details.setUsername(user);
@@ -163,10 +151,6 @@ public class SampleSteamGuardRememberMe implements Runnable {
         // if the account is using 2-factor auth, we'll provide the two-factor code instead
         // this will also be null on our first logon attempt
         details.setTwoFactorCode(twoFactorAuth);
-
-        // our subsequent logons use the hash of the sentry file as proof of ownership of the file
-        // this will also be null for our first (no authcode) and second (authcode only) logon attempts
-        details.setSentryFileHash(sentryHash);
 
         // Set LoginID to a non-zero value if you have another client connected using the same account,
         // the same private ip, and same public ip.
@@ -226,59 +210,5 @@ public class SampleSteamGuardRememberMe implements Runnable {
         System.out.println("Logged off of Steam: " + callback.getResult());
 
         isRunning = false;
-    }
-
-    private void onMachineAuth(UpdateMachineAuthCallback callback) {
-        System.out.println("Updating sentry file...");
-
-        // write out our sentry file
-        // ideally we'd want to write to the filename specified in the callback
-        // but then this sample would require more code to find the correct sentry file to read during logon
-        // for the sake of simplicity, we'll just use "sentry.bin"
-
-        File sentry = new File("sentry.bin");
-        try (FileOutputStream fos = new FileOutputStream(sentry)) {
-            FileChannel channel = fos.getChannel();
-            channel.position(callback.getOffset());
-            channel.write(ByteBuffer.wrap(callback.getData(), 0, callback.getBytesToWrite()));
-
-            OTPDetails otpDetails = new OTPDetails();
-            otpDetails.setIdentifier(callback.getOneTimePassword().getIdentifier());
-            otpDetails.setType(callback.getOneTimePassword().getType());
-
-            MachineAuthDetails details = new MachineAuthDetails();
-            details.setJobID(callback.getJobID());
-            details.setFileName(callback.getFileName());
-            details.setBytesWritten(callback.getBytesToWrite());
-            details.setFileSize((int) sentry.length());
-            details.setOffset(callback.getOffset());
-            details.setEResult(EResult.OK);
-            details.setLastError(0);
-            details.setOneTimePassword(otpDetails);
-            details.setSentryFileHash(calculateSHA1(sentry));
-
-            steamUser.sendMachineAuthResponse(details);
-        } catch (IOException | NoSuchAlgorithmException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    private byte[] calculateSHA1(File file) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-1");
-
-        try (InputStream fis = Files.newInputStream(file.toPath())) {
-            int n = 0;
-            byte[] buffer = new byte[8192];
-            while (n != -1) {
-                n = fis.read(buffer);
-                if (n > 0) {
-                    digest.update(buffer, 0, n);
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to calculate SHA1", e);
-        }
-
-        return digest.digest();
     }
 }
