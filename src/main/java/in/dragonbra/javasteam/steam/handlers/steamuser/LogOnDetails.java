@@ -9,6 +9,7 @@ import in.dragonbra.javasteam.util.Utils;
 /**
  * Represents the details required to log into Steam3 as a user.
  */
+@SuppressWarnings("unused")
 public class LogOnDetails {
 
     private String username = "";
@@ -31,6 +32,7 @@ public class LogOnDetails {
 
     private boolean shouldRememberPassword;
 
+    @Deprecated
     private byte[] sentryFileHash;
 
     private String accessToken;
@@ -222,6 +224,7 @@ public class LogOnDetails {
      *
      * @return the sentry file hash.
      */
+    @Deprecated
     public byte[] getSentryFileHash() {
         return sentryFileHash;
     }
@@ -231,6 +234,7 @@ public class LogOnDetails {
      *
      * @param sentryFileHash the sentry file hash.
      */
+    @Deprecated
     public void setSentryFileHash(byte[] sentryFileHash) {
         this.sentryFileHash = sentryFileHash;
     }
