@@ -16,7 +16,7 @@ interface OnChallengeUrlChanged {
 class QrAuthSession(
     authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
-    response: CAuthentication_BeginAuthSessionViaQR_Response.Builder
+    response: CAuthentication_BeginAuthSessionViaQR_Response.Builder,
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,

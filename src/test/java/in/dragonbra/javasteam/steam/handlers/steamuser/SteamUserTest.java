@@ -7,12 +7,9 @@ import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.ECurrencyCode;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientUpdateMachineAuthResponse;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
 import in.dragonbra.javasteam.types.SteamID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -83,17 +80,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
     }
 
     @Test
-    public void logOnLoginKeyWithNoRemember() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            LogOnDetails details = new LogOnDetails();
-            details.setUsername("testusername");
-            details.setLoginKey("loginkey");
-
-            handler.logOn(details);
-        });
-    }
-
-    @Test
     public void logOnAnonymous() {
         handler.logOnAnonymous();
 
@@ -132,75 +118,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
         ClientMsgProtobuf<CMsgClientLogOff.Builder> msg = verifySend(EMsg.ClientLogOff);
 
         assertNotNull(msg);
-    }
-
-    @Test
-    public void machineAuthResponse() {
-        OTPDetails otp = new OTPDetails();
-        otp.setIdentifier("testid");
-        otp.setType(5);
-        otp.setValue(42);
-
-        MachineAuthDetails details = new MachineAuthDetails();
-
-        details.setJobID(new JobID(123));
-        details.setFileName("testfilename");
-        details.setBytesWritten(10);
-        details.setFileSize(16);
-        details.setOffset(69);
-        details.setEResult(EResult.OK);
-        details.setLastError(1);
-        details.setOneTimePassword(otp);
-        details.setSentryFileHash(new byte[]{0, 1, 2, 3});
-
-        handler.sendMachineAuthResponse(details);
-
-        ClientMsgProtobuf<CMsgClientUpdateMachineAuthResponse.Builder> msg = verifySend(EMsg.ClientUpdateMachineAuthResponse);
-
-        assertEquals(123, msg.getProtoHeader().getJobidTarget());
-        assertEquals("testfilename", msg.getBody().getFilename());
-        assertEquals(10, msg.getBody().getCubwrote());
-        assertEquals(16, msg.getBody().getFilesize());
-        assertEquals(69, msg.getBody().getOffset());
-        assertEquals(EResult.OK.code(), msg.getBody().getEresult());
-        assertEquals(1, msg.getBody().getGetlasterror());
-        assertEquals(5, msg.getBody().getOtpType());
-        assertEquals(42, msg.getBody().getOtpValue());
-        assertEquals("testid", msg.getBody().getOtpIdentifier());
-        assertArrayEquals(new byte[]{0, 1, 2, 3}, msg.getBody().getShaFile().toByteArray());
-    }
-
-    @Test
-    public void machineAuthResponseNullDetails() {
-        assertThrows(IllegalArgumentException.class, () -> handler.sendMachineAuthResponse(null));
-    }
-
-    @Test
-    public void requestWebNonce() {
-        AsyncJobSingle<WebAPIUserNonceCallback> job = handler.requestWebAPIUserNonce();
-
-        ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonce.Builder> msg = verifySend(EMsg.ClientRequestWebAPIAuthenticateUserNonce);
-
-        assertEquals(SOURCE_JOB_ID, job.getJobID());
-        assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-    }
-
-    @Test
-    public void acceptNewLoginKey() {
-        LoginKeyCallback callback = new LoginKeyCallback(CMsgClientNewLoginKey.newBuilder()
-                .setLoginKey("loginkey")
-                .setUniqueId(123));
-
-        handler.acceptNewLoginKey(callback);
-
-        ClientMsgProtobuf<CMsgClientNewLoginKeyAccepted.Builder> msg = verifySend(EMsg.ClientNewLoginKeyAccepted);
-
-        assertEquals(123, msg.getBody().getUniqueId());
-    }
-
-    @Test
-    public void acceptNewLoginKeyNullCallback() {
-        assertThrows(IllegalArgumentException.class, () -> handler.acceptNewLoginKey(null));
     }
 
     @Test
@@ -253,18 +170,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
     }
 
     @Test
-    public void handleLoginKey() {
-        IPacketMsg msg = getPacket(EMsg.ClientNewLoginKey, true);
-
-        handler.handleMsg(msg);
-
-        LoginKeyCallback callback = verifyCallback();
-
-        assertEquals("testloginkey", callback.getLoginKey());
-        assertEquals(69, callback.getUniqueID());
-    }
-
-    @Test
     public void handleSessionToken() {
         IPacketMsg msg = getPacket(EMsg.ClientSessionToken, true);
 
@@ -273,20 +178,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
         SessionTokenCallback callback = verifyCallback();
 
         assertEquals(123, callback.getSessionToken());
-    }
-
-    @Test
-    public void handleUpdateMachineAuth() {
-        IPacketMsg msg = getPacket(EMsg.ClientUpdateMachineAuth, true);
-
-        handler.handleMsg(msg);
-
-        UpdateMachineAuthCallback callback = verifyCallback();
-
-        assertEquals("ssfn746471640643517445", callback.getFileName());
-        assertEquals(0, callback.getOffset());
-        assertEquals(2048, callback.getBytesToWrite());
-        assertEquals(2048, callback.getData().length);
     }
 
     @Test

@@ -1,20 +1,26 @@
+# ****
+# Don't forget to update dependencies in buildSrc
+# toml doesn't support buildSrc yet
+# ****
+
 [versions]
 # Java / Kotlin versions
-java = "1.8"
-kotlin = "1.9.20" # https://kotlinlang.org/docs/releases.html#release-details || https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
+java = "11"
+kotlin = "1.9.23" # https://kotlinlang.org/docs/releases.html#release-details
+dokka = "1.9.20" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 ktlint = "12.1.0" # https://github.com/JLLeitschuh/ktlint-gradle/releases
 
 # Standard Library versions
-bouncyCastle = "1.77" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
-commons-io = "2.15.1" # https://mvnrepository.com/artifact/commons-io/commons-io
+bouncyCastle = "1.78" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
+commons-io = "2.16.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.14.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 commons-validator = "1.8.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
 gson = "2.10.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
-jacoco = "0.8.11" # https://www.eclemma.org/jacoco
+jacoco = "0.8.12" # https://www.eclemma.org/jacoco
 javaWebSocket = "1.5.6" # https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
 kotlin-coroutines = "1.8.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
 okHttp = "5.0.0-alpha.12" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-protobuf = "3.25.3" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+protobuf = "4.26.1" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 publishPlugin = "1.1.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
 qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
@@ -23,7 +29,7 @@ qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-q
 commonsCodec = "1.16.1" # https://mvnrepository.com/artifact/commons-codec/commons-codec
 junit5 = "5.10.2" # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockWebServer = "5.0.0-alpha.12" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
-mockitoVersion = "4.11.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
+mockitoVersion = "5.11.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
 
 [libraries]
 bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
@@ -48,7 +54,7 @@ test-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockit
 test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockitoVersion" }
 
 [plugins]
-kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "kotlin" }
+kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-lint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }

@@ -131,7 +131,7 @@ public class SampleWebCookie implements Runnable {
             accessToken = pollResponse.getAccessToken();
             refreshToken = pollResponse.getRefreshToken();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
 
             // List a couple of exceptions that could be important to handle.
             if (e instanceof AuthenticationException) {

@@ -72,7 +72,6 @@ public class SampleServerList implements Runnable {
             try (Scanner s = new Scanner(loginKeyFile)) {
                 cellID = Integer.parseInt(s.nextLine());
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
                 System.out.println("Error parsing cellid from cellid.txt. Continuing with cellid 0.");
             }
             System.out.println("Using persisted cell ID: " + cellID);
@@ -162,7 +161,7 @@ public class SampleServerList implements Runnable {
         try (FileWriter fw = new FileWriter("cellid.txt")) {
             fw.write(String.valueOf(callback.getCellID()));
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
 
         System.out.println("Successfully logged on!");
@@ -178,4 +177,3 @@ public class SampleServerList implements Runnable {
         isRunning = false;
     }
 }
-

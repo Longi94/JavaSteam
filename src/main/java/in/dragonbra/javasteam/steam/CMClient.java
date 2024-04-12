@@ -81,7 +81,7 @@ public abstract class CMClient {
         onClientConnected();
     };
 
-    private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<DisconnectedEventArgs>() {
+    private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
             isConnected = false;
@@ -250,10 +250,10 @@ public abstract class CMClient {
             case Multi:
                 handleMulti(packetMsg);
                 break;
-            case ClientLogOnResponse: // we handle this to get the SteamID/SessionID and to setup heartbeating
+            case ClientLogOnResponse: // we handle this to get the SteamID/SessionID and to set up heart beating
                 handleLogOnResponse(packetMsg);
                 break;
-            case ClientLoggedOff: // to stop heartbeating when we get logged off
+            case ClientLoggedOff: // to stop heart beating when we get logged off
                 handleLoggedOff(packetMsg);
                 break;
             case ClientCMList:

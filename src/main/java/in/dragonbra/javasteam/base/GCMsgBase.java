@@ -3,6 +3,8 @@ package in.dragonbra.javasteam.base;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * This is the abstract base class for all available game coordinator messages.
  * It's used to maintain packet payloads and provide a header for all gc messages.
@@ -34,8 +36,11 @@ public abstract class GCMsgBase<HdrType extends IGCSerializableHeader> extends A
     public GCMsgBase(Class<HdrType> clazz, int payloadReserve) {
         super(payloadReserve);
         try {
-            header = clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            header = clazz.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException |
+                 InstantiationException |
+                 IllegalAccessException |
+                 InvocationTargetException e) {
             logger.debug(e);
         }
     }

@@ -6,8 +6,11 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.{kt,kts}]
+ij_kotlin_packages_to_use_import_on_demand = java.util.**, in.dragonbra.javasteam.protobufs.steamclient.**, kotlinx.coroutines.**
 indent_size = 4
-ktlint_disabled_rules=no-wildcard-imports
+ktlint_code_style = intellij_idea
+ktlint_standard_package-name = disabled
+ktlint_standard_multiline-expression-wrapping = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
 
-[*.{yml,yaml}]
-indent_size = 2
+

@@ -34,12 +34,12 @@ public class CryptoHelper {
             if (Utils.getOSType() == EOSType.AndroidUnknown) {
                 Class<? extends Provider> provider =
                         (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
-                Security.insertProviderAt(provider.newInstance(), 1);
+                Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
                 SEC_PROV = "SC";
             } else {
                 Class<? extends Provider> provider =
                         (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
-                Security.addProvider(provider.newInstance());
+                Security.addProvider(provider.getDeclaredConstructor().newInstance());
                 SEC_PROV = "BC";
             }
         } catch (Exception e) {
@@ -83,15 +83,19 @@ public class CryptoHelper {
         CRC32 crc = new CRC32();
         crc.update(input, 0, input.length);
         final long hash = crc.getValue();
-        MemoryStream ms = new MemoryStream(4);
-        BinaryWriter bw = new BinaryWriter(ms.asOutputStream());
 
-        try {
-            bw.writeInt((int) hash);
-        } catch (IOException e) {
-            logger.debug(e);
+        try (MemoryStream ms = new MemoryStream(4)) {
+            BinaryWriter bw = new BinaryWriter(ms.asOutputStream());
+
+            try {
+                bw.writeInt((int) hash);
+            } catch (IOException e) {
+                logger.debug(e);
+            }
+            return ms.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("MemoryStream closed");
         }
-        return ms.toByteArray();
     }
 
     /**
@@ -149,8 +153,13 @@ public class CryptoHelper {
             // decrypt the remaining ciphertext in cbc with the decrypted IV
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv.getValue()));
             return cipher.doFinal(cipherText);
-        } catch (final InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException |
-                NoSuchPaddingException | BadPaddingException | IllegalBlockSizeException | NoSuchProviderException e) {
+        } catch (final InvalidKeyException |
+                       InvalidAlgorithmParameterException |
+                       NoSuchAlgorithmException |
+                       NoSuchPaddingException |
+                       BadPaddingException |
+                       IllegalBlockSizeException |
+                       NoSuchProviderException e) {
             throw new CryptoException("failed to symmetric decrypt", e);
         }
     }
@@ -201,8 +210,13 @@ public class CryptoHelper {
             System.arraycopy(cipherText, 0, output, cryptedIv.length, cipherText.length);
 
             return output;
-        } catch (final InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException |
-                IllegalBlockSizeException | NoSuchPaddingException | NoSuchProviderException | BadPaddingException e) {
+        } catch (final InvalidKeyException |
+                       InvalidAlgorithmParameterException |
+                       NoSuchAlgorithmException |
+                       IllegalBlockSizeException |
+                       NoSuchPaddingException |
+                       NoSuchProviderException |
+                       BadPaddingException e) {
             throw new CryptoException("failed to symmetric encrypt", e);
         }
     }
@@ -255,26 +269,29 @@ public class CryptoHelper {
         // validate HMAC
         byte[] hmacBytes;
 
-        MemoryStream ms = new MemoryStream();
-        ms.write(iv.getValue(), iv.getValue().length - 3, 3);
-        ms.write(plaintextData, 0, plaintextData.length);
-        ms.seek(0, SeekOrigin.BEGIN);
+        try (MemoryStream ms = new MemoryStream()) {
+            ms.write(iv.getValue(), iv.getValue().length - 3, 3);
+            ms.write(plaintextData, 0, plaintextData.length);
+            ms.seek(0, SeekOrigin.BEGIN);
 
-        try {
-            Mac mac = Mac.getInstance("HmacSHA1");
-            mac.init(new SecretKeySpec(hmacSecret, "HmacSHA1"));
-            hmacBytes = mac.doFinal(ms.toByteArray());
+            try {
+                Mac mac = Mac.getInstance("HmacSHA1");
+                mac.init(new SecretKeySpec(hmacSecret, "HmacSHA1"));
+                hmacBytes = mac.doFinal(ms.toByteArray());
 
-            for (int i = 0; i < iv.getValue().length - 3; i++) {
-                if (hmacBytes[i] != iv.getValue()[i]) {
-                    throw new CryptoException("NetFilterEncryption was unable to decrypt packet: HMAC from server did not match computed HMAC.");
+                for (int i = 0; i < iv.getValue().length - 3; i++) {
+                    if (hmacBytes[i] != iv.getValue()[i]) {
+                        throw new CryptoException("NetFilterEncryption was unable to decrypt packet: HMAC from server did not match computed HMAC.");
+                    }
                 }
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+                throw new CryptoException("NetFilterEncryption was unable to decrypt packet", e);
             }
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new CryptoException("NetFilterEncryption was unable to decrypt packet", e);
-        }
 
-        return plaintextData;
+            return plaintextData;
+        } catch (Exception e) {
+            throw new RuntimeException("MemoryStream closed");
+        }
     }
 
     /**

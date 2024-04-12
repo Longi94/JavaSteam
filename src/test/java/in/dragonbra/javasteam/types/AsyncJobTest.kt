@@ -223,7 +223,7 @@ class AsyncJobTest {
 
         Assertions.assertTrue(
             jobFinished,
-            "Async job should inform completion when completion predicat is passed after a result is given"
+            "Async job should inform completion when completion predicate is passed after a result is given"
         )
         Assertions.assertTrue(
             asyncTask.isCompleted,
@@ -303,10 +303,12 @@ class AsyncJobTest {
         )
 
         // give result 1 of 2
-        asyncJob.addResult(Callback().apply {
-            jobID = JobID(123)
-            isFinished = false
-        })
+        asyncJob.addResult(
+            Callback().apply {
+                jobID = JobID(123)
+                isFinished = false
+            }
+        )
 
         // delay for what the original timeout would have been
         runBlocking { delay(5000) }

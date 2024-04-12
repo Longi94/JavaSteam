@@ -20,6 +20,7 @@ import java.util.EnumSet;
 /**
  * This callback is returned in response to an attempt to log on to the Steam3 network through {@link SteamUser}.
  */
+@SuppressWarnings("unused")
 public class LoggedOnCallback extends CallbackMsg {
 
     private final EResult result;
@@ -45,9 +46,6 @@ public class LoggedOnCallback extends CallbackMsg {
     private int cellIDPingThreshold;
 
     private byte[] steam2Ticket;
-
-    @Deprecated
-    private String webAPIUserNonce;
 
     private String ipCountryCode;
 
@@ -81,8 +79,6 @@ public class LoggedOnCallback extends CallbackMsg {
         steam2Ticket = resp.getSteam2Ticket().toByteArray();
 
         ipCountryCode = resp.getIpCountryCode();
-
-        webAPIUserNonce = resp.getWebapiAuthenticateUserNonce();
 
         vanityURL = resp.getVanityUrl();
 
@@ -202,15 +198,6 @@ public class LoggedOnCallback extends CallbackMsg {
      */
     public byte[] getSteam2Ticket() {
         return steam2Ticket;
-    }
-
-    /**
-     * @deprecated Steam no longer sends webapi nonce as of October 2023, use SteamAuthentication.
-     * @return the WebAPI authentication user nonce.
-     */
-    @Deprecated
-    public String getWebAPIUserNonce() {
-        return webAPIUserNonce;
     }
 
     /**

@@ -230,7 +230,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesWritesBinaryToStream() throws IOException {
+    public void keyValuesWritesBinaryToStream() {
         String expectedHexValue = "00525000017374617475730023444F54415F52505F424F54505241435449434500016E756D5F706172616D730030000" +
                 "17761746368696E675F736572766572005B413A313A323130383933353136393A353431325D00017761746368696E675F66726F6D5F73" +
                 "6572766572005B413A313A3836343436383939343A353431325D000808";
@@ -241,12 +241,15 @@ public class KeyValueTest extends TestBase {
         kv.getChildren().add(new KeyValue("watching_server", "[A:1:2108935169:5412]"));
         kv.getChildren().add(new KeyValue("watching_from_server", "[A:1:864468994:5412]"));
 
-        MemoryStream ms = new MemoryStream();
-        kv.saveToStream(ms.asOutputStream(), true);
+        try (MemoryStream ms = new MemoryStream()) {
+            kv.saveToStream(ms.asOutputStream(), true);
 
-        String hexValue = Hex.encodeHexString(ms.toByteArray(), false).replaceAll("-", "");
+            String hexValue = Hex.encodeHexString(ms.toByteArray(), false).replaceAll("-", "");
 
-        assertEquals(expectedHexValue, hexValue);
+            assertEquals(expectedHexValue, hexValue);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
@@ -371,7 +374,7 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesSavesTextToStream() throws IOException {
+    public void keyValuesSavesTextToStream() {
         String expected = "\"RootNode\"\n{\n\t\"key1\"\t\t\"value1\"\n\t\"key2\"\n\t{\n\t\t\"ChildKey\"\t\t\"ChildValue\"\n\t}\n}\n";
 
         KeyValue kv = new KeyValue("RootNode");
@@ -382,13 +385,16 @@ public class KeyValueTest extends TestBase {
         kv.getChildren().add(kv2);
 
         String text;
-        MemoryStream ms = new MemoryStream();
-        kv.saveToStream(ms.asOutputStream(), false);
-        ms.seek(0, SeekOrigin.BEGIN);
 
-        text = new String(ms.toByteArray());
+        try (MemoryStream ms = new MemoryStream()) {
+            kv.saveToStream(ms.asOutputStream(), false);
+            ms.seek(0, SeekOrigin.BEGIN);
 
-        assertEquals(expected, text);
+            text = new String(ms.toByteArray());
+            assertEquals(expected, text);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
@@ -416,37 +422,46 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
-    public void keyValuesEscapesTextWhenSerializing() throws IOException {
+    public void keyValuesEscapesTextWhenSerializing() {
         KeyValue kv = new KeyValue("key");
         kv.getChildren().add(new KeyValue("slashes", "\\o/"));
         kv.getChildren().add(new KeyValue("newline", "\r\n"));
 
         String text;
-        MemoryStream ms = new MemoryStream();
-        kv.saveToStream(ms.asOutputStream(), false);
-        ms.seek(0, SeekOrigin.BEGIN);
 
-        text = new String(ms.toByteArray());
+        try (MemoryStream ms = new MemoryStream()) {
+            kv.saveToStream(ms.asOutputStream(), false);
+            ms.seek(0, SeekOrigin.BEGIN);
 
-        String expectedValue = "\"key\"\n{\n\t\"slashes\"\t\t\"\\\\o/\"\n\t\"newline\"\t\t\"\\r\\n\"\n}\n";
-        assertEquals(expectedValue, text);
+            text = new String(ms.toByteArray());
+
+            String expectedValue = "\"key\"\n{\n\t\"slashes\"\t\t\"\\\\o/\"\n\t\"newline\"\t\t\"\\r\\n\"\n}\n";
+            assertEquals(expectedValue, text);
+
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
-    public void keyValuesTextPreserveEmptyObjects() throws IOException {
+    public void keyValuesTextPreserveEmptyObjects() {
         KeyValue kv = new KeyValue("key");
         kv.getChildren().add(new KeyValue("emptyObj"));
         kv.getChildren().add(new KeyValue("emptyString", ""));
 
         String text;
-        MemoryStream ms = new MemoryStream();
-        kv.saveToStream(ms.asOutputStream(), false);
-        ms.seek(0, SeekOrigin.BEGIN);
 
-        text = new String(ms.toByteArray());
+        try (MemoryStream ms = new MemoryStream()) {
+            kv.saveToStream(ms.asOutputStream(), false);
+            ms.seek(0, SeekOrigin.BEGIN);
 
-        String expectedValue = "\"key\"\n{\n\t\"emptyObj\"\n\t{\n\t}\n\t\"emptyString\"\t\t\"\"\n}\n";
-        assertEquals(expectedValue, text);
+            text = new String(ms.toByteArray());
+
+            String expectedValue = "\"key\"\n{\n\t\"emptyObj\"\n\t{\n\t}\n\t\"emptyString\"\t\t\"\"\n}\n";
+            assertEquals(expectedValue, text);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test

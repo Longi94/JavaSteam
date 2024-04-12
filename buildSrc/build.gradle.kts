@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    id("org.jlleitschuh.gradle.ktlint") version "11.6.1"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0" // https://github.com/JLLeitschuh/ktlint-gradle/releases
 }
 
 version = "1.0.0"
@@ -14,7 +14,7 @@ dependencies {
     implementation(gradleApi())
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation("commons-io:commons-io:2.14.0")
+    implementation("commons-io:commons-io:2.16.0")
 }
 
 gradlePlugin {

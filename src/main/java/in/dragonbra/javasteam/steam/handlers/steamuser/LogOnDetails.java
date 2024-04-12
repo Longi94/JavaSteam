@@ -2,13 +2,13 @@ package in.dragonbra.javasteam.steam.handlers.steamuser;
 
 import in.dragonbra.javasteam.enums.EOSType;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoginKeyCallback;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.Utils;
 
 /**
  * Represents the details required to log into Steam3 as a user.
  */
+@SuppressWarnings("unused")
 public class LogOnDetails {
 
     private String username = "";
@@ -23,15 +23,7 @@ public class LogOnDetails {
 
     private String twoFactorCode = "";
 
-    /**
-     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
-     */
-    @Deprecated
-    private String loginKey = "";
-
     private boolean shouldRememberPassword;
-
-    private byte[] sentryFileHash;
 
     private String accessToken;
 
@@ -176,30 +168,8 @@ public class LogOnDetails {
     }
 
     /**
-     * Gets the login key used to login. This is a key that has been received in a previous Steam session by a {@link LoginKeyCallback}.
-     *
-     * @return the login key.
-     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
-     */
-    @Deprecated
-    public String getLoginKey() {
-        return loginKey;
-    }
-
-    /**
-     * Sets the login key used to login. This is a key that has been received in a previous Steam session by a {@link LoginKeyCallback}.
-     *
-     * @param loginKey the login key.
-     * @deprecated "Steam no longer sends new login keys as of March 2023, use SteamAuthentication."
-     */
-    @Deprecated
-    public void setLoginKey(String loginKey) {
-        this.loginKey = loginKey;
-    }
-
-    /**
      * Gets the 'Should Remember Password' flag.
-     * This is used in combination with the login key and {@link LoginKeyCallback} for password-less login.
+     * This is used in combination with the <see cref="AccessToken"/> for password-less login.
      *
      * @return the 'Should Remember Password' flag.
      */
@@ -209,30 +179,13 @@ public class LogOnDetails {
 
     /**
      * Sets the 'Should Remember Password' flag.
-     * This is used in combination with the login key and {@link LoginKeyCallback} for password-less login.
+     * This is used in combination with the {@link LogOnDetails#accessToken } for password-less login.
+     * Set this to true when {@link in.dragonbra.javasteam.steam.authentication.AuthSessionDetails#persistentSession } is set to true.
      *
      * @param shouldRememberPassword the 'Should Remember Password' flag.
      */
     public void setShouldRememberPassword(boolean shouldRememberPassword) {
         this.shouldRememberPassword = shouldRememberPassword;
-    }
-
-    /**
-     * Gets the sentry file hash for this logon attempt, or null if no sentry file is available.
-     *
-     * @return the sentry file hash.
-     */
-    public byte[] getSentryFileHash() {
-        return sentryFileHash;
-    }
-
-    /**
-     * Sets the sentry file hash for this logon attempt, or null if no sentry file is available.
-     *
-     * @param sentryFileHash the sentry file hash.
-     */
-    public void setSentryFileHash(byte[] sentryFileHash) {
-        this.sentryFileHash = sentryFileHash;
     }
 
     /**

@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.base;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.GeneratedMessage;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
 import in.dragonbra.javasteam.util.log.LogManager;
@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
  *
  * @param <BodyType> The body type of this message.
  */
-public class ClientMsgProtobuf<BodyType extends GeneratedMessageV3.Builder<BodyType>> extends AClientMsgProtobuf {
+public class ClientMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyType>> extends AClientMsgProtobuf {
 
     private static final Logger logger = LogManager.getLogger(ClientMsgProtobuf.class);
 

@@ -40,6 +40,7 @@ public class MyHandler extends ClientMsgHandler {
      * The concept of this example is still valid.
      */
     // handlers can also define functions which can send data to the steam servers
+    @SuppressWarnings("unused")
     public void logOff(String user, String pass) {
         ClientMsgProtobuf<CMsgClientLogOff.Builder> logOffMessage = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
         client.send(logOffMessage);
