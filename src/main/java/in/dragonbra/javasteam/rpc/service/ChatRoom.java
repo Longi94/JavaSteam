@@ -19,267 +19,267 @@ public class ChatRoom extends UnifiedService implements IChatRoom {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateChatRoomGroup(CChatRoom_CreateChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createChatRoomGroup(CChatRoom_CreateChatRoomGroup_Request request) {
         return sendMessage(request, "CreateChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SaveChatRoomGroup(CChatRoom_SaveChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> saveChatRoomGroup(CChatRoom_SaveChatRoomGroup_Request request) {
         return sendMessage(request, "SaveChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RenameChatRoomGroup(CChatRoom_RenameChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> renameChatRoomGroup(CChatRoom_RenameChatRoomGroup_Request request) {
         return sendMessage(request, "RenameChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetChatRoomGroupTagline(CChatRoom_SetChatRoomGroupTagline_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setChatRoomGroupTagline(CChatRoom_SetChatRoomGroupTagline_Request request) {
         return sendMessage(request, "SetChatRoomGroupTagline");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetChatRoomGroupAvatar(CChatRoom_SetChatRoomGroupAvatar_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setChatRoomGroupAvatar(CChatRoom_SetChatRoomGroupAvatar_Request request) {
         return sendMessage(request, "SetChatRoomGroupAvatar");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetChatRoomGroupWatchingBroadcast(CChatRoom_SetChatRoomGroupWatchingBroadcast_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setChatRoomGroupWatchingBroadcast(CChatRoom_SetChatRoomGroupWatchingBroadcast_Request request) {
         return sendMessage(request, "SetChatRoomGroupWatchingBroadcast");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> JoinMiniGameForChatRoomGroup(CChatRoom_JoinMiniGameForChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> joinMiniGameForChatRoomGroup(CChatRoom_JoinMiniGameForChatRoomGroup_Request request) {
         return sendMessage(request, "JoinMiniGameForChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> EndMiniGameForChatRoomGroup(CChatRoom_EndMiniGameForChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> endMiniGameForChatRoomGroup(CChatRoom_EndMiniGameForChatRoomGroup_Request request) {
         return sendMessage(request, "EndMiniGameForChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> MuteUserInGroup(CChatRoom_MuteUser_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> muteUserInGroup(CChatRoom_MuteUser_Request request) {
         return sendMessage(request, "MuteUserInGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> KickUserFromGroup(CChatRoom_KickUser_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> kickUserFromGroup(CChatRoom_KickUser_Request request) {
         return sendMessage(request, "KickUserFromGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetUserBanState(CChatRoom_SetUserBanState_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setUserBanState(CChatRoom_SetUserBanState_Request request) {
         return sendMessage(request, "SetUserBanState");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RevokeInviteToGroup(CChatRoom_RevokeInvite_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> revokeInviteToGroup(CChatRoom_RevokeInvite_Request request) {
         return sendMessage(request, "RevokeInviteToGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateRole(CChatRoom_CreateRole_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createRole(CChatRoom_CreateRole_Request request) {
         return sendMessage(request, "CreateRole");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetRoles(CChatRoom_GetRoles_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getRoles(CChatRoom_GetRoles_Request request) {
         return sendMessage(request, "GetRoles");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RenameRole(CChatRoom_RenameRole_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> renameRole(CChatRoom_RenameRole_Request request) {
         return sendMessage(request, "RenameRole");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> ReorderRole(CChatRoom_ReorderRole_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> reorderRole(CChatRoom_ReorderRole_Request request) {
         return sendMessage(request, "ReorderRole");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteRole(CChatRoom_DeleteRole_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteRole(CChatRoom_DeleteRole_Request request) {
         return sendMessage(request, "DeleteRole");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetRoleActions(CChatRoom_GetRoleActions_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getRoleActions(CChatRoom_GetRoleActions_Request request) {
         return sendMessage(request, "GetRoleActions");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> ReplaceRoleActions(CChatRoom_ReplaceRoleActions_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> replaceRoleActions(CChatRoom_ReplaceRoleActions_Request request) {
         return sendMessage(request, "ReplaceRoleActions");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> AddRoleToUser(CChatRoom_AddRoleToUser_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> addRoleToUser(CChatRoom_AddRoleToUser_Request request) {
         return sendMessage(request, "AddRoleToUser");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetRolesForUser(CChatRoom_GetRolesForUser_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getRolesForUser(CChatRoom_GetRolesForUser_Request request) {
         return sendMessage(request, "GetRolesForUser");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteRoleFromUser(CChatRoom_DeleteRoleFromUser_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteRoleFromUser(CChatRoom_DeleteRoleFromUser_Request request) {
         return sendMessage(request, "DeleteRoleFromUser");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> JoinChatRoomGroup(CChatRoom_JoinChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> joinChatRoomGroup(CChatRoom_JoinChatRoomGroup_Request request) {
         return sendMessage(request, "JoinChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> InviteFriendToChatRoomGroup(CChatRoom_InviteFriendToChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> inviteFriendToChatRoomGroup(CChatRoom_InviteFriendToChatRoomGroup_Request request) {
         return sendMessage(request, "InviteFriendToChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> LeaveChatRoomGroup(CChatRoom_LeaveChatRoomGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> leaveChatRoomGroup(CChatRoom_LeaveChatRoomGroup_Request request) {
         return sendMessage(request, "LeaveChatRoomGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateChatRoom(CChatRoom_CreateChatRoom_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createChatRoom(CChatRoom_CreateChatRoom_Request request) {
         return sendMessage(request, "CreateChatRoom");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteChatRoom(CChatRoom_DeleteChatRoom_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteChatRoom(CChatRoom_DeleteChatRoom_Request request) {
         return sendMessage(request, "DeleteChatRoom");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RenameChatRoom(CChatRoom_RenameChatRoom_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> renameChatRoom(CChatRoom_RenameChatRoom_Request request) {
         return sendMessage(request, "RenameChatRoom");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> ReorderChatRoom(CChatRoom_ReorderChatRoom_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> reorderChatRoom(CChatRoom_ReorderChatRoom_Request request) {
         return sendMessage(request, "ReorderChatRoom");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SendChatMessage(CChatRoom_SendChatMessage_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> sendChatMessage(CChatRoom_SendChatMessage_Request request) {
         return sendMessage(request, "SendChatMessage");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> JoinVoiceChat(CChatRoom_JoinVoiceChat_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> joinVoiceChat(CChatRoom_JoinVoiceChat_Request request) {
         return sendMessage(request, "JoinVoiceChat");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> LeaveVoiceChat(CChatRoom_LeaveVoiceChat_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> leaveVoiceChat(CChatRoom_LeaveVoiceChat_Request request) {
         return sendMessage(request, "LeaveVoiceChat");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetMessageHistory(CChatRoom_GetMessageHistory_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getMessageHistory(CChatRoom_GetMessageHistory_Request request) {
         return sendMessage(request, "GetMessageHistory");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetMyChatRoomGroups(CChatRoom_GetMyChatRoomGroups_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getMyChatRoomGroups(CChatRoom_GetMyChatRoomGroups_Request request) {
         return sendMessage(request, "GetMyChatRoomGroups");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetChatRoomGroupState(CChatRoom_GetChatRoomGroupState_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getChatRoomGroupState(CChatRoom_GetChatRoomGroupState_Request request) {
         return sendMessage(request, "GetChatRoomGroupState");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetChatRoomGroupSummary(CChatRoom_GetChatRoomGroupSummary_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getChatRoomGroupSummary(CChatRoom_GetChatRoomGroupSummary_Request request) {
         return sendMessage(request, "GetChatRoomGroupSummary");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetAppChatRoomGroupForceActive(CChatRoom_SetAppChatRoomGroupForceActive_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setAppChatRoomGroupForceActive(CChatRoom_SetAppChatRoomGroupForceActive_Request request) {
         return sendMessage(request, "SetAppChatRoomGroupForceActive");
     }
 
     @Override
-    public void SetAppChatRoomGroupStopForceActive(CChatRoom_SetAppChatRoomGroupStopForceActive_Notification request) {
+    public void setAppChatRoomGroupStopForceActive(CChatRoom_SetAppChatRoomGroupStopForceActive_Notification request) {
         sendNotification(request, "SetAppChatRoomGroupStopForceActive");
     }
 
     @Override
-    public void AckChatMessage(CChatRoom_AckChatMessage_Notification request) {
+    public void ackChatMessage(CChatRoom_AckChatMessage_Notification request) {
         sendNotification(request, "AckChatMessage");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateInviteLink(CChatRoom_CreateInviteLink_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createInviteLink(CChatRoom_CreateInviteLink_Request request) {
         return sendMessage(request, "CreateInviteLink");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetInviteLinkInfo(CChatRoom_GetInviteLinkInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getInviteLinkInfo(CChatRoom_GetInviteLinkInfo_Request request) {
         return sendMessage(request, "GetInviteLinkInfo");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetInviteInfo(CChatRoom_GetInviteInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getInviteInfo(CChatRoom_GetInviteInfo_Request request) {
         return sendMessage(request, "GetInviteInfo");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetInviteLinksForGroup(CChatRoom_GetInviteLinksForGroup_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getInviteLinksForGroup(CChatRoom_GetInviteLinksForGroup_Request request) {
         return sendMessage(request, "GetInviteLinksForGroup");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetBanList(CChatRoom_GetBanList_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getBanList(CChatRoom_GetBanList_Request request) {
         return sendMessage(request, "GetBanList");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetInviteList(CChatRoom_GetInviteList_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getInviteList(CChatRoom_GetInviteList_Request request) {
         return sendMessage(request, "GetInviteList");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteInviteLink(CChatRoom_DeleteInviteLink_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteInviteLink(CChatRoom_DeleteInviteLink_Request request) {
         return sendMessage(request, "DeleteInviteLink");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetSessionActiveChatRoomGroups(CChatRoom_SetSessionActiveChatRoomGroups_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setSessionActiveChatRoomGroups(CChatRoom_SetSessionActiveChatRoomGroups_Request request) {
         return sendMessage(request, "SetSessionActiveChatRoomGroups");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetUserChatGroupPreferences(CChatRoom_SetUserChatGroupPreferences_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setUserChatGroupPreferences(CChatRoom_SetUserChatGroupPreferences_Request request) {
         return sendMessage(request, "SetUserChatGroupPreferences");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteChatMessages(CChatRoom_DeleteChatMessages_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteChatMessages(CChatRoom_DeleteChatMessages_Request request) {
         return sendMessage(request, "DeleteChatMessages");
     }
 
     @Override
-    public void UpdateMemberListView(CChatRoom_UpdateMemberListView_Notification request) {
+    public void updateMemberListView(CChatRoom_UpdateMemberListView_Notification request) {
         sendNotification(request, "UpdateMemberListView");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SearchMembers(CChatRoom_SearchMembers_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> searchMembers(CChatRoom_SearchMembers_Request request) {
         return sendMessage(request, "SearchMembers");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> UpdateMessageReaction(CChatRoom_UpdateMessageReaction_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> updateMessageReaction(CChatRoom_UpdateMessageReaction_Request request) {
         return sendMessage(request, "UpdateMessageReaction");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetMessageReactionReactors(CChatRoom_GetMessageReactionReactors_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getMessageReactionReactors(CChatRoom_GetMessageReactionReactors_Request request) {
         return sendMessage(request, "GetMessageReactionReactors");
     }
 }

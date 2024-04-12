@@ -14,7 +14,7 @@ open class VersionGenTask : DefaultTask() {
 
     private val outputDir = File(
         project.layout.buildDirectory.get().asFile,
-        "generated/source/javasteam/main/java/$PACKAGE"
+        "generated/source/javasteam/main/java/in/dragonbra/javasteam/util"
     )
 
     @TaskAction

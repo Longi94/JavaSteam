@@ -19,57 +19,57 @@ public class UserAccount extends UnifiedService implements IUserAccount {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetAvailableValveDiscountPromotions(CUserAccount_GetAvailableValveDiscountPromotions_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getAvailableValveDiscountPromotions(CUserAccount_GetAvailableValveDiscountPromotions_Request request) {
         return sendMessage(request, "GetAvailableValveDiscountPromotions");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetClientWalletDetails(CUserAccount_GetClientWalletDetails_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getClientWalletDetails(CUserAccount_GetClientWalletDetails_Request request) {
         return sendMessage(request, "GetClientWalletDetails");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetAccountLinkStatus(CUserAccount_GetAccountLinkStatus_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getAccountLinkStatus(CUserAccount_GetAccountLinkStatus_Request request) {
         return sendMessage(request, "GetAccountLinkStatus");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CancelLicenseForApp(CUserAccount_CancelLicenseForApp_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> cancelLicenseForApp(CUserAccount_CancelLicenseForApp_Request request) {
         return sendMessage(request, "CancelLicenseForApp");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetUserCountry(CUserAccount_GetUserCountry_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getUserCountry(CUserAccount_GetUserCountry_Request request) {
         return sendMessage(request, "GetUserCountry");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateFriendInviteToken(CUserAccount_CreateFriendInviteToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createFriendInviteToken(CUserAccount_CreateFriendInviteToken_Request request) {
         return sendMessage(request, "CreateFriendInviteToken");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetFriendInviteTokens(CUserAccount_GetFriendInviteTokens_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getFriendInviteTokens(CUserAccount_GetFriendInviteTokens_Request request) {
         return sendMessage(request, "GetFriendInviteTokens");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> ViewFriendInviteToken(CUserAccount_ViewFriendInviteToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> viewFriendInviteToken(CUserAccount_ViewFriendInviteToken_Request request) {
         return sendMessage(request, "ViewFriendInviteToken");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RedeemFriendInviteToken(CUserAccount_RedeemFriendInviteToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> redeemFriendInviteToken(CUserAccount_RedeemFriendInviteToken_Request request) {
         return sendMessage(request, "RedeemFriendInviteToken");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RevokeFriendInviteToken(CUserAccount_RevokeFriendInviteToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> revokeFriendInviteToken(CUserAccount_RevokeFriendInviteToken_Request request) {
         return sendMessage(request, "RevokeFriendInviteToken");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RegisterCompatTool(CUserAccount_RegisterCompatTool_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> registerCompatTool(CUserAccount_RegisterCompatTool_Request request) {
         return sendMessage(request, "RegisterCompatTool");
     }
 }

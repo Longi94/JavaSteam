@@ -50,7 +50,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder()
         request.accountName = accountName
 
-        val message = authenticationService.GetPasswordRSAPublicKey(request.build()).runBlock()
+        val message = authenticationService.getPasswordRSAPublicKey(request.build()).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Failed to get password public key", message.result)
@@ -82,7 +82,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
             }
         }
 
-        val message = authenticationService.GenerateAccessTokenForApp(request.build()).runBlock()
+        val message = authenticationService.generateAccessTokenForApp(request.build()).runBlock()
 
         if (message.result != EResult.OK) {
             throw IllegalArgumentException("Failed to generate token ${message.result}")
@@ -116,7 +116,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         request.websiteId = authSessionDetails.websiteID
         request.deviceDetails = deviceDetails.build()
 
-        val message = authenticationService.BeginAuthSessionViaQR(request.build()).runBlock()
+        val message = authenticationService.beginAuthSessionViaQR(request.build()).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Failed to begin QR auth session", message.result)
@@ -190,7 +190,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
             request.guardData = authSessionDetails.guardData
         }
 
-        val message = authenticationService.BeginAuthSessionViaCredentials(request.build()).runBlock()
+        val message = authenticationService.beginAuthSessionViaCredentials(request.build()).runBlock()
 
         if (message.result != EResult.OK) {
             throw AuthenticationException("Authentication failed", message.result)

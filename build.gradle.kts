@@ -4,13 +4,14 @@ plugins {
     `maven-publish`
     alias(libs.plugins.kotlin.dokka)
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.lint)
+    alias(libs.plugins.kotlin.kotlinter)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.protobuf.gradle)
     id("jacoco")
     id("signing")
     projectversiongen
     steamlanguagegen
+    rpcinterfacegen
 }
 
 allprojects {
@@ -90,12 +91,15 @@ sourceSets.main {
         files("build/generated/source/steamd/main/java").builtBy("generateSteamLanguage"),
         files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion")
     )
+    kotlin.srcDirs(
+        files("build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/interfaces").builtBy("generateRpcMethods")
+    )
 }
 
 /* Dependencies */
+tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
-tasks["compileJava"].dependsOn("generateSteamLanguage")
-tasks["compileJava"].dependsOn("generateProjectVersion")
+tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods",)
 tasks["build"].finalizedBy(dokkaJavadocJar)
 
 dependencies {

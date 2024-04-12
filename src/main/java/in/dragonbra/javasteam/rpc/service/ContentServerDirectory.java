@@ -19,37 +19,37 @@ public class ContentServerDirectory extends UnifiedService implements IContentSe
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getServersForSteamPipe(CContentServerDirectory_GetServersForSteamPipe_Request request) {
         return sendMessage(request, "GetServersForSteamPipe");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getDepotPatchInfo(CContentServerDirectory_GetDepotPatchInfo_Request request) {
         return sendMessage(request, "GetDepotPatchInfo");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getClientUpdateHosts(CContentServerDirectory_GetClientUpdateHosts_Request request) {
         return sendMessage(request, "GetClientUpdateHosts");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getManifestRequestCode(CContentServerDirectory_GetManifestRequestCode_Request request) {
         return sendMessage(request, "GetManifestRequestCode");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetCDNAuthToken(CContentServerDirectory_GetCDNAuthToken_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getCDNAuthToken(CContentServerDirectory_GetCDNAuthToken_Request request) {
         return sendMessage(request, "GetCDNAuthToken");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RequestPeerContentServer(CContentServerDirectory_RequestPeerContentServer_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> requestPeerContentServer(CContentServerDirectory_RequestPeerContentServer_Request request) {
         return sendMessage(request, "RequestPeerContentServer");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetPeerContentInfo(CContentServerDirectory_GetPeerContentInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getPeerContentInfo(CContentServerDirectory_GetPeerContentInfo_Request request) {
         return sendMessage(request, "GetPeerContentInfo");
     }
 }

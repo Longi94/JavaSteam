@@ -19,7 +19,7 @@ public class Chat extends UnifiedService implements IChat {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> RequestFriendPersonaStates(CChat_RequestFriendPersonaStates_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> requestFriendPersonaStates(CChat_RequestFriendPersonaStates_Request request) {
         return sendMessage(request, "RequestFriendPersonaStates");
     }
 }

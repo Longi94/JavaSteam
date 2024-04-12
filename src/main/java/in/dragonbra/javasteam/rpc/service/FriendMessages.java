@@ -19,32 +19,32 @@ public class FriendMessages extends UnifiedService implements IFriendMessages {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getRecentMessages(CFriendMessages_GetRecentMessages_Request request) {
         return sendMessage(request, "GetRecentMessages");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getActiveMessageSessions(CFriendsMessages_GetActiveMessageSessions_Request request) {
         return sendMessage(request, "GetActiveMessageSessions");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SendMessage(CFriendMessages_SendMessage_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> sendMessage(CFriendMessages_SendMessage_Request request) {
         return sendMessage(request, "SendMessage");
     }
 
     @Override
-    public void AckMessage(CFriendMessages_AckMessage_Notification request) {
+    public void ackMessage(CFriendMessages_AckMessage_Notification request) {
         sendNotification(request, "AckMessage");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> IsInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> isInFriendsUIBeta(CFriendMessages_IsInFriendsUIBeta_Request request) {
         return sendMessage(request, "IsInFriendsUIBeta");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> UpdateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> updateMessageReaction(CFriendMessages_UpdateMessageReaction_Request request) {
         return sendMessage(request, "UpdateMessageReaction");
     }
 }

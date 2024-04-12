@@ -1,7 +1,7 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0" // https://github.com/JLLeitschuh/ktlint-gradle/releases
+    id("org.jmailen.kotlinter") version "4.3.0" // https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 }
 
 version = "1.0.0"
@@ -15,6 +15,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
     implementation("commons-io:commons-io:2.16.0")
+    // https://mvnrepository.com/artifact/com.squareup/kotlinpoet
+    implementation("com.squareup:kotlinpoet:1.16.0")
 }
 
 gradlePlugin {
@@ -26,6 +28,10 @@ gradlePlugin {
         create("projectversiongen") {
             id = "projectversiongen"
             implementationClass = "in.dragonbra.generators.versions.VersionGenPlugin"
+        }
+        create("rpcinterfacegen") {
+            id = "rpcinterfacegen"
+            implementationClass = "in.dragonbra.generators.rpc.RpcGenPlugin"
         }
     }
 }

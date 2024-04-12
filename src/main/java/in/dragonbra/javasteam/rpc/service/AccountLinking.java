@@ -19,7 +19,7 @@ public class AccountLinking extends UnifiedService implements IAccountLinking {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetLinkedAccountInfo(CAccountLinking_GetLinkedAccountInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getLinkedAccountInfo(CAccountLinking_GetLinkedAccountInfo_Request request) {
         return sendMessage(request, "GetLinkedAccountInfo");
     }
 }

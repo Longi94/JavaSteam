@@ -19,12 +19,12 @@ public class ClanChatRooms extends UnifiedService implements IClanChatRooms {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getClanChatRoomInfo(CClanChatRooms_GetClanChatRoomInfo_Request request) {
         return sendMessage(request, "GetClanChatRoomInfo");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SetClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> setClanChatRoomPrivate(CClanChatRooms_SetClanChatRoomPrivate_Request request) {
         return sendMessage(request, "SetClanChatRoomPrivate");
     }
 }

@@ -19,64 +19,62 @@ public class RemoteClient extends UnifiedService implements IRemoteClient {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> GetPairingInfo(CRemoteClient_GetPairingInfo_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> getPairingInfo(CRemoteClient_GetPairingInfo_Request request) {
         return sendMessage(request, "GetPairingInfo");
     }
 
     @Override
-    public void NotifyOnline(CRemoteClient_Online_Notification request) {
+    public void notifyOnline(CRemoteClient_Online_Notification request) {
         sendNotification(request, "NotifyOnline");
-
     }
 
     @Override
-    public void NotifyReplyPacket(CRemoteClient_ReplyPacket_Notification request) {
+    public void notifyReplyPacket(CRemoteClient_ReplyPacket_Notification request) {
         sendNotification(request, "NotifyReplyPacket");
-
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> AllocateRelayServer(CRemoteClient_AllocateRelayServer_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> allocateRelayServer(CRemoteClient_AllocateRelayServer_Request request) {
         return sendMessage(request, "AllocateRelayServer");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> AllocateSDR(CRemoteClient_AllocateSDR_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> allocateSDR(CRemoteClient_AllocateSDR_Request request) {
         return sendMessage(request, "AllocateSDR");
     }
 
     @Override
-    public void SendSteamBroadcastPacket(CRemoteClient_SteamBroadcast_Notification request) {
+    public void sendSteamBroadcastPacket(CRemoteClient_SteamBroadcast_Notification request) {
         sendNotification(request, "SendSteamBroadcastPacket");
     }
 
     @Override
-    public void SendSteamToSteamPacket(CRemoteClient_SteamToSteam_Notification request) {
+    public void sendSteamToSteamPacket(CRemoteClient_SteamToSteam_Notification request) {
         sendNotification(request, "SendSteamToSteamPacket");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> SendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> sendRemotePlaySessionStarted(CRemotePlay_SessionStarted_Request request) {
         return sendMessage(request, "SendRemotePlaySessionStarted");
     }
 
     @Override
-    public void SendRemotePlaySessionStopped(CRemotePlay_SessionStopped_Notification request) {
+    public void sendRemotePlaySessionStopped(CRemotePlay_SessionStopped_Notification request) {
         sendNotification(request, "SendRemotePlaySessionStopped");
     }
 
     @Override
-    public void SendRemotePlayTogetherPacket(CRemotePlayTogether_Notification request) {
+    public void sendRemotePlayTogetherPacket(CRemotePlayTogether_Notification request) {
         sendNotification(request, "SendRemotePlayTogetherPacket");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> CreateRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> createRemotePlayTogetherInvitation(CRemoteClient_CreateRemotePlayTogetherInvitation_Request request) {
         return sendMessage(request, "CreateRemotePlayTogetherInvitation");
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> DeleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> deleteRemotePlayTogetherInvitation(CRemoteClient_DeleteRemotePlayTogetherInvitation_Request request) {
         return sendMessage(request, "DeleteRemotePlayTogetherInvitation");
     }
 }

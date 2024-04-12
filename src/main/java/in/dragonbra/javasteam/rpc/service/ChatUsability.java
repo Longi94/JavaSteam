@@ -17,7 +17,7 @@ public class ChatUsability extends UnifiedService implements IChatUsability {
     }
 
     @Override
-    public void NotifyClientUsabilityMetrics(CChatUsability_ClientUsabilityMetrics_Notification request) {
+    public void notifyClientUsabilityMetrics(CChatUsability_ClientUsabilityMetrics_Notification request) {
         sendNotification(request, "NotifyClientUsabilityMetrics");
     }
 }

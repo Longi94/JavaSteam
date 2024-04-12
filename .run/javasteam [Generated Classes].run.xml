@@ -13,6 +13,7 @@
           <option value="generateProto" />
           <option value="generateSteamLanguage" />
           <option value="generateProjectVersion" />
+          <option value="generateRpcMethods" />
         </list>
       </option>
       <option name="vmOptions" />

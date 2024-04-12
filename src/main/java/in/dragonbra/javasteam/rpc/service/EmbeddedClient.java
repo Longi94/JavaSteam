@@ -19,7 +19,7 @@ public class EmbeddedClient extends UnifiedService implements IEmbeddedClient {
     }
 
     @Override
-    public AsyncJobSingle<ServiceMethodResponse> AuthorizeCurrentDevice(CEmbeddedClient_AuthorizeCurrentDevice_Request request) {
+    public AsyncJobSingle<ServiceMethodResponse> authorizeCurrentDevice(CEmbeddedClient_AuthorizeCurrentDevice_Request request) {
         return sendMessage(request, "AuthorizeCurrentDevice");
     }
 }
