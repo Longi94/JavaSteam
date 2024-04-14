@@ -92,14 +92,17 @@ sourceSets.main {
         files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion")
     )
     kotlin.srcDirs(
-        files("build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/interfaces").builtBy("generateRpcMethods")
+        files(
+            "build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/interfaces",
+            "build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/service"
+        ).builtBy("generateRpcMethods")
     )
 }
 
 /* Dependencies */
 tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
-tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods",)
+tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
 tasks["build"].finalizedBy(dokkaJavadocJar)
 
 dependencies {

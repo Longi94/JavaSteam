@@ -7,6 +7,17 @@ import java.io.File
 
 open class RpcGenTask : DefaultTask() {
 
+    companion object {
+        private const val KDOC_AUTHOR = "Lossy"
+        private const val KDOC_DATE = "2024-04-10"
+
+        val kDocClass = """
+            |@author $KDOC_AUTHOR
+            |@since $KDOC_DATE
+            """
+            .trimMargin()
+    }
+
     private val outputDir = File(
         project.layout.buildDirectory.get().asFile,
         "generated/source/javasteam/main/java/"

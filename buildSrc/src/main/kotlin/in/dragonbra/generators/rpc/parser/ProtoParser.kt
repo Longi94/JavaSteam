@@ -2,17 +2,46 @@ package `in`.dragonbra.generators.rpc.parser
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import `in`.dragonbra.generators.rpc.RpcGenTask
 import java.io.File
 import java.util.*
 
 class ProtoParser(private val outputDir: File) {
 
     companion object {
-        private const val PACKAGE = "in.dragonbra.javasteam.rpc.interfaces"
-        private const val KDOC_AUTHOR = "Lossy"
-        private const val KDOC_DATE = "2024-04-10"
+        private const val INTERFACE_PACKAGE = "in.dragonbra.javasteam.rpc.interfaces"
+        private const val CLASS_PACKAGE = "in.dragonbra.javasteam.rpc.service"
+
+        private val suppressAnnotation = AnnotationSpec.builder(Suppress::class)
+            .addMember("%S", "KDocUnresolvedReference") // IntelliJ's seems to get confused with canonical names
+            .addMember("%S", "RedundantVisibilityModifier") // KotlinPoet is an explicit API generator
+            .addMember("%S", "unused") // All methods could be used.
+            .build()
+
+        val classAsyncJobSingle = ClassName(
+            "in.dragonbra.javasteam.types",
+            "AsyncJobSingle"
+        )
+        val classServiceMethodResponse = ClassName(
+            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
+            "ServiceMethodResponse"
+        )
+
+
+        private val kDocNoResponse = """|No return value.""".trimMargin()
+        private fun kDocReturns(requestClassName: ClassName, returnClassName: ClassName): String = """
+                |@param request The request.
+                |@see [${requestClassName.simpleName}]
+                |@returns [${returnClassName.canonicalName}]
+                """.trimMargin()
     }
 
+    /**
+     * Open a .proto file and find all service interfaces.
+     * Then grab the name of the RPC interface name and everything between the curly braces
+     * Then loop through all RPC interface methods, destructuring them to name, type, and response and put them in a list.
+     * Collect the items into a [Service] and pass it off to [buildInterface]
+     */
     fun parseFile(file: File) {
         val protoContent = file.readText()
 
@@ -21,7 +50,8 @@ class ProtoParser(private val outputDir: File) {
             val serviceName = serviceMatch.groupValues[1]
             val methodsContent = serviceMatch.groupValues[2]
 
-            val serviceMethods = mutableListOf<ServiceMethod>()
+            val serviceMethods = mutableListOf<ServiceMethod>() // Method list
+
             val serviceMethodRegex = Regex("""rpc\s+(\w+)\s*\((.*?)\)\s*returns\s*\((.*?)\);""")
             serviceMethodRegex.findAll(methodsContent).forEach { methodMatch ->
                 val (methodName, requestType, responseType) = methodMatch.destructured
@@ -35,8 +65,8 @@ class ProtoParser(private val outputDir: File) {
             }
 
             val service = Service(serviceName, serviceMethods)
-
             buildInterface(file, service)
+            buildClass(file, service)
         }
     }
 
@@ -69,28 +99,17 @@ class ProtoParser(private val outputDir: File) {
         return importName
     }
 
+    /**
+     * Build the [Service] to an interface with all known RPC methods.
+     */
     private fun buildInterface(file: File, service: Service) {
         val protoFileName = transformProtoFileName(file.name)
         val interfaceName = "I${service.name}"
 
-        // kDoc
-        val kDoc = """
-            |@author $KDOC_AUTHOR
-            |@since $KDOC_DATE
-            """
-            .trimMargin()
-
-        // Suppress
-        val suppressAnnotation = AnnotationSpec.builder(Suppress::class)
-            .addMember("%S", "KDocUnresolvedReference") // IntelliJ's seems to get confused with canonical names
-            .addMember("%S", "RedundantVisibilityModifier") // KotlinPoet is an explicit API generator
-            .addMember("%S", "unused") // All methods could be used.
-            .build()
-
         // Interface Builder
         val iBuilder = TypeSpec.interfaceBuilder(interfaceName)
             .addAnnotation(suppressAnnotation)
-            .addKdoc(kDoc)
+            .addKdoc(RpcGenTask.kDocClass)
 
         // Iterate over found 'rpc' methods
         service.methods.forEach { method ->
@@ -99,55 +118,111 @@ class ProtoParser(private val outputDir: File) {
                 "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
                 method.requestType
             )
-
             val returnClassName = ClassName(
                 "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
                 method.responseType
             )
 
-            val kDocReturns = """
-                |@param request The request.
-                |@see [${requestClassName.simpleName}]
-                |@returns [${returnClassName.canonicalName}]
-                """
-                .trimMargin()
-
-            val kDocVoid = """
-                |No return value.
-                """
-                .trimMargin()
-
+            // Make a method
             val funBuilder = FunSpec.builder(methodName)
                 .addModifiers(KModifier.ABSTRACT)
                 .addParameter("request", requestClassName)
 
+            // Add method kDoc
             if (method.responseType == "NoResponse") {
-                funBuilder.addKdoc(kDocVoid)
+                funBuilder.addKdoc(kDocNoResponse)
             } else {
-                funBuilder.addKdoc(kDocReturns)
+                kDocReturns(requestClassName, returnClassName).also(funBuilder::addKdoc)
             }
 
+            // Creates: AsyncJobSingle<ServiceMethodResponse>
             if (method.responseType != "NoResponse") {
-                // Creates: AsyncJobSingle<ServiceMethodResponse>
-                val requestReturnType = ClassName(
-                    "in.dragonbra.javasteam.types",
-                    "AsyncJobSingle"
-                ).parameterizedBy(
-                    ClassName(
-                        "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
-                        "ServiceMethodResponse"
-                    )
-                )
-
+                val requestReturnType = classAsyncJobSingle.parameterizedBy(classServiceMethodResponse)
                 funBuilder.returns(requestReturnType)
             }
 
+            // Add the function to the interface class.
             iBuilder.addFunction(funBuilder.build())
         }
 
         // Build everything together
-        val fileBuilder = FileSpec.builder(PACKAGE, interfaceName)
+        val fileBuilder = FileSpec.builder(INTERFACE_PACKAGE, interfaceName)
             .addType(iBuilder.build())
+            .build()
+
+        // Write the file
+        fileBuilder.writeTo(outputDir)
+    }
+
+    /**
+     * Build the [Service] to a class with all known RPC methods.
+     */
+    private fun buildClass(file: File, service: Service) {
+        val protoFileName = transformProtoFileName(file.name)
+        val className = service.name
+
+        val unifiedServiceClass = ClassName(
+            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
+            "UnifiedService"
+        )
+        val unifiedMessageClass = ClassName(
+            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
+            "SteamUnifiedMessages"
+        )
+        val interfaceType = ClassName("in.dragonbra.javasteam.rpc.interfaces", "I$className")
+
+        // Class Builder
+        val cBuilder = TypeSpec.classBuilder(className)
+            .addAnnotation(suppressAnnotation)
+            .addKdoc(RpcGenTask.kDocClass)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("steamUnifiedMessages", unifiedMessageClass)
+                    .build()
+            )
+            .addSuperclassConstructorParameter("steamUnifiedMessages")
+            .superclass(unifiedServiceClass)
+            .addSuperinterface(interfaceType)
+
+        // Iterate over found 'rpc' methods.
+        service.methods.forEach { method ->
+            val methodName = method.methodName
+            val requestClassName = ClassName(
+                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                method.requestType
+            )
+            val returnClassName = ClassName(
+                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                method.responseType
+            )
+
+            // Make a method
+            val funBuilder = FunSpec.builder(methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) })
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("request", requestClassName)
+
+            // Add method kDoc
+            if (method.responseType == "NoResponse") {
+                funBuilder.addKdoc(kDocNoResponse)
+            } else {
+                kDocReturns(requestClassName, returnClassName).also(funBuilder::addKdoc)
+            }
+
+            // Creates: AsyncJobSingle<ServiceMethodResponse>
+            if (method.responseType != "NoResponse") {
+                val requestReturnType = classAsyncJobSingle.parameterizedBy(classServiceMethodResponse)
+                funBuilder.returns(requestReturnType)
+                funBuilder.addStatement("return sendMessage(request, \"$methodName\")")
+            } else {
+                funBuilder.addStatement("sendNotification(request, \"$methodName\")")
+            }
+
+            cBuilder.addFunction(funBuilder.build())
+        }
+
+        // Build everything together
+        val fileBuilder = FileSpec.builder(CLASS_PACKAGE, className)
+            .addType(cBuilder.build())
             .build()
 
         // Write the file
