@@ -61,6 +61,8 @@ class ProtoParser(private val outputDir: File) {
                     }
 
                 Service(serviceName, serviceMethods).also { service ->
+                    println("[${file.name}] - found \"${service.name}\", which has ${service.methods.size} methods")
+
                     buildInterface(file, service)
                     buildClass(file, service)
                 }

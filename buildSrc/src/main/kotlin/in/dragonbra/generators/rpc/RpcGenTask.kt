@@ -35,9 +35,6 @@ open class RpcGenTask : DefaultTask() {
 
         protoDirectory.walkTopDown()
             .filter { it.isFile && it.extension == "proto" }
-            .forEach { protoFile ->
-                println("Parsing ${protoFile.name}")
-                protoParser.parseFile(protoFile)
-            }
+            .forEach(protoParser::parseFile)
     }
 }
