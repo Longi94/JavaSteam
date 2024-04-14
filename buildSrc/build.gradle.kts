@@ -1,7 +1,6 @@
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    id("org.jmailen.kotlinter") version "4.3.0" // https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 }
 
 version = "1.0.0"

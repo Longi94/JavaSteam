@@ -89,13 +89,7 @@ sourceSets.main {
     java.srcDirs(
         // builtBy() fixes gradle warning "Execution optimizations have been disabled for task"
         files("build/generated/source/steamd/main/java").builtBy("generateSteamLanguage"),
-        files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion")
-    )
-    kotlin.srcDirs(
-        files(
-            "build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/interfaces",
-            "build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/service"
-        ).builtBy("generateRpcMethods")
+        files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion", "generateRpcMethods")
     )
 }
 

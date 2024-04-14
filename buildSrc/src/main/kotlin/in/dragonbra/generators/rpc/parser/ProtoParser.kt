@@ -8,25 +8,24 @@ import java.util.*
 
 class ProtoParser(private val outputDir: File) {
 
-    companion object {
-        private const val INTERFACE_PACKAGE = "in.dragonbra.javasteam.rpc.interfaces"
-        private const val CLASS_PACKAGE = "in.dragonbra.javasteam.rpc.service"
+    private companion object {
+        private const val RPC_PACKAGE = "in.dragonbra.javasteam.rpc"
 
-        private val suppressAnnotation = AnnotationSpec.builder(Suppress::class)
+        private val suppressAnnotation = AnnotationSpec
+            .builder(Suppress::class)
             .addMember("%S", "KDocUnresolvedReference") // IntelliJ's seems to get confused with canonical names
             .addMember("%S", "RedundantVisibilityModifier") // KotlinPoet is an explicit API generator
             .addMember("%S", "unused") // All methods could be used.
             .build()
 
-        val classAsyncJobSingle = ClassName(
+        private val classAsyncJobSingle = ClassName(
             "in.dragonbra.javasteam.types",
             "AsyncJobSingle"
         )
-        val classServiceMethodResponse = ClassName(
+        private val classServiceMethodResponse = ClassName(
             "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
             "ServiceMethodResponse"
         )
-
 
         private val kDocNoResponse = """|No return value.""".trimMargin()
         private fun kDocReturns(requestClassName: ClassName, returnClassName: ClassName): String = """
@@ -43,38 +42,36 @@ class ProtoParser(private val outputDir: File) {
      * Collect the items into a [Service] and pass it off to [buildInterface]
      */
     fun parseFile(file: File) {
-        val protoContent = file.readText()
+        Regex("""service\s+(\w+)\s*\{([^}]*)}""")
+            .findAll(file.readText())
+            .forEach { serviceMatch ->
+                val serviceMethods = mutableListOf<ServiceMethod>() // Method list
 
-        val serviceRegex = Regex("""service\s+(\w+)\s*\{([^}]*)}""")
-        serviceRegex.findAll(protoContent).forEach { serviceMatch ->
-            val serviceName = serviceMatch.groupValues[1]
-            val methodsContent = serviceMatch.groupValues[2]
+                val serviceName = serviceMatch.groupValues[1]
+                val methodsContent = serviceMatch.groupValues[2]
 
-            val serviceMethods = mutableListOf<ServiceMethod>() // Method list
+                Regex("""rpc\s+(\w+)\s*\((.*?)\)\s*returns\s*\((.*?)\);""")
+                    .findAll(methodsContent)
+                    .forEach { methodMatch ->
+                        val (methodName, requestType, responseType) = methodMatch.destructured
+                        val request = requestType.trim().replace(".", "")
+                        val response = responseType.trim().replace(".", "")
 
-            val serviceMethodRegex = Regex("""rpc\s+(\w+)\s*\((.*?)\)\s*returns\s*\((.*?)\);""")
-            serviceMethodRegex.findAll(methodsContent).forEach { methodMatch ->
-                val (methodName, requestType, responseType) = methodMatch.destructured
-                serviceMethods.add(
-                    ServiceMethod(
-                        methodName,
-                        requestType.trim().replace(".", ""),
-                        responseType.trim().replace(".", "")
-                    )
-                )
+                        ServiceMethod(methodName, request, response).also(serviceMethods::add)
+                    }
+
+                Service(serviceName, serviceMethods).also { service ->
+                    buildInterface(file, service)
+                    buildClass(file, service)
+                }
             }
-
-            val service = Service(serviceName, serviceMethods)
-            buildInterface(file, service)
-            buildClass(file, service)
-        }
     }
 
     /**
-     * Transforms the .proto file into an import statement. Also handles edge cases
+     * Transforms the .proto file into an import statement.
+     * Also handles `some` edge cases
      *
-     * Example:
-     * steammessages_contentsystem.steamclient.proto to SteammessagesContentsystemSteamclient
+     * Example: steammessages_contentsystem.steamclient.proto to SteammessagesContentsystemSteamclient
      */
     private fun transformProtoFileName(protoFileName: String): String {
         // Edge cases
@@ -82,10 +79,9 @@ class ProtoParser(private val outputDir: File) {
             return "SteammessagesRemoteclientServiceMessages"
         }
 
-        val regex = Regex("[._]")
-        val importName = protoFileName
+        return protoFileName
             .removeSuffix(".proto")
-            .split(regex)
+            .split("[._]".toRegex())
             .joinToString("") { str ->
                 str.replaceFirstChar { char ->
                     if (char.isLowerCase()) {
@@ -95,137 +91,128 @@ class ProtoParser(private val outputDir: File) {
                     }
                 }
             }
-
-        return importName
     }
 
     /**
      * Build the [Service] to an interface with all known RPC methods.
      */
     private fun buildInterface(file: File, service: Service) {
-        val protoFileName = transformProtoFileName(file.name)
-        val interfaceName = "I${service.name}"
-
         // Interface Builder
-        val iBuilder = TypeSpec.interfaceBuilder(interfaceName)
+        val iBuilder = TypeSpec
+            .interfaceBuilder("I${service.name}")
             .addAnnotation(suppressAnnotation)
             .addKdoc(RpcGenTask.kDocClass)
 
         // Iterate over found 'rpc' methods
+        val protoFileName = transformProtoFileName(file.name)
         service.methods.forEach { method ->
-            val methodName = method.methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) }
             val requestClassName = ClassName(
-                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
                 method.requestType
-            )
-            val returnClassName = ClassName(
-                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
-                method.responseType
             )
 
             // Make a method
-            val funBuilder = FunSpec.builder(methodName)
+            val funBuilder = FunSpec
+                .builder(method.methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) })
                 .addModifiers(KModifier.ABSTRACT)
                 .addParameter("request", requestClassName)
 
             // Add method kDoc
+            // Add `AsyncJobSingle<ServiceMethodResponse>` if there is a response
             if (method.responseType == "NoResponse") {
                 funBuilder.addKdoc(kDocNoResponse)
             } else {
-                kDocReturns(requestClassName, returnClassName).also(funBuilder::addKdoc)
-            }
-
-            // Creates: AsyncJobSingle<ServiceMethodResponse>
-            if (method.responseType != "NoResponse") {
-                val requestReturnType = classAsyncJobSingle.parameterizedBy(classServiceMethodResponse)
-                funBuilder.returns(requestReturnType)
+                val returnClassName = ClassName(
+                    packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                    method.responseType
+                )
+                val kDoc = kDocReturns(requestClassName, returnClassName)
+                funBuilder.addKdoc(kDoc)
+                    .returns(classAsyncJobSingle.parameterizedBy(classServiceMethodResponse))
             }
 
             // Add the function to the interface class.
             iBuilder.addFunction(funBuilder.build())
         }
 
-        // Build everything together
-        val fileBuilder = FileSpec.builder(INTERFACE_PACKAGE, interfaceName)
+        // Build everything together and write it
+        FileSpec.builder("$RPC_PACKAGE.interfaces", "I${service.name}")
             .addType(iBuilder.build())
             .build()
-
-        // Write the file
-        fileBuilder.writeTo(outputDir)
+            .writeTo(outputDir)
     }
 
     /**
      * Build the [Service] to a class with all known RPC methods.
      */
     private fun buildClass(file: File, service: Service) {
-        val protoFileName = transformProtoFileName(file.name)
-        val className = service.name
-
-        val unifiedServiceClass = ClassName(
-            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
-            "UnifiedService"
-        )
-        val unifiedMessageClass = ClassName(
-            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
-            "SteamUnifiedMessages"
-        )
-        val interfaceType = ClassName("in.dragonbra.javasteam.rpc.interfaces", "I$className")
-
         // Class Builder
-        val cBuilder = TypeSpec.classBuilder(className)
+        val cBuilder = TypeSpec
+            .classBuilder(service.name)
             .addAnnotation(suppressAnnotation)
             .addKdoc(RpcGenTask.kDocClass)
             .primaryConstructor(
                 FunSpec.constructorBuilder()
-                    .addParameter("steamUnifiedMessages", unifiedMessageClass)
+                    .addParameter(
+                        name = "steamUnifiedMessages",
+                        type = ClassName(
+                            packageName = "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
+                            "SteamUnifiedMessages"
+                        )
+                    )
                     .build()
             )
             .addSuperclassConstructorParameter("steamUnifiedMessages")
-            .superclass(unifiedServiceClass)
-            .addSuperinterface(interfaceType)
+            .superclass(
+                ClassName(
+                    packageName = "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
+                    "UnifiedService"
+                )
+            )
+            .addSuperinterface(
+                ClassName(
+                    packageName = "in.dragonbra.javasteam.rpc.interfaces",
+                    "I${service.name}"
+                )
+            )
 
         // Iterate over found 'rpc' methods.
+        val protoFileName = transformProtoFileName(file.name)
         service.methods.forEach { method ->
-            val methodName = method.methodName
             val requestClassName = ClassName(
-                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
                 method.requestType
-            )
-            val returnClassName = ClassName(
-                "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
-                method.responseType
             )
 
             // Make a method
-            val funBuilder = FunSpec.builder(methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) })
+            val funBuilder = FunSpec
+                .builder(method.methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) })
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("request", requestClassName)
 
             // Add method kDoc
+            // Add `AsyncJobSingle<ServiceMethodResponse>` if there is a response
             if (method.responseType == "NoResponse") {
                 funBuilder.addKdoc(kDocNoResponse)
+                    .addStatement("sendNotification(request, \"${method.methodName}\")")
             } else {
-                kDocReturns(requestClassName, returnClassName).also(funBuilder::addKdoc)
-            }
-
-            // Creates: AsyncJobSingle<ServiceMethodResponse>
-            if (method.responseType != "NoResponse") {
-                val requestReturnType = classAsyncJobSingle.parameterizedBy(classServiceMethodResponse)
-                funBuilder.returns(requestReturnType)
-                funBuilder.addStatement("return sendMessage(request, \"$methodName\")")
-            } else {
-                funBuilder.addStatement("sendNotification(request, \"$methodName\")")
+                val returnClassName = ClassName(
+                    packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                    method.responseType
+                )
+                val kDoc = kDocReturns(requestClassName, returnClassName)
+                funBuilder.addKdoc(kDoc)
+                    .returns(classAsyncJobSingle.parameterizedBy(classServiceMethodResponse))
+                    .addStatement("return sendMessage(request, \"${method.methodName}\")")
             }
 
             cBuilder.addFunction(funBuilder.build())
         }
 
-        // Build everything together
-        val fileBuilder = FileSpec.builder(CLASS_PACKAGE, className)
+        // Build everything together and write it
+        FileSpec.builder("$RPC_PACKAGE.service", service.name)
             .addType(cBuilder.build())
             .build()
-
-        // Write the file
-        fileBuilder.writeTo(outputDir)
+            .writeTo(outputDir)
     }
 }
