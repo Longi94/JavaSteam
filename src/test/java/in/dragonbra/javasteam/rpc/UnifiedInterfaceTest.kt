@@ -88,6 +88,8 @@ class UnifiedInterfaceTest {
             "EmbeddedClient.kt",
             "FriendMessages.kt",
             "FriendMessagesClient.kt",
+            "Inventory.kt",
+            "InventoryClient.kt",
             "Parental.kt",
             "ParentalClient.kt",
             "Player.kt",
