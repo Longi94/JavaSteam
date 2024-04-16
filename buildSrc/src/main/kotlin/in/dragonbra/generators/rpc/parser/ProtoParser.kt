@@ -10,6 +10,8 @@ class ProtoParser(private val outputDir: File) {
 
     private companion object {
         private const val RPC_PACKAGE = "in.dragonbra.javasteam.rpc"
+        private const val SERVICE_PACKAGE = "${RPC_PACKAGE}.service"
+        private const val INTERFACE_PACKAGE = "$RPC_PACKAGE.interfaces"
 
         private val suppressAnnotation = AnnotationSpec
             .builder(Suppress::class)
@@ -39,7 +41,7 @@ class ProtoParser(private val outputDir: File) {
      * Open a .proto file and find all service interfaces.
      * Then grab the name of the RPC interface name and everything between the curly braces
      * Then loop through all RPC interface methods, destructuring them to name, type, and response and put them in a list.
-     * Collect the items into a [Service] and pass it off to [buildInterface]
+     * Collect the items into a [Service] and pass it off to [buildInterface] and [buildClass]
      */
     fun parseFile(file: File) {
         Regex("""service\s+(\w+)\s*\{([^}]*)}""")
@@ -71,7 +73,7 @@ class ProtoParser(private val outputDir: File) {
 
     /**
      * Transforms the .proto file into an import statement.
-     * Also handles `some` edge cases
+     * Also handle edge cases if they are discovered.
      *
      * Example: steammessages_contentsystem.steamclient.proto to SteammessagesContentsystemSteamclient
      */
@@ -138,7 +140,7 @@ class ProtoParser(private val outputDir: File) {
         }
 
         // Build everything together and write it
-        FileSpec.builder("$RPC_PACKAGE.interfaces", "I${service.name}")
+        FileSpec.builder(INTERFACE_PACKAGE, "I${service.name}")
             .addType(iBuilder.build())
             .build()
             .writeTo(outputDir)
@@ -196,7 +198,7 @@ class ProtoParser(private val outputDir: File) {
             // Add `AsyncJobSingle<ServiceMethodResponse>` if there is a response
             if (method.responseType == "NoResponse") {
                 funBuilder.addKdoc(kDocNoResponse)
-                    .addStatement("sendNotification(request, \"${method.methodName}\")")
+                    .addStatement("sendNotification(request, %S)", method.methodName)
             } else {
                 val returnClassName = ClassName(
                     packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
@@ -205,14 +207,14 @@ class ProtoParser(private val outputDir: File) {
                 val kDoc = kDocReturns(requestClassName, returnClassName)
                 funBuilder.addKdoc(kDoc)
                     .returns(classAsyncJobSingle.parameterizedBy(classServiceMethodResponse))
-                    .addStatement("return sendMessage(request, \"${method.methodName}\")")
+                    .addStatement("return sendMessage(request, %S)", method.methodName)
             }
 
             cBuilder.addFunction(funBuilder.build())
         }
 
         // Build everything together and write it
-        FileSpec.builder("$RPC_PACKAGE.service", service.name)
+        FileSpec.builder(SERVICE_PACKAGE, service.name)
             .addType(cBuilder.build())
             .build()
             .writeTo(outputDir)
