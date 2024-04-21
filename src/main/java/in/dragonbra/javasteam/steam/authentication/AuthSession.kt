@@ -247,7 +247,7 @@ open class AuthSession(
         request.clientId = clientID
         request.requestId = ByteString.copyFrom(requestID)
 
-        val message = authentication.authenticationService.PollAuthSessionStatus(request.build()).runBlock()
+        val message = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
 
         // eresult can be Expired, FileNotFound, Fail
         if (message.result != EResult.OK) {

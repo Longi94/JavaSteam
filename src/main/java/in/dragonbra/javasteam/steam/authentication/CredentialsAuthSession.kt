@@ -42,7 +42,7 @@ class CredentialsAuthSession(
         request.codeType = codeType
 
         val message =
-            authentication.authenticationService.UpdateAuthSessionWithSteamGuardCode(request.build()).runBlock()
+            authentication.authenticationService.updateAuthSessionWithSteamGuardCode(request.build()).runBlock()
 
         val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
             message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)

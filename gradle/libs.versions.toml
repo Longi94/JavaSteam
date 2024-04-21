@@ -8,7 +8,7 @@
 java = "11"
 kotlin = "1.9.23" # https://kotlinlang.org/docs/releases.html#release-details
 dokka = "1.9.20" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
-ktlint = "12.1.0" # https://github.com/JLLeitschuh/ktlint-gradle/releases
+kotlinter = "4.3.0" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 
 # Standard Library versions
 bouncyCastle = "1.78" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
@@ -56,7 +56,7 @@ test-mockito-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.r
 [plugins]
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-lint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+kotlin-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
 
