@@ -11,6 +11,9 @@ name: Java PR CI/CD
 on:
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - 'tools/**'
 
 permissions:
   contents: read
