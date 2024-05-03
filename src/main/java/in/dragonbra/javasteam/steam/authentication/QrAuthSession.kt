@@ -25,6 +25,7 @@ class QrAuthSession(
     allowedConfirmations = response.allowedConfirmationsList,
     pollingInterval = response.interval
 ) {
+
     /**
      * URL based on client ID, which can be rendered as QR code.
      */

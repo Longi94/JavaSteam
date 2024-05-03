@@ -21,9 +21,7 @@ class AuthSessionDetails {
     var password: String? = null
 
     /**
-     * Gets or Sets the device name (or user agent).
-     *
-     * Note: Initialized below
+     * Gets or Sets the device name (or user agent). By default, "<DeviceName>(JavaSteam)" will be used.
      */
     var deviceFriendlyName: String?
 
@@ -67,10 +65,7 @@ class AuthSessionDetails {
     var authenticator: IAuthenticator? = null
 
     init {
-        var machineName = System.getenv("COMPUTERNAME")
-        if (machineName == null) {
-            machineName = System.getenv("HOSTNAME")
-        }
+        val machineName = System.getenv("COMPUTERNAME") ?: System.getenv("HOSTNAME")
         deviceFriendlyName = "$machineName (JavaSteam)"
     }
 }

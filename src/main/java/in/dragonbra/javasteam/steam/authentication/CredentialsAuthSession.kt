@@ -28,22 +28,24 @@ class CredentialsAuthSession(
 
     /**
      * Send Steam Guard code for this authentication session.
-     *
      * @param code     The code.
      * @param codeType Type of code.
      * @throws AuthenticationException .
      */
     @Throws(AuthenticationException::class)
     fun sendSteamGuardCode(code: String?, codeType: EAuthSessionGuardType?) {
-        val request = CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request.newBuilder()
-        request.clientId = clientID
-        request.steamid = steamID.convertToUInt64()
-        request.code = code
-        request.codeType = codeType
+        val request = CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request.newBuilder().apply {
+            this.clientId = clientId
+            this.steamid = steamID.convertToUInt64()
+            this.code = code
+            this.codeType = codeType
+        }
 
-        val message =
-            authentication.authenticationService.updateAuthSessionWithSteamGuardCode(request.build()).runBlock()
+        val message = authentication.authenticationService
+            .updateAuthSessionWithSteamGuardCode(request.build())
+            .runBlock()
 
+        @Suppress("UNUSED_VARIABLE")
         val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
             message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
 
@@ -55,6 +57,5 @@ class CredentialsAuthSession(
         }
 
         // response may contain agreement_session_url
-        response.agreementSessionUrl // Useless, just stops `Variable 'response' is never used`
     }
 }
