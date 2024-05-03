@@ -18,7 +18,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
-import org.jetbrains.annotations.NotNull;
 import pro.leaco.console.qrcode.ConsoleQrcode;
 
 import java.util.concurrent.CancellationException;
@@ -178,7 +177,7 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
     }
 
     @Override
-    public void onChanged(@NotNull QrAuthSession qrAuthSession) {
+    public void onChanged(QrAuthSession qrAuthSession) {
         drawQRCode(qrAuthSession);
     }
 }
