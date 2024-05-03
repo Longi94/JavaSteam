@@ -4,13 +4,6 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Response
 
 /**
- * Interface to tell the listening class that the QR Challenge URL has changed.
- */
-interface OnChallengeUrlChanged {
-    fun onChanged(qrAuthSession: QrAuthSession)
-}
-
-/**
  * QR code based authentication session.
  */
 class QrAuthSession(
@@ -35,7 +28,7 @@ class QrAuthSession(
     /**
      * Called whenever the challenge url is refreshed by Steam.
      */
-    var challengeUrlChanged: OnChallengeUrlChanged? = null
+    var challengeUrlChanged: IChallengeUrlChanged? = null
 
     override fun handlePollAuthSessionStatusResponse(response: CAuthentication_PollAuthSessionStatus_Response.Builder) {
         super.handlePollAuthSessionStatusResponse(response)

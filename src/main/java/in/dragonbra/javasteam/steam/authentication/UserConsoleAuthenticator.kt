@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture
  * This implementation will prompt user to enter 2-factor authentication codes in the console.
  * or inform to use the Mobile App to approve sign in.
  *
- * Note: This can be replaced with your own method using [IAuthenticator]
+ * Note: This can be replaced with your own class using [IAuthenticator]
  */
 class UserConsoleAuthenticator : IAuthenticator {
 

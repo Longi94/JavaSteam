@@ -181,7 +181,7 @@ open class AuthSession(
      * @return An object containing tokens which can be used to log in to Steam, or null if not yet authenticated.
      * @throws AuthenticationException Thrown when polling fails.
      */
-    private fun pollAuthSessionStatus(): AuthPollResult? {
+    fun pollAuthSessionStatus(): AuthPollResult? {
         val request = AuthSessionStatusRequest.newBuilder()
         request.clientId = clientId
         request.requestId = ByteString.copyFrom(requestId)

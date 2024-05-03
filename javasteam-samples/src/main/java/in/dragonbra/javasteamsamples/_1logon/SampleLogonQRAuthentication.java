@@ -4,7 +4,7 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
 import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
 import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
-import in.dragonbra.javasteam.steam.authentication.OnChallengeUrlChanged;
+import in.dragonbra.javasteam.steam.authentication.IChallengeUrlChanged;
 import in.dragonbra.javasteam.steam.authentication.QrAuthSession;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
@@ -32,7 +32,7 @@ import java.util.concurrent.CancellationException;
  * @since 2023-03-19
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChanged {
+public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChanged {
 
     private SteamClient steamClient;
 
