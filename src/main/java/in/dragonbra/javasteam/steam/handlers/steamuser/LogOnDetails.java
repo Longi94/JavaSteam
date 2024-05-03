@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamuser;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.Utils;
@@ -169,7 +170,7 @@ public class LogOnDetails {
 
     /**
      * Gets the 'Should Remember Password' flag.
-     * This is used in combination with the <see cref="AccessToken"/> for password-less login.
+     * This is used in combination with the {@link AuthPollResult#getAccessToken()} for password-less login.
      *
      * @return the 'Should Remember Password' flag.
      */
