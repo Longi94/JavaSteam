@@ -69,10 +69,21 @@ tasks.dokkaJavadoc {
     }
 }
 
-val dokkaJavadocJar by tasks.register<Jar>("dokkaJavadocJar") {
-    dependsOn(tasks.dokkaJavadoc)
-    from(tasks.dokkaJavadoc.flatMap { it.outputDirectory })
-    archiveClassifier.set("javadoc")
+// Make sure Maven Publishing gets javadock
+// https://stackoverflow.com/a/71172854
+lateinit var javadocArtifact: PublishArtifact
+tasks {
+    val dokkaHtml by getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+
+    val javadocJar by creating(Jar::class) {
+        dependsOn(dokkaHtml)
+        archiveClassifier.set("javadoc")
+        from(dokkaHtml.outputDirectory)
+    }
+
+    artifacts {
+        javadocArtifact = archives(javadocJar)
+    }
 }
 
 /* Configuration */
@@ -97,7 +108,7 @@ sourceSets.main {
 tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
-tasks["build"].finalizedBy(dokkaJavadocJar)
+// tasks["build"].finalizedBy(dokkaJavadocJar)
 
 dependencies {
     implementation(libs.commons.io)
@@ -124,6 +135,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            artifact(javadocArtifact)
             pom {
                 name = "JavaSteam"
                 packaging = "jar"

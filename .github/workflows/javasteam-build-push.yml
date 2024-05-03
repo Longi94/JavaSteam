@@ -11,6 +11,9 @@ name: Java Push CI/CD
 on:
   push:
     branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - 'tools/**'
 
 permissions:
   contents: read
