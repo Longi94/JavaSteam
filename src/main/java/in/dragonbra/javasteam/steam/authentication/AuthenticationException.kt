@@ -21,7 +21,12 @@ class AuthenticationException : Exception {
 
     /**
      * Initializes a new instance of the [AuthenticationException] class.
-     *
+     * @param message The message that describes the error.
+     */
+    constructor(message: String) : super(message)
+
+    /**
+     * Initializes a new instance of the [AuthenticationException] class.
      * @param message The message that describes the error.
      * @param result  The result code that describes the error.
      */

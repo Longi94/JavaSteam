@@ -4,7 +4,7 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
 import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
 import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
-import in.dragonbra.javasteam.steam.authentication.OnChallengeUrlChanged;
+import in.dragonbra.javasteam.steam.authentication.IChallengeUrlChanged;
 import in.dragonbra.javasteam.steam.authentication.QrAuthSession;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
@@ -18,7 +18,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
-import org.jetbrains.annotations.NotNull;
 import pro.leaco.console.qrcode.ConsoleQrcode;
 
 import java.util.concurrent.CancellationException;
@@ -32,7 +31,7 @@ import java.util.concurrent.CancellationException;
  * @since 2023-03-19
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChanged {
+public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChanged {
 
     private SteamClient steamClient;
 
@@ -109,8 +108,9 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
 
             // Starting polling Steam for authentication response
             // This response is later used to log on to Steam after connecting
-            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat();
+            // Note: This is blocking, it would be up to you to make it non-blocking for Java.
+            // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
+            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
 
             System.out.println("Connected to Steam! Logging in " + pollResponse.getAccountName() + "...");
 
@@ -127,12 +127,14 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
             System.err.println(e.getMessage());
 
             if (e instanceof AuthenticationException) {
-                System.out.println("An Authentication error has occurred.");
+                System.out.println("An Authentication error has occurred. " + e.getMessage());
             }
 
             if (e instanceof CancellationException) {
-                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred");
+                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
             }
+
+            steamUser.logOff();
         }
     }
 
@@ -175,7 +177,7 @@ public class SampleLogonQRAuthentication implements Runnable, OnChallengeUrlChan
     }
 
     @Override
-    public void onChanged(@NotNull QrAuthSession qrAuthSession) {
+    public void onChanged(QrAuthSession qrAuthSession) {
         drawQRCode(qrAuthSession);
     }
 }

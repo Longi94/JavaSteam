@@ -111,8 +111,9 @@ public class SampleLogonAuthentication implements Runnable {
 
             CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
 
-            // AuthPollResult pollResponse = authSession.pollingWaitForResult(); // This method is for Kotlin (coroutines)
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat();
+            // Note: This is blocking, it would be up to you to make it non-blocking for Java.
+            // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
+            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());
@@ -132,11 +133,11 @@ public class SampleLogonAuthentication implements Runnable {
 
             // List a couple of exceptions that could be important to handle.
             if (e instanceof AuthenticationException) {
-                System.out.println("An Authentication error has occurred.");
+                System.out.println("An Authentication error has occurred. " + e.getMessage());
             }
 
             if (e instanceof CancellationException) {
-                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred");
+                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
             }
         }
     }
