@@ -3,7 +3,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/in.dragonbra/javasteam)](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 [![Discord](https://img.shields.io/discord/420907597906968586.svg)](https://discord.gg/8F2JuTu)
 
-Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 8.
+Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets Java 11.
 
 ## Download
 
