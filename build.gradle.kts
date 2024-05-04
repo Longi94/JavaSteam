@@ -16,7 +16,7 @@ plugins {
 
 allprojects {
     group = "in.dragonbra"
-    version = "1.4.0"
+    version = "1.4.1-SNAPSHOT"
 }
 
 repositories {

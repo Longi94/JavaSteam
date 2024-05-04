@@ -16,6 +16,7 @@ import `in`.dragonbra.javasteam.rpc.service.Authentication
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
@@ -159,7 +160,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
         val rsaPublicKeySpec = RSAPublicKeySpec(publicModulus, publicExponent)
         val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec)
 
-        val cipher = Cipher.getInstance("RSA/None/PKCS1Padding").apply {
+        val cipher = Cipher.getInstance("RSA/None/PKCS1Padding", CryptoHelper.SEC_PROV).apply {
             init(Cipher.ENCRYPT_MODE, publicKey)
         }
 
