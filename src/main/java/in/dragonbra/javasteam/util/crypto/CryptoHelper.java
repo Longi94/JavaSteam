@@ -31,17 +31,10 @@ public class CryptoHelper {
 
     static {
         try {
-            if (Utils.getOSType() == EOSType.AndroidUnknown) {
-                Class<? extends Provider> provider =
-                        (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
-                Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
-                SEC_PROV = "SC";
-            } else {
-                Class<? extends Provider> provider =
-                        (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
-                Security.addProvider(provider.getDeclaredConstructor().newInstance());
-                SEC_PROV = "BC";
-            }
+            Class<? extends Provider> provider =
+                    (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
+            Security.addProvider(provider.getDeclaredConstructor().newInstance());
+            SEC_PROV = "BC";
         } catch (Exception e) {
             throw new SecurityException("Couldn't create security provider", e);
         }

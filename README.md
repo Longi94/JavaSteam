@@ -44,16 +44,14 @@ Maven
 </dependency>
 ```
 
-**3. Add the appropriate cryptography dependency to your project. JavaSteam depends on this.**
+**3. Add the cryptography dependency to your project. JavaSteam depends on this.**
 
-[Android | Spongy Castle](https://mvnrepository.com/artifact/com.madgag.spongycastle/prov)
-
-[Non-Android | Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
+[Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
 
 
 ## Getting Started
 
-You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library. 
+You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library.
 
 There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples) too you can check out.
 

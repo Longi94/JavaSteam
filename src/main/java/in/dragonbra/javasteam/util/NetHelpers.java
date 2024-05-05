@@ -1,17 +1,22 @@
 package in.dragonbra.javasteam.util;
 
-import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author lngtr
  * @since 2018-02-22
  */
 public class NetHelpers {
+
+    private static final String IPV4_REGEX = "^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$";
+
+    private static final Pattern pattern = Pattern.compile(IPV4_REGEX);
 
     public static InetAddress getIPAddress(int ipAddr) {
         ByteBuffer b = ByteBuffer.allocate(4);
@@ -39,7 +44,9 @@ public class NetHelpers {
 
         String[] split = address.split(":");
 
-        if (!InetAddressValidator.getInstance().isValidInet4Address(split[0])) {
+        Matcher matcher = pattern.matcher(split[0]);
+
+        if (!matcher.matches()) {
             return null;
         }
 
