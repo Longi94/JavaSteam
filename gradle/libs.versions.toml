@@ -14,7 +14,6 @@ kotlinter = "4.3.0" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 bouncyCastle = "1.78" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
 commons-io = "2.16.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.14.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-validator = "1.8.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
 gson = "2.10.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
 jacoco = "0.8.12" # https://www.eclemma.org/jacoco
 javaWebSocket = "1.5.6" # https://mvnrepository.com/artifact/org.java-websocket/Java-WebSocket
@@ -35,7 +34,6 @@ mockitoVersion = "5.11.0" # https://mvnrepository.com/artifact/org.mockito/mocki
 bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
-commons-validator = { module = "commons-validator:commons-validator", version.ref = "commons-validator" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }

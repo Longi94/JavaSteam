@@ -69,7 +69,7 @@ tasks.dokkaJavadoc {
     }
 }
 
-// Make sure Maven Publishing gets javadock
+// Make sure Maven Publishing gets javadoc
 // https://stackoverflow.com/a/71172854
 lateinit var javadocArtifact: PublishArtifact
 tasks {
@@ -108,12 +108,10 @@ sourceSets.main {
 tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
-// tasks["build"].finalizedBy(dokkaJavadocJar)
 
 dependencies {
     implementation(libs.commons.io)
     implementation(libs.commons.lang3)
-    implementation(libs.commons.validator)
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.stdib)
@@ -145,12 +143,12 @@ publishing {
                 scm {
                     connection = "scm:git:git://github.com/Longi94/JavaSteam.git"
                     developerConnection = "scm:git:ssh://github.com:Longi94/JavaSteam.git"
-                    url = "http://github.com/Longi94/JavaSteam/tree/master"
+                    url = "https://github.com/Longi94/JavaSteam/tree/master"
                 }
                 licenses {
                     license {
                         name = "MIT License"
-                        url = "http://www.opensource.org/licenses/mit-license.php"
+                        url = "https://www.opensource.org/licenses/mit-license.php"
                     }
                 }
                 developers {
