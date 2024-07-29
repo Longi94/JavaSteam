@@ -40,6 +40,10 @@ public class LogOnDetails {
 
     private String machineName;
 
+    private ChatMode chatMode;
+
+    private UiMode uiMode;
+
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
         accountID = 0L;
@@ -52,6 +56,9 @@ public class LogOnDetails {
             envName = System.getenv("HOSTNAME");
         }
         machineName = envName + " (JavaSteam)";
+
+        chatMode = ChatMode.DEFAULT;
+        uiMode = UiMode.DEFAULT;
     }
 
     /**
@@ -323,5 +330,41 @@ public class LogOnDetails {
      */
     public void setMachineName(String machineName) {
         this.machineName = machineName;
+    }
+
+    /**
+     * Gets the chat mode.
+     *
+     * @return the {@link ChatMode}
+     */
+    public ChatMode getChatMode() {
+        return chatMode;
+    }
+
+    /**
+     * Sets the chat mode.
+     *
+     * @param chatMode the chat mode {@link ChatMode}
+     */
+    public void setChatMode(ChatMode chatMode) {
+        this.chatMode = chatMode;
+    }
+
+    /**
+     * Gets the ui mode.
+     *
+     * @return the {@link UiMode}
+     */
+    public UiMode getUiMode() {
+        return uiMode;
+    }
+
+    /**
+     * Sets the ui mode.
+     *
+     * @param uiMode the ui mode {@link UiMode}
+     */
+    public void setUiMode(UiMode uiMode) {
+        this.uiMode = uiMode;
     }
 }
