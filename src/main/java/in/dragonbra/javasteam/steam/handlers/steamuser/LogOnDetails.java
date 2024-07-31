@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamuser;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.enums.EUIMode;
 import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.types.SteamID;
@@ -42,7 +43,7 @@ public class LogOnDetails {
 
     private ChatMode chatMode;
 
-    private UiMode uiMode;
+    private EUIMode uiMode;
 
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
@@ -58,7 +59,7 @@ public class LogOnDetails {
         machineName = envName + " (JavaSteam)";
 
         chatMode = ChatMode.DEFAULT;
-        uiMode = UiMode.DEFAULT;
+        uiMode = EUIMode.Unknown;
     }
 
     /**
@@ -353,18 +354,18 @@ public class LogOnDetails {
     /**
      * Gets the ui mode.
      *
-     * @return the {@link UiMode}
+     * @return the {@link EUIMode}
      */
-    public UiMode getUiMode() {
+    public EUIMode getUiMode() {
         return uiMode;
     }
 
     /**
      * Sets the ui mode.
      *
-     * @param uiMode the ui mode {@link UiMode}
+     * @param uiMode the ui mode {@link EUIMode}
      */
-    public void setUiMode(UiMode uiMode) {
+    public void setUiMode(EUIMode uiMode) {
         this.uiMode = uiMode;
     }
 }

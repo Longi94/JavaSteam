@@ -1,6 +1,7 @@
 package in.dragonbra.javasteamsamples._8UnifiedMessages;
 
 import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.enums.EUIMode;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.CFriendMessages_IncomingMessage_Notification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesPlayerSteamclient.*;
 import in.dragonbra.javasteam.rpc.service.Player;
@@ -10,7 +11,6 @@ import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.Servi
 import in.dragonbra.javasteam.steam.handlers.steamuser.ChatMode;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
-import in.dragonbra.javasteam.steam.handlers.steamuser.UiMode;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
@@ -125,7 +125,7 @@ public class SampleUnifiedMessages implements Runnable {
         LogOnDetails details = new LogOnDetails();
         details.setUsername(user);
         details.setPassword(pass);
-        details.setUiMode(UiMode.DEFAULT);
+        details.setUiMode(EUIMode.Unknown);
         details.setChatMode(ChatMode.NEW_STEAM_CHAT);
 
         // Set LoginID to a non-zero value if you have another client connected using the same account,

@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
+import in.dragonbra.javasteam.enums.EUIMode;
 import in.dragonbra.javasteam.generated.MsgClientLogOnResponse;
 import in.dragonbra.javasteam.generated.MsgClientLoggedOff;
 import in.dragonbra.javasteam.generated.MsgClientLogon;
@@ -132,8 +133,8 @@ public class SteamUser extends ClientMsgHandler {
             logon.getBody().setChatMode(details.getChatMode().getMode());
         }
 
-        if (details.getUiMode() != UiMode.DEFAULT) {
-            logon.getBody().setUiMode(details.getUiMode().getMode());
+        if (details.getUiMode() != EUIMode.Unknown) {
+            logon.getBody().setUiMode(details.getUiMode().code());
         }
 
         // steam guard
