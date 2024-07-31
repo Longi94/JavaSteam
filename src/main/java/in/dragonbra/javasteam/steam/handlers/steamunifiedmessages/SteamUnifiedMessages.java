@@ -119,36 +119,40 @@ public class SteamUnifiedMessages extends ClientMsgHandler {
         PacketClientMsgProtobuf packetMsgProto = (PacketClientMsgProtobuf) packetMsg;
 
         String jobName = packetMsgProto.getHeader().getProto().getTargetJobName();
-        if (!Strings.isNullOrEmpty(jobName)) {
-            String[] splitByDot = jobName.split("\\.");
-            String[] splitByHash = splitByDot[1].split("#");
 
-            String serviceName = splitByDot[0];
-            String methodName = splitByHash[0];
+        if (Strings.isNullOrEmpty(jobName)) {
+            logger.debug("Job name is null or empty");
+            return;
+        }
 
-            String serviceInterfaceName = "in.dragonbra.javasteam.rpc.interfaces.I" + serviceName;
-            try {
-                logger.debug("Handling Service Method: " + serviceInterfaceName);
+        String[] splitByDot = jobName.split("\\.");
+        String[] splitByHash = splitByDot[1].split("#");
 
-                Class<?> serviceInterfaceType = Class.forName(serviceInterfaceName);
+        String serviceName = splitByDot[0];
+        String methodName = splitByHash[0];
 
-                Method method = null;
-                for (Method m : serviceInterfaceType.getDeclaredMethods()) {
-                    if (m.getName().equals(methodName)) {
-                        method = m;
-                    }
+        String serviceInterfaceName = "in.dragonbra.javasteam.rpc.interfaces.I" + serviceName;
+        try {
+            logger.debug("Handling Service Method: " + serviceInterfaceName);
+
+            Class<?> serviceInterfaceType = Class.forName(serviceInterfaceName);
+
+            Method method = null;
+            for (Method m : serviceInterfaceType.getDeclaredMethods()) {
+                if (m.getName().equals(methodName)) {
+                    method = m;
                 }
-
-                if (method != null) {
-                    Class<? extends AbstractMessage> argumentType = (Class<? extends AbstractMessage>) method.getParameterTypes()[0];
-
-                    client.postCallback(new ServiceMethodNotification(argumentType, packetMsg));
-                }
-            } catch (ClassNotFoundException e) {
-                // The RPC service implementation was not implemented.
-                // Either the .proto is missing, or the service was not converted to an interface yet.
-                logger.error("Service Method: " + serviceName + ", was not found");
             }
+
+            if (method != null) {
+                Class<? extends AbstractMessage> argumentType = (Class<? extends AbstractMessage>) method.getParameterTypes()[0];
+
+                client.postCallback(new ServiceMethodNotification(argumentType, packetMsg));
+            }
+        } catch (ClassNotFoundException e) {
+            // The RPC service implementation was not implemented.
+            // Either the .proto is missing, or the service was not converted to an interface yet.
+            logger.debug("Service Method: " + serviceName + ", was not found");
         }
     }
 }
