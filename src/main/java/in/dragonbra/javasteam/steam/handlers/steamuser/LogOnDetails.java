@@ -45,6 +45,8 @@ public class LogOnDetails {
 
     private EUIMode uiMode;
 
+    private boolean isSteamDeck;
+
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
         accountID = 0L;
@@ -60,6 +62,7 @@ public class LogOnDetails {
 
         chatMode = ChatMode.DEFAULT;
         uiMode = EUIMode.Unknown;
+        isSteamDeck = false;
     }
 
     /**
@@ -367,5 +370,23 @@ public class LogOnDetails {
      */
     public void setUiMode(EUIMode uiMode) {
         this.uiMode = uiMode;
+    }
+
+    /**
+     * Gets whether this is Steam Deck login.
+     *
+     * @return The Steam Deck login value.
+     */
+    public boolean isSteamDeck() {
+        return isSteamDeck;
+    }
+
+    /**
+     * Sets whether this is Steam Deck login.
+     *
+     * @param steamDeck The Steam Deck login value.
+     */
+    public void setSteamDeck(boolean steamDeck) {
+        isSteamDeck = steamDeck;
     }
 }

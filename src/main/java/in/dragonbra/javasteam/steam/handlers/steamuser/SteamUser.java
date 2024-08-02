@@ -137,6 +137,10 @@ public class SteamUser extends ClientMsgHandler {
             logon.getBody().setUiMode(details.getUiMode().code());
         }
 
+        if (details.isSteamDeck()) {
+            logon.getBody().setIsSteamDeck(true);
+        }
+
         // steam guard
         if (!Strings.isNullOrEmpty(details.getAuthCode())) {
             logon.getBody().setAuthCode(details.getAuthCode());
