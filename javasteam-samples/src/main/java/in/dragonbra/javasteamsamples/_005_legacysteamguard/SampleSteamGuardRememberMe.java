@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._5steamguard;
+package in.dragonbra.javasteamsamples._005_legacysteamguard;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
@@ -11,6 +11,8 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteamsamples._000_authentication.SampleLogonAuthentication;
+import in.dragonbra.javasteamsamples._001_authenticationwithqrcode.SampleLogonQRAuthentication;
 
 import java.util.Scanner;
 
@@ -49,8 +51,9 @@ import java.util.Scanner;
  * This sample will be removed in the future.
  * <p>
  * See:
- * {@link in.dragonbra.javasteamsamples._1logon.SampleLogonAuthentication }
- * {@link in.dragonbra.javasteamsamples._1logon.SampleLogonQRAuthentication}
+ * {@link SampleLogonAuthentication }
+ * and
+ * {@link SampleLogonQRAuthentication}
  *
  * @author lngtr
  * @see <a href="https://github.com/SteamRE/SteamKit/pull/1270#issuecomment-1768359942">SteamKit issue</a>

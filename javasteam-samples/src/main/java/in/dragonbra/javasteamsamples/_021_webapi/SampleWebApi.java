@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._3debuglog;
+package in.dragonbra.javasteamsamples._021_webapi;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
@@ -9,37 +9,32 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.util.log.LogListener;
+import in.dragonbra.javasteam.steam.webapi.WebAPI;
+import in.dragonbra.javasteam.types.KeyValue;
+import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 //
-// Sample 3: DebugLog
+// Sample 6: WebAPI
 //
-// sometimes is may be necessary to peek under the hood of SteamKit2
-// to debug or diagnose some issues
+// this sample will give an example of how the WebAPI utilities can be used to
+// interact with the Steam Web APIs
 //
-// to help with this, SK2 includes a component named the DebugLog
-//
-// internal SK2 components will occasionally make use of the DebugLog
-// to share diagnostic information
-//
-// in order to use the DebugLog, a listener must first be registered with it
-//
-// by default, SK2 does not install any listeners, user code must install one
-//
-// additionally, the DebugLog is disabled by default in release builds,
-// but it may be enabled with the DebugLog.Enabled member
-//
-// you'll note that while this sample project is relatively similar to
-// Sample 1, the console output becomes very verbose
-//
+// the Steam Web APIs are structured as a set of "interfaces" with methods,
+// similar to classes in OO languages.
+// as such, the API for interacting with the WebAPI follows a similar methodology
 
 /**
  * @author lngtr
  * @since 2021-10-11
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleDebugLog implements Runnable {
+public class SampleWebApi implements Runnable {
 
     private SteamClient steamClient;
 
@@ -53,51 +48,27 @@ public class SampleDebugLog implements Runnable {
 
     private final String pass;
 
-    // define our debuglog listener
-    static class MyListener implements LogListener {
-
-        // this function will be called when internal steamkit components write to the debuglog
-        @Override
-        public void onLog(Class<?> clazz, String message, Throwable throwable) {
-            // for this example, we'll print the output to the console
-            System.out.println("MyListener - " + clazz.getName() + ": " + message);
-        }
-
-        @Override
-        public void onError(Class<?> clazz, String message, Throwable throwable) {
-            // for this example, we'll print errors the output to the console
-            System.err.println("MyListener - " + clazz.getName() + ": " + message);
-        }
-    }
-
-    public SampleDebugLog(String user, String pass) {
+    public SampleWebApi(String user, String pass) {
         this.user = user;
         this.pass = pass;
     }
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample3: No username and password specified!");
+            System.out.println("Sample6: No username and password specified!");
             return;
         }
 
-        // JavaSteam already has one built in for convenience.
-        // LogManager.addListener(new DefaultLogListener());
+        LogManager.addListener(new DefaultLogListener());
 
-        LogManager.addListener(new MyListener());
-
-        new SampleDebugLog(args[0], args[1]).run();
+        new SampleWebApi(args[0], args[1]).run();
     }
 
     @Override
     public void run() {
+
         // create our steamclient instance
         steamClient = new SteamClient();
-
-        // uncomment this if you'd like to dump raw sent and received packets
-        // that can be opened for analysis in NetHookAnalyzer
-        // NOTE: dumps may contain sensitive data (such as your Steam password)
-        // steamClient.setDebugNetworkListener(new NetHookNetworkListener());
 
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);
@@ -151,17 +122,17 @@ public class SampleDebugLog implements Runnable {
     private void onLoggedOn(LoggedOnCallback callback) {
         if (callback.getResult() != EResult.OK) {
             if (callback.getResult() == EResult.AccountLogonDenied) {
-                // if we receive AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
+                // if we recieve AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
                 // then the account we're logging into is SteamGuard protected
                 // see sample 5 for how SteamGuard can be handled
+
                 System.out.println("Unable to logon to Steam: This account is SteamGuard protected.");
 
                 isRunning = false;
                 return;
             }
 
-            System.out.println("Unable to logon to Steam: " + callback.getResult());
-
+            System.out.println("Unable to logon to Steam: " + callback.getResult() + " / " + callback.getExtendedResult());
             isRunning = false;
             return;
 
@@ -171,6 +142,20 @@ public class SampleDebugLog implements Runnable {
 
         // at this point, we'd be able to perform actions on Steam
 
+        WebAPI api = steamClient.getConfiguration().getWebAPI("ISteamNews");
+
+        try {
+            Map<String, String> args = new HashMap<>();
+            args.put("appid", "440");
+
+            KeyValue result = api.call("GetNewsForApp", 2, args);
+
+            printKeyValue(result, 1);
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
         // for this sample we'll just log off
         steamUser.logOff();
     }
@@ -179,5 +164,19 @@ public class SampleDebugLog implements Runnable {
         System.out.println("Logged off of Steam: " + callback.getResult());
 
         isRunning = false;
+    }
+
+    // Recursively print out child KeyValues.
+    private void printKeyValue(KeyValue keyValue, int depth) {
+        String spacePadding = String.join("", Collections.nCopies(depth, "    "));
+
+        if (keyValue.getChildren().isEmpty()) {
+            System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());
+        } else {
+            System.out.println(spacePadding + keyValue.getName() + ":");
+            for (KeyValue child : keyValue.getChildren()) {
+                printKeyValue(child, depth + 1);
+            }
+        }
     }
 }

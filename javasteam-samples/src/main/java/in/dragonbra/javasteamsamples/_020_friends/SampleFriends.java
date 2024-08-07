@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._4friends;
+package in.dragonbra.javasteamsamples._020_friends;
 
 import in.dragonbra.javasteam.enums.EFriendRelationship;
 import in.dragonbra.javasteam.enums.EPersonaState;

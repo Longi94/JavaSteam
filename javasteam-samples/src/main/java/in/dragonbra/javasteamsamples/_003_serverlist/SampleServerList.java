@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._7serverlist;
+package in.dragonbra.javasteamsamples._003_serverlist;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.discovery.FileServerListProvider;

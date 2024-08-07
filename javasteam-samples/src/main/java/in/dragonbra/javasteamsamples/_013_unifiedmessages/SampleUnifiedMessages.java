@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._8UnifiedMessages;
+package in.dragonbra.javasteamsamples._013_unifiedmessages;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.enums.EUIMode;
