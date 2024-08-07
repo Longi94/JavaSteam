@@ -1,6 +1,7 @@
 package in.dragonbra.javasteam.steam.handlers.steamuser;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.enums.EUIMode;
 import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.types.SteamID;
@@ -40,6 +41,12 @@ public class LogOnDetails {
 
     private String machineName;
 
+    private ChatMode chatMode;
+
+    private EUIMode uiMode;
+
+    private boolean isSteamDeck;
+
     public LogOnDetails() {
         accountInstance = SteamID.DESKTOP_INSTANCE;
         accountID = 0L;
@@ -52,6 +59,10 @@ public class LogOnDetails {
             envName = System.getenv("HOSTNAME");
         }
         machineName = envName + " (JavaSteam)";
+
+        chatMode = ChatMode.DEFAULT;
+        uiMode = EUIMode.Unknown;
+        isSteamDeck = false;
     }
 
     /**
@@ -323,5 +334,59 @@ public class LogOnDetails {
      */
     public void setMachineName(String machineName) {
         this.machineName = machineName;
+    }
+
+    /**
+     * Gets the chat mode.
+     *
+     * @return the {@link ChatMode}
+     */
+    public ChatMode getChatMode() {
+        return chatMode;
+    }
+
+    /**
+     * Sets the chat mode.
+     *
+     * @param chatMode the chat mode {@link ChatMode}
+     */
+    public void setChatMode(ChatMode chatMode) {
+        this.chatMode = chatMode;
+    }
+
+    /**
+     * Gets the ui mode.
+     *
+     * @return the {@link EUIMode}
+     */
+    public EUIMode getUiMode() {
+        return uiMode;
+    }
+
+    /**
+     * Sets the ui mode.
+     *
+     * @param uiMode the ui mode {@link EUIMode}
+     */
+    public void setUiMode(EUIMode uiMode) {
+        this.uiMode = uiMode;
+    }
+
+    /**
+     * Gets whether this is Steam Deck login.
+     *
+     * @return The Steam Deck login value.
+     */
+    public boolean isSteamDeck() {
+        return isSteamDeck;
+    }
+
+    /**
+     * Sets whether this is Steam Deck login.
+     *
+     * @param steamDeck The Steam Deck login value.
+     */
+    public void setSteamDeck(boolean steamDeck) {
+        isSteamDeck = steamDeck;
     }
 }
