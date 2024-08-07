@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._2extending;
+package in.dragonbra.javasteamsamples._010_extending;
 
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
