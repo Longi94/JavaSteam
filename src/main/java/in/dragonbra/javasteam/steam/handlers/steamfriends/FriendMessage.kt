@@ -1,54 +1,19 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends
 
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.util.Date;
+import `in`.dragonbra.javasteam.types.SteamID
+import java.util.*
 
 /**
  * Represents a single Message sent to or received from a friend
+ *
+ * @param steamID The SteamID of the User that wrote the message.
+ * @param unread Whether the message has been read, i.e., is an offline message.
+ * @param message The actual message.
+ * @param timestamp The time (in UTC) when the message was sent.
  */
-public class FriendMessage {
-
-    private final SteamID steamID;
-
-    private final boolean unread;
-
-    private final String message;
-
-    private final Date timestamp;
-
-    public FriendMessage(SteamID steamID, boolean unread, String message, Date timestamp) {
-        this.steamID = steamID;
-        this.unread = unread;
-        this.message = message;
-        this.timestamp = timestamp;
-    }
-
-    /**
-     * @return the {@link SteamID} of the User that wrote the message
-     */
-    public SteamID getSteamID() {
-        return steamID;
-    }
-
-    /**
-     * @return whether or not the message has been read, i.e., is an offline message.
-     */
-    public boolean isUnread() {
-        return unread;
-    }
-
-    /**
-     * @return the actual message
-     */
-    public String getMessage() {
-        return message;
-    }
-
-    /**
-     * @return time (in UTC) when the message was sent
-     */
-    public Date getTimestamp() {
-        return timestamp;
-    }
-}
+class FriendMessage(
+    val steamID: SteamID,
+    val unread: Boolean,
+    val message: String,
+    val timestamp: Date,
+)

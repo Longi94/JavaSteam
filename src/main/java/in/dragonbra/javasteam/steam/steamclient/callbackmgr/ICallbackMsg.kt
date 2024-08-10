@@ -1,12 +1,15 @@
-package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
+package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.types.JobID
 
 /**
  * A callback message
  */
-public interface ICallbackMsg {
-    JobID getJobID();
+interface ICallbackMsg {
 
-    void setJobID(JobID jobID);
+    /**
+     * The [JobID] that this callback is associated with. If there is no job associated,
+     * then this will be [JobID.INVALID]
+     */
+    var jobID: JobID
 }

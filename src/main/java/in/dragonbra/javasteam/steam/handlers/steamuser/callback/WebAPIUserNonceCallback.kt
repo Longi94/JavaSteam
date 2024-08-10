@@ -1,37 +1,36 @@
-package in.dragonbra.javasteam.steam.handlers.steamuser.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamuser.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientRequestWebAPIAuthenticateUserNonceResponse;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientRequestWebAPIAuthenticateUserNonceResponse
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * This callback is received when requesting a new WebAPI authentication user nonce.
  */
-public class WebAPIUserNonceCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final String nonce;
-
-    public WebAPIUserNonceCallback(JobID jobID, CMsgClientRequestWebAPIAuthenticateUserNonceResponse.Builder body) {
-        setJobID(jobID);
-
-        result = EResult.from(body.getEresult());
-        nonce = body.getWebapiAuthenticateUserNonce();
-    }
+class WebAPIUserNonceCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of the request as {@link EResult}.
+     * Gets the result of the request.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the authentication nonce.
+     * Gets the authentication nonce.
      */
-    public String getNonce() {
-        return nonce;
+    val nonce: String
+
+    init {
+        val userNonce = ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonceResponse.Builder>(
+            CMsgClientRequestWebAPIAuthenticateUserNonceResponse::class.java,
+            packetMsg
+        )
+        val body = userNonce.body
+
+        jobID = userNonce.targetJobID
+
+        result = EResult.from(body.eresult)
+        nonce = body.webapiAuthenticateUserNonce
     }
 }

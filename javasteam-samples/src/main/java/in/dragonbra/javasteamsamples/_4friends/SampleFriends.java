@@ -4,7 +4,6 @@ import in.dragonbra.javasteam.enums.EFriendRelationship;
 import in.dragonbra.javasteam.enums.EPersonaState;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.Friend;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.PersonaState;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendAddedCallback;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendsListCallback;
@@ -199,8 +198,6 @@ public class SampleFriends implements Runnable {
         // this callback is received when the persona state (friend information) of a friend changes
 
         // for this sample we'll simply display the names of the friends
-        for (PersonaState state : callback.getPersonaStates()) {
-            System.out.println("State change: " + state.getName() + " " + state.getState());
-        }
+        System.out.println("State change: " + callback.getName() + " " + callback.getState());
     }
 }

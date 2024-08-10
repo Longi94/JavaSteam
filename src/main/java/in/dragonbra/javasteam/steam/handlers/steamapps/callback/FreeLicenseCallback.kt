@@ -1,52 +1,46 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicenseResponse;
-import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicenseResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import java.util.*
 
 /**
- * This callback is received in response to calling {@link SteamApps#requestFreeLicense}, informing the client of newly granted packages, if any.
+ * This callback is received in response to calling [SteamApps.requestFreeLicense], informing the client of newly granted packages, if any.
  */
-public class FreeLicenseCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final List<Integer> grantedApps;
-
-    private final List<Integer> grantedPackages;
-
-    public FreeLicenseCallback(JobID jobID, CMsgClientRequestFreeLicenseResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-
-        grantedApps = Collections.unmodifiableList(msg.getGrantedAppidsList());
-        grantedPackages = Collections.unmodifiableList(msg.getGrantedPackageidsList());
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class FreeLicenseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of the message.
+     * Gets the result of the message.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the list of granted apps.
+     * Gets the list of granted apps.
      */
-    public List<Integer> getGrantedApps() {
-        return grantedApps;
-    }
+    val grantedApps: List<Int>
 
     /**
-     * @return the list of granted packages.
+     * Gets the list of granted packages.
      */
-    public List<Integer> getGrantedPackages() {
-        return grantedPackages;
+    val grantedPackages: List<Int>
+
+    init {
+        val grantedLicenses = ClientMsgProtobuf<CMsgClientRequestFreeLicenseResponse.Builder>(
+            CMsgClientRequestFreeLicenseResponse::class.java,
+            packetMsg
+        )
+        val msg = grantedLicenses.body
+
+        jobID = grantedLicenses.targetJobID
+
+        result = EResult.from(msg.eresult)
+
+        grantedApps = Collections.unmodifiableList(msg.grantedAppidsList)
+        grantedPackages = Collections.unmodifiableList(msg.grantedPackageidsList)
     }
 }

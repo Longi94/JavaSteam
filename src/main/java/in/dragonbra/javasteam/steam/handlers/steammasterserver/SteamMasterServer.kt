@@ -1,85 +1,65 @@
-package in.dragonbra.javasteam.steam.handlers.steammasterserver;
+package `in`.dragonbra.javasteam.steam.handlers.steammasterserver
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgClientGMSServerQuery;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse;
-import in.dragonbra.javasteam.steam.handlers.steammasterserver.callback.QueryCallback;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.NetHelpers;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgClientGMSServerQuery
+import `in`.dragonbra.javasteam.steam.handlers.steammasterserver.callback.QueryCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.util.NetHelpers
 
 /**
  * This handler is used for requesting server list details from Steam.
  */
-public class SteamMasterServer extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamMasterServer() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.GMSClientServerQueryResponse, this::handleServerQueryResponse);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamMasterServer : ClientMsgHandler() {
 
     /**
      * Requests a list of servers from the Steam game master server.
-     * Results are returned in a {@link QueryCallback}.
+     * Results are returned in a [QueryCallback].
      *
      * @param details The details for the request.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link QueryCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [QueryCallback].
      */
-    public AsyncJobSingle<QueryCallback> serverQuery(QueryDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
+    fun serverQuery(details: QueryDetails): AsyncJobSingle<QueryCallback> {
+        val query = ClientMsgProtobuf<CMsgClientGMSServerQuery.Builder>(
+            CMsgClientGMSServerQuery::class.java,
+            EMsg.ClientGMSServerQuery
+        )
+        query.setSourceJobID(client.getNextJobID())
+
+        query.body.setAppId(details.appID)
+
+        details.geoLocatedIP?.let {
+            query.body.setGeoLocationIp(NetHelpers.getIPAddress(it))
         }
 
-        ClientMsgProtobuf<CMsgClientGMSServerQuery.Builder> query =
-                new ClientMsgProtobuf<>(CMsgClientGMSServerQuery.class, EMsg.ClientGMSServerQuery);
-        JobID jobID = client.getNextJobID();
-        query.setSourceJobID(jobID);
+        query.body.setFilterText(details.filter)
+        query.body.setRegionCode(details.region.code().toInt())
 
-        query.getBody().setAppId(details.getAppID());
+        query.body.setMaxServers(details.maxServers)
 
-        if (details.getGeoLocatedIP() != null) {
-            query.getBody().setGeoLocationIp(NetHelpers.getIPAddress(details.getGeoLocatedIP()));
-        }
+        client.send(query)
 
-        query.getBody().setFilterText(details.getFilter());
-        query.getBody().setRegionCode(details.getRegion().code());
-
-        query.getBody().setMaxServers(details.getMaxServers());
-
-        client.send(query);
-
-        return new AsyncJobSingle<>(this.client, query.getSourceJobID());
+        return AsyncJobSingle(this.client, query.sourceJobID)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
-        }
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback = getCallback(packetMsg) ?: return
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
+        client.postCallback(callback)
     }
 
-    private void handleServerQueryResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgGMSClientServerQueryResponse.Builder> queryResponse =
-                new ClientMsgProtobuf<>(CMsgGMSClientServerQueryResponse.class, packetMsg);
-
-        client.postCallback(new QueryCallback(queryResponse.getTargetJobID(), queryResponse.getBody()));
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
+            EMsg.GMSClientServerQueryResponse -> QueryCallback(packetMsg)
+            else -> null
+        }
     }
 }

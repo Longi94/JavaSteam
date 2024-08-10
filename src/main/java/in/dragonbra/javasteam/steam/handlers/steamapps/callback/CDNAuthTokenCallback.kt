@@ -1,49 +1,43 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthTokenResponse;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-
-import java.util.Date;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthTokenResponse
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import java.util.*
 
 /**
  * This callback is received when a CDN auth token is received
  */
-public class CDNAuthTokenCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final String token;
-
-    private final Date expiration;
-
-    public CDNAuthTokenCallback(JobID jobID, CMsgClientGetCDNAuthTokenResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-        token = msg.getToken();
-        expiration = new Date(msg.getExpirationTime() * 1000L);
-    }
+class CDNAuthTokenCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of the operation.
+     * Gets the result of the operation.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the CDN auth token.
+     * Gets the CDN auth token.
      */
-    public String getToken() {
-        return token;
-    }
+    val token: String
 
     /**
-     * @return the token expiration date.
+     * Gets the token expiration date.
      */
-    public Date getExpiration() {
-        return expiration;
+    val expiration: Date
+
+    init {
+        val response = ClientMsgProtobuf<CMsgClientGetCDNAuthTokenResponse.Builder>(
+            CMsgClientGetCDNAuthTokenResponse::class.java,
+            packetMsg
+        )
+        val msg = response.body
+
+        jobID = response.targetJobID
+
+        result = EResult.from(msg.eresult)
+        token = msg.token
+        expiration = Date(msg.expirationTime * 1000L)
     }
 }

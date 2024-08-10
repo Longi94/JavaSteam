@@ -107,16 +107,6 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
     }
 
     @Test
-    public void picsGetProductInfoNull() {
-        assertThrows(IllegalArgumentException.class, () -> handler.picsGetProductInfo(null, new LinkedList<>(), false));
-    }
-
-    @Test
-    public void picsGetProductInfoNull2() {
-        assertThrows(IllegalArgumentException.class, () -> handler.picsGetProductInfo(new LinkedList<>(), null, false));
-    }
-
-    @Test
     public void getCDNAuthToken() {
         AsyncJobSingle<CDNAuthTokenCallback> job = handler.getCDNAuthToken(1, 2, "testhostname");
 
@@ -140,11 +130,6 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
         assertEquals(SOURCE_JOB_ID, job.getJobID());
         assertEquals(1, msg.getBody().getAppidsCount());
         assertEquals(440, msg.getBody().getAppids(0));
-    }
-
-    @Test
-    public void requestFreeLicenseNull() {
-        assertThrows(IllegalArgumentException.class, () -> handler.requestFreeLicense(null));
     }
 
     @Test

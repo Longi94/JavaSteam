@@ -1,67 +1,34 @@
-package in.dragonbra.javasteam.steam.handlers.steamuser.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamuser.callback
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * This callback is received when email information is received from the network.
  */
-public class EmailAddrInfoCallback extends CallbackMsg {
-
-    private final String emailAddress;
-
-    private final boolean emailIsValidated;
-
-    private final boolean emailValidationChanged;
-
-    private final boolean credentialChangeRequiresCode;
-
-    private final boolean passwordOrSecretqaChangeRequiresCode;
-
-    public EmailAddrInfoCallback(CMsgClientEmailAddrInfo.Builder msg) {
-        emailAddress = msg.getEmailAddress();
-
-        emailIsValidated = msg.getEmailIsValidated();
-
-        emailValidationChanged = msg.getEmailValidationChanged();
-
-        credentialChangeRequiresCode = msg.getCredentialChangeRequiresCode();
-
-        passwordOrSecretqaChangeRequiresCode = msg.getPasswordOrSecretqaChangeRequiresCode();
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class EmailAddrInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the email address of this account.
+     * Gets the email address of this account.
      */
-    public String getEmailAddress() {
-        return emailAddress;
-    }
+    val emailAddress: String
 
     /**
-     * @return a value indicating validated email or not.
+     * Gets a value indicating validated email or not.
      */
-    public boolean isEmailValidated() {
-        return emailIsValidated;
-    }
+    val isEmailValidated: Boolean
 
-    /**
-     * @return ???
-     */
-    public boolean isEmailValidationChanged() {
-        return emailValidationChanged;
-    }
+    init {
+        val emailAddrInfo = ClientMsgProtobuf<CMsgClientEmailAddrInfo.Builder>(
+            CMsgClientEmailAddrInfo::class.java,
+            packetMsg
+        )
+        val msg = emailAddrInfo.body
 
-    /**
-     * @return ???
-     */
-    public boolean isCredentialChangeRequiresCode() {
-        return credentialChangeRequiresCode;
-    }
-
-    /**
-     * @return ???
-     */
-    public boolean isPasswordOrSecretqaChangeRequiresCode() {
-        return passwordOrSecretqaChangeRequiresCode;
+        emailAddress = msg.emailAddress
+        isEmailValidated = msg.emailIsValidated
     }
 }

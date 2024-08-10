@@ -1,67 +1,68 @@
-package in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback
 
-import in.dragonbra.javasteam.base.IPacketGCMsg;
-import in.dragonbra.javasteam.base.PacketClientGCMsg;
-import in.dragonbra.javasteam.base.PacketClientGCMsgProtobuf;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.MsgUtil;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketGCMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.base.PacketClientGCMsg
+import `in`.dragonbra.javasteam.base.PacketClientGCMsgProtobuf
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.util.MsgUtil
 
 /**
- * This callback is fired when a game coordinator message is recieved from the network.
+ * This callback is fired when a game coordinator message is received from the network.
  */
-public class MessageCallback extends CallbackMsg {
-
-    private final int eMsg;
-
-    private final int appID;
-
-    private final IPacketGCMsg message;
-
-    public MessageCallback(JobID jobID, CMsgGCClient.Builder gcMsg) {
-        setJobID(jobID);
-
-        eMsg = gcMsg.getMsgtype();
-        appID = gcMsg.getAppid();
-        message = getPacketGCMsg(gcMsg.getMsgtype(), gcMsg.getPayload().toByteArray());
-    }
+class MessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the game coordinator message type
+     * raw emsg (with protobuf flag, if present)
      */
-    public int geteMsg() {
-        return MsgUtil.getGCMsg(eMsg);
-    }
+    private val _eMsg: Int
 
     /**
-     * @return the AppID of the game coordinator the message is from
+     * Gets the game coordinator message type.
      */
-    public int getAppID() {
-        return appID;
-    }
+    val eMsg: Int
+        get() = MsgUtil.getGCMsg(_eMsg)
 
     /**
-     * @return <b>true</b> if this instance is protobuf'd; otherwise, <b>false</b>
+     * Gets the AppID of the game coordinator the message is from.
      */
-    public boolean isProto() {
-        return MsgUtil.isProtoBuf(eMsg);
-    }
+    val appID: Int
 
     /**
-     * @return the actual message
+     * Gets a value indicating whether this message is protobuf'd.
      */
-    public IPacketGCMsg getMessage() {
-        return message;
+    val isProto: Boolean
+        get() = MsgUtil.isProtoBuf(_eMsg)
+
+    /**
+     * Gets the actual message.
+     */
+    val message: IPacketGCMsg
+
+    init {
+        val msg = ClientMsgProtobuf<CMsgGCClient.Builder>(
+            CMsgGCClient::class.java,
+            packetMsg
+        )
+        val gcMsg = msg.body
+
+        _eMsg = gcMsg.msgtype
+        appID = gcMsg.appid
+        message = getPacketGCMsg(gcMsg.msgtype, gcMsg.payload.toByteArray())
+        jobID = message.targetJobID
     }
 
-    private static IPacketGCMsg getPacketGCMsg(int eMsg, byte[] data) {
-        int realEMsg = MsgUtil.getGCMsg(eMsg);
+    companion object {
+        private fun getPacketGCMsg(eMsg: Int, data: ByteArray): IPacketGCMsg {
+            val realEMsg: Int = MsgUtil.getGCMsg(eMsg)
 
-        if (MsgUtil.isProtoBuf(eMsg)) {
-            return new PacketClientGCMsgProtobuf(realEMsg, data);
-        } else {
-            return new PacketClientGCMsg(realEMsg, data);
+            return if (MsgUtil.isProtoBuf(eMsg)) {
+                PacketClientGCMsgProtobuf(realEMsg, data)
+            } else {
+                PacketClientGCMsg(realEMsg, data)
+            }
         }
     }
 }

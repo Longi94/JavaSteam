@@ -1,48 +1,43 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKeyResponse;
-import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKeyResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * This callback is received in response to calling {@link SteamApps#getDepotDecryptionKey(int, int)}
+ * This callback is received in response to calling [SteamApps.getDepotDecryptionKey]
  */
-public class DepotKeyCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final int depotID;
-
-    private final byte[] depotKey;
-
-    public DepotKeyCallback(JobID jobID, CMsgClientGetDepotDecryptionKeyResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-        depotID = msg.getDepotId();
-        depotKey = msg.getDepotEncryptionKey().toByteArray();
-    }
+class DepotKeyCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of requesting this encryption key.
+     * Gets the result of requesting this encryption key.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the DepotID this encryption key is for.
+     * Gets the DepotID this encryption key is for.
      */
-    public int getDepotID() {
-        return depotID;
-    }
+    val depotID: Int
 
     /**
-     * @return the encryption key for this depot.
+     * Gets the encryption key for this depot.
      */
-    public byte[] getDepotKey() {
-        return depotKey;
+    val depotKey: ByteArray
+
+    init {
+        val keyResponse = ClientMsgProtobuf<CMsgClientGetDepotDecryptionKeyResponse.Builder>(
+            CMsgClientGetDepotDecryptionKeyResponse::class.java,
+            packetMsg
+        )
+        val msg = keyResponse.body
+
+        jobID = keyResponse.targetJobID
+
+        result = EResult.from(msg.eresult)
+        depotID = msg.depotId
+        depotKey = msg.depotEncryptionKey.toByteArray()
     }
 }

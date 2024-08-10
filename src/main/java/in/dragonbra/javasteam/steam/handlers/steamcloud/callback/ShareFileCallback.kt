@@ -1,38 +1,38 @@
-package in.dragonbra.javasteam.steam.handlers.steamcloud.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFileResponse;
-import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFileResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * This callback is received in response to calling {@link SteamCloud#shareFile(int, String)}.
+ * This callback is received in response to calling [SteamCloud.shareFile].
  */
-public class ShareFileCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final long ugcId;
-
-    public ShareFileCallback(JobID jobID, CMsgClientUFSShareFileResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-        ugcId = msg.getHcontent();
-    }
+class ShareFileCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of the request.
+     * Gets the result of the request.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the resulting UGC handle.
+     * Gets the resulting UGC handle.
      */
-    public long getUgcId() {
-        return ugcId;
+    val ugcId: Long
+
+    init {
+        val shareResponse = ClientMsgProtobuf<CMsgClientUFSShareFileResponse.Builder>(
+            CMsgClientUFSShareFileResponse::class.java,
+            packetMsg
+        )
+        val msg = shareResponse.body
+
+        jobID = shareResponse.targetJobID
+
+        result = EResult.from(msg.eresult)
+
+        ugcId = msg.hcontent
     }
 }

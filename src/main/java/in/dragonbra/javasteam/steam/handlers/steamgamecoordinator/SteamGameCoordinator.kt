@@ -1,34 +1,19 @@
-package in.dragonbra.javasteam.steam.handlers.steamgamecoordinator;
+package `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator
 
-import com.google.protobuf.ByteString;
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IClientGCMsg;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient;
-import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback.MessageCallback;
-import in.dragonbra.javasteam.util.MsgUtil;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.protobuf.ByteString
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IClientGCMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient
+import `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback.MessageCallback
+import `in`.dragonbra.javasteam.util.MsgUtil
 
 /**
  * This handler handles all game coordinator messaging.
  */
-public class SteamGameCoordinator extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamGameCoordinator() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientFromGC, this::handleFromGC);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamGameCoordinator : ClientMsgHandler() {
 
     /**
      * Sends a game coordinator message for a specific appid.
@@ -36,37 +21,27 @@ public class SteamGameCoordinator extends ClientMsgHandler {
      * @param msg   The GC message to send.
      * @param appId The app id of the game coordinator to send to.
      */
-    public void send(IClientGCMsg msg, int appId) {
-        if (msg == null) {
-            throw new IllegalArgumentException("msg is null");
-        }
+    fun send(msg: IClientGCMsg, appId: Int) {
+        val clientMsg = ClientMsgProtobuf<CMsgGCClient.Builder>(CMsgGCClient::class.java, EMsg.ClientToGC)
 
-        ClientMsgProtobuf<CMsgGCClient.Builder> clientMsg = new ClientMsgProtobuf<>(CMsgGCClient.class, EMsg.ClientToGC);
+        clientMsg.protoHeader.setRoutingAppid(appId)
+        clientMsg.body.setMsgtype(MsgUtil.makeGCMsg(msg.getMsgType(), msg.isProto()))
+        clientMsg.body.setAppid(appId)
 
-        clientMsg.getProtoHeader().setRoutingAppid(appId);
-        clientMsg.getBody().setMsgtype(MsgUtil.makeGCMsg(msg.getMsgType(), msg.isProto()));
-        clientMsg.getBody().setAppid(appId);
+        clientMsg.body.setPayload(ByteString.copyFrom(msg.serialize()))
 
-        clientMsg.getBody().setPayload(ByteString.copyFrom(msg.serialize()));
-
-        client.send(clientMsg);
+        client.send(clientMsg)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
+    /**
+     * Handles a client message. This should not be called directly.
+     *
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        if (packetMsg.msgType == EMsg.ClientToGC) {
+            val callback = MessageCallback(packetMsg)
+            client.postCallback(callback)
         }
-
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
-    }
-
-    private void handleFromGC(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgGCClient.Builder> msg = new ClientMsgProtobuf<>(CMsgGCClient.class, packetMsg);
-
-        client.postCallback(new MessageCallback(msg.getTargetJobID(), msg.getBody()));
     }
 }

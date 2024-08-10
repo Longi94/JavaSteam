@@ -1,37 +1,34 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EChatInfoType;
-import in.dragonbra.javasteam.generated.MsgClientChatRoomInfo;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
+import `in`.dragonbra.javasteam.base.ClientMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatInfoType
+import `in`.dragonbra.javasteam.generated.MsgClientChatRoomInfo
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
 
 /**
- * This callback is fired in response to chat room info being recieved.
+ * This callback is fired in response to chat room info being received.
  */
-public class ChatRoomInfoCallback extends CallbackMsg {
+class ChatRoomInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
-    private final SteamID chatRoomID;
+    /**
+     * Gets [SteamID] of the chat room.
+     */
+    val chatRoomID: SteamID
 
-    private final EChatInfoType type;
+    /**
+     * Gets the info type.
+     */
+    val type: EChatInfoType
 
-    public ChatRoomInfoCallback(MsgClientChatRoomInfo msg, byte[] payload) {
-        chatRoomID = msg.getSteamIdChat();
-        type = msg.getType();
+    init {
+        val roomInfo = ClientMsg(MsgClientChatRoomInfo::class.java, packetMsg)
+        val msg = roomInfo.body
+
+        chatRoomID = msg.steamIdChat
+        type = msg.type
 
         // todo: handle inner payload based on the type similar to ChatMemberInfoCallback
-    }
-
-    /**
-     * @return {@link SteamID} of the chat room.
-     */
-    public SteamID getChatRoomID() {
-        return chatRoomID;
-    }
-
-    /**
-     * @return the info type.
-     */
-    public EChatInfoType getType() {
-        return type;
     }
 }

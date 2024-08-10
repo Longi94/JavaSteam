@@ -56,8 +56,6 @@ public class SteamClient extends CMClient {
 
     private final Queue<ICallbackMsg> callbackQueue = new LinkedList<>();
 
-    private final Map<EMsg, Consumer<IPacketMsg>> dispatchMap = new HashMap<>();
-
     /**
      * Initializes a new instance of the {@link SteamClient} class with the default configuration.
      */
@@ -91,10 +89,6 @@ public class SteamClient extends CMClient {
         addHandler(new SteamUserStats());
 
         processStartTime = new Date();
-
-        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
-        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
-        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
 
         jobManager = new AsyncJobManager();
     }
@@ -348,12 +342,24 @@ public class SteamClient extends CMClient {
             return false;
         }
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            // we want to handle some of the clientmsgs before we pass them along to registered handlers
-            dispatcher.accept(packetMsg);
+        if (packetMsg == null) {
+            throw new NullPointerException("packetMsg is null");
         }
 
+        // we want to handle some of the clientmsgs before we pass them along to registered handlers
+        switch (packetMsg.getMsgType()) {
+            case ClientCMList:
+                handleCMList(packetMsg);
+                break;
+            case JobHeartbeat:
+                handleJobHeartbeat(packetMsg);
+                break;
+            case DestJobFailed:
+                handleJobFailed(packetMsg);
+                break;
+        }
+
+        // pass along the clientmsg to all registered handlers
         for (Map.Entry<Class<? extends ClientMsgHandler>, ClientMsgHandler> entry : handlers.entrySet()) {
             try {
                 entry.getValue().handleMsg(packetMsg);

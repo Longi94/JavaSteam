@@ -1,63 +1,53 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EChatAction;
-import in.dragonbra.javasteam.enums.EChatActionResult;
-import in.dragonbra.javasteam.generated.MsgClientChatActionResult;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
+import `in`.dragonbra.javasteam.base.ClientMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatAction
+import `in`.dragonbra.javasteam.enums.EChatActionResult
+import `in`.dragonbra.javasteam.generated.MsgClientChatActionResult
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
 
 /**
  * This callback is fired when a chat action has completed.
  */
-public class ChatActionResultCallback extends CallbackMsg {
-
-    private final SteamID chatRoomID;
-
-    private final SteamID chatterID;
-
-    private final EChatAction action;
-
-    private final EChatActionResult result;
-
-    public ChatActionResultCallback(MsgClientChatActionResult result) {
-        this.chatRoomID = result.getSteamIdChat();
-        this.chatterID = result.getSteamIdUserActedOn();
-        this.action = result.getChatAction();
-        this.result = result.getActionResult();
-    }
-
-    public ChatActionResultCallback(SteamID chatRoomID, SteamID chatterID, EChatAction action, EChatActionResult result) {
-        this.chatRoomID = chatRoomID;
-        this.chatterID = chatterID;
-        this.action = action;
-        this.result = result;
-    }
+@Suppress("MemberVisibilityCanBePrivate", "unused")
+class ChatActionResultCallback : CallbackMsg {
 
     /**
-     * @return the SteamID of the chat room the action was performed in.
+     * Gets the SteamID of the chat room the action was performed in.
      */
-    public SteamID getChatRoomID() {
-        return chatRoomID;
-    }
+    val chatRoomID: SteamID
 
     /**
-     * @return the SteamID of the chat member the action was performed on.
+     * Gets the SteamID of the chat member the action was performed on.
      */
-    public SteamID getChatterID() {
-        return chatterID;
-    }
+    val chatterID: SteamID
 
     /**
-     * @return the chat action that was performed.
+     * Gets the chat action that was performed.
      */
-    public EChatAction getAction() {
-        return action;
-    }
+    val action: EChatAction
 
     /**
-     * @return the result of the chat action.
+     * Gets the result of the chat action.
      */
-    public EChatActionResult getResult() {
-        return result;
+    val result: EChatActionResult
+
+    constructor(packetMsg: IPacketMsg) {
+        val actionResult = ClientMsg(MsgClientChatActionResult::class.java, packetMsg)
+        val result = actionResult.body
+
+        this.chatRoomID = result.steamIdChat
+        this.chatterID = result.steamIdUserActedOn
+        this.action = result.chatAction
+        this.result = result.actionResult
+    }
+
+    constructor(chatRoomID: SteamID, chatterID: SteamID, action: EChatAction, result: EChatActionResult) {
+        this.chatRoomID = chatRoomID
+        this.chatterID = chatterID
+        this.action = action
+        this.result = result
     }
 }

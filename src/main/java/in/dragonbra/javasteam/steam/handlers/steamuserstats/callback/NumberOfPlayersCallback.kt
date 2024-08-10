@@ -1,37 +1,37 @@
-package in.dragonbra.javasteam.steam.handlers.steamuserstats.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayersResponse;
-import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayersResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * This callback is fired in response to {@link SteamUserStats#getNumberOfCurrentPlayers(int)}.
+ * This callback is fired in response to [SteamUserStats.getNumberOfCurrentPlayers].
  */
-public class NumberOfPlayersCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final int numPlayers;
-
-    public NumberOfPlayersCallback(JobID jobID, CMsgDPGetNumberOfCurrentPlayersResponse.Builder resp) {
-        setJobID(jobID);
-        result = EResult.from(resp.getEresult());
-        numPlayers = resp.getPlayerCount();
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class NumberOfPlayersCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
 
     /**
-     * @return the result of the request by {@link EResult}.
+     * Gets the result of the request.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the current number of players according to Steam.
+     * Gets the current number of players according to Steam.
      */
-    public int getNumPlayers() {
-        return numPlayers;
+    val numPlayers: Int
+
+    init {
+        val msg = ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayersResponse.Builder>(
+            CMsgDPGetNumberOfCurrentPlayersResponse::class.java,
+            packetMsg
+        )
+        val resp = msg.body
+
+        jobID = msg.targetJobID
+        result = EResult.from(resp.eresult)
+        numPlayers = resp.playerCount
     }
 }
