@@ -1,90 +1,71 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EChatRoomType;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.GameID;
-import in.dragonbra.javasteam.types.SteamID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatRoomType
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.GameID
+import `in`.dragonbra.javasteam.types.SteamID
 
 /**
- * This callback is fired when a chat invite is recieved.
+ * This callback is fired when a chat invite is received.
  */
-public class ChatInviteCallback extends CallbackMsg {
-
-    private final SteamID invitedID;
-
-    private final SteamID chatRoomID;
-
-    private final SteamID patronID;
-
-    private final EChatRoomType chatRoomType;
-
-    private final SteamID friendChatID;
-
-    private final String chatRoomName;
-
-    private final GameID gameID;
-
-    public ChatInviteCallback(CMsgClientChatInvite.Builder invite) {
-        invitedID = new SteamID(invite.getSteamIdInvited());
-        chatRoomID = new SteamID(invite.getSteamIdChat());
-
-        patronID = new SteamID(invite.getSteamIdPatron());
-
-        chatRoomType = EChatRoomType.from(invite.getChatroomType());
-
-        friendChatID = new SteamID(invite.getSteamIdFriendChat());
-
-        chatRoomName = invite.getChatName();
-        gameID = new GameID(invite.getGameId());
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class ChatInviteCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the {@link SteamID} of the user who was invited to the chat.
+     * Gets the [SteamID] of the user who was invited to the chat.
      */
-    public SteamID getInvitedID() {
-        return invitedID;
-    }
+    val invitedID: SteamID
 
     /**
-     * @return the chat room {@link SteamID}.
+     * Gets the chat room [SteamID].
      */
-    public SteamID getChatRoomID() {
-        return chatRoomID;
-    }
+    val chatRoomID: SteamID
 
     /**
-     * @return the {@link SteamID} of the user who performed the invitation.
+     * Gets the [SteamID] of the user who performed the invitation.
      */
-    public SteamID getPatronID() {
-        return patronID;
-    }
+    val patronID: SteamID
 
     /**
-     * @return the chat room type.
+     * Gets the chat room type.
      */
-    public EChatRoomType getChatRoomType() {
-        return chatRoomType;
-    }
+    val chatRoomType: EChatRoomType?
 
     /**
-     * @return the {@link SteamID} of the chat friend.
+     * Gets the [SteamID] of the chat friend.
      */
-    public SteamID getFriendChatID() {
-        return friendChatID;
-    }
+    val friendChatID: SteamID
 
     /**
-     * @return the name of the chat room.
+     * Gets the name of the chat room.
      */
-    public String getChatRoomName() {
-        return chatRoomName;
-    }
+    val chatRoomName: String
 
     /**
-     * @return the {@link GameID} associated with this chat room, if it's a game lobby.
+     * Gets the [GameID] associated with this chat room, if it's a game lobby.
      */
-    public GameID getGameID() {
-        return gameID;
+    val gameID: GameID
+
+    init {
+        val chatInvite = ClientMsgProtobuf<CMsgClientChatInvite.Builder>(
+            CMsgClientChatInvite::class.java,
+            packetMsg
+        )
+        val invite = chatInvite.body
+
+        invitedID = SteamID(invite.steamIdInvited)
+        chatRoomID = SteamID(invite.steamIdChat)
+
+        patronID = SteamID(invite.steamIdPatron)
+
+        chatRoomType = EChatRoomType.from(invite.chatroomType)
+
+        friendChatID = SteamID(invite.steamIdFriendChat)
+
+        chatRoomName = invite.chatName
+        gameID = GameID(invite.gameId)
     }
 }

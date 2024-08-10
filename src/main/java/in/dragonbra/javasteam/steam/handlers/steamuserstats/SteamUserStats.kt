@@ -1,183 +1,165 @@
-package in.dragonbra.javasteam.steam.handlers.steamuserstats;
+package `in`.dragonbra.javasteam.steam.handlers.steamuserstats
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.ELeaderboardDataRequest;
-import in.dragonbra.javasteam.enums.ELeaderboardDisplayType;
-import in.dragonbra.javasteam.enums.ELeaderboardSortMethod;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayers;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayersResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLB;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLBResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntries;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntriesResponse;
-import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback;
-import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback;
-import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.ELeaderboardDataRequest
+import `in`.dragonbra.javasteam.enums.ELeaderboardDisplayType
+import `in`.dragonbra.javasteam.enums.ELeaderboardSortMethod
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayers
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLB
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntries
+import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
 
 /**
  * This handler handles Steam user statistic related actions.
  */
-public class SteamUserStats extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamUserStats() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientGetNumberOfCurrentPlayersDPResponse, this::handleNumberOfPlayersResponse);
-        dispatchMap.put(EMsg.ClientLBSFindOrCreateLBResponse, this::handleFindOrCreateLBResponse);
-        dispatchMap.put(EMsg.ClientLBSGetLBEntriesResponse, this::handleGetLBEntriesResponse);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamUserStats : ClientMsgHandler() {
 
     /**
      * Retrieves the number of current players for a given app id.
-     * Results are returned in a {@link NumberOfPlayersCallback}.
+     * Results are returned in a [NumberOfPlayersCallback].
      *
      * @param appId The app id to request the number of players for.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link NumberOfPlayersCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [NumberOfPlayersCallback].
      */
-    public AsyncJobSingle<NumberOfPlayersCallback> getNumberOfCurrentPlayers(int appId) {
-        ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayers.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgDPGetNumberOfCurrentPlayers.class, EMsg.ClientGetNumberOfCurrentPlayersDP);
-        JobID jobID = client.getNextJobID();
-        msg.setSourceJobID(jobID);
+    fun getNumberOfCurrentPlayers(appId: Int): AsyncJobSingle<NumberOfPlayersCallback> {
+        val msg = ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayers.Builder>(
+            CMsgDPGetNumberOfCurrentPlayers::class.java,
+            EMsg.ClientGetNumberOfCurrentPlayersDP
+        )
+        msg.setSourceJobID(client.getNextJobID())
 
-        msg.getBody().setAppid(appId);
+        msg.body.setAppid(appId)
 
-        client.send(msg);
+        client.send(msg)
 
-        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
     /**
      * Asks the Steam back-end for a leaderboard by name for a given appid.
-     * Results are returned in a {@link FindOrCreateLeaderboardCallback}.
-     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
+     * Results are returned in a [FindOrCreateLeaderboardCallback].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      *
      * @param appId The AppID to request a leaderboard for.
      * @param name  Name of the leaderboard to request.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [FindOrCreateLeaderboardCallback].
      */
-    public AsyncJobSingle<FindOrCreateLeaderboardCallback> findLeaderBoard(int appId, String name) {
-        ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
-        JobID jobID = client.getNextJobID();
-        msg.setSourceJobID(jobID);
+    fun findLeaderBoard(appId: Int, name: String?): AsyncJobSingle<FindOrCreateLeaderboardCallback> {
+        val msg = ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder>(
+            CMsgClientLBSFindOrCreateLB::class.java,
+            EMsg.ClientLBSFindOrCreateLB
+        )
+        msg.setSourceJobID(client.getNextJobID())
 
         // routing_appid has to be set correctly to receive a response
-        msg.getProtoHeader().setRoutingAppid(appId);
+        msg.protoHeader.setRoutingAppid(appId)
 
-        msg.getBody().setAppId(appId);
-        msg.getBody().setLeaderboardName(name);
-        msg.getBody().setCreateIfNotFound(false);
+        msg.body.setAppId(appId)
+        msg.body.setLeaderboardName(name)
+        msg.body.setCreateIfNotFound(false)
 
-        client.send(msg);
+        client.send(msg)
 
-        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
     /**
      * Asks the Steam back-end for a leaderboard by name, and will create it if it's not yet.
-     * Results are returned in a {@link FindOrCreateLeaderboardCallback}.
-     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
+     * Results are returned in a [FindOrCreateLeaderboardCallback].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      *
      * @param appId       The AppID to request a leaderboard for.
      * @param name        Name of the leaderboard to create.
      * @param sortMethod  Sort method to use for this leaderboard
      * @param displayType Display type for this leaderboard.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link FindOrCreateLeaderboardCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [FindOrCreateLeaderboardCallback].
      */
-    public AsyncJobSingle<FindOrCreateLeaderboardCallback> createLeaderboard(int appId, String name, ELeaderboardSortMethod sortMethod, ELeaderboardDisplayType displayType) {
-        ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLB.class, EMsg.ClientLBSFindOrCreateLB);
-        JobID jobID = client.getNextJobID();
-        msg.setSourceJobID(jobID);
+    fun createLeaderboard(
+        appId: Int,
+        name: String,
+        sortMethod: ELeaderboardSortMethod,
+        displayType: ELeaderboardDisplayType,
+    ): AsyncJobSingle<FindOrCreateLeaderboardCallback> {
+        val msg = ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder>(
+            CMsgClientLBSFindOrCreateLB::class.java,
+            EMsg.ClientLBSFindOrCreateLB
+        )
+        msg.setSourceJobID(client.getNextJobID())
 
         // routing_appid has to be set correctly to receive a response
-        msg.getProtoHeader().setRoutingAppid(appId);
+        msg.protoHeader.setRoutingAppid(appId)
 
-        msg.getBody().setAppId(appId);
-        msg.getBody().setLeaderboardName(name);
-        msg.getBody().setLeaderboardDisplayType(displayType.code());
-        msg.getBody().setLeaderboardSortMethod(sortMethod.code());
-        msg.getBody().setCreateIfNotFound(true);
+        msg.body.setAppId(appId)
+        msg.body.setLeaderboardName(name)
+        msg.body.setLeaderboardDisplayType(displayType.code())
+        msg.body.setLeaderboardSortMethod(sortMethod.code())
+        msg.body.setCreateIfNotFound(true)
 
-        client.send(msg);
+        client.send(msg)
 
-        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
     /**
      * Asks the Steam back-end for a set of rows in the leaderboard.
-     * Results are returned in a {@link LeaderboardEntriesCallback}.
-     * The returned {@link AsyncJobSingle} can also be awaited to retrieve the callback result.
+     * Results are returned in a [LeaderboardEntriesCallback].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      *
      * @param appId       The AppID to request leaderboard rows for.
      * @param id          ID of the leaderboard to view.
      * @param rangeStart  Range start or 0.
      * @param rangeEnd    Range end or max leaderboard entries.
      * @param dataRequest Type of request.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link LeaderboardEntriesCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [LeaderboardEntriesCallback].
      */
-    public AsyncJobSingle<LeaderboardEntriesCallback> getLeaderboardEntries(int appId, int id, int rangeStart, int rangeEnd, ELeaderboardDataRequest dataRequest) {
-        ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientLBSGetLBEntries.class, EMsg.ClientLBSGetLBEntries);
-        JobID jobID = client.getNextJobID();
-        msg.setSourceJobID(jobID);
+    fun getLeaderboardEntries(
+        appId: Int,
+        id: Int,
+        rangeStart: Int,
+        rangeEnd: Int,
+        dataRequest: ELeaderboardDataRequest,
+    ): AsyncJobSingle<LeaderboardEntriesCallback> {
+        val msg = ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder>(
+            CMsgClientLBSGetLBEntries::class.java,
+            EMsg.ClientLBSGetLBEntries
+        )
+        msg.setSourceJobID(client.getNextJobID())
 
-        msg.getBody().setAppId(appId);
-        msg.getBody().setLeaderboardId(id);
-        msg.getBody().setLeaderboardDataRequest(dataRequest.code());
-        msg.getBody().setRangeStart(rangeStart);
-        msg.getBody().setRangeEnd(rangeEnd);
+        msg.body.setAppId(appId)
+        msg.body.setLeaderboardId(id)
+        msg.body.setLeaderboardDataRequest(dataRequest.code())
+        msg.body.setRangeStart(rangeStart)
+        msg.body.setRangeEnd(rangeEnd)
 
-        client.send(msg);
+        client.send(msg)
 
-        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback: CallbackMsg = getCallback(packetMsg) ?: return
+
+        client.postCallback(callback)
+    }
+
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.getMsgType()) {
+            EMsg.ClientGetNumberOfCurrentPlayersDPResponse -> NumberOfPlayersCallback(packetMsg)
+            EMsg.ClientLBSFindOrCreateLBResponse -> FindOrCreateLeaderboardCallback(packetMsg)
+            EMsg.ClientLBSGetLBEntriesResponse -> LeaderboardEntriesCallback(packetMsg)
+            else -> null
         }
-
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
-    }
-
-    private void handleNumberOfPlayersResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayersResponse.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgDPGetNumberOfCurrentPlayersResponse.class, packetMsg);
-
-        client.postCallback(new NumberOfPlayersCallback(msg.getTargetJobID(), msg.getBody()));
-    }
-
-    private void handleFindOrCreateLBResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientLBSFindOrCreateLBResponse.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientLBSFindOrCreateLBResponse.class, packetMsg);
-
-        client.postCallback(new FindOrCreateLeaderboardCallback(msg.getTargetJobID(), msg.getBody()));
-    }
-
-    private void handleGetLBEntriesResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientLBSGetLBEntriesResponse.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientLBSGetLBEntriesResponse.class, packetMsg);
-
-        client.postCallback(new LeaderboardEntriesCallback(msg.getTargetJobID(), msg.getBody()));
     }
 }

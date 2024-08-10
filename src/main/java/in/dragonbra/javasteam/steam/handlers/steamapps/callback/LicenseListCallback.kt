@@ -1,46 +1,36 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientLicenseList;
-import in.dragonbra.javasteam.steam.handlers.steamapps.License;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientLicenseList
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.License
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * This callback is fired during logon, informing the client of it's available licenses.
  */
-public class LicenseListCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final List<License> licenseList;
-
-    public LicenseListCallback(CMsgClientLicenseList.Builder msg) {
-        result = EResult.from(msg.getEresult());
-
-        List<License> licenses = new ArrayList<>();
-
-        for (CMsgClientLicenseList.License l : msg.getLicensesList()) {
-            licenses.add(new License(l));
-        }
-
-        licenseList = Collections.unmodifiableList(licenses);
-    }
+class LicenseListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of the message.
+     * Gets the result of the message.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the license list.
+     * Gets the license list.
      */
-    public List<License> getLicenseList() {
-        return licenseList;
+    val licenseList: List<License>
+
+    init {
+        val licenseListResp = ClientMsgProtobuf<CMsgClientLicenseList.Builder>(
+            CMsgClientLicenseList::class.java,
+            packetMsg
+        )
+        val msg = licenseListResp.body
+
+        result = EResult.from(msg.eresult)
+
+        licenseList = msg.licensesList.map { License(it) }
     }
 }

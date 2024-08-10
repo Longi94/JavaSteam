@@ -1,89 +1,63 @@
-package in.dragonbra.javasteam.steam.handlers.steamworkshop.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamworkshop.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse;
-import in.dragonbra.javasteam.steam.handlers.steamworkshop.EnumerationUserDetails;
-import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import java.util.*
 
 /**
- * This callback is received in response to calling {@link SteamWorkshop#enumeratePublishedFilesByUserAction(EnumerationUserDetails)}.
+ * This callback is received in response to calling [SteamWorkshop.enumeratePublishedFilesByUserAction].
  */
-public class UserActionPublishedFilesCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final List<File> files;
-
-    private final int totalResults;
-
-    public UserActionPublishedFilesCallback(JobID jobID, CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-
-        List<File> fileList = new ArrayList<>();
-        for (CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.PublishedFileId f : msg.getPublishedFilesList()) {
-            fileList.add(new File(f));
-        }
-        files = Collections.unmodifiableList(fileList);
-
-        totalResults = msg.getTotalResults();
-    }
+@Suppress("MemberVisibilityCanBePrivate", "unused")
+class UserActionPublishedFilesCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
 
     /**
-     * @return the result by {@link EResult}.
+     * Gets the result.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the list of enumerated files.
+     * Gets the list of enumerated files.
      */
-    public List<File> getFiles() {
-        return files;
-    }
+    val files: List<File>
 
     /**
-     * @return the count of total results.
+     * Gets the count of total results.
      */
-    public int getTotalResults() {
-        return totalResults;
+    val totalResults: Int
+
+    init {
+        val response = ClientMsgProtobuf<CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.Builder>(
+            CMsgClientUCMEnumeratePublishedFilesByUserActionResponse::class.java,
+            packetMsg
+        )
+        val msg = response.body
+
+        jobID = response.targetJobID
+
+        result = EResult.from(msg.eresult)
+
+        files = msg.publishedFilesList.map { File(it) }
+
+        totalResults = msg.totalResults
     }
 
     /**
      * Represents the details of a single published file.
      */
-    public static class File {
-
-        private final long fileID;
-
-        private final Date timestamp;
-
-        public File(CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.PublishedFileId file) {
-            fileID = file.getPublishedFileId();
-            timestamp = new Date(file.getRtimeTimeStamp() * 1000L);
-        }
+    class File(file: CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.PublishedFileId) {
 
         /**
-         * @return the file ID.
+         * Gets the file ID.
          */
-        public long getFileID() {
-            return fileID;
-        }
+        val fileID: Long = file.publishedFileId
 
         /**
-         * @return the timestamp of this file.
+         * Gets the timestamp of this file.
          */
-        public Date getTimestamp() {
-            return timestamp;
-        }
+        val timestamp: Date = Date(file.rtimeTimeStamp * 1000L)
     }
 }

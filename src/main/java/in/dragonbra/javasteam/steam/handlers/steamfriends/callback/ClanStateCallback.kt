@@ -1,148 +1,103 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EAccountFlags;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.Event;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EAccountFlags
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.Event
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
+import java.util.*
 
 /**
  * This callback is posted when a clan's state has been changed.
  */
-public class ClanStateCallback extends CallbackMsg {
+class ClanStateCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
-    private final SteamID clanID;
+    /**
+     * Gets the [SteamID] of the clan that posted this state update.
+     */
+    val clanID: SteamID
 
-    private final EnumSet<EAccountFlags> accountFlags;
+    /**
+     * Gets the account flags.
+     */
+    val accountFlags: EnumSet<EAccountFlags>
 
-    private final boolean chatRoomPrivate;
+    /**
+     * Gets the privacy of the chat room.
+     */
+    val isChatRoomPrivate: Boolean
 
-    private String clanName;
+    /**
+     * Gets the name of the clan.
+     */
+    var clanName: String? = null
+        private set
 
-    private byte[] avatarHash;
+    /**
+     * Gets the SHA-1 avatar hash.
+     */
+    var avatarHash: ByteArray = byteArrayOf()
+        private set
 
-    private int memberTotalCount;
+    /**
+     * Gets the total number of members in this clan.
+     */
+    var memberTotalCount: Int = 0
+        private set
 
-    private int memberOnlineCount;
+    /**
+     * Gets the number of members in this clan that are currently online.
+     */
+    var memberOnlineCount: Int = 0
+        private set
 
-    private int memberChattingCount;
+    /**
+     * Gets the number of members in this clan that are currently chatting.
+     */
+    var memberChattingCount: Int = 0
+        private set
 
-    private int memberInGameCount;
+    /**
+     * Gets the number of members in this clan that are currently in-game.
+     */
+    var memberInGameCount: Int = 0
+        private set
 
-    private List<Event> events;
+    /**
+     * Gets any events associated with this clan state update. See [Event]
+     */
+    val events: List<Event>
 
-    private List<Event> announcements;
+    /**
+     * Gets any announcements associated with this clan state update. See [Event]
+     */
+    val announcements: List<Event>
 
-    public ClanStateCallback(CMsgClientClanState.Builder msg) {
-        clanID = new SteamID(msg.getSteamidClan());
+    init {
+        val clanState = ClientMsgProtobuf<CMsgClientClanState.Builder>(CMsgClientClanState::class.java, packetMsg)
+        val msg = clanState.body
 
-        accountFlags = EAccountFlags.from(msg.getClanAccountFlags());
-        chatRoomPrivate = msg.getChatRoomPrivate();
+        clanID = SteamID(msg.steamidClan)
+
+        accountFlags = EAccountFlags.from(msg.clanAccountFlags)
+        isChatRoomPrivate = msg.chatRoomPrivate
 
         if (msg.hasNameInfo()) {
-            clanName = msg.getNameInfo().getClanName();
-            avatarHash = msg.getNameInfo().getShaAvatar().toByteArray();
+            clanName = msg.nameInfo.clanName
+            avatarHash = msg.nameInfo.shaAvatar.toByteArray()
         }
 
         if (msg.hasUserCounts()) {
-            memberTotalCount = msg.getUserCounts().getMembers();
-            memberOnlineCount = msg.getUserCounts().getOnline();
-            memberChattingCount = msg.getUserCounts().getChatting();
-            memberInGameCount = msg.getUserCounts().getInGame();
+            memberTotalCount = msg.userCounts.members
+            memberOnlineCount = msg.userCounts.online
+            memberChattingCount = msg.userCounts.chatting
+            memberInGameCount = msg.userCounts.inGame
         }
 
-        events = new ArrayList<>();
-        for (CMsgClientClanState.Event event : msg.getEventsList()) {
-            events.add(new Event(event));
-        }
-        this.events = Collections.unmodifiableList(events);
+        events = msg.eventsList.map { Event(it) }
 
-        announcements = new ArrayList<>();
-        for (CMsgClientClanState.Event event : msg.getAnnouncementsList()) {
-            announcements.add(new Event(event));
-        }
-        this.announcements = Collections.unmodifiableList(announcements);
-    }
-
-    /**
-     * @return the {@link SteamID} of the clan that posted this state update.
-     */
-    public SteamID getClanID() {
-        return clanID;
-    }
-
-    /**
-     * @return the account flags.
-     */
-    public EnumSet<EAccountFlags> getAccountFlags() {
-        return accountFlags;
-    }
-
-    /**
-     * @return the privacy of the chat room.
-     */
-    public boolean isChatRoomPrivate() {
-        return chatRoomPrivate;
-    }
-
-    /**
-     * @return the name of the clan.
-     */
-    public String getClanName() {
-        return clanName;
-    }
-
-    /**
-     * @return the SHA-1 avatar hash.
-     */
-    public byte[] getAvatarHash() {
-        return avatarHash;
-    }
-
-    /**
-     * @return the total number of members in this clan.
-     */
-    public int getMemberTotalCount() {
-        return memberTotalCount;
-    }
-
-    /**
-     * @return the number of members in this clan that are currently online.
-     */
-    public int getMemberOnlineCount() {
-        return memberOnlineCount;
-    }
-
-    /**
-     * @return the number of members in this clan that are currently chatting.
-     */
-    public int getMemberChattingCount() {
-        return memberChattingCount;
-    }
-
-    /**
-     * @return the number of members in this clan that are currently in-game.
-     */
-    public int getMemberInGameCount() {
-        return memberInGameCount;
-    }
-
-    /**
-     * @return any events associated with this clan state update. See {@link Event}
-     */
-    public List<Event> getEvents() {
-        return events;
-    }
-
-    /**
-     * @return any announcements associated with this clan state update. See {@link Event}
-     */
-    public List<Event> getAnnouncements() {
-        return announcements;
+        announcements = msg.announcementsList.map { Event(it) }
     }
 }

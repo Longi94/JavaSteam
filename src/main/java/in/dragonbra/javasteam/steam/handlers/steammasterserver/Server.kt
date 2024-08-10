@@ -1,35 +1,22 @@
-package in.dragonbra.javasteam.steam.handlers.steammasterserver;
+package `in`.dragonbra.javasteam.steam.handlers.steammasterserver
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse;
-import in.dragonbra.javasteam.util.NetHelpers;
-
-import java.net.InetSocketAddress;
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGMSClientServerQueryResponse
+import `in`.dragonbra.javasteam.util.NetHelpers
+import java.net.InetSocketAddress
 
 /**
  * Represents a single server.
  */
-public class Server {
-
-    private final InetSocketAddress endPoint;
-
-    private final int authedPlayers;
-
-    public Server(CMsgGMSClientServerQueryResponse.Server server) {
-        endPoint = new InetSocketAddress(NetHelpers.getIPAddress(server.getServerIp().getV4()), server.getQueryPort());
-        authedPlayers = server.getAuthPlayers();
-    }
+@Suppress("unused")
+class Server(server: CMsgGMSClientServerQueryResponse.Server) {
 
     /**
-     * @return the IP endpoint of the server
+     * Gets the IP endpoint of the server.
      */
-    public InetSocketAddress getEndPoint() {
-        return endPoint;
-    }
+    val endPoint: InetSocketAddress = InetSocketAddress(NetHelpers.getIPAddress(server.serverIp.v4), server.queryPort)
 
     /**
-     * @return the number of Steam authenticated players on this server
+     * Gets the number of Steam authenticated players on this server
      */
-    public int getAuthedPlayers() {
-        return authedPlayers;
-    }
+    val authedPlayers: Int = server.authPlayers
 }

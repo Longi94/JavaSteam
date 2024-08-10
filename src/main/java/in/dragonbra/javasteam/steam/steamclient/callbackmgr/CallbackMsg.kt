@@ -1,22 +1,19 @@
-package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
+package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.types.JobID
 
 /**
+ * Represents the base object all callbacks are based off.
+ *
+ * @constructor Initializes a new instance of the [CallbackMsg] class.
+ *
  * @author lngtr
  * @since 2018-02-22
  */
-public class CallbackMsg implements ICallbackMsg {
+abstract class CallbackMsg : ICallbackMsg {
 
-    private JobID jobID = JobID.INVALID;
-
-    @Override
-    public JobID getJobID() {
-        return this.jobID;
-    }
-
-    @Override
-    public void setJobID(JobID jobID) {
-        this.jobID = jobID;
-    }
+    /**
+     * Gets or sets the job ID this callback refers to. If it is not a job callback, it will be [JobID.INVALID].
+     */
+    override var jobID: JobID = JobID.INVALID
 }

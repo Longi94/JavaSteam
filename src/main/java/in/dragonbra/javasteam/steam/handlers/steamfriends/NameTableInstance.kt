@@ -1,55 +1,27 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistoryResponse;
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistoryResponse
+import `in`.dragonbra.javasteam.types.SteamID
+import java.util.*
 
 /**
  * Represents a name table of an account.
  */
-public class NameTableInstance {
-
-    private final EResult result;
-
-    private final SteamID steamID;
-
-    private List<NameInstance> names;
-
-    public NameTableInstance(CMsgClientAMGetPersonaNameHistoryResponse.NameTableInstance instance) {
-        result = EResult.from(instance.getEresult());
-        steamID = new SteamID(instance.getSteamid());
-
-        names = new ArrayList<>();
-
-        for (CMsgClientAMGetPersonaNameHistoryResponse.NameTableInstance.NameInstance nameInstance : instance.getNamesList()) {
-            names.add(new NameInstance(nameInstance));
-        }
-
-        names = Collections.unmodifiableList(names);
-    }
+class NameTableInstance(instance: CMsgClientAMGetPersonaNameHistoryResponse.NameTableInstance) {
 
     /**
-     * @return the result of querying this name table
+     * Gets the result of querying this name table
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult = EResult.from(instance.eresult)
 
     /**
-     * @return the steam id this name table belongs to
+     * Gets the steam id this name table belongs to
      */
-    public SteamID getSteamID() {
-        return steamID;
-    }
+    val steamID: SteamID = SteamID(instance.steamid)
 
     /**
-     * @return the names in this name table
+     * Gets the names in this name table
      */
-    public List<NameInstance> getNames() {
-        return names;
-    }
+    var names: List<NameInstance> = instance.namesList.map { NameInstance(it) }
 }

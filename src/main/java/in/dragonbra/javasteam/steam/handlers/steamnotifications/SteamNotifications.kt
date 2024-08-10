@@ -1,108 +1,74 @@
-package in.dragonbra.javasteam.steam.handlers.steamnotifications;
+package `in`.dragonbra.javasteam.steam.handlers.steamnotifications
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.*;
-import in.dragonbra.javasteam.steam.handlers.steamnotifications.callback.CommentNotificationsCallback;
-import in.dragonbra.javasteam.steam.handlers.steamnotifications.callback.ItemAnnouncementsCallback;
-import in.dragonbra.javasteam.steam.handlers.steamnotifications.callback.OfflineMessageNotificationCallback;
-import in.dragonbra.javasteam.steam.handlers.steamnotifications.callback.UserNotificationsCallback;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestCommentNotifications
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestItemAnnouncements
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestOfflineMessageCount
+import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.callback.CommentNotificationsCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.callback.ItemAnnouncementsCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.callback.OfflineMessageNotificationCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.callback.UserNotificationsCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * This handler handles steam notifications.
  */
-public class SteamNotifications extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamNotifications() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientUserNotifications, this::handleUserNotifications);
-        dispatchMap.put(EMsg.ClientChatOfflineMessageNotification, this::handleOfflineMessageNotification);
-        dispatchMap.put(EMsg.ClientCommentNotifications, this::handleCommentNotifications);
-        dispatchMap.put(EMsg.ClientItemAnnouncements, this::handleItemAnnouncements);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamNotifications : ClientMsgHandler() {
 
     /**
      * Request comment notifications.
-     * Results are returned in a {@link CommentNotificationsCallback}.
+     * Results are returned in a [CommentNotificationsCallback].
      */
-    public void requestCommentNotifications() {
-        ClientMsgProtobuf<CMsgClientRequestCommentNotifications.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientRequestCommentNotifications.class, EMsg.ClientRequestCommentNotifications);
-
-        client.send(request);
+    fun requestCommentNotifications() {
+        ClientMsgProtobuf<CMsgClientRequestCommentNotifications.Builder>(
+            CMsgClientRequestCommentNotifications::class.java,
+            EMsg.ClientRequestCommentNotifications
+        ).also(client::send)
     }
 
     /**
      * Request new items notifications.
-     * Results are returned in a {@link ItemAnnouncementsCallback}.
+     * Results are returned in a [ItemAnnouncementsCallback].
      */
-    public void requestItemAnnouncements() {
-        ClientMsgProtobuf<CMsgClientRequestItemAnnouncements.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientRequestItemAnnouncements.class, EMsg.ClientRequestItemAnnouncements);
-
-        client.send(request);
+    fun requestItemAnnouncements() {
+        ClientMsgProtobuf<CMsgClientRequestItemAnnouncements.Builder>(
+            CMsgClientRequestItemAnnouncements::class.java,
+            EMsg.ClientRequestItemAnnouncements
+        ).also(client::send)
     }
 
     /**
      * Request offline message count.
-     * Results are returned in a {@link OfflineMessageNotificationCallback}.
+     * Results are returned in a [OfflineMessageNotificationCallback].
      */
-    public void requestOfflineMessageCount() {
-        ClientMsgProtobuf<CMsgClientRequestOfflineMessageCount.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientRequestOfflineMessageCount.class, EMsg.ClientChatRequestOfflineMessageCount);
-
-        client.send(request);
+    fun requestOfflineMessageCount() {
+        ClientMsgProtobuf<CMsgClientRequestOfflineMessageCount.Builder>(
+            CMsgClientRequestOfflineMessageCount::class.java,
+            EMsg.ClientChatRequestOfflineMessageCount
+        ).also(client::send)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback = getCallback(packetMsg) ?: return
+
+        client.postCallback(callback)
+    }
+
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
+            EMsg.ClientUserNotifications -> UserNotificationsCallback(packetMsg)
+            EMsg.ClientChatOfflineMessageNotification -> OfflineMessageNotificationCallback(packetMsg)
+            EMsg.ClientCommentNotifications -> CommentNotificationsCallback(packetMsg)
+            EMsg.ClientItemAnnouncements -> ItemAnnouncementsCallback(packetMsg)
+            else -> null
         }
-
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
-    }
-
-    private void handleUserNotifications(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUserNotifications.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientUserNotifications.class, packetMsg);
-
-        client.postCallback(new UserNotificationsCallback(msg.getBody()));
-    }
-
-    private void handleOfflineMessageNotification(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientOfflineMessageNotification.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientOfflineMessageNotification.class, packetMsg);
-
-        client.postCallback(new OfflineMessageNotificationCallback(msg.getBody()));
-    }
-
-    private void handleCommentNotifications(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientCommentNotifications.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientCommentNotifications.class, packetMsg);
-
-        client.postCallback(new CommentNotificationsCallback(msg.getBody()));
-    }
-
-    private void handleItemAnnouncements(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientItemAnnouncements.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientItemAnnouncements.class, packetMsg);
-
-        client.postCallback(new ItemAnnouncementsCallback(msg.getBody()));
     }
 }

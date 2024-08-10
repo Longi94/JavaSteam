@@ -1,78 +1,58 @@
-package in.dragonbra.javasteam.steam.handlers.steamworkshop;
+package `in`.dragonbra.javasteam.steam.handlers.steamworkshop
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserAction;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserActionResponse;
-import in.dragonbra.javasteam.steam.handlers.steamworkshop.callback.UserActionPublishedFilesCallback;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMEnumeratePublishedFilesByUserAction
+import `in`.dragonbra.javasteam.steam.handlers.steamworkshop.callback.UserActionPublishedFilesCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
 
 /**
  * This handler is used for requesting files published on the Steam Workshop.
  */
-public class SteamWorkshop extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamWorkshop() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientUCMEnumeratePublishedFilesByUserActionResponse, this::handleEnumPublishedFilesByAction);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamWorkshop : ClientMsgHandler() {
 
     /**
      * Enumerates the list of published files for the current logged-in user based on user action.
-     * Results are returned in a {@link UserActionPublishedFilesCallback}.
-     * The returned {@link in.dragonbra.javasteam.types.AsyncJobSingle} can also be awaited to retrieve the callback result.
+     * Results are returned in a [UserActionPublishedFilesCallback].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      *
      * @param details The specific details of the request.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link UserActionPublishedFilesCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [UserActionPublishedFilesCallback].
      */
-    public AsyncJobSingle<UserActionPublishedFilesCallback> enumeratePublishedFilesByUserAction(EnumerationUserDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
-        }
+    fun enumeratePublishedFilesByUserAction(details: EnumerationUserDetails): AsyncJobSingle<UserActionPublishedFilesCallback> {
+        val enumRequest = ClientMsgProtobuf<CMsgClientUCMEnumeratePublishedFilesByUserAction.Builder>(
+            CMsgClientUCMEnumeratePublishedFilesByUserAction::class.java,
+            EMsg.ClientUCMEnumeratePublishedFilesByUserAction
+        )
+        enumRequest.setSourceJobID(client.getNextJobID())
 
-        ClientMsgProtobuf<CMsgClientUCMEnumeratePublishedFilesByUserAction.Builder> enumRequest =
-                new ClientMsgProtobuf<>(CMsgClientUCMEnumeratePublishedFilesByUserAction.class, EMsg.ClientUCMEnumeratePublishedFilesByUserAction);
-        JobID jobID = client.getNextJobID();
-        enumRequest.setSourceJobID(jobID);
+        enumRequest.body.setAction(details.userAction.code())
+        enumRequest.body.setAppId(details.appID)
+        enumRequest.body.setStartIndex(details.startIndex)
 
-        enumRequest.getBody().setAction(details.getUserAction().code());
-        enumRequest.getBody().setAppId(details.getAppID());
-        enumRequest.getBody().setStartIndex(details.getStartIndex());
+        client.send(enumRequest)
 
-        client.send(enumRequest);
-
-        return new AsyncJobSingle<>(this.client, enumRequest.getSourceJobID());
+        return AsyncJobSingle(this.client, enumRequest.sourceJobID)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
-        }
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback: CallbackMsg = getCallback(packetMsg) ?: return
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
+        client.postCallback(callback)
     }
 
-    private void handleEnumPublishedFilesByAction(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.Builder> response =
-                new ClientMsgProtobuf<>(CMsgClientUCMEnumeratePublishedFilesByUserActionResponse.class, packetMsg);
-
-        client.postCallback(new UserActionPublishedFilesCallback(response.getTargetJobID(), response.getBody()));
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.getMsgType()) {
+            EMsg.ClientUCMEnumeratePublishedFilesByUserActionResponse -> UserActionPublishedFilesCallback(packetMsg)
+            else -> null
+        }
     }
 }

@@ -1,53 +1,32 @@
-package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages;
+package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages
 
-import com.google.protobuf.GeneratedMessage;
-import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
+import com.google.protobuf.GeneratedMessage
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
 
 /**
  * @author Lossy
  * @since 2023-01-04
  */
-@SuppressWarnings("unused")
-public abstract class UnifiedService {
+@Suppress("unused")
+abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMessages) {
 
-    // private static final Logger logger = LogManager.getLogger(UnifiedService.class);
-
-    private final SteamUnifiedMessages steamUnifiedMessages;
-
-    public UnifiedService(SteamUnifiedMessages steamUnifiedMessages) {
-        this.steamUnifiedMessages = steamUnifiedMessages;
-    }
-
-    public String getClassName() {
-        return this.getClass().getSimpleName();
-    }
-
-    /**
-     * @param parentClassName The parent class name, ie: Player
-     * @param methodName      The calling method name, ie: GetGameBadgeLevels
-     * @return The name of the RPC endpoint as formatted ServiceName.RpcName. ie: Player.GetGameBadgeLevels#1
-     */
-    private static String getRpcEndpoint(String parentClassName, String methodName) {
-        return String.format("%s.%s#%s", parentClassName, methodName, 1);
-    }
+    private val className: String
+        get() = this.javaClass.simpleName
 
     /**
      * Sends a message.
-     * <p>
-     * Results are returned in a
-     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     *
+     * Results are returned in a [ServiceMethodResponse].
      *
      * @param message    The message to send.
      * @param methodName The Target Job Name.
-     * @return The JobID of the message. This can be used to find the appropriate
-     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse}.
+     * @return The JobID of the message. This can be used to find the appropriate [ServiceMethodResponse].
      */
-    public AsyncJobSingle<ServiceMethodResponse> sendMessage(GeneratedMessage message, String methodName) {
-        String serviceName = getClassName();
-        String rpcEndpoint = getRpcEndpoint(serviceName, methodName);
+    fun sendMessage(message: GeneratedMessage, methodName: String): AsyncJobSingle<ServiceMethodResponse> {
+        val rpcEndpoint = getRpcEndpoint(className, methodName)
 
-        return sendMessageOrNotification(rpcEndpoint, message, false);
+        return sendMessageOrNotification(rpcEndpoint, message, false)!!
     }
 
     /**
@@ -56,20 +35,34 @@ public abstract class UnifiedService {
      * @param message    The message to send.
      * @param methodName The Target Job Name.
      */
-    public void sendNotification(GeneratedMessage message, String methodName) {
-        String serviceName = getClassName();
-        String rpcEndpoint = getRpcEndpoint(serviceName, methodName);
+    fun sendNotification(message: GeneratedMessage, methodName: String) {
+        val rpcEndpoint = getRpcEndpoint(className, methodName)
 
-        sendMessageOrNotification(rpcEndpoint, message, true);
+        sendMessageOrNotification(rpcEndpoint, message, true)
     }
 
-    private AsyncJobSingle<ServiceMethodResponse> sendMessageOrNotification(String rpcName, GeneratedMessage message, Boolean isNotification) {
-
+    private fun sendMessageOrNotification(
+        rpcName: String,
+        message: GeneratedMessage,
+        isNotification: Boolean,
+    ): AsyncJobSingle<ServiceMethodResponse>? {
         if (isNotification) {
-            steamUnifiedMessages.sendNotification(rpcName, message);
-            return null;
+            steamUnifiedMessages.sendNotification(rpcName, message)
+            return null
         }
 
-        return steamUnifiedMessages.sendMessage(rpcName, message);
+        return steamUnifiedMessages.sendMessage(rpcName, message)
+    }
+
+    companion object {
+        // val logger = LogManager.getLogger(UnifiedService.class)
+
+        /**
+         * @param parentClassName The parent class name, ie: Player
+         * @param methodName      The calling method name, ie: GetGameBadgeLevels
+         * @return The name of the RPC endpoint as formatted ServiceName.RpcName. ie: Player.GetGameBadgeLevels#1
+         */
+        private fun getRpcEndpoint(parentClassName: String, methodName: String): String =
+            String.format("%s.%s#%s", parentClassName, methodName, 1)
     }
 }

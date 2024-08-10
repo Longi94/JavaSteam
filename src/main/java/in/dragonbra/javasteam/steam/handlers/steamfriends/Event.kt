@@ -1,70 +1,40 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState;
-import in.dragonbra.javasteam.types.GameID;
-import in.dragonbra.javasteam.types.GlobalID;
-
-import java.util.Date;
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientClanState
+import `in`.dragonbra.javasteam.types.GameID
+import `in`.dragonbra.javasteam.types.GlobalID
+import java.util.*
 
 /**
  * Represents an event or announcement that was posted by a clan.
  */
-public class Event {
-
-    private final GlobalID id;
-
-    private final Date eventTime;
-
-    private final String headline;
-
-    private final GameID gameID;
-
-    private final boolean justPosted;
-
-    public Event(CMsgClientClanState.Event clanEvent) {
-        id = new GlobalID(clanEvent.getGid());
-
-        eventTime = new Date(clanEvent.getEventTime() * 1000L);
-        headline = clanEvent.getHeadline();
-        gameID = new GameID(clanEvent.getGameId());
-
-        justPosted = clanEvent.getJustPosted();
-    }
+@Suppress("unused")
+class Event(clanEvent: CMsgClientClanState.Event) {
 
     /**
-     * @return the globally unique ID for this specific event.
+     * Gets the globally unique ID for this specific event.
      */
-    public GlobalID getId() {
-        return id;
-    }
+    val id: GlobalID = GlobalID(clanEvent.gid)
 
     /**
-     * @return the event time.
+     * Gets the event time.
      */
-    public Date getEventTime() {
-        return eventTime;
-    }
+    val eventTime: Date = Date(clanEvent.eventTime * 1000L)
 
     /**
-     * @return the headline of the event.
+     * Gets the headline of the event.
      */
-    public String getHeadline() {
-        return headline;
-    }
+    val headline: String = clanEvent.headline
 
     /**
-     * @return the {@link GameID} associated with this event, if any.
+     * Gets the [GameID] associated with this event, if any.
      */
-    public GameID getGameID() {
-        return gameID;
-    }
+    val gameID: GameID = GameID(clanEvent.gameId)
 
     /**
      * Gets a value indicating whether this event was just posted.
      *
-     * @return <b>true</b> if the event was just posted; otherwise, <b>false</b>.
+     * Gets **true** if the event was just posted; otherwise, **false**.
      */
-    public boolean isJustPosted() {
-        return justPosted;
-    }
+    val isJustPosted: Boolean = clanEvent.justPosted
 }
