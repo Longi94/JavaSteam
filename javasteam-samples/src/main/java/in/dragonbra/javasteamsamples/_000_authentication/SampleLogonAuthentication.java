@@ -1,12 +1,11 @@
-package in.dragonbra.javasteamsamples._1logon;
+package in.dragonbra.javasteamsamples._000_authentication;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
-import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
-import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
-import in.dragonbra.javasteam.steam.authentication.IChallengeUrlChanged;
-import in.dragonbra.javasteam.steam.authentication.QrAuthSession;
-import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
+import in.dragonbra.javasteam.steam.authentication.*;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -18,20 +17,16 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
-import pro.leaco.console.qrcode.ConsoleQrcode;
 
+import java.util.Base64;
 import java.util.concurrent.CancellationException;
-
-// NOTE: https://github.com/SteamRE/SteamKit/pull/1129#issuecomment-1473758793
-//  CM will kick you in 60 seconds if you don't auth.
-//  Steam client also has this issue, but it will reconnect and just continue polling.
 
 /**
  * @author lossy
  * @since 2023-03-19
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChanged {
+public class SampleLogonAuthentication implements Runnable {
 
     private SteamClient steamClient;
 
@@ -43,15 +38,24 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
 
     private boolean isRunning;
 
-    public SampleLogonQRAuthentication() {
+    private final String user;
+
+    private final String pass;
+
+    public SampleLogonAuthentication(String user, String pass) {
+        this.user = user;
+        this.pass = pass;
     }
 
     public static void main(String[] args) {
-        // No username or password is required for this example.
+        if (args.length < 2) {
+            System.out.println("Sample1: No username and password specified!");
+            return;
+        }
 
         LogManager.addListener(new DefaultLogListener());
 
-        new SampleLogonQRAuthentication().run();
+        new SampleLogonAuthentication(args[0], args[1]).run();
     }
 
     @Override
@@ -93,26 +97,23 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
     }
 
     private void onConnected(ConnectedCallback callback) {
+        System.out.println("Connected to Steam! Logging in " + user + "...");
+
+        AuthSessionDetails authDetails = new AuthSessionDetails();
+        authDetails.username = user;
+        authDetails.password = pass;
+        authDetails.persistentSession = false;
+        authDetails.authenticator = new UserConsoleAuthenticator();
+
         try {
             // get the authentication handler, which used for authenticating with Steam
             SteamAuthentication auth = new SteamAuthentication(steamClient, unifiedMessages);
 
-            QrAuthSession authSession = auth.beginAuthSessionViaQR(new AuthSessionDetails());
+            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
 
-            // Steam will periodically refresh the challenge url, this callback allows you to draw a new qr code.
-            // Note: Callback is below.
-            authSession.setChallengeUrlChanged(this);
-
-            // Draw current qr right away
-            drawQRCode(authSession);
-
-            // Starting polling Steam for authentication response
-            // This response is later used to log on to Steam after connecting
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
             AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
-
-            System.out.println("Connected to Steam! Logging in " + pollResponse.getAccountName() + "...");
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());
@@ -123,9 +124,14 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
             details.setLoginID(149);
 
             steamUser.logOn(details);
+
+            // This is not required, but it is possible to parse the JWT access token to see the scope and expiration date.
+            // parseJsonWebToken(pollResponse.accessToken, "AccessToken");
+            // parseJsonWebToken(pollResponse.refreshToken, "RefreshToken");
         } catch (Exception e) {
             System.err.println(e.getMessage());
 
+            // List a couple of exceptions that could be important to handle.
             if (e instanceof AuthenticationException) {
                 System.out.println("An Authentication error has occurred. " + e.getMessage());
             }
@@ -133,8 +139,6 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
             if (e instanceof CancellationException) {
                 System.out.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
             }
-
-            steamUser.logOff();
         }
     }
 
@@ -166,18 +170,28 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
         isRunning = false;
     }
 
-    private void drawQRCode(QrAuthSession authSession) {
-        String challengeURL = authSession.getChallengeUrl();
-        System.out.println("Challenge URL: " + challengeURL);
+
+    @SuppressWarnings("unused")
+    private void parseJsonWebToken(String token, String name) {
+        String[] tokenComponents = token.split("\\.");
+
+        // Fix up base64url to normal base64
+        String base64 = tokenComponents[1].replace('-', '+').replace('_', '/');
+
+        if (base64.length() % 4 != 0) {
+            base64 += new String(new char[4 - base64.length() % 4]).replace('\0', '=');
+        }
+
+        byte[] payloadBytes = Base64.getDecoder().decode(base64);
+
+        // Payload can be parsed as JSON, and then fields such expiration date, scope, etc can be accessed
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonElement payload = JsonParser.parseString(new String(payloadBytes));
+        String formatted = gson.toJson(payload);
+
+        // For brevity, we will simply output formatted json to console
+        System.out.println(name + ": " + formatted);
         System.out.println();
-
-        // Encode and Print the link as a QR code
-        System.out.println("Use the Steam Mobile App to sign in via QR code:");
-        ConsoleQrcode.INSTANCE.print(challengeURL);
     }
 
-    @Override
-    public void onChanged(QrAuthSession qrAuthSession) {
-        drawQRCode(qrAuthSession);
-    }
 }

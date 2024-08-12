@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._6webapi;
+package in.dragonbra.javasteamsamples._004_legacylogin;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
@@ -9,32 +9,34 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
-import in.dragonbra.javasteam.steam.webapi.WebAPI;
-import in.dragonbra.javasteam.types.KeyValue;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 //
-// Sample 6: WebAPI
+// Sample 1: Logon
 //
-// this sample will give an example of how the WebAPI utilities can be used to
-// interact with the Steam Web APIs
+// the first act of business before being able to use steamkit2's features is to
+// log on to the steam network
 //
-// the Steam Web APIs are structured as a set of "interfaces" with methods,
-// similar to classes in OO languages.
-// as such, the API for interacting with the WebAPI follows a similar methodology
+// interaction with steamkit is done through client message handlers and the results
+// come back through a callback queue controlled by a steamclient instance
+//
+// your code must create a CallbackMgr, and instances of Callback<T>. Callback<T> maps a specific
+// callback type to a function, whilst CallbackMgr routes the callback objects to the functions that
+// you have specified. a Callback<T> is bound to a specific callback manager.
+//
+// WARNING!
+// This the old login flow, we keep this sample around because it still currently works
+// for simple cases where you do not need to remember password.
+// See SampleLogonAuthentication for the new flow.
+//
 
 /**
  * @author lngtr
- * @since 2021-10-11
+ * @since 2018-02-23
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleWebApi implements Runnable {
+public class SampleLogon implements Runnable {
 
     private SteamClient steamClient;
 
@@ -48,20 +50,20 @@ public class SampleWebApi implements Runnable {
 
     private final String pass;
 
-    public SampleWebApi(String user, String pass) {
+    public SampleLogon(String user, String pass) {
         this.user = user;
         this.pass = pass;
     }
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample6: No username and password specified!");
+            System.out.println("Sample1: No username and password specified!");
             return;
         }
 
         LogManager.addListener(new DefaultLogListener());
 
-        new SampleWebApi(args[0], args[1]).run();
+        new SampleLogon(args[0], args[1]).run();
     }
 
     @Override
@@ -125,7 +127,6 @@ public class SampleWebApi implements Runnable {
                 // if we recieve AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
                 // then the account we're logging into is SteamGuard protected
                 // see sample 5 for how SteamGuard can be handled
-
                 System.out.println("Unable to logon to Steam: This account is SteamGuard protected.");
 
                 isRunning = false;
@@ -133,6 +134,7 @@ public class SampleWebApi implements Runnable {
             }
 
             System.out.println("Unable to logon to Steam: " + callback.getResult() + " / " + callback.getExtendedResult());
+
             isRunning = false;
             return;
 
@@ -142,20 +144,6 @@ public class SampleWebApi implements Runnable {
 
         // at this point, we'd be able to perform actions on Steam
 
-        WebAPI api = steamClient.getConfiguration().getWebAPI("ISteamNews");
-
-        try {
-            Map<String, String> args = new HashMap<>();
-            args.put("appid", "440");
-
-            KeyValue result = api.call("GetNewsForApp", 2, args);
-
-            printKeyValue(result, 1);
-
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-        }
-
         // for this sample we'll just log off
         steamUser.logOff();
     }
@@ -164,19 +152,5 @@ public class SampleWebApi implements Runnable {
         System.out.println("Logged off of Steam: " + callback.getResult());
 
         isRunning = false;
-    }
-
-    // Recursively print out child KeyValues.
-    private void printKeyValue(KeyValue keyValue, int depth) {
-        String spacePadding = String.join("", Collections.nCopies(depth, "    "));
-
-        if (keyValue.getChildren().isEmpty()) {
-            System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());
-        } else {
-            System.out.println(spacePadding + keyValue.getName() + ":");
-            for (KeyValue child : keyValue.getChildren()) {
-                printKeyValue(child, depth + 1);
-            }
-        }
     }
 }

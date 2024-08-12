@@ -1,4 +1,4 @@
-package in.dragonbra.javasteamsamples._1logon;
+package in.dragonbra.javasteamsamples._002_webcookie;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.authentication.*;
