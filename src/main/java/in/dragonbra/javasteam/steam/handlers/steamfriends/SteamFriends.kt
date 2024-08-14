@@ -645,12 +645,13 @@ class SteamFriends : ClientMsgHandler() {
     override fun handleMsg(packetMsg: IPacketMsg) {
         val callback = getCallback(packetMsg)
 
-        // ignore messages that we don't have a handler function for
+        // Ignore messages that we don't have a handler function for
         callback?.let {
-            client.postCallback(callback)
+            client.postCallback(it)
             return
         }
 
+        // Special handling for some messages because they need access to client or post callbacks differently
         when (packetMsg.msgType) {
             EMsg.ClientPersonaState -> handlePersonaState(packetMsg)
             EMsg.ClientFriendsList -> handleFriendsList(packetMsg)
@@ -779,6 +780,10 @@ class SteamFriends : ClientMsgHandler() {
         // remove anything we marked for removal
         friendsToRemove.forEach(friendsList::remove)
         clansToRemove.forEach(clanList::remove)
+
+        if (reqInfo.body.friendsList.isNotEmpty()) {
+            client.send(reqInfo)
+        }
 
         FriendsListCallback(list.body).also(client::postCallback)
     }

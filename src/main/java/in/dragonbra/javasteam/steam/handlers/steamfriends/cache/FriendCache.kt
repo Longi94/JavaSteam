@@ -29,6 +29,14 @@ class Clan(
 ) : Account()
 
 class AccountList<T : Account>(private val clazz: Class<T>) : ConcurrentHashMap<SteamID, T>() {
+
+    /**
+     * Get the [User] or [Clan] based on the [SteamID]. If the object does not exist,
+     * the given steamID will be added to the list and returned.
+     *
+     * @param id The steam id.
+     * @return the [User] or [Clan] object.
+     */
     fun getAccount(id: SteamID): T = getOrPut(id) {
         clazz.getDeclaredConstructor().newInstance().apply {
             steamID = id
