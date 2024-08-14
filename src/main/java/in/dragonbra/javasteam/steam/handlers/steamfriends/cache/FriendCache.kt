@@ -42,6 +42,13 @@ class AccountList<T : Account>(private val clazz: Class<T>) : ConcurrentHashMap<
             steamID = id
         }
     }
+
+    /**
+     * Get all the values in the HashMap.
+     *
+     * @return a list of either [User] or [Clan].
+     */
+    fun getList(): List<T> = values.toList()
 }
 
 @Suppress("MemberVisibilityCanBePrivate")

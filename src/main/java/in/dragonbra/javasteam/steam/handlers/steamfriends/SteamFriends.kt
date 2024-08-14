@@ -37,6 +37,8 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverF
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgPersonaChangeResponse
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.AccountCache
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.Clan
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.User
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.AliasHistoryCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.ChatActionResultCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.ChatEnterCallback
@@ -67,6 +69,7 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import java.io.IOException
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * This handler handles all interaction with other users on the Steam3 network.
@@ -74,10 +77,43 @@ import java.nio.charset.StandardCharsets
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class SteamFriends : ClientMsgHandler() {
 
-    private var friendsList: MutableList<SteamID> = mutableListOf()
-    private var clanList: MutableList<SteamID> = mutableListOf()
+    var friendsList: MutableList<SteamID> = mutableListOf()
+        private set
+    var clanList: MutableList<SteamID> = mutableListOf()
+        private set
 
     private var cache: AccountCache = AccountCache()
+
+    /**
+     * Gets a list of all caches users.
+     *
+     * @return a list of [User]
+     */
+    fun getCachedUsers(): List<User> = cache.users.getList()
+
+    /**
+     * Gets a list of all cached clans.
+     *
+     * @return a list of [Clan]
+     */
+    fun getCachedClans(): List<Clan> = cache.clans.getList()
+
+    /**
+     * Gets result if the given steam ID is the local user or not.
+     *
+     * @param steamID the steam ID of the local logged-in user
+     * @return true if the account is the local user, otherwise false.
+     */
+    @JvmOverloads
+    fun isLocalUser(steamID: SteamID? = null): Boolean = cache.isLocalUser(steamID ?: client.steamID)
+
+    /**
+     * Gets the steam ID from the cached account.
+     *
+     * @param steamID the steam ID to check the cache
+     * @return The [SteamID] of the cached user.
+     */
+    fun getFriendSteamID(steamID: SteamID): SteamID = cache.getUser(steamID).steamID // Why not...
 
     /**
      * Gets the local user's persona name. Will be null before user initialization.
@@ -86,6 +122,13 @@ class SteamFriends : ClientMsgHandler() {
      * @return The name.
      */
     fun getPersonaName(): String? = cache.localUser.name
+
+    /**
+     * Gets the local user's persona avatar hash. Will be null before user initialization.
+     *
+     * @return The avatar hash.
+     */
+    fun getPersonaAvatar(): ByteArray? = cache.localUser.avatarHash
 
     /**
      * Sets the local user's persona name and broadcasts it over the network.
@@ -229,6 +272,23 @@ class SteamFriends : ClientMsgHandler() {
      * @return A byte array representing a SHA-1 hash of the friend's avatar.
      */
     fun getFriendAvatar(steamID: SteamID): ByteArray? = cache.getUser(steamID).avatarHash
+
+    /**
+     * Gets the PersonaState Flags of a friend.
+     *
+     * @param steamID The steam id.
+     * @return and [EnumSet] of [EPersonaStateFlag]
+     */
+    fun getFriendPersonaStateFlags(steamID: SteamID): EnumSet<EPersonaStateFlag>? =
+        cache.getUser(steamID).personaStateFlags
+
+    /**
+     * Gets the game app id of a friend.
+     *
+     * @param steamID The steam id.
+     * @return the game app id or 0 if not playing.
+     */
+    fun getFriendGameAppId(steamID: SteamID): Int = cache.getUser(steamID).gameAppID
 
     /**
      * Gets the count of clans the local user is a member of.
@@ -467,7 +527,8 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamIdList   A list of SteamIDs to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.getDefaultPersonaStateFlags].
      */
-    fun requestFriendInfo(steamIdList: List<SteamID>, requestedInfo: Int) {
+    @JvmOverloads
+    fun requestFriendInfo(steamIdList: List<SteamID>, requestedInfo: Int = 0) {
         var info = requestedInfo
 
         if (info == 0) {
@@ -490,7 +551,8 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID A SteamID to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.getDefaultPersonaStateFlags].
      */
-    fun requestFriendInfo(steamID: SteamID, requestedInfo: Int) {
+    @JvmOverloads
+    fun requestFriendInfo(steamID: SteamID, requestedInfo: Int = 0) {
         requestFriendInfo(listOf(steamID), requestedInfo)
     }
 
