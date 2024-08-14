@@ -1,152 +1,118 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EChatRoomEnterResponse;
-import in.dragonbra.javasteam.enums.EChatRoomType;
-import in.dragonbra.javasteam.generated.MsgClientChatEnter;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.ChatMemberInfo;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
-import in.dragonbra.javasteam.util.stream.BinaryReader;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatRoomEnterResponse
+import `in`.dragonbra.javasteam.enums.EChatRoomType
+import `in`.dragonbra.javasteam.generated.MsgClientChatEnter
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.ChatMemberInfo
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * This callback is fired in response to attempting to join a chat.
  */
-public class ChatEnterCallback extends CallbackMsg {
+@Suppress("MemberVisibilityCanBePrivate")
+class ChatEnterCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
-    private final SteamID chatID;
+    /**
+     * Gets the [SteamID] of the chat room.
+     */
+    val chatID: SteamID
 
-    private final SteamID friendID;
+    /**
+     * Gets the friend ID.
+     */
+    val friendID: SteamID
 
-    private final EChatRoomType chatRoomType;
+    /**
+     * Gets the type of the chat room.
+     */
+    val chatRoomType: EChatRoomType
 
-    private final SteamID ownerID;
+    /**
+     * Gets the [SteamID] of the chat room owner.
+     */
+    val ownerID: SteamID
 
-    private final SteamID clanID;
+    /**
+     * Gets the clan [SteamID] that owns this chat room.
+     */
+    val clanID: SteamID
 
-    private final byte chatFlags;
+    /**
+     * Gets the chat flags.
+     */
+    val chatFlags: Byte
 
-    private final EChatRoomEnterResponse enterResponse;
+    /**
+     * Gets the chat enter response.
+     */
+    val enterResponse: EChatRoomEnterResponse
 
-    private final int numChatMembers;
+    /**
+     * Gets the number of users currently in this chat room.
+     */
+    val numChatMembers: Int
 
-    private String chatRoomName;
+    /**
+     * Gets the name of the chat room.
+     */
+    var chatRoomName: String = ""
+        private set
 
-    private List<ChatMemberInfo> chatMembers;
+    /**
+     * Gets a list of [ChatMemberInfo] instances for each of the members of this chat room.
+     */
+    var chatMembers: List<ChatMemberInfo> = listOf()
+        private set
 
-    public ChatEnterCallback(MsgClientChatEnter msg, byte[] payload) {
-        chatID = msg.getSteamIdChat();
-        friendID = msg.getSteamIdFriend();
+    init {
+        val chatEnter = ClientMsg(MsgClientChatEnter::class.java, packetMsg)
+        val msg = chatEnter.body
 
-        chatRoomType = msg.getChatRoomType();
+        chatID = msg.steamIdChat
+        friendID = msg.steamIdFriend
 
-        ownerID = msg.getSteamIdOwner();
-        clanID = msg.getSteamIdClan();
+        chatRoomType = msg.chatRoomType
 
-        chatFlags = msg.getChatFlags();
+        ownerID = msg.steamIdOwner
+        clanID = msg.steamIdClan
 
-        enterResponse = msg.getEnterResponse();
+        chatFlags = msg.chatFlags
 
-        numChatMembers = msg.getNumMembers();
+        enterResponse = msg.enterResponse
 
-        ByteArrayInputStream bais = new ByteArrayInputStream(payload);
+        numChatMembers = msg.numMembers
 
-        try (BinaryReader br = new BinaryReader(bais)) {
-            // steamclient always attempts to read the chat room name, regardless of the enter response
-            chatRoomName = br.readNullTermString(StandardCharsets.UTF_8);
+        val bais = ByteArrayInputStream(chatEnter.payload.toByteArray())
 
-            if (enterResponse != EChatRoomEnterResponse.Success) {
-                // the rest of the payload depends on a successful chat enter
-                return;
+        try {
+            BinaryReader(bais).use { br ->
+                // steamclient always attempts to read the chat room name, regardless of the enter response
+                chatRoomName = br.readNullTermString(StandardCharsets.UTF_8)
+
+                if (enterResponse != EChatRoomEnterResponse.Success) {
+                    // the rest of the payload depends on a successful chat enter
+                    return@use
+                }
+
+                val memberList: MutableList<ChatMemberInfo> = ArrayList<ChatMemberInfo>()
+
+                for (i in 0 until numChatMembers) {
+                    val memberInfo = ChatMemberInfo()
+                    memberInfo.readFromStream(br)
+
+                    memberList.add(memberInfo)
+                }
+                chatMembers = Collections.unmodifiableList(memberList)
             }
-
-            List<ChatMemberInfo> memberList = new ArrayList<>();
-
-            for (int i = 0; i < numChatMembers; i++) {
-                ChatMemberInfo memberInfo = new ChatMemberInfo();
-                memberInfo.readFromStream(br);
-
-                memberList.add(memberInfo);
-            }
-
-            chatMembers = Collections.unmodifiableList(memberList);
-        } catch (IOException ignored) {
+        } catch (ignored: IOException) {
         }
-    }
-
-    /**
-     * @return the {@link SteamID} of the chat room.
-     */
-    public SteamID getChatID() {
-        return chatID;
-    }
-
-    /**
-     * @return the friend ID.
-     */
-    public SteamID getFriendID() {
-        return friendID;
-    }
-
-    /**
-     * @return the type of the chat room.
-     */
-    public EChatRoomType getChatRoomType() {
-        return chatRoomType;
-    }
-
-    /**
-     * @return the {@link SteamID} of the chat room owner.
-     */
-    public SteamID getOwnerID() {
-        return ownerID;
-    }
-
-    /**
-     * @return the clan {@link SteamID} that owns this chat room.
-     */
-    public SteamID getClanID() {
-        return clanID;
-    }
-
-    /**
-     * @return the chat flags.
-     */
-    public byte getChatFlags() {
-        return chatFlags;
-    }
-
-    /**
-     * @return the chat enter response.
-     */
-    public EChatRoomEnterResponse getEnterResponse() {
-        return enterResponse;
-    }
-
-    /**
-     * @return the number of users currently in this chat room.
-     */
-    public int getNumChatMembers() {
-        return numChatMembers;
-    }
-
-    /**
-     * @return the name of the chat room.
-     */
-    public String getChatRoomName() {
-        return chatRoomName;
-    }
-
-    /**
-     * @return a list of {@link ChatMemberInfo} instances for each of the members of this chat room.
-     */
-    public List<ChatMemberInfo> getChatMembers() {
-        return chatMembers;
     }
 }

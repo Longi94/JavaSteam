@@ -1,28 +1,29 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientSetPlayerNicknameResponse;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.types.SteamID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientSetPlayerNicknameResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * This callback is fired in response to setting a nickname of a player by calling {@link SteamFriends#setFriendNickname(SteamID, String)}.
+ * This callback is fired in response to setting a nickname of a player by calling [SteamFriends.setFriendNickname].
  */
-public class NicknameCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    public NicknameCallback(JobID jobID, CMsgClientSetPlayerNicknameResponse.Builder body) {
-        setJobID(jobID);
-        result = EResult.from(body.getEresult());
-    }
+class NicknameCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result of setting a nickname
+     * Gets the result of setting a nickname
      */
-    public EResult getResult() {
-        return result;
+    val result: EResult
+
+    init {
+        val response = ClientMsgProtobuf<CMsgClientSetPlayerNicknameResponse.Builder>(
+            CMsgClientSetPlayerNicknameResponse::class.java,
+            packetMsg
+        )
+
+        jobID = response.targetJobID
+        result = EResult.from(response.body.eresult)
     }
 }

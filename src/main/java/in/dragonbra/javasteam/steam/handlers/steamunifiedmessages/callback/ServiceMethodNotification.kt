@@ -1,80 +1,60 @@
-package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback
 
-import com.google.protobuf.AbstractMessage;
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import com.google.protobuf.AbstractMessage
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * @author Lossy
  * @since 2023-01-04
- * <p>
- * This callback represents a service notification received though
- * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+ *
+ *
+ * This callback represents a service notification received though [SteamUnifiedMessages].
  */
-@SuppressWarnings("unused")
-public class ServiceMethodNotification extends CallbackMsg {
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+class ServiceMethodNotification(messageType: Class<out AbstractMessage>, packetMsg: IPacketMsg) : CallbackMsg() {
 
-    private final String methodName;
+    /**
+     * Gets the name of the Service.
+     */
+    val serviceName: String
+        get() = methodName.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
 
-    private final Object body;
+    /**
+     * Gets the name of the RPC method.
+     */
+    val rpcName: String
+        get() = methodName.substring(serviceName.length + 1)
+            .split("#".toRegex())
+            .dropLastWhile { it.isEmpty() }
+            .toTypedArray()[0]
 
-    private final ClientMsgProtobuf<?> clientMsg;
+    /**
+     * Gets the full name of the service method.
+     */
+    val methodName: String
 
-    private final SteammessagesBase.CMsgProtoBufHeader protoHeader;
+    /**
+     * Gets the protobuf notification body.
+     */
+    val body: Any
 
-    public ServiceMethodNotification(Class<? extends AbstractMessage> messageType, IPacketMsg packetMsg) {
-        // Bounce into generic-land.
-        clientMsg = new ClientMsgProtobuf<>(messageType, packetMsg);
-        protoHeader = clientMsg.getHeader().getProto().build();
+    /**
+     * Gets the client message, See [ClientMsgProtobuf]
+     */
+    val clientMsg: ClientMsgProtobuf<*> = ClientMsgProtobuf(messageType, packetMsg) // Bounce into generic-land.
 
+    /**
+     * Gets the Proto Header, See [SteammessagesBase.CMsgProtoBufHeader]
+     */
+    val protoHeader: SteammessagesBase.CMsgProtoBufHeader = clientMsg.header.proto.build()
+
+    init {
         // Note: JobID will be -1
-
-        this.methodName = clientMsg.getHeader().getProto().getTargetJobName();
-        this.body = clientMsg.getBody().build();
-    }
-
-    /**
-     * @return the client message, See {@link ClientMsgProtobuf}
-     */
-    public ClientMsgProtobuf<?> getClientMsg() {
-        return clientMsg;
-    }
-
-    /**
-     * @return the Proto Header, See {@link SteammessagesBase.CMsgProtoBufHeader}
-     */
-    public SteammessagesBase.CMsgProtoBufHeader getProtoHeader() {
-        return protoHeader;
-    }
-
-
-    /**
-     * @return Gets the name of the Service.
-     */
-    public String getServiceName() {
-        return methodName.split("\\.")[0];
-    }
-
-    /**
-     * @return Gets the name of the RPC method.
-     */
-    public String getRpcName() {
-        return methodName.substring(getServiceName().length() + 1).split("#")[0];
-    }
-
-    /**
-     * @return Gets the full name of the service method.
-     */
-    public String getMethodName() {
-        return methodName;
-    }
-
-    /**
-     * @return Gets the protobuf notification body.
-     */
-    public Object getBody() {
-        return body;
+        methodName = clientMsg.header.proto.getTargetJobName()
+        body = clientMsg.body.build()
     }
 }

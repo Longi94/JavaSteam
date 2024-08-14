@@ -1,44 +1,42 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRedeemGuestPassResponse;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRedeemGuestPassResponse
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
-public class RedeemGuestPassResponseCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final Integer packageID;
-
-    private final Integer mustOwnAppID;
-
-    public RedeemGuestPassResponseCallback(JobID jobID, CMsgClientRedeemGuestPassResponse.Builder msg) {
-        setJobID(jobID);
-
-        this.result = EResult.from(msg.getEresult());
-        this.packageID = msg.getPackageId();
-        this.mustOwnAppID = msg.getMustOwnAppid();
-    }
+/**
+ * This callback is received in response to activating a guest pass or a gift.
+ */
+@Suppress("MemberVisibilityCanBePrivate")
+class RedeemGuestPassResponseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return Result of the operation
+     * Gets Result of the operation
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return Result of the operation
+     * Gets Result of the operation
      */
-    public Integer getPackageID() {
-        return packageID;
-    }
+    val packageID: Int
 
     /**
-     * @return App ID which must be owned to activate this guest pass.
+     * Gets App ID which must be owned to activate this guest pass.
      */
-    public Integer getMustOwnAppID() {
-        return mustOwnAppID;
+    val mustOwnAppID: Int
+
+    init {
+        val redeemedGuestPass = ClientMsgProtobuf<CMsgClientRedeemGuestPassResponse.Builder>(
+            CMsgClientRedeemGuestPassResponse::class.java,
+            packetMsg
+        )
+        val msg = redeemedGuestPass.body
+
+        jobID = redeemedGuestPass.targetJobID
+        result = EResult.from(msg.eresult)
+        packageID = msg.packageId
+        mustOwnAppID = msg.mustOwnAppid
     }
 }

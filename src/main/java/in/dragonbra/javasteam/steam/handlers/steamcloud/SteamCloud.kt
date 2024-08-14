@@ -1,143 +1,108 @@
-package in.dragonbra.javasteam.steam.handlers.steamcloud;
+package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfoResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetailsResponse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFileResponse;
-import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback;
-import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback;
-import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.types.UGCHandle;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile
+import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.types.UGCHandle
 
 /**
  * This handler is used for interacting with remote storage and user generated content.
  */
-public class SteamCloud extends ClientMsgHandler {
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamCloud() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientUFSGetUGCDetailsResponse, this::handleUGCDetailsResponse);
-        dispatchMap.put(EMsg.ClientUFSGetSingleFileInfoResponse, this::handleSingleFileInfoResponse);
-        dispatchMap.put(EMsg.ClientUFSShareFileResponse, this::handleShareFileResponse);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+class SteamCloud : ClientMsgHandler() {
 
     /**
      * Requests details for a specific item of user generated content from the Steam servers.
-     * Results are returned in a {@link UGCDetailsCallback}.
+     * Results are returned in a [UGCDetailsCallback].
      *
      * @param ugcId The unique user generated content id.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link UGCDetailsCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [UGCDetailsCallback].
      */
-    public AsyncJobSingle<UGCDetailsCallback> requestUGCDetails(UGCHandle ugcId) {
-        if (ugcId == null) {
-            throw new IllegalArgumentException("ugcId is null");
-        }
+    fun requestUGCDetails(ugcId: UGCHandle): AsyncJobSingle<UGCDetailsCallback> {
+        val request = ClientMsgProtobuf<CMsgClientUFSGetUGCDetails.Builder>(
+            CMsgClientUFSGetUGCDetails::class.java,
+            EMsg.ClientUFSGetUGCDetails
+        )
+        request.setSourceJobID(client.getNextJobID())
 
-        ClientMsgProtobuf<CMsgClientUFSGetUGCDetails.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientUFSGetUGCDetails.class, EMsg.ClientUFSGetUGCDetails);
-        JobID jobID = client.getNextJobID();
-        request.setSourceJobID(jobID);
+        request.body.setHcontent(ugcId.value)
 
-        request.getBody().setHcontent(ugcId.getValue());
+        client.send(request)
 
-        client.send(request);
-
-        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
+        return AsyncJobSingle(client, request.sourceJobID)
     }
 
     /**
      * Requests details for a specific file in the user's Cloud storage.
-     * Results are returned in a {@link SingleFileInfoCallback}.
+     * Results are returned in a [SingleFileInfoCallback].
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link SingleFileInfoCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [SingleFileInfoCallback].
      */
-    public AsyncJobSingle<SingleFileInfoCallback> getSingleFileInfo(int appId, String filename) {
-        ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfo.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientUFSGetSingleFileInfo.class, EMsg.ClientUFSGetSingleFileInfo);
-        JobID jobID = client.getNextJobID();
-        request.setSourceJobID(jobID);
+    fun getSingleFileInfo(appId: Int, filename: String): AsyncJobSingle<SingleFileInfoCallback> {
+        val request = ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfo.Builder>(
+            CMsgClientUFSGetSingleFileInfo::class.java,
+            EMsg.ClientUFSGetSingleFileInfo
+        )
+        request.setSourceJobID(client.getNextJobID())
 
-        request.getBody().setAppId(appId);
-        request.getBody().setFileName(filename);
+        request.body.setAppId(appId)
+        request.body.setFileName(filename)
 
-        client.send(request);
+        client.send(request)
 
-        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
+        return AsyncJobSingle(client, request.sourceJobID)
     }
 
     /**
      * Commit a Cloud file at the given path to make its UGC handle publicly visible.
-     * Results are returned in a {@link ShareFileCallback}.
+     * Results are returned in a [ShareFileCallback].
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link ShareFileCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [ShareFileCallback].
      */
-    public AsyncJobSingle<ShareFileCallback> shareFile(int appId, String filename) {
-        ClientMsgProtobuf<CMsgClientUFSShareFile.Builder> request =
-                new ClientMsgProtobuf<>(CMsgClientUFSShareFile.class, EMsg.ClientUFSShareFile);
-        JobID jobID = client.getNextJobID();
-        request.setSourceJobID(jobID);
+    fun shareFile(appId: Int, filename: String): AsyncJobSingle<ShareFileCallback> {
+        val request = ClientMsgProtobuf<CMsgClientUFSShareFile.Builder>(
+            CMsgClientUFSShareFile::class.java,
+            EMsg.ClientUFSShareFile
+        )
+        request.setSourceJobID(client.getNextJobID())
 
-        request.getBody().setAppId(appId);
-        request.getBody().setFileName(filename);
+        request.body.setAppId(appId)
+        request.body.setFileName(filename)
 
-        client.send(request);
+        client.send(request)
 
-        return new AsyncJobSingle<>(this.client, request.getSourceJobID());
+        return AsyncJobSingle(client, request.sourceJobID)
     }
 
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback = getCallback(packetMsg) ?: return
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
+        client.postCallback(callback)
+    }
+
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
+            EMsg.ClientUFSGetUGCDetailsResponse -> UGCDetailsCallback(packetMsg)
+            EMsg.ClientUFSGetSingleFileInfoResponse -> SingleFileInfoCallback(packetMsg)
+            EMsg.ClientUFSShareFileResponse -> ShareFileCallback(packetMsg)
+            else -> null
         }
-
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
-    }
-
-    private void handleUGCDetailsResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUFSGetUGCDetailsResponse.Builder> infoResponse =
-                new ClientMsgProtobuf<>(CMsgClientUFSGetUGCDetailsResponse.class, packetMsg);
-
-        client.postCallback(new UGCDetailsCallback(infoResponse.getTargetJobID(), infoResponse.getBody()));
-    }
-
-    private void handleSingleFileInfoResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfoResponse.Builder> infoResponse =
-                new ClientMsgProtobuf<>(CMsgClientUFSGetSingleFileInfoResponse.class, packetMsg);
-
-        client.postCallback(new SingleFileInfoCallback(infoResponse.getTargetJobID(), infoResponse.getBody()));
-    }
-
-    private void handleShareFileResponse(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUFSShareFileResponse.Builder> shareResponse =
-                new ClientMsgProtobuf<>(CMsgClientUFSShareFileResponse.class, packetMsg);
-
-        client.postCallback(new ShareFileCallback(shareResponse.getTargetJobID(), shareResponse.getBody()));
     }
 }

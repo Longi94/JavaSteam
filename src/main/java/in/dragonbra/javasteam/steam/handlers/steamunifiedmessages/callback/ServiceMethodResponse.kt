@@ -1,95 +1,74 @@
-package in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback
 
-import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessage;
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.PacketClientMsgProtobuf;
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgProtoBufHeader;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
+import com.google.protobuf.AbstractMessage
+import com.google.protobuf.GeneratedMessage
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.PacketClientMsgProtobuf
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.JobID
 
 /**
  * @author Lossy
  * @since 2023-01-04
- * <p>
- * This callback is returned in response to a service method sent through
- * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+ *
+ * This callback is returned in response to a service method sent through [SteamUnifiedMessages].
  */
-@SuppressWarnings("unused")
-public class ServiceMethodResponse extends CallbackMsg {
-
-    private final EResult result;
-
-    private final String methodName;
-
-    private final PacketClientMsgProtobuf packetMsg;
-
-    private final CMsgProtoBufHeader protoHeader;
-
-    public ServiceMethodResponse(PacketClientMsgProtobuf packetMsg) {
-        protoHeader = packetMsg.getHeader().getProto().build();
-
-        JobID jobID = new JobID(protoHeader.getJobidTarget());
-        setJobID(jobID);
-
-        this.result = EResult.from(protoHeader.getEresult());
-        this.methodName = protoHeader.getTargetJobName();
-        this.packetMsg = packetMsg;
-    }
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+class ServiceMethodResponse(packetMsg: PacketClientMsgProtobuf) : CallbackMsg() {
 
     /**
-     * @return the packet message, See {@link PacketClientMsgProtobuf}
+     * Gets the result of the message.
      */
-    public PacketClientMsgProtobuf getPacketMsg() {
-        return packetMsg;
-    }
+    val result: EResult
 
     /**
-     * @return the Proto Header, See {@link CMsgProtoBufHeader}
+     * Gets the name of the Service.
      */
-    public CMsgProtoBufHeader getProtoHeader() {
-        return protoHeader;
-    }
+    val serviceName: String
+        get() = methodName.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
 
     /**
-     * @return Gets the result of the message.
+     * Gets the name of the RPC method.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val rpcName: String
+        get() = methodName.substring(serviceName.length + 1)
+            .split("#".toRegex())
+            .dropLastWhile { it.isEmpty() }
+            .toTypedArray()[0]
 
     /**
-     * @return Gets the name of the Service.
+     * Gets the full name of the service method.
      */
-    public String getServiceName() {
-        return methodName.split("\\.")[0];
-    }
+    val methodName: String
 
     /**
-     * @return Gets the name of the RPC method.
+     * Gets the packet message, See [PacketClientMsgProtobuf]
      */
-    public String getRpcName() {
-        return methodName.substring(getServiceName().length() + 1).split("#")[0];
-    }
+    val packetMsg: PacketClientMsgProtobuf
 
     /**
-     * @return Gets the full name of the service method.
+     * Gets the Proto Header, See [SteammessagesBase.CMsgProtoBufHeader]
      */
-    public String getMethodName() {
-        return methodName;
+    val protoHeader: SteammessagesBase.CMsgProtoBufHeader = packetMsg.header.proto.build()
+
+    init {
+        jobID = JobID(protoHeader.jobidTarget)
+
+        result = EResult.from(protoHeader.eresult)
+        methodName = protoHeader.targetJobName
+        this.packetMsg = packetMsg
     }
 
     /**
      * Deserializes the response into a protobuf object.
      *
      * @param clazz The message class, type erasure.
-     * @param <T>   Protobuf type of the response message.
-     * @return The response to the message sent through
-     * {@link in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages}.
+     * @param T Protobuf type of the response message.
+     * @return The response to the message sent through [SteamUnifiedMessages].
      */
-    public <T extends GeneratedMessage.Builder<T>> T getDeserializedResponse(Class<? extends AbstractMessage> clazz) {
-        ClientMsgProtobuf<T> msg = new ClientMsgProtobuf<>(clazz, packetMsg);
-        return msg.getBody();
-    }
+    fun <T : GeneratedMessage.Builder<T>> getDeserializedResponse(clazz: Class<out AbstractMessage>): T =
+        ClientMsgProtobuf<T>(clazz, packetMsg).body
 }

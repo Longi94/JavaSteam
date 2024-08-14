@@ -1,71 +1,57 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.generated.MsgClientUpdateGuestPassesList;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.KeyValue;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.generated.MsgClientUpdateGuestPassesList
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.KeyValue
+import java.io.IOException
 
 /**
  * This callback is received when the list of guest passes is updated.
  */
-public class GuestPassListCallback extends CallbackMsg {
+class GuestPassListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
-    private final EResult result;
+    /**
+     * Gets the result of the operation.
+     */
+    val result: EResult
 
-    private final int countGuestPassesToGive;
+    /**
+     * Gets the number of guest passes to be given out.
+     */
+    val countGuestPassesToGive: Int
 
-    private final int countGuestPassesToRedeem;
+    /**
+     * Gets the number of guest passes to be redeemed.
+     */
+    val countGuestPassesToRedeem: Int
 
-    private final List<KeyValue> guestPasses;
+    /**
+     * Gets the guest pass list.
+     */
+    val guestPasses: List<KeyValue>
 
-    public GuestPassListCallback(MsgClientUpdateGuestPassesList msg, InputStream payload) {
-        result = msg.getResult();
-        countGuestPassesToGive = msg.getCountGuestPassesToGive();
-        countGuestPassesToRedeem = msg.getCountGuestPassesToRedeem();
+    init {
+        val guestPassesResp = ClientMsg(MsgClientUpdateGuestPassesList::class.java, packetMsg)
+        val msg = guestPassesResp.body
 
-        guestPasses = new ArrayList<>();
+        result = msg.result
+        countGuestPassesToGive = msg.countGuestPassesToGive
+        countGuestPassesToRedeem = msg.countGuestPassesToRedeem
+
+        val tempList = mutableListOf<KeyValue>()
         try {
-            for (int i = 0; i < countGuestPassesToGive + countGuestPassesToRedeem; i++) {
-                KeyValue kv = new KeyValue();
-                kv.tryReadAsBinary(payload);
-                guestPasses.add(kv);
+            for (i in 0 until countGuestPassesToGive + countGuestPassesToRedeem) {
+                val kv = KeyValue()
+                kv.tryReadAsBinary(guestPassesResp.payload)
+                tempList.add(kv)
             }
-        } catch (IOException e) {
-            throw new IllegalArgumentException("failed to read guest passes", e);
+        } catch (e: IOException) {
+            throw IllegalArgumentException("failed to read guest passes", e)
         }
-    }
 
-    /**
-     * @return the result of the operation.
-     */
-    public EResult getResult() {
-        return result;
-    }
-
-    /**
-     * @return the number of guest passes to be given out.
-     */
-    public int getCountGuestPassesToGive() {
-        return countGuestPassesToGive;
-    }
-
-    /**
-     * @return the number of guest passes to be redeemed.
-     */
-    public int getCountGuestPassesToRedeem() {
-        return countGuestPassesToRedeem;
-    }
-
-    /**
-     *
-     * @return the guest pass list.
-     */
-    public List<KeyValue> getGuestPasses() {
-        return guestPasses;
+        guestPasses = tempList.toList()
     }
 }

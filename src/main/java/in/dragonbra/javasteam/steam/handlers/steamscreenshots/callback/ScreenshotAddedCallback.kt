@@ -1,38 +1,38 @@
-package in.dragonbra.javasteam.steam.handlers.steamscreenshots.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamscreenshots.callback
 
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshotResponse;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.types.UGCHandle;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshotResponse
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.UGCHandle
 
 /**
  * This callback is fired when a new screenshot is added.
  */
-public class ScreenshotAddedCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final UGCHandle screenshotID;
-
-    public ScreenshotAddedCallback(JobID jobID, CMsgClientUCMAddScreenshotResponse.Builder msg) {
-        setJobID(jobID);
-
-        result = EResult.from(msg.getEresult());
-        screenshotID = new UGCHandle(msg.getScreenshotid());
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class ScreenshotAddedCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the result by {@link EResult}
+     * Gets the result.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult
 
     /**
-     * @return the screenshot ID of the newly added screenshot.
+     * Gets the screenshot ID of the newly added screenshot.
      */
-    public UGCHandle getScreenshotID() {
-        return screenshotID;
+    val screenshotID: UGCHandle
+
+    init {
+        val resp = ClientMsgProtobuf<CMsgClientUCMAddScreenshotResponse.Builder>(
+            CMsgClientUCMAddScreenshotResponse::class.java,
+            packetMsg
+        )
+        val msg = resp.body
+
+        jobID = resp.targetJobID
+
+        result = EResult.from(msg.eresult)
+        screenshotID = UGCHandle(msg.screenshotid)
     }
 }

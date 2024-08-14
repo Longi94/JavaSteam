@@ -1,58 +1,50 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EChatEntryType;
-import in.dragonbra.javasteam.generated.MsgClientChatMsg;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.nio.charset.StandardCharsets;
+import `in`.dragonbra.javasteam.base.ClientMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatEntryType
+import `in`.dragonbra.javasteam.generated.MsgClientChatMsg
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
+import java.nio.charset.StandardCharsets
 
 /**
  * This callback is fired when a chat room message arrives.
  */
-public class ChatMsgCallback extends CallbackMsg {
-
-    private final SteamID chatterID;
-
-    private final SteamID chatRoomID;
-
-    private final EChatEntryType chatMsgType;
-
-    private final String message;
-
-    public ChatMsgCallback(MsgClientChatMsg msg, byte[] payload) {
-        chatterID = msg.getSteamIdChatter();
-        chatRoomID = msg.getSteamIdChatRoom();
-        chatMsgType = msg.getChatMsgType();
-
-        message = new String(payload, StandardCharsets.UTF_8).replaceAll("\0+$", ""); // trim any extra null chars from the end
-    }
+@Suppress("MemberVisibilityCanBePrivate")
+class ChatMsgCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the {@link SteamID} of the chatter.
+     * Gets the [SteamID] of the chatter.
      */
-    public SteamID getChatterID() {
-        return chatterID;
-    }
+    val chatterID: SteamID
 
     /**
-     * @return the {@link SteamID} of the chat room.
+     * Gets the [SteamID] of the chat room.
      */
-    public SteamID getChatRoomID() {
-        return chatRoomID;
-    }
+    val chatRoomID: SteamID
 
     /**
-     * @return chat entry type.
+     * Gets chat entry type.
      */
-    public EChatEntryType getChatMsgType() {
-        return chatMsgType;
-    }
+    val chatMsgType: EChatEntryType
 
     /**
-     * @return the message.
+     * Gets the message.
      */
-    public String getMessage() {
-        return message;
+    val message: String
+
+    init {
+        val chatMsg = ClientMsg(MsgClientChatMsg::class.java, packetMsg)
+        val msg = chatMsg.body
+
+        chatterID = msg.steamIdChatter
+        chatRoomID = msg.steamIdChatRoom
+
+        chatMsgType = msg.chatMsgType
+
+        // trim any extra null chars from the end
+        val payload = chatMsg.payload
+        message = String(payload.toByteArray(), StandardCharsets.UTF_8).replace("\u0000+$".toRegex(), "")
     }
 }

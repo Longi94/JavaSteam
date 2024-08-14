@@ -1,38 +1,29 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistoryResponse;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.NameTableInstance;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistoryResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.NameTableInstance
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * Callback fired in response to calling {@link SteamFriends#requestAliasHistory(SteamID)}.
+ * Callback fired in response to calling [SteamFriends.requestAliasHistory].
  */
-public class AliasHistoryCallback extends CallbackMsg {
-
-    private List<NameTableInstance> responses;
-
-    public AliasHistoryCallback(JobID jobID, CMsgClientAMGetPersonaNameHistoryResponse.Builder msg) {
-        setJobID(jobID);
-        responses = new ArrayList<>();
-
-        for (CMsgClientAMGetPersonaNameHistoryResponse.NameTableInstance instance : msg.getResponsesList()) {
-            responses.add(new NameTableInstance(instance));
-        }
-
-        responses = Collections.unmodifiableList(responses);
-    }
+class AliasHistoryCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return the responses to the steam ids
+     * Gets the responses to the steam ids
      */
-    public List<NameTableInstance> getResponses() {
-        return responses;
+    val responses: List<NameTableInstance>
+
+    init {
+        val resp = ClientMsgProtobuf<CMsgClientAMGetPersonaNameHistoryResponse.Builder>(
+            CMsgClientAMGetPersonaNameHistoryResponse::class.java,
+            packetMsg
+        )
+        jobID = resp.targetJobID
+
+        responses = resp.body.responsesList.map { NameTableInstance(it) }
     }
 }

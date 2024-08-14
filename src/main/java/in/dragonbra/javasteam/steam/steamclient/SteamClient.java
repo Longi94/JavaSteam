@@ -2,7 +2,6 @@ package in.dragonbra.javasteam.steam.steamclient;
 
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.steam.CMClient;
@@ -27,7 +26,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.AsyncJob;
 import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
@@ -54,8 +52,6 @@ public class SteamClient extends CMClient {
     private final Object callbackLock = new Object();
 
     private final Queue<ICallbackMsg> callbackQueue = new LinkedList<>();
-
-    private final Map<EMsg, Consumer<IPacketMsg>> dispatchMap = new HashMap<>();
 
     /**
      * Initializes a new instance of the {@link SteamClient} class with the default configuration.
@@ -89,10 +85,6 @@ public class SteamClient extends CMClient {
         addHandler(new SteamUserStats());
 
         processStartTime = new Date();
-
-        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
-        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
-        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
 
         jobManager = new AsyncJobManager();
     }
@@ -346,10 +338,21 @@ public class SteamClient extends CMClient {
             return false;
         }
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            // we want to handle some of the clientmsgs before we pass them along to registered handlers
-            dispatcher.accept(packetMsg);
+        if (packetMsg == null) {
+            throw new NullPointerException("packetMsg is null");
+        }
+
+        // we want to handle some of the clientmsgs before we pass them along to registered handlers
+        switch (packetMsg.getMsgType()) {
+            case ClientCMList:
+                handleCMList(packetMsg);
+                break;
+            case JobHeartbeat:
+                handleJobHeartbeat(packetMsg);
+                break;
+            case DestJobFailed:
+                handleJobFailed(packetMsg);
+                break;
         }
 
         for (Map.Entry<Class<? extends ClientMsgHandler>, ClientMsgHandler> entry : handlers.entrySet()) {

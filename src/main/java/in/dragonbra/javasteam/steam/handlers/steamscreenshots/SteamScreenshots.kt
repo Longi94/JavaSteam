@@ -1,91 +1,72 @@
-package in.dragonbra.javasteam.steam.handlers.steamscreenshots;
+package `in`.dragonbra.javasteam.steam.handlers.steamscreenshots
 
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshot;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshotResponse;
-import in.dragonbra.javasteam.steam.handlers.steamscreenshots.callback.ScreenshotAddedCallback;
-import in.dragonbra.javasteam.types.AsyncJobSingle;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUcm.CMsgClientUCMAddScreenshot
+import `in`.dragonbra.javasteam.steam.handlers.steamscreenshots.callback.ScreenshotAddedCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.AsyncJobSingle
 
 /**
  * This handler is used for screenshots.
  */
-public class SteamScreenshots extends ClientMsgHandler {
-
-    /**
-     * Width of a screenshot thumbnail
-     */
-    public static final int SCREENSHOT_THUMBNAIL_WIDTH = 200;
-
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
-
-    public SteamScreenshots() {
-        dispatchMap = new HashMap<>();
-
-        dispatchMap.put(EMsg.ClientUCMAddScreenshotResponse, this::handleUCMAddScreenshot);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
-    }
+@Suppress("unused")
+class SteamScreenshots : ClientMsgHandler() {
 
     /**
      * Adds a screenshot to the user's screenshot library. The screenshot image and thumbnail must already exist on the UFS.
-     * Results are returned in a {@link ScreenshotAddedCallback}.
-     * The returned {@link in.dragonbra.javasteam.types.AsyncJob} can also be awaited to retrieve the callback result.
+     * Results are returned in a [ScreenshotAddedCallback].
+     * The returned [in.dragonbra.javasteam.types.AsyncJob] can also be awaited to retrieve the callback result.
      *
      * @param details The details of the screenshot.
-     * @return The Job ID of the request. This can be used to find the appropriate {@link ScreenshotAddedCallback}.
+     * @return The Job ID of the request. This can be used to find the appropriate [ScreenshotAddedCallback].
      */
-    public AsyncJobSingle<ScreenshotAddedCallback> addScreenshot(ScreenshotDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
+    fun addScreenshot(details: ScreenshotDetails): AsyncJobSingle<ScreenshotAddedCallback> {
+        val msg = ClientMsgProtobuf<CMsgClientUCMAddScreenshot.Builder>(
+            CMsgClientUCMAddScreenshot::class.java,
+            EMsg.ClientUCMAddScreenshot
+        )
+        msg.setSourceJobID(client.getNextJobID())
+
+        details.gameID?.let {
+            msg.body.setAppid(it.appID)
         }
 
-        ClientMsgProtobuf<CMsgClientUCMAddScreenshot.Builder> msg =
-                new ClientMsgProtobuf<>(CMsgClientUCMAddScreenshot.class, EMsg.ClientUCMAddScreenshot);
-        JobID jobID = client.getNextJobID();
-        msg.setSourceJobID(jobID);
+        msg.body.setCaption(details.caption)
+        msg.body.setFilename(details.ufsImageFilePath)
+        msg.body.setPermissions(details.privacy.code())
+        msg.body.setThumbname(details.usfThumbnailFilePath)
+        msg.body.setWidth(details.width)
+        msg.body.setHeight(details.height)
+        msg.body.setRtime32Created((details.creationTime.time / 1000L).toInt())
 
-        if (details.getGameID() != null) {
-            msg.getBody().setAppid(details.getGameID().getAppID());
-        }
+        client.send(msg)
 
-        msg.getBody().setCaption(details.getCaption());
-        msg.getBody().setFilename(details.getUfsImageFilePath());
-        msg.getBody().setPermissions(details.getPrivacy().code());
-        msg.getBody().setThumbname(details.getUsfThumbnailFilePath());
-        msg.getBody().setWidth(details.getWidth());
-        msg.getBody().setHeight(details.getHeight());
-        msg.getBody().setRtime32Created((int) (details.getCreationTime().getTime() / 1000L));
-
-        client.send(msg);
-
-        return new AsyncJobSingle<>(this.client, msg.getSourceJobID());
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
-        }
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback = getCallback(packetMsg) ?: return
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
+        client.postCallback(callback)
     }
 
-    private void handleUCMAddScreenshot(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientUCMAddScreenshotResponse.Builder> resp =
-                new ClientMsgProtobuf<>(CMsgClientUCMAddScreenshotResponse.class, packetMsg);
+    companion object {
+        /**
+         * Width of a screenshot thumbnail
+         */
+        const val SCREENSHOT_THUMBNAIL_WIDTH: Int = 200
 
-        client.postCallback(new ScreenshotAddedCallback(resp.getTargetJobID(), resp.getBody()));
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
+            EMsg.ClientUCMAddScreenshotResponse -> ScreenshotAddedCallback(packetMsg)
+            else -> null
+        }
     }
 }

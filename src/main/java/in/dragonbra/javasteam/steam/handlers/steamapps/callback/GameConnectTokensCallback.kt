@@ -1,44 +1,33 @@
-package in.dragonbra.javasteam.steam.handlers.steamapps.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamapps.callback
 
-import com.google.protobuf.ByteString;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGameConnectTokens;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGameConnectTokens
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
  * This callback is fired when the client receives a list of game connect tokens.
  */
-public class GameConnectTokensCallback extends CallbackMsg {
-
-    private final int tokensToKeep;
-
-    private final List<byte[]> tokens;
-
-    public GameConnectTokensCallback(CMsgClientGameConnectTokens.Builder msg) {
-        tokensToKeep = msg.getMaxTokensToKeep();
-
-        List<byte[]> temp = new ArrayList<>();
-        for (ByteString token : msg.getTokensList()) {
-            temp.add(token.toByteArray());
-        }
-
-        tokens = Collections.unmodifiableList(temp);
-    }
+class GameConnectTokensCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
-     * @return a count of tokens to keep.
+     * Gets a count of tokens to keep.
      */
-    public int getTokensToKeep() {
-        return tokensToKeep;
-    }
+    val tokensToKeep: Int
 
     /**
-     * @return the list of tokens.
+     * Gets the list of tokens.
      */
-    public List<byte[]> getTokens() {
-        return tokens;
+    val tokens: List<ByteArray>
+
+    init {
+        val gcTokens = ClientMsgProtobuf<CMsgClientGameConnectTokens.Builder>(
+            CMsgClientGameConnectTokens::class.java,
+            packetMsg
+        )
+        val msg = gcTokens.body
+
+        tokensToKeep = msg.maxTokensToKeep
+        tokens = msg.tokensList.map { it.toByteArray() }
     }
 }

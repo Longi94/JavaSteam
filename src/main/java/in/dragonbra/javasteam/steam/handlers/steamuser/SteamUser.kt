@@ -1,311 +1,190 @@
-package in.dragonbra.javasteam.steam.handlers.steamuser;
+package `in`.dragonbra.javasteam.steam.handlers.steamuser
 
-import com.google.protobuf.ByteString;
-import in.dragonbra.javasteam.base.ClientMsg;
-import in.dragonbra.javasteam.base.ClientMsgProtobuf;
-import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EAccountType;
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.enums.EUIMode;
-import in.dragonbra.javasteam.generated.MsgClientLogOnResponse;
-import in.dragonbra.javasteam.generated.MsgClientLoggedOff;
-import in.dragonbra.javasteam.generated.MsgClientLogon;
-import in.dragonbra.javasteam.generated.MsgClientMarketingMessageUpdate2;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientWalletInfoUpdate;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientEmailAddrInfo;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientPlayingSessionState;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientVanityURLChangedNotification;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.*;
-import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
-import in.dragonbra.javasteam.types.SteamID;
-import in.dragonbra.javasteam.util.HardwareUtils;
-import in.dragonbra.javasteam.util.NetHelpers;
-import in.dragonbra.javasteam.util.Strings;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.google.protobuf.ByteString
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EAccountType
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.enums.EUIMode
+import `in`.dragonbra.javasteam.generated.MsgClientLogon
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.EmailAddrInfoCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.MarketingMessageCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.PlayingSessionStateCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.SessionTokenCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.VanityURLChangedCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.WalletInfoCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.WebAPIUserNonceCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
+import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.HardwareUtils
+import `in`.dragonbra.javasteam.util.NetHelpers
 
 /**
  * This handler handles all user log on/log off related actions and callbacks.
  */
-@SuppressWarnings("unused")
-public class SteamUser extends ClientMsgHandler {
+class SteamUser : ClientMsgHandler() {
 
-    private Map<EMsg, Consumer<IPacketMsg>> dispatchMap;
+    val steamID: SteamID
+        get() = client.steamID
 
-    public SteamUser() {
-        dispatchMap = new HashMap<>();
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        // ignore messages that we don't have a handler function for
+        val callback = getCallback(packetMsg) ?: return
 
-        // EMsg.ClientNewLoginKey and EMsg.ClientUpdateMachineAuth are removed - April 10, 2024
-
-        dispatchMap.put(EMsg.ClientLogOnResponse, this::handleLogOnResponse);
-        dispatchMap.put(EMsg.ClientLoggedOff, this::handleLoggedOff);
-        dispatchMap.put(EMsg.ClientSessionToken, this::handleSessionToken);
-        dispatchMap.put(EMsg.ClientAccountInfo, this::handleAccountInfo);
-        dispatchMap.put(EMsg.ClientEmailAddrInfo, this::handleEmailAddrInfo);
-        dispatchMap.put(EMsg.ClientWalletInfoUpdate, this::handleWalletInfo);
-        dispatchMap.put(EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse, this::handleWebAPIUserNonce);
-        dispatchMap.put(EMsg.ClientVanityURLChangedNotification, this::handleVanityURLChangedNotification);
-        dispatchMap.put(EMsg.ClientMarketingMessageUpdate2, this::handleMarketingMessageUpdate);
-        dispatchMap.put(EMsg.ClientPlayingSessionState, this::handlePlayingSessionState);
-
-        dispatchMap = Collections.unmodifiableMap(dispatchMap);
+        client.postCallback(callback)
     }
 
     /**
      * Logs the client into the Steam3 network.
      * The client should already have been connected at this point.
-     * Results are returned in a {@link LoggedOnCallback}.
+     * Results are returned in a [LoggedOnCallback].
      *
      * @param details The details to use for logging on.
      */
-    public void logOn(LogOnDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
+    fun logOn(details: LogOnDetails) {
+        if (details.username.isEmpty() || (details.password.isNullOrEmpty() && details.accessToken.isNullOrEmpty())) {
+            throw IllegalArgumentException("LogOn requires a username and password or access token to be set in 'details'.")
         }
 
-        if (Strings.isNullOrEmpty(details.getUsername()) ||
-                (Strings.isNullOrEmpty(details.getPassword()) && Strings.isNullOrEmpty(details.getAccessToken()))) {
-            throw new IllegalArgumentException("LogOn requires a username and password or access token to be set in 'details'.");
+        if (!client.isConnected) {
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
 
-        if (!client.isConnected()) {
-            client.postCallback(new LoggedOnCallback(EResult.NoConnection));
-            return;
-        }
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
-        ClientMsgProtobuf<CMsgClientLogon.Builder> logon = new ClientMsgProtobuf<>(CMsgClientLogon.class, EMsg.ClientLogon);
+        val steamID = SteamID(details.accountID, details.accountInstance, client.universe, EAccountType.Individual)
 
-        SteamID steamID = new SteamID(details.getAccountID(), details.getAccountInstance(), client.getUniverse(), EAccountType.Individual);
-
-        SteammessagesBase.CMsgIPAddress.Builder ipAddress = SteammessagesBase.CMsgIPAddress.newBuilder();
-        if (details.getLoginID() != null) {
-            ipAddress.setV4(details.getLoginID());
-
-            logon.getBody().setObfuscatedPrivateIp(ipAddress.build());
+        if (details.loginID != null) {
+            // TODO: Support IPv6 login ids?
+            CMsgIPAddress.newBuilder().apply {
+                v4 = details.loginID!!
+            }.build().also(logon.body::setObfuscatedPrivateIp)
         } else {
-            int localIp = NetHelpers.getIPAddress(client.getLocalIP());
-            ipAddress.setV4(localIp ^ MsgClientLogon.ObfuscationMask);
-
-            logon.getBody().setObfuscatedPrivateIp(ipAddress.build());
+            CMsgIPAddress.newBuilder().apply {
+                v4 = NetHelpers.getIPAddress(client.localIP) xor MsgClientLogon.ObfuscationMask
+            }.build().also(logon.body::setObfuscatedPrivateIp)
         }
 
         // Legacy field, Steam client still sets it
-        if (logon.getBody().getObfuscatedPrivateIp().hasV4()) {
-            logon.getBody().setDeprecatedObfustucatedPrivateIp(logon.getBody().getObfuscatedPrivateIp().getV4());
+        if (logon.body.obfuscatedPrivateIp.hasV4()) {
+            logon.body.setDeprecatedObfustucatedPrivateIp(logon.body.obfuscatedPrivateIp.getV4())
         }
 
+        logon.protoHeader.setClientSessionid(0)
+        logon.protoHeader.setSteamid(steamID.convertToUInt64())
 
-        logon.getProtoHeader().setClientSessionid(0);
-        logon.getProtoHeader().setSteamid(steamID.convertToUInt64());
+        logon.body.setAccountName(details.username)
+        details.password?.let { logon.body.setPassword(it) }
+        logon.body.setShouldRememberPassword(details.shouldRememberPassword)
 
-        logon.getBody().setAccountName(details.getUsername());
-        if (!Strings.isNullOrEmpty(details.getPassword())) {
-            logon.getBody().setPassword(details.getPassword());
-        }
-        logon.getBody().setShouldRememberPassword(details.isShouldRememberPassword());
+        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
+        logon.body.setClientOsType(details.clientOSType.code())
+        logon.body.setClientLanguage(details.clientLanguage)
+        logon.body.setCellId(details.cellID ?: client.configuration.cellID)
 
-        logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
-        logon.getBody().setClientOsType(details.getClientOSType().code());
-        logon.getBody().setClientLanguage(details.getClientLanguage());
-
-        if (details.getCellID() != null) {
-            logon.getBody().setCellId(details.getCellID());
-        } else {
-            logon.getBody().setCellId(client.getConfiguration().getCellID());
-        }
-
-        logon.getBody().setSteam2TicketRequest(details.isRequestSteam2Ticket());
+        logon.body.setSteam2TicketRequest(details.requestSteam2Ticket)
 
         // we're now using the latest steamclient package version, this is required to get a proper sentry file for steam guard
-        logon.getBody().setClientPackageVersion(1771); // todo: determine if this is still required
-        logon.getBody().setSupportsRateLimitResponse(true);
-        logon.getBody().setMachineName(details.getMachineName());
-        logon.getBody().setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()));
+        logon.body.setClientPackageVersion(1771) // todo: determine if this is still required
+        logon.body.setSupportsRateLimitResponse(true)
+        logon.body.setMachineName(details.machineName)
+        val machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
+        logon.body.setMachineId(machineId)
 
-        if (details.getChatMode() != ChatMode.DEFAULT) {
-            logon.getBody().setChatMode(details.getChatMode().getMode());
+        if (details.chatMode != ChatMode.DEFAULT) {
+            logon.body.setChatMode(details.chatMode.mode)
         }
 
-        if (details.getUiMode() != EUIMode.Unknown) {
-            logon.getBody().setUiMode(details.getUiMode().code());
+        if (details.uiMode != EUIMode.Unknown) {
+            logon.body.setUiMode(details.uiMode.code())
         }
 
-        if (details.isSteamDeck()) {
-            logon.getBody().setIsSteamDeck(true);
+        if (details.isSteamDeck) {
+            logon.body.setIsSteamDeck(true)
         }
 
         // steam guard
-        if (!Strings.isNullOrEmpty(details.getAuthCode())) {
-            logon.getBody().setAuthCode(details.getAuthCode());
-        }
+        details.authCode?.let(logon.body::setAuthCode)
+        details.twoFactorCode?.let(logon.body::setTwoFactorCode)
 
-        if (!Strings.isNullOrEmpty(details.getTwoFactorCode())) {
-            logon.getBody().setTwoFactorCode(details.getTwoFactorCode());
-        }
+        details.accessToken?.let(logon.body::setAccessToken)
 
-        if (!Strings.isNullOrEmpty(details.getAccessToken())) {
-            logon.getBody().setAccessToken(details.getAccessToken());
-        }
-
-        client.send(logon);
+        client.send(logon)
     }
 
     /**
      * Logs the client into the Steam3 network as an anonymous user.
      * The client should already have been connected at this point.
-     * Results are returned in a {@link LoggedOnCallback}.
-     */
-    public void logOnAnonymous() {
-        logOnAnonymous(new AnonymousLogOnDetails());
-    }
-
-    /**
-     * Logs the client into the Steam3 network as an anonymous user.
-     * The client should already have been connected at this point.
-     * Results are returned in a {@link LoggedOnCallback}.
+     * Results are returned in a [LoggedOnCallback].
      *
      * @param details The details to use for logging on.
      */
-    public void logOnAnonymous(AnonymousLogOnDetails details) {
-        if (details == null) {
-            throw new IllegalArgumentException("details is null");
+    @JvmOverloads
+    fun logOnAnonymous(details: AnonymousLogOnDetails = AnonymousLogOnDetails()) {
+        if (!client.isConnected) {
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
 
-        if (!client.isConnected()) {
-            client.postCallback(new LoggedOnCallback(EResult.NoConnection));
-            return;
-        }
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
-        ClientMsgProtobuf<CMsgClientLogon.Builder> logon = new ClientMsgProtobuf<>(CMsgClientLogon.class, EMsg.ClientLogon);
+        val auId = SteamID(0, 0, client.universe, EAccountType.AnonUser)
 
-        SteamID auId = new SteamID(0, 0, client.getUniverse(), EAccountType.AnonUser);
+        logon.protoHeader.setClientSessionid(0)
+        logon.protoHeader.setSteamid(auId.convertToUInt64())
 
-        logon.getProtoHeader().setClientSessionid(0);
-        logon.getProtoHeader().setSteamid(auId.convertToUInt64());
+        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
+        logon.body.setClientOsType(details.clientOSType.code())
+        logon.body.setClientLanguage(details.clientLanguage)
+        logon.body.setCellId(details.cellID ?: client.configuration.cellID)
 
-        logon.getBody().setProtocolVersion(MsgClientLogon.CurrentProtocol);
-        logon.getBody().setClientOsType(details.getClientOSType().code());
-        logon.getBody().setClientLanguage(details.getClientLanguage());
+        val machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
+        logon.body.setMachineId(machineId)
 
-        if (details.getCellID() != null) {
-            logon.getBody().setCellId(details.getCellID());
-        } else {
-            logon.getBody().setCellId(client.getConfiguration().getCellID());
-        }
-
-        logon.getBody().setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()));
-
-        client.send(logon);
+        client.send(logon)
     }
 
     /**
      * Informs the Steam servers that this client wishes to log off from the network.
-     * The Steam server will disconnect the client, and a
-     * {@link in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback DisconnectedCallback} will be posted.
+     * The Steam server will disconnect the client, and a [DisconnectedCallback] will be posted.
      */
-    public void logOff() {
-        setExpectDisconnection(true);
+    fun logOff() {
+        isExpectDisconnection = true
 
-        ClientMsgProtobuf<CMsgClientLogOff.Builder> logOff = new ClientMsgProtobuf<>(CMsgClientLogOff.class, EMsg.ClientLogOff);
-        client.send(logOff);
-
-        // TODO: 2018-02-28 it seems like the socket is not closed after getting logged of or I am doing something horribly wrong, let's disconnect here
-        client.disconnect();
-    }
-
-    @Override
-    public void handleMsg(IPacketMsg packetMsg) {
-        if (packetMsg == null) {
-            throw new IllegalArgumentException("packetMsg is null");
-        }
-
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            dispatcher.accept(packetMsg);
-        }
-    }
-
-    public SteamID getSteamID() {
-        return client.getSteamID();
-    }
-
-    private void handleLogOnResponse(IPacketMsg packetMsg) {
-        if (packetMsg.isProto()) {
-            ClientMsgProtobuf<CMsgClientLogonResponse.Builder> logonResp = new ClientMsgProtobuf<>(CMsgClientLogonResponse.class, packetMsg);
-
-            client.postCallback(new LoggedOnCallback(logonResp.getBody()));
-        } else {
-            ClientMsg<MsgClientLogOnResponse> logonResp = new ClientMsg<>(MsgClientLogOnResponse.class, packetMsg);
-
-            client.postCallback(new LoggedOnCallback(logonResp.getBody()));
-        }
-    }
-
-    private void handleLoggedOff(IPacketMsg packetMsg) {
-        EResult result;
-
-        if (packetMsg.isProto()) {
-            ClientMsgProtobuf<CMsgClientLoggedOff.Builder> loggedOff = new ClientMsgProtobuf<>(CMsgClientLoggedOff.class, packetMsg);
-            result = EResult.from(loggedOff.getBody().getEresult());
-        } else {
-            ClientMsg<MsgClientLoggedOff> loggedOff = new ClientMsg<>(MsgClientLoggedOff.class, packetMsg);
-            result = loggedOff.getBody().getResult();
-        }
-
-        client.postCallback(new LoggedOffCallback(result));
+        val logOff = ClientMsgProtobuf<CMsgClientLogOff.Builder>(CMsgClientLogOff::class.java, EMsg.ClientLogOff)
+        client.send(logOff)
 
         // TODO: 2018-02-28 it seems like the socket is not closed after getting logged of or I am doing something horribly wrong, let's disconnect here
-        client.disconnect();
+        client.disconnect()
     }
 
-    private void handleSessionToken(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientSessionToken.Builder> sessToken = new ClientMsgProtobuf<>(CMsgClientSessionToken.class, packetMsg);
-        client.postCallback(new SessionTokenCallback(sessToken.getBody()));
-    }
-
-    private void handleAccountInfo(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientAccountInfo.Builder> accInfo = new ClientMsgProtobuf<>(CMsgClientAccountInfo.class, packetMsg);
-        client.postCallback(new AccountInfoCallback(accInfo.getBody()));
-    }
-
-    private void handleEmailAddrInfo(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientEmailAddrInfo.Builder> emailAddrInfo = new ClientMsgProtobuf<>(CMsgClientEmailAddrInfo.class, packetMsg);
-        client.postCallback(new EmailAddrInfoCallback(emailAddrInfo.getBody()));
-    }
-
-    private void handleWalletInfo(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientWalletInfoUpdate.Builder> walletInfo = new ClientMsgProtobuf<>(CMsgClientWalletInfoUpdate.class, packetMsg);
-        client.postCallback(new WalletInfoCallback(walletInfo.getBody()));
-    }
-
-    private void handleWebAPIUserNonce(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientRequestWebAPIAuthenticateUserNonceResponse.Builder> userNonce = new ClientMsgProtobuf<>(CMsgClientRequestWebAPIAuthenticateUserNonceResponse.class, packetMsg);
-        client.postCallback(new WebAPIUserNonceCallback(userNonce.getTargetJobID(), userNonce.getBody()));
-    }
-
-    private void handleVanityURLChangedNotification(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientVanityURLChangedNotification.Builder> vanityUrl = new ClientMsgProtobuf<>(CMsgClientVanityURLChangedNotification.class, packetMsg);
-        client.postCallback(new VanityURLChangedCallback(vanityUrl.getTargetJobID(), vanityUrl.getBody()));
-    }
-
-    private void handleMarketingMessageUpdate(IPacketMsg packetMsg) {
-        ClientMsg<MsgClientMarketingMessageUpdate2> marketingMessage = new ClientMsg<>(MsgClientMarketingMessageUpdate2.class, packetMsg);
-
-        byte[] payload = marketingMessage.getPayload().toByteArray();
-
-        client.postCallback(new MarketingMessageCallback(marketingMessage.getBody(), payload));
-    }
-
-    private void handlePlayingSessionState(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientPlayingSessionState.Builder> playingSessionState = new ClientMsgProtobuf<>(CMsgClientPlayingSessionState.class, packetMsg);
-
-        client.postCallback(new PlayingSessionStateCallback(playingSessionState.getTargetJobID(), playingSessionState.getBody()));
+    companion object {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
+            EMsg.ClientLogOnResponse -> LoggedOnCallback(packetMsg)
+            EMsg.ClientLoggedOff -> LoggedOffCallback(packetMsg)
+            EMsg.ClientSessionToken -> SessionTokenCallback(packetMsg)
+            EMsg.ClientAccountInfo -> AccountInfoCallback(packetMsg)
+            EMsg.ClientEmailAddrInfo -> EmailAddrInfoCallback(packetMsg)
+            EMsg.ClientWalletInfoUpdate -> WalletInfoCallback(packetMsg)
+            EMsg.ClientRequestWebAPIAuthenticateUserNonceResponse -> WebAPIUserNonceCallback(packetMsg)
+            EMsg.ClientVanityURLChangedNotification -> VanityURLChangedCallback(packetMsg)
+            EMsg.ClientMarketingMessageUpdate2 -> MarketingMessageCallback(packetMsg)
+            EMsg.ClientPlayingSessionState -> PlayingSessionStateCallback(packetMsg)
+            else -> null
+        }
     }
 }

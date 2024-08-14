@@ -1,69 +1,43 @@
-package in.dragonbra.javasteam.steam.handlers.steamfriends.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback
 
-import in.dragonbra.javasteam.enums.EAccountType;
-import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.enums.EUniverse;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryResponse;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.FriendMessage;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
-import in.dragonbra.javasteam.types.SteamID;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import `in`.dragonbra.javasteam.enums.EAccountType
+import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.enums.EUniverse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.FriendMessage
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.SteamID
+import java.util.*
 
 /**
  * This callback is fired in response to receiving historical messages.
  *
- * @see SteamFriends#requestOfflineMessages()
- * @see SteamFriends#requestMessageHistory(SteamID)
+ * @see SteamFriends.requestOfflineMessages
+ * @see SteamFriends.requestMessageHistory
  */
-public class FriendMsgHistoryCallback extends CallbackMsg {
-
-    private final EResult result;
-
-    private final SteamID steamID;
-
-    private final List<FriendMessage> messages;
-
-    public FriendMsgHistoryCallback(CMsgClientChatGetFriendMessageHistoryResponse.Builder msg, EUniverse universe) {
-        result = EResult.from(msg.getSuccess());
-
-        steamID = new SteamID(msg.getSteamid());
-
-        List<FriendMessage> messages = new ArrayList<>();
-        for (CMsgClientChatGetFriendMessageHistoryResponse.FriendMessage m : msg.getMessagesList()) {
-            SteamID senderID = new SteamID(m.getAccountid(), universe, EAccountType.Individual);
-            Date timestamp = new Date(m.getTimestamp() * 1000L);
-
-            messages.add(new FriendMessage(senderID, m.getUnread(), m.getMessage(), timestamp));
-        }
-
-        this.messages = Collections.unmodifiableList(messages);
-    }
+class FriendMsgHistoryCallback(
+    msg: CMsgClientChatGetFriendMessageHistoryResponse.Builder,
+    universe: EUniverse?,
+) : CallbackMsg() {
 
     /**
-     * @return the result of the request.
+     * Gets the result of the request.
      */
-    public EResult getResult() {
-        return result;
-    }
+    val result: EResult = EResult.from(msg.success)
 
     /**
-     * @return the {@link SteamID} of the user with whom these messages were exchanged.
+     * Gets the [SteamID] of the user with whom these messages were exchanged.
      */
-    public SteamID getSteamID() {
-        return steamID;
-    }
+    val steamID: SteamID = SteamID(msg.steamid)
 
     /**
-     * Offline messages are marked by having set {@link FriendMessage#isUnread()} to <b>true</b>
-     *
-     * @return the messages exchanged with the user.
+     * The messages exchanged with the user.
+     * Offline messages are marked by having set [FriendMessage.unread] to **true**
      */
-    public List<FriendMessage> getMessages() {
-        return messages;
+    val messages: List<FriendMessage> = msg.messagesList.map { m ->
+        val senderID = SteamID(m.accountid.toLong(), universe, EAccountType.Individual)
+        val timestamp = Date(m.timestamp * 1000L)
+        FriendMessage(senderID, m.unread, m.message, timestamp)
     }
 }

@@ -1,24 +1,26 @@
-package in.dragonbra.javasteam.steam.handlers.steamnotifications.callback;
+package `in`.dragonbra.javasteam.steam.handlers.steamnotifications.callback
 
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientItemAnnouncements;
-import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
-import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientItemAnnouncements
+import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications
+import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * Fired in response to calling {@link SteamNotifications#requestItemAnnouncements()}.
+ * Fired in response to calling [SteamNotifications.requestItemAnnouncements].
  */
-public class ItemAnnouncementsCallback extends CallbackMsg {
-
-    private final int count;
-
-    public ItemAnnouncementsCallback(CMsgClientItemAnnouncements.Builder msg) {
-        count = msg.getCountNewItems();
-    }
-
+class ItemAnnouncementsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * @return the number of new items
      */
-    public int getCount() {
-        return count;
+    val count: Int
+
+    init {
+        val resp = ClientMsgProtobuf<CMsgClientItemAnnouncements.Builder>(
+            CMsgClientItemAnnouncements::class.java,
+            packetMsg
+        )
+
+        count = resp.body.countNewItems
     }
 }
