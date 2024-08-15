@@ -1,0 +1,47 @@
+package `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator
+
+import com.google.protobuf.ByteString
+import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
+import `in`.dragonbra.javasteam.base.IClientGCMsg
+import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient
+import `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback.MessageCallback
+import `in`.dragonbra.javasteam.util.MsgUtil
+
+/**
+ * This handler handles all game coordinator messaging.
+ */
+class SteamGameCoordinator : ClientMsgHandler() {
+
+    /**
+     * Sends a game coordinator message for a specific appid.
+     *
+     * @param msg   The GC message to send.
+     * @param appId The app id of the game coordinator to send to.
+     */
+    fun send(msg: IClientGCMsg, appId: Int) {
+        val clientMsg = ClientMsgProtobuf<CMsgGCClient.Builder>(CMsgGCClient::class.java, EMsg.ClientToGC)
+
+        clientMsg.protoHeader.setRoutingAppid(appId)
+        clientMsg.body.setMsgtype(MsgUtil.makeGCMsg(msg.getMsgType(), msg.isProto()))
+        clientMsg.body.setAppid(appId)
+
+        clientMsg.body.setPayload(ByteString.copyFrom(msg.serialize()))
+
+        client.send(clientMsg)
+    }
+
+    /**
+     * Handles a client message. This should not be called directly.
+     *
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        if (packetMsg.msgType == EMsg.ClientToGC) {
+            val callback = MessageCallback(packetMsg)
+            client.postCallback(callback)
+        }
+    }
+}

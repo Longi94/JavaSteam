@@ -2,7 +2,6 @@ package in.dragonbra.javasteam.steam.steamclient;
 
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.steam.CMClient;
@@ -15,7 +14,6 @@ import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer
 import in.dragonbra.javasteam.steam.handlers.steamnetworking.SteamNetworking;
 import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
-import in.dragonbra.javasteam.steam.handlers.steamtrading.SteamTrading;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
@@ -28,7 +26,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.AsyncJob;
 import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
@@ -58,8 +55,6 @@ public class SteamClient extends CMClient {
 
     private final Queue<ICallbackMsg> callbackQueue = new LinkedList<>();
 
-    private final Map<EMsg, Consumer<IPacketMsg>> dispatchMap = new HashMap<>();
-
     /**
      * Initializes a new instance of the {@link SteamClient} class with the default configuration.
      */
@@ -85,7 +80,6 @@ public class SteamClient extends CMClient {
         addHandlerCore(new SteamMasterServer());
         addHandlerCore(new SteamCloud());
         addHandlerCore(new SteamWorkshop());
-        addHandlerCore(new SteamTrading());
         addHandlerCore(new SteamUnifiedMessages());
         addHandlerCore(new SteamScreenshots());
         addHandlerCore(new SteamNetworking());
@@ -93,10 +87,6 @@ public class SteamClient extends CMClient {
         addHandlerCore(new SteamUserStats());
 
         processStartTime = new Date();
-
-        dispatchMap.put(EMsg.ClientCMList, this::handleCMList);
-        dispatchMap.put(EMsg.JobHeartbeat, this::handleJobHeartbeat);
-        dispatchMap.put(EMsg.DestJobFailed, this::handleJobFailed);
 
         jobManager = new AsyncJobManager();
     }
@@ -354,10 +344,21 @@ public class SteamClient extends CMClient {
             return false;
         }
 
-        Consumer<IPacketMsg> dispatcher = dispatchMap.get(packetMsg.getMsgType());
-        if (dispatcher != null) {
-            // we want to handle some of the clientmsgs before we pass them along to registered handlers
-            dispatcher.accept(packetMsg);
+        if (packetMsg == null) {
+            throw new NullPointerException("packetMsg is null");
+        }
+
+        // we want to handle some of the clientmsgs before we pass them along to registered handlers
+        switch (packetMsg.getMsgType()) {
+            case ClientCMList:
+                handleCMList(packetMsg);
+                break;
+            case JobHeartbeat:
+                handleJobHeartbeat(packetMsg);
+                break;
+            case DestJobFailed:
+                handleJobFailed(packetMsg);
+                break;
         }
 
         for (var handler : handlers.entrySet()) {

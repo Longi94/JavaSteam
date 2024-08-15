@@ -14,6 +14,7 @@ on:
     paths-ignore:
       - '**.md'
       - 'tools/**'
+      - 'javasteam-samples/**'
 
 permissions:
   contents: read
