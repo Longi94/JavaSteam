@@ -41,7 +41,9 @@ public class SteamClient extends CMClient {
 
     private static final Logger logger = LogManager.getLogger(SteamClient.class);
 
-    private final Map<Class<? extends ClientMsgHandler>, ClientMsgHandler> handlers = new HashMap<>();
+    private static final int HANDLERS_COUNT = 13;
+
+    private final Map<Class<? extends ClientMsgHandler>, ClientMsgHandler> handlers = new HashMap<>(HANDLERS_COUNT);
 
     private final AsyncJobManager jobManager;
 
@@ -70,19 +72,19 @@ public class SteamClient extends CMClient {
 
         // add this library's handlers
         // notice: SteamFriends should be added before SteamUser due to AccountInfoCallback
-        addHandler(new SteamFriends());
-        addHandler(new SteamUser());
-        addHandler(new SteamApps());
-        addHandler(new SteamGameCoordinator());
-        addHandler(new SteamGameServer());
-        addHandler(new SteamMasterServer());
-        addHandler(new SteamCloud());
-        addHandler(new SteamWorkshop());
-        addHandler(new SteamUnifiedMessages());
-        addHandler(new SteamScreenshots());
-        addHandler(new SteamNetworking());
-        addHandler(new SteamNotifications());
-        addHandler(new SteamUserStats());
+        addHandlerCore(new SteamFriends());
+        addHandlerCore(new SteamUser());
+        addHandlerCore(new SteamApps());
+        addHandlerCore(new SteamGameCoordinator());
+        addHandlerCore(new SteamGameServer());
+        addHandlerCore(new SteamMasterServer());
+        addHandlerCore(new SteamCloud());
+        addHandlerCore(new SteamWorkshop());
+        addHandlerCore(new SteamUnifiedMessages());
+        addHandlerCore(new SteamScreenshots());
+        addHandlerCore(new SteamNetworking());
+        addHandlerCore(new SteamNotifications());
+        addHandlerCore(new SteamUserStats());
 
         processStartTime = new Date();
 
@@ -103,6 +105,10 @@ public class SteamClient extends CMClient {
             throw new IllegalArgumentException("A handler of type " + handler.getClass() + " is already registered.");
         }
 
+        addHandlerCore(handler);
+    }
+
+    private void addHandlerCore(ClientMsgHandler handler) {
         handler.setup(this);
         handlers.put(handler.getClass(), handler);
     }
@@ -355,11 +361,11 @@ public class SteamClient extends CMClient {
                 break;
         }
 
-        for (Map.Entry<Class<? extends ClientMsgHandler>, ClientMsgHandler> entry : handlers.entrySet()) {
+        for (var handler : handlers.entrySet()) {
             try {
-                entry.getValue().handleMsg(packetMsg);
+                handler.getValue().handleMsg(packetMsg);
             } catch (Exception e) {
-                logger.debug("Unhandled exception from " + entry.getKey().getName() + " handlers", e);
+                logger.debug("Unhandled exception from " + handler.getKey().getName() + " handlers", e);
                 SteamClient.this.disconnect();
                 return false;
             }
