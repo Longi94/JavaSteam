@@ -39,6 +39,7 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
     public void verifyLocalUser() throws IOException {
         var sid = steamClient.getSteamID();
         var avatarHash = "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb";
+        var personaStateSet = EnumSet.of(EPersonaStateFlag.InJoinableGame, EPersonaStateFlag.ClientTypeMobile);
 
         var friendsListMsg = getPacket(EMsg.ClientFriendsList, true);
         handler.handleMsg(friendsListMsg);
@@ -54,9 +55,7 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
         localUser.setPersonaState(EPersonaState.Online.code());
         localUser.setPlayerName("testpersonaname");
         localUser.setPersonaStateFlags(
-                EPersonaStateFlag.code(
-                        EnumSet.of(EPersonaStateFlag.InJoinableGame, EPersonaStateFlag.ClientTypeMobile)
-                )
+                EPersonaStateFlag.code(personaStateSet)
         );
 
         var personaState = new ClientMsgProtobuf<SteammessagesClientserverFriends.CMsgClientPersonaState.Builder>(
@@ -70,7 +69,8 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
         );
         personaState.getBody().addFriends(localUser.build());
 
-        handler.handleMsg(new PacketClientMsgProtobuf(EMsg.ClientPersonaState, personaState.serialize()));
+        var packet = new PacketClientMsgProtobuf(EMsg.ClientPersonaState, personaState.serialize());
+        handler.handleMsg(packet);
 
         // AccountCache
         Assertions.assertTrue(handler.isLocalUser());
@@ -78,12 +78,13 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
         // Account
         Assertions.assertEquals(sid, handler.getFriendSteamID(sid));
         Assertions.assertEquals("testpersonaname", handler.getPersonaName());
+        Assertions.assertNotNull(handler.getPersonaAvatar());
         Assertions.assertEquals(avatarHash, new String((handler.getPersonaAvatar())));
 
         // User
         Assertions.assertNull(handler.getFriendRelationship(sid));
         Assertions.assertEquals(EPersonaState.Online, handler.getFriendPersonaState(sid));
-        Assertions.assertEquals(EnumSet.of(EPersonaStateFlag.InJoinableGame, EPersonaStateFlag.ClientTypeMobile), handler.getFriendPersonaStateFlags(sid));
+        Assertions.assertEquals(personaStateSet, handler.getFriendPersonaStateFlags(sid));
         Assertions.assertEquals(440, handler.getFriendGameAppId(sid));
         Assertions.assertEquals(new GameID(440), handler.getFriendGamePlayed(sid));
         Assertions.assertEquals("Team Fortress 2", handler.getFriendGamePlayedName(sid));
@@ -91,12 +92,6 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
 
     @Test
     public void verifyCachedFriends() throws IOException {
-        var msg = new ClientMsgProtobuf<SteammessagesClientserverFriends.CMsgClientFriendsList.Builder>(
-                SteammessagesClientserverFriends.CMsgClientFriendsList.class,
-                EMsg.ClientFriendsList
-        );
-        msg.getBody().setBincremental(false);
-
         List<SteammessagesClientserverFriends.CMsgClientFriendsList.Friend> list = new ArrayList<>();
 
         for (int idx = 0; idx < 10; idx++) {
@@ -110,19 +105,58 @@ public class FriendCacheTest extends HandlerTestBase<SteamFriends> {
             list.add(friend.build());
         }
 
+        var msg = new ClientMsgProtobuf<SteammessagesClientserverFriends.CMsgClientFriendsList.Builder>(
+                SteammessagesClientserverFriends.CMsgClientFriendsList.class,
+                EMsg.ClientFriendsList
+        );
+        msg.getBody().setBincremental(false);
         msg.getBody().addAllFriends(list);
 
-        handler.handleMsg(new PacketClientMsgProtobuf(EMsg.ClientFriendsList, msg.serialize()));
+        var packet = new PacketClientMsgProtobuf(EMsg.ClientFriendsList, msg.serialize());
+        handler.handleMsg(packet);
 
         Assertions.assertEquals(10, handler.getCachedUsers().size());
-        Assertions.assertEquals(10, handler.getFriendsList().size());
+        Assertions.assertEquals(10, handler.getFriendCount());
 
         var sid2 = new SteamID(1236);
         sid2.setAccountType(EAccountType.Individual);
+
         Assertions.assertEquals(sid2, handler.getFriendSteamID(sid2));
         Assertions.assertEquals(sid2, handler.getFriendByIndex(2));
         Assertions.assertEquals(EFriendRelationship.Friend, handler.getFriendRelationship(sid2));
     }
 
-    // TODO clan testing
+    @Test
+    public void verifyCachedClans() throws IOException {
+        List<SteammessagesClientserverFriends.CMsgClientFriendsList.Friend> list = new ArrayList<>();
+
+        for (int idx = 0; idx < 10; idx++) {
+            var clanid = new SteamID(1234 + idx);
+            clanid.setAccountType(EAccountType.Clan);
+
+            var clan = SteammessagesClientserverFriends.CMsgClientFriendsList.Friend.newBuilder();
+            clan.setUlfriendid(clanid.convertToUInt64());
+
+            list.add(clan.build());
+        }
+
+        var msg = new ClientMsgProtobuf<SteammessagesClientserverFriends.CMsgClientFriendsList.Builder>(
+                SteammessagesClientserverFriends.CMsgClientFriendsList.class,
+                EMsg.ClientFriendsList
+        );
+        msg.getBody().setBincremental(false);
+        msg.getBody().addAllFriends(list);
+
+        var packet = new PacketClientMsgProtobuf(EMsg.ClientFriendsList, msg.serialize());
+        handler.handleMsg(packet);
+
+        Assertions.assertEquals(10, handler.getCachedClans().size());
+        Assertions.assertEquals(10, handler.getClanCount());
+
+        var sid2 = new SteamID(1236);
+        sid2.setAccountType(EAccountType.Clan);
+
+        Assertions.assertEquals(sid2, handler.getClanSteamID(sid2));
+        Assertions.assertEquals(sid2, handler.getClanByIndex(2));
+    }
 }

@@ -110,10 +110,18 @@ class SteamFriends : ClientMsgHandler() {
     /**
      * Gets the steam ID from the cached account.
      *
-     * @param steamID the steam ID to check the cache
+     * @param steamID the steam ID to check the cache.
      * @return The [SteamID] of the cached user.
      */
     fun getFriendSteamID(steamID: SteamID): SteamID = cache.getUser(steamID).steamID // Why not...
+
+    /**
+     * Gets the steam ID from the cached clans account.
+     *
+     * @param steamID the steam ID to check the cache.
+     * @return The [SteamID] of the cached clan.
+     */
+    fun getClanSteamID(steamID: SteamID): SteamID = cache.clans.getAccount(steamID).steamID // Why not...
 
     /**
      * Gets the local user's persona name. Will be null before user initialization.
