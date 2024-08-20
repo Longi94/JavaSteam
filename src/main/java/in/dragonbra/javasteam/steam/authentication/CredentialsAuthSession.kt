@@ -35,7 +35,7 @@ class CredentialsAuthSession(
     @Throws(AuthenticationException::class)
     fun sendSteamGuardCode(code: String?, codeType: EAuthSessionGuardType?) {
         val request = CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request.newBuilder().apply {
-            this.clientId = clientId
+            this.clientId = this@CredentialsAuthSession.clientId // Could rename this to clientID instead.
             this.steamid = steamID.convertToUInt64()
             this.code = code
             this.codeType = codeType
