@@ -30,7 +30,7 @@ class AuthenticationException : Exception {
      * @param message The message that describes the error.
      * @param result  The result code that describes the error.
      */
-    constructor(message: String, result: EResult) : super("$message with result $result") {
+    constructor(message: String, result: EResult) : super("$message with result: $result") {
         this.result = result
     }
 }

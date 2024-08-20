@@ -12,7 +12,7 @@ class AccessTokenGenerateResult(
 
     /**
      * New refresh token.
-     * This can be provided to [LogOnDetails.getAccessToken]
+     * This can be provided to [LogOnDetails.accessToken]
      */
     val refreshToken: String = response.refreshToken
 

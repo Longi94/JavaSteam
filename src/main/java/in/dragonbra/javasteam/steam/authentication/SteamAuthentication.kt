@@ -68,6 +68,7 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
      * @param allowRenewal If true, allow renewing the token.
      * @return A [AccessTokenGenerateResult] containing the new token
      */
+    @Throws(IllegalArgumentException::class, IllegalArgumentException::class)
     @JvmOverloads
     fun generateAccessTokenForApp(
         steamID: SteamID,
@@ -89,8 +90,9 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
             throw IllegalArgumentException("Failed to generate token ${message.result}")
         }
 
-        val response: CAuthentication_AccessToken_GenerateForApp_Response.Builder =
-            message.getDeserializedResponse(CAuthentication_AccessToken_GenerateForApp_Response::class.java)
+        val response = message.getDeserializedResponse<CAuthentication_AccessToken_GenerateForApp_Response.Builder>(
+            CAuthentication_AccessToken_GenerateForApp_Response::class.java
+        )
 
         return AccessTokenGenerateResult(response)
     }
@@ -124,8 +126,9 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
             throw AuthenticationException("Failed to begin QR auth session", message.result)
         }
 
-        val response: CAuthentication_BeginAuthSessionViaQR_Response.Builder =
-            message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaQR_Response::class.java)
+        val response = message.getDeserializedResponse<CAuthentication_BeginAuthSessionViaQR_Response.Builder>(
+            CAuthentication_BeginAuthSessionViaQR_Response::class.java
+        )
 
         return QrAuthSession(this, authSessionDetails.authenticator, response)
     }
@@ -200,8 +203,9 @@ class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages:
             throw AuthenticationException("Authentication failed", message.result)
         }
 
-        val response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder =
-            message.getDeserializedResponse(CAuthentication_BeginAuthSessionViaCredentials_Response::class.java)
+        val response = message.getDeserializedResponse<CAuthentication_BeginAuthSessionViaCredentials_Response.Builder>(
+            CAuthentication_BeginAuthSessionViaCredentials_Response::class.java
+        )
 
         return CredentialsAuthSession(this, authSessionDetails.authenticator, response)
     }
