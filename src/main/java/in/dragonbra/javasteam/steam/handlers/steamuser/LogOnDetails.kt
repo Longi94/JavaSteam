@@ -23,7 +23,7 @@ import `in`.dragonbra.javasteam.util.Utils
  * @param authCode Gets or sets the Steam Guard auth code used to log in. This is the code sent to the user's email.
  * @param twoFactorCode Gets or sets the 2-factor auth code used to log in. This is the code that can be received from the authenticator apps.
  * @param shouldRememberPassword Gets or sets the 'Should Remember Password' flag. This is used in combination with the [accessToken] for password-less login. Set this to true when [AuthSessionDetails.persistentSession] is set to true.
- * @param accessToken Gets or sets the access token used to log in. This a token that has been provided after a successful login using [SteamAuthentication].
+ * @param accessToken Gets or sets the Refresh token used to log in. This a token that has been provided after a successful login using [SteamAuthentication].
  * @param accountInstance Gets or sets the account instance. 1 for the PC instance or 2 for the Console (PS3) instance. See [SteamID.DESKTOP_INSTANCE] and [SteamID.CONSOLE_INSTANCE]
  * @param accountID Gets or sets the account ID used for connecting clients when using the Console instance.
  * @param requestSteam2Ticket Gets or sets a value indicating whether to request the Steam2 ticket. This is an optional request only needed for Steam2 content downloads.
@@ -42,7 +42,7 @@ data class LogOnDetails(
     var authCode: String? = null,
     var twoFactorCode: String? = null,
     var shouldRememberPassword: Boolean = false,
-    var accessToken: String? = null,
+    var accessToken: String? = null, // This is actually your refresh token.
     var accountInstance: Long = SteamID.DESKTOP_INSTANCE,
     var accountID: Long = 0L,
     var requestSteam2Ticket: Boolean = false,

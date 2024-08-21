@@ -17,5 +17,5 @@ class Friend(friend: CMsgClientFriendsList.Friend) {
     /**
      * Gets the relationship to this friend.
      */
-    val relationship: EFriendRelationship = EFriendRelationship.from(friend.efriendrelationship)
+    val relationship: EFriendRelationship = EFriendRelationship.from(friend.efriendrelationship) ?: EFriendRelationship.None
 }

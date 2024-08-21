@@ -119,6 +119,7 @@ open class AuthSession(
         }
     }
 
+    @Throws(AuthenticationException::class)
     private suspend fun handleCodeAuth(preferredConfirmation: AllowedConfirmations) {
         val credentialsAuthSession = this as? CredentialsAuthSession
             ?: throw AuthenticationException(
@@ -135,7 +136,7 @@ open class AuthSession(
         val expectedInvalidCodeResult = when (preferredConfirmation.confirmationType) {
             SessionGuardType.k_EAuthSessionGuardType_EmailCode -> EResult.InvalidLoginAuthCode
             SessionGuardType.k_EAuthSessionGuardType_DeviceCode -> EResult.TwoFactorCodeMismatch
-            else -> throw AuthenticationException()
+            else -> throw AuthenticationException("\'${preferredConfirmation.confirmationType}\' not implemented")
         }
 
         var previousCodeWasIncorrect = false
@@ -169,6 +170,7 @@ open class AuthSession(
         }
     }
 
+    @Throws(AuthenticationException::class)
     private fun pollDeviceConfirmation(): AuthPollResult {
         while (true) {
             pollAuthSessionStatus()?.let { return it }
@@ -181,6 +183,7 @@ open class AuthSession(
      * @return An object containing tokens which can be used to log in to Steam, or null if not yet authenticated.
      * @throws AuthenticationException Thrown when polling fails.
      */
+    @Throws(AuthenticationException::class)
     fun pollAuthSessionStatus(): AuthPollResult? {
         val request = AuthSessionStatusRequest.newBuilder()
         request.clientId = clientId
