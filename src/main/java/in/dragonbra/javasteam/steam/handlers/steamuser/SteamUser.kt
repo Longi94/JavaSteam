@@ -8,10 +8,10 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EUIMode
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
-import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon
+import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.EmailAddrInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback
