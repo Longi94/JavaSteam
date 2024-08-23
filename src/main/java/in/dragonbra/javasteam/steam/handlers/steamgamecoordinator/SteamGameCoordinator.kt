@@ -5,8 +5,8 @@ import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IClientGCMsg
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EMsg
-import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient
+import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator.callback.MessageCallback
 import `in`.dragonbra.javasteam.util.MsgUtil
 

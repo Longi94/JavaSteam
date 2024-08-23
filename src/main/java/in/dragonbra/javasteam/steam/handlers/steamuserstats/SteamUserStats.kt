@@ -6,10 +6,10 @@ import `in`.dragonbra.javasteam.enums.ELeaderboardDataRequest
 import `in`.dragonbra.javasteam.enums.ELeaderboardDisplayType
 import `in`.dragonbra.javasteam.enums.ELeaderboardSortMethod
 import `in`.dragonbra.javasteam.enums.EMsg
-import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayers
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLB
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntries
+import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback

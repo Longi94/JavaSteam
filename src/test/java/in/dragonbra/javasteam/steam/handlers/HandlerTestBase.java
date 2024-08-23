@@ -6,7 +6,6 @@ import in.dragonbra.javasteam.base.IClientMsg;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EUniverse;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;

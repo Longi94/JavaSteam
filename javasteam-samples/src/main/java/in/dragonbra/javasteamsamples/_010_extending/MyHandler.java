@@ -4,7 +4,7 @@ import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
+import in.dragonbra.javasteam.steam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;

@@ -19,7 +19,6 @@ import `in`.dragonbra.javasteam.generated.MsgClientChatMemberInfo
 import `in`.dragonbra.javasteam.generated.MsgClientChatMsg
 import `in`.dragonbra.javasteam.generated.MsgClientJoinChat
 import `in`.dragonbra.javasteam.generated.MsgClientSetIgnoreFriend
-import `in`.dragonbra.javasteam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientAMGetPersonaNameHistory
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientChatInvite
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistory
@@ -36,6 +35,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverF
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgClientSetPlayerNickname
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.CMsgPersonaChangeResponse
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin
+import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.AccountCache
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.Clan
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.cache.User

@@ -1,7 +1,7 @@
 package in.dragonbra.javasteam.steam.steamclient;
 
 import in.dragonbra.javasteam.base.IPacketMsg;
-import in.dragonbra.javasteam.handlers.ClientMsgHandler;
+import in.dragonbra.javasteam.steam.handlers.ClientMsgHandler;
 import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
