@@ -35,8 +35,6 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
 
     private SteamClient steamClient;
 
-    private SteamUnifiedMessages unifiedMessages;
-
     private CallbackManager manager;
 
     private SteamUser steamUser;
@@ -62,9 +60,6 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
 
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);
-
-        // get the steam unified messages handler, which is used for sending and receiving responses from the unified service api
-        unifiedMessages = steamClient.getHandler(SteamUnifiedMessages.class);
 
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
@@ -95,7 +90,7 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
     private void onConnected(ConnectedCallback callback) {
         try {
             // get the authentication handler, which used for authenticating with Steam
-            SteamAuthentication auth = new SteamAuthentication(steamClient, unifiedMessages);
+            SteamAuthentication auth = new SteamAuthentication(steamClient);
 
             QrAuthSession authSession = auth.beginAuthSessionViaQR(new AuthSessionDetails());
 
