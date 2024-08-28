@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -175,26 +176,27 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbacksTriggerActions() {
-        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        var callback = new CallbackForTest(UUID.randomUUID());
 
-        final int[] numCallbacksRun = {0};
+        var numCallbacksRun = new AtomicInteger(0);
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(callback.getUuid(), cb.getUuid());
-            numCallbacksRun[0]++;
-        };
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
+        try (var ignored = mgr.subscribe(
+                CallbackForTest.class, cb -> {
+                    assertEquals(callback.getUuid(), cb.getUuid());
+                    numCallbacksRun.incrementAndGet();
+                })
+        ) {
             for (int i = 0; i < 10; i++) {
                 client.postCallback(callback);
             }
 
-            mgr.runWaitAllCallbacks(1000L);
-            assertEquals(10, numCallbacksRun[0]);
+            mgr.runWaitAllCallbacks(1L); // We must provide `some` sort of timeout or null will always happen on 0L
+            assertEquals(10, numCallbacksRun.get());
 
-            mgr.runWaitAllCallbacks(1000L);
-            assertEquals(10, numCallbacksRun[0]);
-        } catch (IOException e) {
+            // Callbacks should have been freed.
+            mgr.runWaitAllCallbacks(0L);
+            assertEquals(10, numCallbacksRun.get());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

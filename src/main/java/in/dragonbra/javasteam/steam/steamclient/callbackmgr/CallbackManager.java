@@ -36,56 +36,67 @@ public class CallbackManager implements ICallbackMgrInternals {
     /**
      * Runs a single queued callback.
      * If no callback is queued, this method will instantly return.
+     *
+     * @return true if a callback has been run, false otherwise.
      */
-    public void runCallbacks() {
-        ICallbackMsg call = steamClient.getCallback(true);
+    public boolean runCallbacks() {
+        var call = steamClient.getCallback();
 
-        if (call != null) {
-            handle(call);
+        if (call == null) {
+            return false;
         }
+
+        handle(call);
+        return true;
     }
 
     /**
      * Blocks the current thread to run a single queued callback.
-     * If no callback is queued, the method will block for the given timeout.
+     * If no callback is queued, the method will block for the given timeout or until a callback becomes available.
      *
      * @param timeout The length of time to block.
+     * @return true if a callback has been run, false otherwise.
      */
-    public void runWaitCallbacks(long timeout) {
-        ICallbackMsg call = steamClient.waitForCallback(true, timeout);
+    public boolean runWaitCallbacks(long timeout) {
+        var call = steamClient.waitForCallback(timeout);
 
-        if (call != null) {
-            handle(call);
+        if (call == null) {
+            return false;
         }
-    }
 
-    /**
-     * Blocks the current thread to run a single queued callback.
-     * If no callback is queued, the method will block until one is posted.
-     */
-    public void runWaitCallbacks() {
-        ICallbackMsg call = steamClient.waitForCallback(true);
-
-        if (call != null) {
-            handle(call);
-        }
+        handle(call);
+        return true;
     }
 
     /**
      * Blocks the current thread to run all queued callbacks.
-     * If no callback is queued, the method will block for the given timeout.
+     * If no callback is queued, the method will block for the given timeout or until a callback becomes available.
+     * This method returns once the queue has been emptied.
      *
      * @param timeout The length of time to block.
      */
     public void runWaitAllCallbacks(long timeout) {
-        List<ICallbackMsg> calls = steamClient.getAllCallbacks(true, timeout);
-        for (ICallbackMsg call : calls) {
-            handle(call);
+        if(!runWaitCallbacks(timeout)) {
+            return;
         }
+
+        //noinspection StatementWithEmptyBody
+        while (runCallbacks());
     }
 
     /**
-     * REgisters the provided {@link Consumer} to receive callbacks of type {@link TCallback}
+     * Blocks the current thread to run a single queued callback.
+     * If no callback is queued, the method will block until one becomes available.
+     */
+    public void runWaitCallbacks() {
+        var call = steamClient.getCallback();
+        handle(call);
+    }
+
+    // runWaitCallbackAsync()
+
+    /**
+     * Registers the provided {@link Consumer} to receive callbacks of type {@link TCallback}
      *
      * @param callbackType type of the callback
      * @param jobID        The {@link JobID}  of the callbacks that should be subscribed to.
