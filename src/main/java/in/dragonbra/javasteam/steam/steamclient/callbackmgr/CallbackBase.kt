@@ -1,11 +1,11 @@
-package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
+package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
 /**
- * This is the base class for the utility {@link Callback} class.
+ * This is the base class for the utility [Callback] class.
  * This is for internal use only, and shouldn't be used directly.
  */
 abstract class CallbackBase {
-    abstract Class<?> getCallbackType();
+    abstract val callbackType: Class<*>
 
-    abstract void run(Object callback);
+    abstract fun run(callback: Any)
 }

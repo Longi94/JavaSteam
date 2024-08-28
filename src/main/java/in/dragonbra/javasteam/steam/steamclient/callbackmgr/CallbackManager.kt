@@ -1,37 +1,23 @@
-package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
+package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
-import in.dragonbra.javasteam.steam.steamclient.SteamClient;
-import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
-
-import java.io.Closeable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
+import `in`.dragonbra.javasteam.types.JobID
+import `in`.dragonbra.javasteam.util.compat.Consumer
+import java.io.Closeable
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * This class is a utility for routing callbacks to function calls.
  * In order to bind callbacks to functions, an instance of this class must be created for the
- * {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} instance that will be posting callbacks.
+ * [SteamClient] instance that will be posting callbacks.
+ *
+ * @constructor Initializes a new instance of the [CallbackManager] class.
+ *  @param steamClient The [SteamClient] instance to handle the callbacks of.
  */
-public class CallbackManager implements ICallbackMgrInternals {
+class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrInternals {
 
-    private final SteamClient steamClient;
-
-    private final Set<CallbackBase> registeredCallbacks = Collections.newSetFromMap(new ConcurrentHashMap<>());
-
-    /**
-     * Initializes a new instance of the {@link CallbackManager} class.
-     *
-     * @param steamClient The {@link SteamClient SteamClient} instance to handle the callbacks of.
-     */
-    public CallbackManager(SteamClient steamClient) {
-        if (steamClient == null) {
-            throw new IllegalArgumentException("steamclient is null");
-        }
-        this.steamClient = steamClient;
-    }
+    private val registeredCallbacks: MutableSet<CallbackBase> = Collections.newSetFromMap(ConcurrentHashMap())
 
     /**
      * Runs a single queued callback.
@@ -39,15 +25,11 @@ public class CallbackManager implements ICallbackMgrInternals {
      *
      * @return true if a callback has been run, false otherwise.
      */
-    public boolean runCallbacks() {
-        var call = steamClient.getCallback();
+    fun runCallbacks(): Boolean {
+        val call: ICallbackMsg = steamClient.getCallback() ?: return false
 
-        if (call == null) {
-            return false;
-        }
-
-        handle(call);
-        return true;
+        handle(call)
+        return true
     }
 
     /**
@@ -57,15 +39,11 @@ public class CallbackManager implements ICallbackMgrInternals {
      * @param timeout The length of time to block.
      * @return true if a callback has been run, false otherwise.
      */
-    public boolean runWaitCallbacks(long timeout) {
-        var call = steamClient.waitForCallback(timeout);
+    fun runWaitCallbacks(timeout: Long): Boolean {
+        val call: ICallbackMsg = steamClient.waitForCallback(timeout) ?: return false
 
-        if (call == null) {
-            return false;
-        }
-
-        handle(call);
-        return true;
+        handle(call)
+        return true
     }
 
     /**
@@ -75,76 +53,85 @@ public class CallbackManager implements ICallbackMgrInternals {
      *
      * @param timeout The length of time to block.
      */
-    public void runWaitAllCallbacks(long timeout) {
-        if(!runWaitCallbacks(timeout)) {
-            return;
+    fun runWaitAllCallbacks(timeout: Long) {
+        if (!runWaitCallbacks(timeout)) {
+            return
         }
 
-        //noinspection StatementWithEmptyBody
-        while (runCallbacks());
+        while (runCallbacks()) {
+            //
+        }
     }
 
     /**
      * Blocks the current thread to run a single queued callback.
      * If no callback is queued, the method will block until one becomes available.
      */
-    public void runWaitCallbacks() {
-        var call = steamClient.getCallback();
-        handle(call);
-    }
-
-    // runWaitCallbackAsync()
-
-    /**
-     * Registers the provided {@link Consumer} to receive callbacks of type {@link TCallback}
-     *
-     * @param callbackType type of the callback
-     * @param jobID        The {@link JobID}  of the callbacks that should be subscribed to.
-     * @param callbackFunc The function to invoke with the callback.
-     * @param <TCallback>  The type of callback to subscribe to.
-     * @return An {@link Closeable}. Disposing of the return value will unsubscribe the callbackFunc .
-     */
-    public <TCallback extends ICallbackMsg> Closeable subscribe(Class<? extends TCallback> callbackType, JobID jobID, Consumer<TCallback> callbackFunc) {
-        if (jobID == null) {
-            throw new IllegalArgumentException("jobID is null");
-        }
-
-        if (callbackFunc == null) {
-            throw new IllegalArgumentException("callbackFunc is null");
-        }
-
-        Callback<TCallback> callback = new Callback<>(callbackType, callbackFunc, this, jobID);
-        return new Subscription(this, callback);
+    fun runWaitCallbacks() {
+        val call = steamClient.waitForCallback()
+        handle(call)
     }
 
     /**
-     * REgisters the provided {@link Consumer} to receive callbacks of type {@link TCallback}
      *
+     */
+    suspend fun runWaitCallbackAsync() {
+        val call = steamClient.waitForCallbackAsync()
+        handle(call)
+    }
+
+    /**
+     * Registers the provided [Consumer] to receive callbacks of type [TCallback]
+     *
+     * @param TCallback  The type of callback to subscribe to.
+     *  If this is [JobID.INVALID],  all callbacks of type [TCallback]  will be received.
+     * @param callbackType The type of the callback
+     * @param jobID The [JobID]  of the callbacks that should be subscribed to.
+     * @param callbackFunc The function to invoke with the callback.
+     * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc .
+     */
+    fun <TCallback : ICallbackMsg> subscribe(
+        callbackType: Class<out TCallback>,
+        jobID: JobID,
+        callbackFunc: Consumer<TCallback>,
+    ): Closeable {
+        val callback = Callback(callbackType, callbackFunc, this, jobID)
+        return Subscription(this, callback)
+    }
+
+    /**
+     * Registers the provided [Consumer] to receive callbacks of type [TCallback]
+     *
+     * @param TCallback  The type of callback to subscribe to.
      * @param callbackType type of the callback
      * @param callbackFunc The function to invoke with the callback.
-     * @param <TCallback>  The type of callback to subscribe to.
-     * @return An {@link Closeable}. Disposing of the return value will unsubscribe the callbackFunc .
+     * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc.
      */
-    public <TCallback extends ICallbackMsg> Closeable subscribe(Class<? extends TCallback> callbackType, Consumer<TCallback> callbackFunc) {
-        return subscribe(callbackType, JobID.INVALID, callbackFunc);
+    fun <TCallback : ICallbackMsg> subscribe(
+        callbackType: Class<out TCallback>,
+        callbackFunc: Consumer<TCallback>,
+    ): Closeable = subscribe(callbackType, JobID.INVALID, callbackFunc)
+
+    override fun register(callback: CallbackBase) {
+        if (registeredCallbacks.contains(callback)) {
+            return
+        }
+
+        registeredCallbacks.add(callback)
     }
 
-    @Override
-    public void register(CallbackBase callback) {
-        registeredCallbacks.add(callback);
+    override fun unregister(callback: CallbackBase) {
+        registeredCallbacks.remove(callback)
     }
 
-    @Override
-    public void unregister(CallbackBase callback) {
-        registeredCallbacks.remove(callback);
-    }
+    private fun handle(call: ICallbackMsg) {
+        val type = call.javaClass
 
-    private void handle(ICallbackMsg call) {
-        for (CallbackBase callback : registeredCallbacks) {
-            if (callback.getCallbackType().isAssignableFrom(call.getClass())) {
-                callback.run(call);
+        // find handlers interested in this callback
+        registeredCallbacks.forEach { callback ->
+            if (callback.callbackType.isAssignableFrom(type)) {
+                callback.run(call)
             }
         }
     }
-
 }

@@ -1,27 +1,19 @@
-package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
+package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
-import java.io.Closeable;
+import java.io.Closeable
 
 /**
  * @author lngtr
  * @since 2018-02-23
  */
-public class Subscription implements Closeable {
+class Subscription(
+    private var manager: ICallbackMgrInternals?,
+    private var call: CallbackBase?,
+) : Closeable {
 
-    private ICallbackMgrInternals manager;
-    private CallbackBase call;
-
-    public Subscription(ICallbackMgrInternals manager, CallbackBase call) {
-        this.manager = manager;
-        this.call = call;
-    }
-
-    @Override
-    public void close() {
-        if (call != null && manager != null) {
-            manager.unregister(call);
-            call = null;
-            manager = null;
-        }
+    override fun close() {
+        call?.let { manager?.unregister(it) }
+        call = null
+        manager = null
     }
 }
