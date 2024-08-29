@@ -1,125 +1,103 @@
-package in.dragonbra.javasteam.steam.steamclient.configuration;
+package `in`.dragonbra.javasteam.steam.steamclient.configuration
 
-import in.dragonbra.javasteam.enums.EClientPersonaStateFlag;
-import in.dragonbra.javasteam.enums.EUniverse;
-import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
-import in.dragonbra.javasteam.steam.discovery.MemoryServerListProvider;
-import in.dragonbra.javasteam.steam.webapi.WebAPI;
-import okhttp3.OkHttpClient;
-
-import java.util.EnumSet;
+import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
+import `in`.dragonbra.javasteam.enums.EUniverse
+import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
+import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
+import `in`.dragonbra.javasteam.steam.discovery.MemoryServerListProvider
+import `in`.dragonbra.javasteam.steam.webapi.WebAPI
+import okhttp3.OkHttpClient
+import java.util.*
 
 /**
  * @author lngtr
  * @since 2018-02-20
  */
-public class SteamConfigurationBuilder implements ISteamConfigurationBuilder {
+class SteamConfigurationBuilder : ISteamConfigurationBuilder {
 
-    private final SteamConfigurationState state;
+    private val state: SteamConfigurationState = createDefaultState()
 
-    public SteamConfigurationBuilder() {
-        state = createDefaultState();
+    fun build(): SteamConfiguration = SteamConfiguration(state)
+
+    override fun withCellID(cellID: Int): ISteamConfigurationBuilder {
+        state.cellID = cellID
+        return this
     }
 
-    public static SteamConfigurationState createDefaultState() {
-        SteamConfigurationState state = new SteamConfigurationState();
-
-        state.setAllowDirectoryFetch(true);
-        state.setConnectionTimeout(5000L);
-        state.setDefaultPersonaStateFlags(EnumSet.of(EClientPersonaStateFlag.PlayerName, EClientPersonaStateFlag.Presence,
-                EClientPersonaStateFlag.SourceID, EClientPersonaStateFlag.GameExtraInfo, EClientPersonaStateFlag.LastSeen));
-        state.setProtocolTypes(ProtocolTypes.TCP);
-        state.setServerListProvider(new MemoryServerListProvider());
-        state.setUniverse(EUniverse.Public);
-        state.setWebAPIBaseAddress(WebAPI.DEFAULT_BASE_ADDRESS);
-        state.setHttpClient(new OkHttpClient());
-
-        return state;
+    override fun withConnectionTimeout(connectionTimeout: Long): ISteamConfigurationBuilder {
+        state.connectionTimeout = connectionTimeout
+        return this
     }
 
-    public SteamConfiguration build() {
-        return new SteamConfiguration(state);
+    override fun withHttpClient(httpClient: OkHttpClient): ISteamConfigurationBuilder {
+        state.httpClient = httpClient
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withCellID(int cellID) {
-        state.setCellID(cellID);
-        return this;
+    override fun withDefaultPersonaStateFlags(personaStateFlags: EnumSet<EClientPersonaStateFlag>): ISteamConfigurationBuilder {
+        state.defaultPersonaStateFlags = personaStateFlags
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withConnectionTimeout(long connectionTimeout) {
-        state.setConnectionTimeout(connectionTimeout);
-        return this;
+    override fun withDefaultPersonaStateFlags(personaStateFlags: EClientPersonaStateFlag): ISteamConfigurationBuilder {
+        state.defaultPersonaStateFlags = EnumSet.of(personaStateFlags)
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withHttpClient(OkHttpClient httpClient) {
-        state.setHttpClient(httpClient);
-        return this;
+    override fun withDirectoryFetch(allowDirectoryFetch: Boolean): ISteamConfigurationBuilder {
+        state.isAllowDirectoryFetch = allowDirectoryFetch
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withDefaultPersonaStateFlags(EnumSet<EClientPersonaStateFlag> personaStateFlags) {
-        state.setDefaultPersonaStateFlags(personaStateFlags);
-        return this;
+    override fun withProtocolTypes(protocolTypes: EnumSet<ProtocolTypes>): ISteamConfigurationBuilder {
+        state.protocolTypes = protocolTypes
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withDefaultPersonaStateFlags(EClientPersonaStateFlag personaStateFlags) {
-        state.setDefaultPersonaStateFlags(personaStateFlags);
-        return this;
+    override fun withProtocolTypes(protocolTypes: ProtocolTypes): ISteamConfigurationBuilder {
+        state.protocolTypes = EnumSet.of(protocolTypes)
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withDirectoryFetch(boolean allowDirectoryFetch) {
-        state.setAllowDirectoryFetch(allowDirectoryFetch);
-        return this;
+    override fun withServerListProvider(provider: IServerListProvider): ISteamConfigurationBuilder {
+        state.serverListProvider = provider
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withProtocolTypes(EnumSet<ProtocolTypes> protocolTypes) {
-        state.setProtocolTypes(protocolTypes);
-        return this;
+    override fun withUniverse(universe: EUniverse): ISteamConfigurationBuilder {
+        state.universe = universe
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withProtocolTypes(ProtocolTypes protocolTypes) {
-        state.setProtocolTypes(protocolTypes);
-        return this;
+    override fun withWebAPIBaseAddress(baseAddress: String): ISteamConfigurationBuilder {
+        state.webAPIBaseAddress = baseAddress
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withServerListProvider(IServerListProvider provider) {
-        if (provider == null) {
-            throw new IllegalArgumentException("provider is null");
-        }
-        state.setServerListProvider(provider);
-        return this;
+    override fun withWebAPIKey(webApiKey: String): ISteamConfigurationBuilder {
+        state.webAPIKey = webApiKey
+        return this
     }
 
-    @Override
-    public ISteamConfigurationBuilder withUniverse(EUniverse universe) {
-        state.setUniverse(universe);
-        return this;
-    }
-
-    @Override
-    public ISteamConfigurationBuilder withWebAPIBaseAddress(String baseAddress) {
-        if (baseAddress == null) {
-            throw new IllegalArgumentException("baseAddress is null");
-        }
-        state.setWebAPIBaseAddress(baseAddress);
-        return this;
-    }
-
-    @Override
-    public ISteamConfigurationBuilder withWebAPIKey(String webApiKey) {
-        if (webApiKey == null) {
-            throw new IllegalArgumentException("webApiKey is null");
-        }
-        state.setWebAPIKey(webApiKey);
-        return this;
+    companion object {
+        @JvmStatic
+        fun createDefaultState(): SteamConfigurationState = SteamConfigurationState(
+            isAllowDirectoryFetch = true,
+            connectionTimeout = 5000L,
+            defaultPersonaStateFlags = EnumSet.of(
+                EClientPersonaStateFlag.PlayerName,
+                EClientPersonaStateFlag.Presence,
+                EClientPersonaStateFlag.SourceID,
+                EClientPersonaStateFlag.GameExtraInfo,
+                EClientPersonaStateFlag.LastSeen
+            ),
+            httpClient = OkHttpClient(),
+            protocolTypes = EnumSet.of(ProtocolTypes.TCP),
+            serverListProvider = MemoryServerListProvider(),
+            universe = EUniverse.Public,
+            webAPIBaseAddress = WebAPI.DEFAULT_BASE_ADDRESS,
+            cellID = 0,
+            webAPIKey = null,
+        )
     }
 }

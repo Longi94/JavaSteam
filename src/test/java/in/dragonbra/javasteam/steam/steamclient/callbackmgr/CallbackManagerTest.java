@@ -3,16 +3,17 @@ package in.dragonbra.javasteam.steam.steamclient.callbackmgr;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.types.JobID;
-import in.dragonbra.javasteam.util.compat.Consumer;
+import in.dragonbra.javasteam.util.log.LogManager;
+import in.dragonbra.javasteam.util.log.Logger;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author lngtr
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class CallbackManagerTest extends TestBase {
 
+    Logger logger = LogManager.getLogger(CallbackManagerTest.class);
     private SteamClient client;
     private CallbackManager mgr;
 
@@ -31,158 +33,159 @@ public class CallbackManagerTest extends TestBase {
 
     @Test
     public void postedCallbackTriggersAction() {
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        CallbackForTest callback = new CallbackForTest();
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, cb -> {
+            Assertions.assertEquals(callback.uniqueID, cb.getUniqueID());
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertTrue(didCall[0]);
+        Assertions.assertTrue(didCall.get());
     }
 
     @Test
     public void postedCallbackTriggersAction_CatchAll() {
-        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest();
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackMsg> action = cb -> {
-            assertInstanceOf(CallbackForTest.class, cb);
-            CallbackForTest cft = (CallbackForTest) cb;
-            assertEquals(callback.getUuid(), cft.getUuid());
-            didCall[0] = true;
-        };
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, cb -> {
+            Assertions.assertInstanceOf(CallbackForTest.class, cb);
+            Assertions.assertEquals(callback.getUniqueID(), cb.getUniqueID());
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertTrue(didCall[0]);
+        Assertions.assertTrue(didCall.get());
     }
 
     @Test
     public void postedCallbackTriggersActionForExplicitJobIDInvalid() {
         final JobID jobID = new JobID(123456);
-        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest();
+
         callback.setJobID(jobID);
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
-        };
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, JobID.INVALID, action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, JobID.INVALID, cb -> {
+            Assertions.assertEquals(jobID, cb.getJobID());
+            Assertions.assertEquals(callback.getUniqueID(), cb.getUniqueID());
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertTrue(didCall[0]);
+        Assertions.assertTrue(didCall.get());
     }
 
     @Test
     public void postedCallbackWithJobIDTriggersActionWhenNoJobIDSpecified() {
         final JobID jobID = new JobID(123456);
-        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest();
+
         callback.setJobID(jobID);
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
-        };
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, cb -> {
+            Assertions.assertEquals(jobID, cb.getJobID());
+            Assertions.assertEquals(callback.getUniqueID(), cb.getUniqueID());
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertTrue(didCall[0]);
+        Assertions.assertTrue(didCall.get());
     }
 
     @Test
     public void postedCallbackDoesNotTriggerActionForWrongJobID() {
         JobID jobID = new JobID(123456);
-        CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        CallbackForTest callback = new CallbackForTest();
+
         callback.setJobID(jobID);
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackForTest> action = cb -> didCall[0] = true;
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), cb -> {
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertFalse(didCall[0]);
+        Assertions.assertFalse(didCall.get());
     }
 
     @Test
     public void postedCallbackWithJobIDTriggersCallbackForJobID() {
         final JobID jobID = new JobID(123456);
-        final CallbackForTest callback = new CallbackForTest(UUID.randomUUID());
+        final CallbackForTest callback = new CallbackForTest();
+
         callback.setJobID(jobID);
+        callback.setUniqueID(UUID.randomUUID());
 
-        final boolean[] didCall = {false};
+        var didCall = new AtomicBoolean(false);
 
-        Consumer<CallbackForTest> action = cb -> {
-            assertEquals(jobID, cb.getJobID());
-            assertEquals(callback.getUuid(), cb.getUuid());
-            didCall[0] = true;
-        };
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123456), action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, new JobID(123456), cb -> {
+            Assertions.assertEquals(jobID, cb.getJobID());
+            Assertions.assertEquals(callback.getUniqueID(), cb.getUniqueID());
+            didCall.set(true);
+        })) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
-        assertTrue(didCall[0]);
+        Assertions.assertTrue(didCall.get());
     }
 
     @Test
     public void subscribedFunctionDoesNotRunWhenSubscriptionIsDisposed() {
         CallbackForTest callback = new CallbackForTest();
 
-        final int[] callCount = {0};
+        var callCount = new AtomicInteger(0);
 
-        Consumer<CallbackForTest> action = cb -> callCount[0]++;
-
-        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, action)) {
+        try (Closeable ignored = mgr.subscribe(CallbackForTest.class, cb -> callCount.incrementAndGet())) {
             postAndRunCallback(callback);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
         postAndRunCallback(callback);
 
-        assertEquals(1, callCount[0]);
+        Assertions.assertEquals(1, callCount.get());
     }
 
     @Test
     public void postedCallbacksTriggerActions() {
-        var callback = new CallbackForTest(UUID.randomUUID());
+        var callback = new CallbackForTest();
+        callback.setUniqueID(UUID.randomUUID());
 
         var numCallbacksRun = new AtomicInteger(0);
 
         try (var ignored = mgr.subscribe(
                 CallbackForTest.class, cb -> {
-                    assertEquals(callback.getUuid(), cb.getUuid());
+                    Assertions.assertEquals(callback.getUniqueID(), cb.getUniqueID());
                     numCallbacksRun.incrementAndGet();
                 })
         ) {
@@ -191,13 +194,13 @@ public class CallbackManagerTest extends TestBase {
             }
 
             mgr.runWaitAllCallbacks(1L); // We must provide `some` sort of timeout or null will always happen on 0L
-            assertEquals(10, numCallbacksRun.get());
+            Assertions.assertEquals(10, numCallbacksRun.get());
 
             // Callbacks should have been freed.
             mgr.runWaitAllCallbacks(0L);
-            assertEquals(10, numCallbacksRun.get());
+            Assertions.assertEquals(10, numCallbacksRun.get());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -205,4 +208,21 @@ public class CallbackManagerTest extends TestBase {
         client.postCallback(callback);
         mgr.runCallbacks();
     }
+
+    public static class CallbackForTest extends CallbackMsg {
+
+        private UUID uniqueID;
+
+        public CallbackForTest() {
+        }
+
+        public UUID getUniqueID() {
+            return uniqueID;
+        }
+
+        public void setUniqueID(UUID uuid) {
+            this.uniqueID = uuid;
+        }
+    }
+
 }
