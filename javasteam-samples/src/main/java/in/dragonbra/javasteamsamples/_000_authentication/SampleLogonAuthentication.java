@@ -61,7 +61,14 @@ public class SampleLogonAuthentication implements Runnable {
     @Override
     public void run() {
 
-        // create our steamclient instance
+        // // If any configuration needs to be set; such as connection protocol api key, etc., you can configure it like so.
+        // var configuration = SteamConfiguration.create(config -> {
+        //    config.withProtocolTypes(ProtocolTypes.WEB_SOCKET);
+        // });
+        // // create our steamclient instance with custom configuration.
+        // steamClient = new SteamClient(configuration);
+
+        // create our steamclient instance using default configuration
         steamClient = new SteamClient();
 
         // create the callback manager which will route callbacks to function calls

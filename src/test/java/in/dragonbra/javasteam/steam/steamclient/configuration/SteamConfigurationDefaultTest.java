@@ -48,7 +48,7 @@ public class SteamConfigurationDefaultTest {
     public void defaultHttpClientFactory() {
         var client = configuration.getHttpClient();
         Assertions.assertNotNull(client);
-        Assertions.assertEquals(OkHttpClient.class, client.getClass());
+        Assertions.assertInstanceOf(OkHttpClient.class, client);
     }
 
     // @Test
@@ -57,7 +57,7 @@ public class SteamConfigurationDefaultTest {
 
     @Test
     public void serverListProviderIsNothingFancy() {
-        Assertions.assertEquals(MemoryServerListProvider.class, configuration.getServerListProvider().getClass());
+        Assertions.assertInstanceOf(MemoryServerListProvider.class, configuration.getServerListProvider());
     }
 
     @Test

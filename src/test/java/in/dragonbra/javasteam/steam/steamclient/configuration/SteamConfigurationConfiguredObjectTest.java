@@ -63,7 +63,7 @@ public class SteamConfigurationConfiguredObjectTest {
 
     @Test
     public void ServerListProviderIsConfigured() {
-        Assertions.assertEquals(CustomServerListProvider.class, configuration.getServerListProvider().getClass());
+        Assertions.assertInstanceOf(CustomServerListProvider.class, configuration.getServerListProvider());
     }
 
     @Test
