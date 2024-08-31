@@ -26,8 +26,6 @@ public class SampleWebCookie implements Runnable {
 
     private SteamClient steamClient;
 
-    private SteamUnifiedMessages unifiedMessages;
-
     private SteamAuthentication auth;
 
     private CallbackManager manager;
@@ -69,9 +67,6 @@ public class SampleWebCookie implements Runnable {
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);
 
-        // get the steam unified messages handler, which is used for sending and receiving responses from the unified service api
-        unifiedMessages = steamClient.getHandler(SteamUnifiedMessages.class);
-
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
 
@@ -108,7 +103,7 @@ public class SampleWebCookie implements Runnable {
         authSessionDetails.authenticator = new UserConsoleAuthenticator();
 
         // get the authentication handler, which used for authenticating with Steam
-        auth = new SteamAuthentication(steamClient, unifiedMessages);
+        auth = new SteamAuthentication(steamClient);
 
         try {
             CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authSessionDetails);

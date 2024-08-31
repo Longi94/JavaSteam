@@ -6,7 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.authentication.*;
-import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -31,8 +30,6 @@ public class SampleLogonAuthentication implements Runnable {
 
     private SteamClient steamClient;
 
-    private SteamUnifiedMessages unifiedMessages;
-
     private CallbackManager manager;
 
     private SteamUser steamUser;
@@ -42,6 +39,8 @@ public class SampleLogonAuthentication implements Runnable {
     private final String user;
 
     private final String pass;
+
+    private String previouslyStoredGuardData; // For the sake of this sample, we do not persist guard data
 
     public SampleLogonAuthentication(String user, String pass) {
         this.user = user;
@@ -62,14 +61,18 @@ public class SampleLogonAuthentication implements Runnable {
     @Override
     public void run() {
 
-        // create our steamclient instance
+        // // If any configuration needs to be set; such as connection protocol api key, etc., you can configure it like so.
+        // var configuration = SteamConfiguration.create(config -> {
+        //    config.withProtocolTypes(ProtocolTypes.WEB_SOCKET);
+        // });
+        // // create our steamclient instance with custom configuration.
+        // steamClient = new SteamClient(configuration);
+
+        // create our steamclient instance using default configuration
         steamClient = new SteamClient();
 
         // create the callback manager which will route callbacks to function calls
         manager = new CallbackManager(steamClient);
-
-        // get the steam unified messages handler, which is used for sending and receiving responses from the unified service api
-        unifiedMessages = steamClient.getHandler(SteamUnifiedMessages.class);
 
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
@@ -97,25 +100,45 @@ public class SampleLogonAuthentication implements Runnable {
         }
     }
 
+    @SuppressWarnings("DanglingJavadoc")
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
+
+        var shouldRememberPassword = false;
 
         AuthSessionDetails authDetails = new AuthSessionDetails();
         authDetails.username = user;
         authDetails.password = pass;
-        authDetails.persistentSession = false;
+        authDetails.persistentSession = shouldRememberPassword;
+
+        // See NewGuardData comment below.
+        authDetails.guardData = previouslyStoredGuardData;
+
+        /**
+         * {@link UserConsoleAuthenticator} is the default authenticator implementation provided by JavaSteam
+         * for ease of use which blocks the thread and asks for user input to enter the code.
+         * However, if you require special handling (e.g. you have the TOTP secret and can generate codes on the fly),
+         * you can implement your own {@link IAuthenticator}.
+         */
         authDetails.authenticator = new UserConsoleAuthenticator();
 
         try {
-            // get the authentication handler, which used for authenticating with Steam
-            SteamAuthentication auth = new SteamAuthentication(steamClient, unifiedMessages);
-
-            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authDetails);
+            // Begin authenticating via credentials.
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails);
 
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
             AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
 
+            if (pollResponse.getNewGuardData() != null) {
+                // When using certain two factor methods (such as email 2fa), guard data may be provided by Steam
+                // for use in future authentication sessions to avoid triggering 2FA again (this works similarly to the old sentry file system).
+                // Do note that this guard data is also a JWT token and has an expiration date.
+                previouslyStoredGuardData = pollResponse.getNewGuardData();
+            }
+
+            // Logon to Steam with the access token we have received
+            // Note that we are using RefreshToken for logging on here
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());
             details.setAccessToken(pollResponse.getRefreshToken());

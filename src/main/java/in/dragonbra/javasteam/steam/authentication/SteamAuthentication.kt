@@ -30,15 +30,21 @@ import kotlin.coroutines.cancellation.CancellationException
  *
  * @constructor Initializes a new instance of the [SteamAuthentication] class.
  * @param steamClient this instance will be associated with.
- * @param unifiedMessages the unified messages service.
  */
-class SteamAuthentication(private val steamClient: SteamClient, unifiedMessages: SteamUnifiedMessages) {
+class SteamAuthentication(private val steamClient: SteamClient) {
 
     companion object {
         // private val logger = LogManager.getLogger(SteamAuthentication::class.java)
     }
 
-    internal val authenticationService: Authentication = Authentication(unifiedMessages)
+    internal val authenticationService: Authentication
+
+    init {
+        val unifiedMessages = steamClient.getHandler(SteamUnifiedMessages::class.java)
+            ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
+
+        authenticationService = Authentication(unifiedMessages)
+    }
 
     /**
      * Gets public key for the provided account name which can be used to encrypt the account password.

@@ -27,5 +27,5 @@ class AuthPollResult(response: CAuthentication_PollAuthSessionStatus_Response.Bu
      * Supply it in [AuthSessionDetails.guardData] for future logins to avoid resending an email.
      * This value should be stored per account.
      */
-    val newGuardData: String = response.newGuardData
+    val newGuardData: String? = response.newGuardData
 }
