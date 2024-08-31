@@ -69,7 +69,7 @@ tasks.dokkaJavadoc {
     }
 }
 
-// Make sure Maven Publishing gets javadock
+// Make sure Maven Publishing gets javadoc
 // https://stackoverflow.com/a/71172854
 lateinit var javadocArtifact: PublishArtifact
 tasks {
@@ -127,7 +127,12 @@ dependencies {
 /* Artifact publishing */
 nexusPublishing {
     repositories {
-        sonatype()
+        sonatype {
+            val ossrhUsername: String by project
+            val ossrhPassword: String by project
+            username = ossrhUsername
+            password = ossrhPassword
+        }
     }
 }
 
@@ -145,12 +150,12 @@ publishing {
                 scm {
                     connection = "scm:git:git://github.com/Longi94/JavaSteam.git"
                     developerConnection = "scm:git:ssh://github.com:Longi94/JavaSteam.git"
-                    url = "http://github.com/Longi94/JavaSteam/tree/master"
+                    url = "http2://github.com/Longi94/JavaSteam/tree/master"
                 }
                 licenses {
                     license {
                         name = "MIT License"
-                        url = "http://www.opensource.org/licenses/mit-license.php"
+                        url = "https://www.opensource.org/licenses/mit-license.php"
                     }
                 }
                 developers {
@@ -160,19 +165,6 @@ publishing {
                         email = "lngtrn94@gmail.com"
                     }
                 }
-            }
-        }
-    }
-    repositories {
-        maven {
-            val snapshotRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-            val stagingRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotRepoUrl else stagingRepoUrl
-            credentials {
-                val ossrhUsername: String by project
-                val ossrhPassword: String by project
-                username = ossrhUsername
-                password = ossrhPassword
             }
         }
     }
