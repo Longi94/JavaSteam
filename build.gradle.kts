@@ -150,7 +150,7 @@ publishing {
                 scm {
                     connection = "scm:git:git://github.com/Longi94/JavaSteam.git"
                     developerConnection = "scm:git:ssh://github.com:Longi94/JavaSteam.git"
-                    url = "http2://github.com/Longi94/JavaSteam/tree/master"
+                    url = "https://github.com/Longi94/JavaSteam/tree/master"
                 }
                 licenses {
                     license {
