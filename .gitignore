@@ -21,11 +21,6 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-.gradle
-/build/
-/buildSrc/build/
-/javasteam-tf/build/
-
 # Ignore Gradle GUI config
 gradle-app.setting
 
@@ -67,10 +62,19 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# JavaSteam
+.gradle
+/build/
 /netlogs/
+/buildSrc/build/
+/javasteam-tf/build/
 
 # JavaSteam Samples
 cellid.txt
 loginkey.txt
 sentry.bin
 server_list.bin
+
+# Kotlin 2.0
+./.kotlin/sessions/
+*.salive
