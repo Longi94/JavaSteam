@@ -30,9 +30,7 @@ class AsyncJobMultiple<T : CallbackMsg>(
         registerJob(client)
     }
 
-    fun toDeferred(): CompletableDeferred<ResultSet> {
-        return tcs
-    }
+    fun toDeferred(): CompletableDeferred<ResultSet> = tcs
 
     override fun addResult(callback: CallbackMsg?): Boolean {
         if (callback == null) {

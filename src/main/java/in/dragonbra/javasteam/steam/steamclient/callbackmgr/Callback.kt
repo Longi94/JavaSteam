@@ -10,7 +10,8 @@ class Callback<TCall : ICallbackMsg> @JvmOverloads constructor(
     func: Consumer<TCall>?,
     private var mgr: ICallbackMgrInternals? = null,
     var jobID: JobID = JobID.INVALID,
-) : CallbackBase(), Closeable {
+) : CallbackBase(),
+    Closeable {
 
     private val onRun = func
 

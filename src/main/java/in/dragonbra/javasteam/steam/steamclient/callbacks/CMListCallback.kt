@@ -5,7 +5,6 @@ import `in`.dragonbra.javasteam.steam.discovery.ServerRecord
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.util.NetHelpers
 import java.net.InetSocketAddress
-import java.util.*
 
 /**
  * This callback is received when the client has received the CM list from Steam.
