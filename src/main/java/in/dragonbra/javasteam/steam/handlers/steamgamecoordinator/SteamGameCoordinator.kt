@@ -39,7 +39,7 @@ class SteamGameCoordinator : ClientMsgHandler() {
      * @param packetMsg The packet message that contains the data.
      */
     override fun handleMsg(packetMsg: IPacketMsg) {
-        if (packetMsg.msgType == EMsg.ClientToGC) {
+        if (packetMsg.msgType == EMsg.ClientFromGC) {
             val callback = MessageCallback(packetMsg)
             client.postCallback(callback)
         }
