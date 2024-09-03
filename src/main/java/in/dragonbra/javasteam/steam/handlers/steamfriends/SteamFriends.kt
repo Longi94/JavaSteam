@@ -533,7 +533,7 @@ class SteamFriends : ClientMsgHandler() {
      * Results are returned in [PersonaStatesCallback].
      *
      * @param steamIdList   A list of SteamIDs to request the info of.
-     * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.getDefaultPersonaStateFlags].
+     * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.defaultPersonaStateFlags].
      */
     @JvmOverloads
     fun requestFriendInfo(steamIdList: List<SteamID>, requestedInfo: Int = 0) {
@@ -557,7 +557,7 @@ class SteamFriends : ClientMsgHandler() {
      * Results are returned in [PersonaStatesCallback].
      *
      * @param steamID A SteamID to request the info of.
-     * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.getDefaultPersonaStateFlags].
+     * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.defaultPersonaStateFlags].
      */
     @JvmOverloads
     fun requestFriendInfo(steamID: SteamID, requestedInfo: Int = 0) {
@@ -786,7 +786,9 @@ class SteamFriends : ClientMsgHandler() {
     private fun handleFriendsList(packetMsg: IPacketMsg) {
         val list = ClientMsgProtobuf<CMsgClientFriendsList.Builder>(CMsgClientFriendsList::class.java, packetMsg)
 
-        cache.localUser.steamID = client.steamID
+        client.steamID?.let {
+            cache.localUser.steamID = it
+        }
 
         if (!list.body.bincremental) {
             // if we're not an incremental update, the message contains all friends, so we should clear our current list
