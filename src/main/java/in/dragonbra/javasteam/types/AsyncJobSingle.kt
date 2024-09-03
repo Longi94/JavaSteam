@@ -19,14 +19,10 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
         registerJob(client)
     }
 
-    fun toDeferred(): CompletableDeferred<T> {
-        return tcs
-    }
+    fun toDeferred(): CompletableDeferred<T> = tcs
 
     @Throws(CancellationException::class)
-    fun runBlock(): T {
-        return runBlocking { toDeferred().await() }
-    }
+    fun runBlock(): T = runBlocking { toDeferred().await() }
 
     override fun addResult(callback: CallbackMsg?): Boolean {
         requireNotNull(callback) { "callback must not be null" }

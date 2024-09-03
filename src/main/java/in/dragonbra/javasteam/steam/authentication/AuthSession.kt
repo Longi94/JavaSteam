@@ -56,9 +56,7 @@ open class AuthSession(
      * @return An [AuthPollResult] containing tokens which can be used to log in to Steam.
      */
     @Throws(AuthenticationException::class)
-    fun pollingWaitForResultCompat(): CompletableFuture<AuthPollResult> {
-        return scope.future { pollingWaitForResult() }
-    }
+    fun pollingWaitForResultCompat(): CompletableFuture<AuthPollResult> = scope.future { pollingWaitForResult() }
 
     /**
      * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
