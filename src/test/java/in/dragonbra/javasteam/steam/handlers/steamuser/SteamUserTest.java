@@ -11,6 +11,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLog
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.*;
 import in.dragonbra.javasteam.types.SteamID;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -213,5 +214,11 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
 
         assertEquals(new Date(1521763200000L), callback.getUpdateTime());
         assertEquals(7, callback.getMessages().size());
+    }
+
+    @Test
+    public void verifyChatModeValues() {
+        Assertions.assertEquals(0, ChatMode.DEFAULT.getMode());
+        Assertions.assertEquals(2, ChatMode.NEW_STEAM_CHAT.getMode());
     }
 }
