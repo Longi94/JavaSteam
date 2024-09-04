@@ -3,7 +3,7 @@ package `in`.dragonbra.javasteam.steam.authentication
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient
-import `in`.dragonbra.javasteam.rpc.service.Authentication
+import `in`.dragonbra.javasteam.rpc.interfaces.IAuthentication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,7 +22,7 @@ typealias SessionGuardType = SteammessagesAuthSteamclient.EAuthSessionGuardType
 /**
  * Represents an authentication session which can be used to finish the authentication and get access tokens.
  *
- * @param authentication Unified messages class for Authentication related messages, see [Authentication].
+ * @param authentication Unified messages class for Authentication related messages, see [IAuthentication].
  * @param authenticator Authenticator object which will be used to handle 2-factor authentication if necessary.
  * @param clientId Unique identifier of requestor, also used for routing, portion of QR code.
  * @param requestId Unique request ID to be presented by requestor at poll time.
@@ -187,7 +187,9 @@ open class AuthSession(
         request.clientId = clientId
         request.requestId = ByteString.copyFrom(requestId)
 
-        val message = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
+        val message = authentication.authenticationService.sendMessage { api ->
+            api.PollAuthSessionStatus(request.build())
+        }.runBlocking()
 
         // eResult can be Expired, FileNotFound, Fail
         if (message.result != EResult.OK) {

@@ -3,66 +3,83 @@ package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages
 import com.google.protobuf.GeneratedMessage
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.util.log.LogManager
+import java.lang.reflect.Proxy
 
 /**
  * @author Lossy
  * @since 2023-01-04
+ *
+ * This wrapper is used for expression-based RPC calls using Steam Unified Messaging.
+ *
+ * var playService = steamUnifiedMessages.createService(IPlayer.class);
+ * favoriteBadge = playService.sendMessage(api ->
+ *         api.GetFavoriteBadge(favoriteBadgeRequest.build())
+ * ).runBlocking();
  */
 @Suppress("unused")
-abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMessages) {
-
-    private val className: String
-        get() = this.javaClass.simpleName
+class UnifiedService<TService : Any>(
+    private val serviceClass: Class<TService>,
+    private val steamUnifiedMessages: SteamUnifiedMessages,
+) {
+    private companion object {
+        private val logger = LogManager.getLogger(UnifiedService::class.java)
+    }
 
     /**
      * Sends a message.
-     *
      * Results are returned in a [ServiceMethodResponse].
-     *
-     * @param message    The message to send.
-     * @param methodName The Target Job Name.
-     * @return The JobID of the message. This can be used to find the appropriate [ServiceMethodResponse].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
+     * @param TRequest The type of the protobuf object which is the request to the RPC call
+     * @param TResponse The type of the protobuf object which is the response to the RPC call.
+     * @param expr RPC call expression, e.g. x => x.SomeMethodCall(message);
+     * @return The JobID of the request. This can be used to find the appropriate [ServiceMethodResponse].
      */
-    fun sendMessage(message: GeneratedMessage, methodName: String): AsyncJobSingle<ServiceMethodResponse> {
-        val rpcEndpoint = getRpcEndpoint(className, methodName)
-
-        return sendMessageOrNotification(rpcEndpoint, message, false)!!
-    }
+    fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessage(
+        expr: (TService) -> TResponse,
+    ): AsyncJobSingle<ServiceMethodResponse> = sendMessageOrNotification(expr, false)!!
 
     /**
      * Sends a notification.
-     *
-     * @param message    The message to send.
-     * @param methodName The Target Job Name.
+     * @param TRequest The type of the protobuf object which is the request to the RPC call.
+     * @param TResponse The type of the protobuf object which is the response to the RPC call.
+     * @param expr RPC call expression, e.g. x => x.SomeMethodCall(message);
+     * @return null
      */
-    fun sendNotification(message: GeneratedMessage, methodName: String) {
-        val rpcEndpoint = getRpcEndpoint(className, methodName)
+    fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendNotification(
+        expr: (TService) -> TResponse,
+    ): AsyncJobSingle<ServiceMethodResponse>? = sendMessageOrNotification(expr, true)
 
-        sendMessageOrNotification(rpcEndpoint, message, true)
-    }
-
-    private fun sendMessageOrNotification(
-        rpcName: String,
-        message: GeneratedMessage,
+    private fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessageOrNotification(
+        expr: (TService) -> TResponse,
         isNotification: Boolean,
     ): AsyncJobSingle<ServiceMethodResponse>? {
-        if (isNotification) {
-            steamUnifiedMessages.sendNotification(rpcName, message)
-            return null
+        var methodName: String? = null
+        var methodArgs: GeneratedMessage? = null
+
+        @Suppress("UNCHECKED_CAST")
+        val proxy = Proxy.newProxyInstance(
+            serviceClass.classLoader,
+            arrayOf(serviceClass)
+        ) { _, method, args ->
+            methodName = method.name
+            methodArgs = args.firstOrNull() as GeneratedMessage
+            null
+        } as TService
+        expr(proxy)
+
+        val version = 1
+        val serviceName = serviceClass.simpleName.removePrefix("I")
+        val rpcName = "$serviceName.$methodName#$version"
+
+        requireNotNull(methodArgs) { "Unable to get arguments for message" }
+
+        logger.debug("Service Name: $rpcName / Notification: $isNotification")
+        return if (isNotification) {
+            steamUnifiedMessages.sendNotification<TRequest>(rpcName, methodArgs!!)
+            null
+        } else {
+            steamUnifiedMessages.sendMessage<TRequest>(rpcName, methodArgs!!)
         }
-
-        return steamUnifiedMessages.sendMessage(rpcName, message)
-    }
-
-    companion object {
-        // val logger = LogManager.getLogger(UnifiedService.class)
-
-        /**
-         * @param parentClassName The parent class name, ie: Player
-         * @param methodName      The calling method name, ie: GetGameBadgeLevels
-         * @return The name of the RPC endpoint as formatted ServiceName.RpcName. ie: Player.GetGameBadgeLevels#1
-         */
-        private fun getRpcEndpoint(parentClassName: String, methodName: String): String =
-            String.format("%s.%s#%s", parentClassName, methodName, 1)
     }
 }

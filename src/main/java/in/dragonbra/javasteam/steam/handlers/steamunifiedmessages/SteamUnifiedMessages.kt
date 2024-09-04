@@ -24,6 +24,13 @@ import java.lang.reflect.Method
 class SteamUnifiedMessages : ClientMsgHandler() {
 
     /**
+     * Creates a service for Unified RPC methods.
+     * See [in.dragonbra.javasteam.rpc.interfaces] for available interfaces.
+     */
+    fun <TService : Any> createService(serviceClass: Class<TService>): UnifiedService<TService> =
+        UnifiedService(serviceClass, this)
+
+    /**
      * Handles a client message. This should not be called directly.
      *
      * @param packetMsg The packet message that contains the data.

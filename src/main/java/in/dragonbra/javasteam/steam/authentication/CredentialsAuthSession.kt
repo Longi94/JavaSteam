@@ -41,9 +41,9 @@ class CredentialsAuthSession(
             this.codeType = codeType
         }
 
-        val message = authentication.authenticationService
-            .updateAuthSessionWithSteamGuardCode(request.build())
-            .runBlock()
+        val message = authentication.authenticationService.sendMessage { api ->
+            api.UpdateAuthSessionWithSteamGuardCode(request.build())
+        }.runBlocking()
 
         @Suppress("UNUSED_VARIABLE")
         val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
