@@ -13,5 +13,5 @@ enum class ChatMode(val mode: Int) {
     /**
      * The chat mode for new Steam group chat.
      */
-    NEW_STEAM_CHAT(1),
+    NEW_STEAM_CHAT(2),
 }
