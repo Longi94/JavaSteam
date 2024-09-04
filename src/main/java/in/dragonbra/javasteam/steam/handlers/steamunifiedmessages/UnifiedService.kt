@@ -32,7 +32,7 @@ class UnifiedService<TService : Any>(
      * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      * @param TRequest The type of the protobuf object which is the request to the RPC call
      * @param TResponse The type of the protobuf object which is the response to the RPC call.
-     * @param expr RPC call expression, e.g. x => x.SomeMethodCall(message);
+     * @param expr RPC call expression, e.g. x -> x.SomeMethodCall(message);
      * @return The JobID of the request. This can be used to find the appropriate [ServiceMethodResponse].
      */
     fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessage(
@@ -43,7 +43,7 @@ class UnifiedService<TService : Any>(
      * Sends a notification.
      * @param TRequest The type of the protobuf object which is the request to the RPC call.
      * @param TResponse The type of the protobuf object which is the response to the RPC call.
-     * @param expr RPC call expression, e.g. x => x.SomeMethodCall(message);
+     * @param expr RPC call expression, e.g. x -> x.SomeMethodCall(message);
      * @return null
      */
     fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendNotification(
