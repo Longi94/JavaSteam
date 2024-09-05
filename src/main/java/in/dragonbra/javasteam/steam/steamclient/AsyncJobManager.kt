@@ -36,7 +36,7 @@ class AsyncJobManager {
      * @param jobID    the job.
      * @param callback the callback.
      */
-    fun tryCompleteJob(jobID: JobID, callback: CallbackMsg?) {
+    fun tryCompleteJob(jobID: JobID, callback: CallbackMsg) {
         // if not a job we are tracking ourselves, can ignore it
         val asyncJob = getJob(jobID) ?: return
 

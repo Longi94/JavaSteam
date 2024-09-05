@@ -92,7 +92,7 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
                 EClientPersonaStateFlag.LastSeen
             ),
             httpClient = OkHttpClient(),
-            protocolTypes = EnumSet.of(ProtocolTypes.TCP),
+            protocolTypes = EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.WEB_SOCKET),
             serverListProvider = MemoryServerListProvider(),
             universe = EUniverse.Public,
             webAPIBaseAddress = WebAPI.DEFAULT_BASE_ADDRESS,

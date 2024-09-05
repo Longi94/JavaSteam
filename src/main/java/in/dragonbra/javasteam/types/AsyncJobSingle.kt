@@ -24,9 +24,7 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
     @Throws(CancellationException::class)
     fun runBlock(): T = runBlocking { toDeferred().await() }
 
-    override fun addResult(callback: CallbackMsg?): Boolean {
-        requireNotNull(callback) { "callback must not be null" }
-
+    override fun addResult(callback: CallbackMsg): Boolean {
         // we're complete with just this callback
         @Suppress("UNCHECKED_CAST")
         tcs.complete(callback as T)

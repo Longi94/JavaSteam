@@ -27,10 +27,10 @@ public class SteamDirectoryTest extends TestBase {
     public void load() {
         try (MockWebServer server = new MockWebServer()) {
 
-            URL vdf = WebAPITest.class.getClassLoader().getResource("testresponses/GetCMList.vdf");
+            URL vdf = WebAPITest.class.getClassLoader().getResource("testresponses/GetCMListForConnect.vdf");
 
             if (vdf == null) {
-                fail("finding 'testresponses/GetCMList.vdf' was null");
+                fail("finding 'testresponses/GetCMListForConnect.vdf' was null");
             }
 
             String resource = IOUtils.toString(vdf, StandardCharsets.UTF_8);
@@ -46,10 +46,10 @@ public class SteamDirectoryTest extends TestBase {
 
             List<ServerRecord> servers = SteamDirectory.load(config);
 
-            assertEquals(200, servers.size());
+            assertEquals(80, servers.size());
 
             RecordedRequest request = server.takeRequest();
-            assertEquals("/ISteamDirectory/GetCMList/v1?format=vdf&cellid=0", request.getPath());
+            assertEquals("/ISteamDirectory/GetCMListForConnect/v1?format=vdf&cellid=0", request.getPath());
             assertEquals("GET", request.getMethod());
 
             server.shutdown();

@@ -67,7 +67,7 @@ public class SteamConfigurationDefaultTest {
 
     @Test
     public void defaultProtocols() {
-        Assertions.assertEquals(EnumSet.of(ProtocolTypes.TCP), configuration.getProtocolTypes());
+        Assertions.assertEquals(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.WEB_SOCKET), configuration.getProtocolTypes());
     }
 
     @Test
