@@ -13,12 +13,12 @@ import `in`.dragonbra.javasteam.types.SteamID
 class CredentialsAuthSession(
     authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
-    response: CAuthentication_BeginAuthSessionViaCredentials_Response.Builder,
+    response: CAuthentication_BeginAuthSessionViaCredentials_Response,
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,
-    clientId = response.clientId,
-    requestId = response.requestId.toByteArray(),
+    clientID = response.clientId,
+    requestID = response.requestId.toByteArray(),
     allowedConfirmations = response.allowedConfirmationsList,
     pollingInterval = response.interval
 ) {
@@ -33,9 +33,9 @@ class CredentialsAuthSession(
      * @throws AuthenticationException .
      */
     @Throws(AuthenticationException::class)
-    fun sendSteamGuardCode(code: String?, codeType: EAuthSessionGuardType?) {
+    fun sendSteamGuardCode(code: String, codeType: EAuthSessionGuardType) {
         val request = CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request.newBuilder().apply {
-            this.clientId = this@CredentialsAuthSession.clientId // Could rename this to clientID instead.
+            this.clientId = clientID
             this.steamid = steamID.convertToUInt64()
             this.code = code
             this.codeType = codeType

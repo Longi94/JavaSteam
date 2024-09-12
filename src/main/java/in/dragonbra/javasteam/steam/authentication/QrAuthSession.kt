@@ -13,8 +13,8 @@ class QrAuthSession(
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,
-    clientId = response.clientId,
-    requestId = response.requestId.toByteArray(),
+    clientID = response.clientId,
+    requestID = response.requestId.toByteArray(),
     allowedConfirmations = response.allowedConfirmationsList,
     pollingInterval = response.interval
 ) {
@@ -30,7 +30,7 @@ class QrAuthSession(
      */
     var challengeUrlChanged: IChallengeUrlChanged? = null
 
-    override fun handlePollAuthSessionStatusResponse(response: CAuthentication_PollAuthSessionStatus_Response.Builder) {
+    override fun handlePollAuthSessionStatusResponse(response: CAuthentication_PollAuthSessionStatus_Response) {
         super.handlePollAuthSessionStatusResponse(response)
 
         if (response.newChallengeUrl.isNotEmpty()) {

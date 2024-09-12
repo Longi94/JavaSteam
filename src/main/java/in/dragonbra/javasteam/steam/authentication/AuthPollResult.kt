@@ -5,7 +5,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 /**
  * Represents authentication poll result.
  */
-class AuthPollResult(response: CAuthentication_PollAuthSessionStatus_Response.Builder) {
+class AuthPollResult(response: CAuthentication_PollAuthSessionStatus_Response) {
 
     /**
      * Account name of authenticating account.

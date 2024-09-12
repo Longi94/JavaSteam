@@ -69,6 +69,8 @@ class ServiceMethodResponse(packetMsg: PacketClientMsgProtobuf) : CallbackMsg() 
      * @param T Protobuf type of the response message.
      * @return The response to the message sent through [SteamUnifiedMessages].
      */
-    fun <T : GeneratedMessage.Builder<T>> getDeserializedResponse(clazz: Class<out AbstractMessage>): T =
-        ClientMsgProtobuf<T>(clazz, packetMsg).body
+    fun <T : GeneratedMessage.Builder<T>> getDeserializedResponse(clazz: Class<out AbstractMessage>): T {
+        val msg = ClientMsgProtobuf<T>(clazz, packetMsg)
+        return msg.body
+    }
 }

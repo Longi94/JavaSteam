@@ -32,7 +32,11 @@ import kotlin.coroutines.cancellation.CancellationException
  * @constructor Initializes a new instance of the [SteamAuthentication] class.
  * @param steamClient this instance will be associated with.
  */
-class SteamAuthentication(private val steamClient: SteamClient) {
+class SteamAuthentication
+@Throws(NullPointerException::class)
+constructor(
+    private val steamClient: SteamClient,
+) {
 
     companion object {
         // private val logger = LogManager.getLogger(SteamAuthentication::class.java)
@@ -54,7 +58,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @throws AuthenticationException if getting the public key failed.
      */
     @Throws(AuthenticationException::class)
-    private fun getPasswordRSAPublicKey(accountName: String?): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
+    private fun getPasswordRSAPublicKey(accountName: String?): CAuthentication_GetPasswordRSAPublicKey_Response {
         val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder().apply {
             this.accountName = accountName
         }
@@ -67,7 +71,9 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             throw AuthenticationException("Failed to get password public key", message.result)
         }
 
-        return message.getDeserializedResponse(CAuthentication_GetPasswordRSAPublicKey_Response::class.java)
+        return message.getDeserializedResponse<CAuthentication_GetPasswordRSAPublicKey_Response.Builder>(
+            CAuthentication_GetPasswordRSAPublicKey_Response::class.java
+        ).build()
     }
 
     /**
@@ -77,7 +83,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @param allowRenewal If true, allow renewing the token.
      * @return A [AccessTokenGenerateResult] containing the new token
      */
-    @Throws(IllegalArgumentException::class, IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class)
     @JvmOverloads
     fun generateAccessTokenForApp(
         steamID: SteamID,
@@ -103,7 +109,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
 
         val response = message.getDeserializedResponse<CAuthentication_AccessToken_GenerateForApp_Response.Builder>(
             CAuthentication_AccessToken_GenerateForApp_Response::class.java
-        )
+        ).build()
 
         return AccessTokenGenerateResult(response)
     }
@@ -220,7 +226,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
 
         val response = message.getDeserializedResponse<CAuthentication_BeginAuthSessionViaCredentials_Response.Builder>(
             CAuthentication_BeginAuthSessionViaCredentials_Response::class.java
-        )
+        ).build()
 
         return CredentialsAuthSession(this, authSessionDetails.authenticator, response)
     }
