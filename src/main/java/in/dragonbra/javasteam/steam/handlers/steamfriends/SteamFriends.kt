@@ -423,9 +423,9 @@ class SteamFriends : ClientMsgHandler() {
             body.type = EChatInfoType.StateChange
 
             try {
-                write(client.steamID.convertToUInt64()) // ChatterActedOn
-                write(EChatMemberStateChange.Left.code()) // StateChange
-                write(client.steamID.convertToUInt64()) // ChatterActedBy
+                writeLong(client.steamID.convertToUInt64()) // ChatterActedOn
+                writeInt(EChatMemberStateChange.Left.code()) // StateChange
+                writeLong(client.steamID.convertToUInt64()) // ChatterActedBy
             } catch (e: IOException) {
                 logger.debug(e)
             }
