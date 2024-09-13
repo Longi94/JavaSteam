@@ -50,39 +50,67 @@ public abstract class AbstractMsgBase {
         return payload.seek(offset, seekOrigin);
     }
 
-    public void write(byte data) throws IOException {
+    public void writeByte(byte data) throws IOException {
         writer.write(data);
     }
 
-    public void write(short data) throws IOException {
+    public byte readByte() throws IOException {
+        return reader.readByte();
+    }
+
+    public void writeBytes(byte[] data) throws IOException {
+        writer.write(data);
+    }
+
+    public byte[] readBytes(int numBytes) throws IOException {
+        return reader.readBytes(numBytes);
+    }
+
+    public void writeShort(short data) throws IOException {
         writer.writeShort(data);
     }
 
-    public void write(int data) throws IOException {
+    public short readShort() throws IOException {
+        return reader.readShort();
+    }
+
+    public void writeInt(int data) throws IOException {
         writer.writeInt(data);
     }
 
-    public void write(long data) throws IOException {
+    public int readInt() throws IOException {
+        return reader.readInt();
+    }
+
+    public void writeLong(long data) throws IOException {
         writer.writeLong(data);
     }
 
-    public void write(byte[] data) throws IOException {
-        writer.write(data);
+    public long readLong() throws IOException {
+        return reader.readLong();
     }
 
-    public void write(float data) throws IOException {
+    public void writeFloat(float data) throws IOException {
         writer.writeFloat(data);
     }
 
-    public void write(double data) throws IOException {
+    public float readFloat() throws IOException {
+        return reader.readFloat();
+    }
+
+    public void writeDouble(double data) throws IOException {
         writer.writeDouble(data);
     }
 
-    public void write(String data) throws IOException {
-        write(data, Charset.defaultCharset());
+    public double readDouble() throws IOException {
+        return reader.readDouble();
     }
 
-    public void write(String data, Charset charset) throws IOException {
+    public void writeString(String data) throws IOException {
+        writeString(data, Charset.defaultCharset());
+    }
+
+    public void writeString(String data, Charset charset) throws IOException {
         if (data == null) {
             return;
         }
@@ -91,7 +119,7 @@ public abstract class AbstractMsgBase {
             throw new IllegalArgumentException("charset is null");
         }
 
-        write(data.getBytes(charset));
+        writeBytes(data.getBytes(charset));
     }
 
     public void writeNullTermString(String data) throws IOException {
@@ -99,36 +127,8 @@ public abstract class AbstractMsgBase {
     }
 
     public void writeNullTermString(String data, Charset charset) throws IOException {
-        write(data, charset);
-        write("\0", charset);
-    }
-
-    public byte readByte() throws IOException {
-        return reader.readByte();
-    }
-
-    public byte[] readBytes(int numBytes) throws IOException {
-        return reader.readBytes(numBytes);
-    }
-
-    public short readShort() throws IOException {
-        return reader.readShort();
-    }
-
-    public int readInt() throws IOException {
-        return reader.readInt();
-    }
-
-    public long readLong() throws IOException {
-        return reader.readLong();
-    }
-
-    public float readFloat() throws IOException {
-        return reader.readFloat();
-    }
-
-    public double readDouble() throws IOException {
-        return reader.readDouble();
+        writeString(data, charset);
+        writeString("\0", charset);
     }
 
     public String readNullTermString() throws IOException {

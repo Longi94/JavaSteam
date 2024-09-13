@@ -142,9 +142,9 @@ public class EnvelopeEncryptedConnection extends Connection {
         byte[] keyCrc = CryptoHelper.crcHash(encryptedHandshakeBlob);
 
         try {
-            response.write(encryptedHandshakeBlob);
-            response.write(keyCrc);
-            response.write(0);
+            response.writeBytes(encryptedHandshakeBlob);
+            response.writeBytes(keyCrc);
+            response.writeInt(0);
         } catch (IOException e) {
             logger.debug(e);
         }
