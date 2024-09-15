@@ -168,7 +168,6 @@ public class KVTextReader extends PushbackInputStream {
             // "
             read();
 
-            // convert the output stream as an utf-8 supported string.
             return sb.toString();
         }
 
