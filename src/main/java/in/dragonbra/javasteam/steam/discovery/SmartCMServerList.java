@@ -144,6 +144,7 @@ public class SmartCMServerList {
         }
 
         for (ServerInfo serverInfo : serverInfos) {
+            logger.debug("Marking " + serverInfo.getRecord().getEndpoint() + " - " + serverInfo.getProtocol() + " as " + quality);
             markServerCore(serverInfo, quality);
         }
 
