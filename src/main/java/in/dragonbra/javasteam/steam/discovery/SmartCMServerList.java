@@ -8,7 +8,10 @@ import in.dragonbra.javasteam.util.log.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Smart list of CM servers.
@@ -22,7 +25,7 @@ public class SmartCMServerList {
 
     private final List<ServerInfo> servers = Collections.synchronizedList(new ArrayList<>());
 
-    private Long badConnectionMemoryTimeSpan;
+    private Duration badConnectionMemoryTimeSpan;
 
     public SmartCMServerList(SteamConfiguration configuration) {
         if (configuration == null) {
@@ -30,9 +33,11 @@ public class SmartCMServerList {
         }
 
         this.configuration = configuration;
+        this.badConnectionMemoryTimeSpan = Duration.ofMinutes(5);
     }
 
     private void startFetchingServers() throws IOException {
+        // if the server list has been populated, no need to perform any additional work
         if (!servers.isEmpty()) {
             return;
         }
@@ -69,11 +74,7 @@ public class SmartCMServerList {
      * Resets the scores of all servers which has a last bad connection more than {@link SmartCMServerList#badConnectionMemoryTimeSpan} ago.
      */
     public void resetOldScores() {
-        if (badConnectionMemoryTimeSpan == null) {
-            return;
-        }
-
-        final long cutoff = System.currentTimeMillis() - badConnectionMemoryTimeSpan;
+        final long cutoff = System.currentTimeMillis() - badConnectionMemoryTimeSpan.toMillis();
 
         for (ServerInfo serverInfo : servers) {
             if (serverInfo.getLastBadConnection() != null && serverInfo.getLastBadConnection().getTime() < cutoff) {
@@ -92,18 +93,21 @@ public class SmartCMServerList {
             throw new IllegalArgumentException("endPoints is null");
         }
 
+        var distinctEndPoints = endPoints.stream().distinct().collect(Collectors.toCollection(ArrayList::new));
+
         servers.clear();
 
-        for (ServerRecord endPoint : endPoints) {
-            addCore(endPoint);
+        for (ServerRecord distinctEndPoint : distinctEndPoints) {
+            addCore(distinctEndPoint);
         }
 
         configuration.getServerListProvider().updateServerList(endPoints);
     }
 
     private void addCore(ServerRecord endPoint) {
-        for (ProtocolTypes protocol : endPoint.getProtocolTypes()) {
-            servers.add(new ServerInfo(endPoint, protocol));
+        for (ProtocolTypes protocolType : endPoint.getProtocolTypes()) {
+            var info = new ServerInfo(endPoint, protocolType);
+            servers.add(info);
         }
     }
 
@@ -121,19 +125,29 @@ public class SmartCMServerList {
     }
 
     public boolean tryMark(InetSocketAddress endPoint, EnumSet<ProtocolTypes> protocolTypes, ServerQuality quality) {
-        List<ServerInfo> serverInfos = new ArrayList<>();
-        for (ServerInfo x : servers) {
-            if (x.getRecord().getEndpoint().equals(endPoint) && protocolTypes.contains(x.getProtocol())) {
-                serverInfos.add(x);
-            }
+        var serverInfos = new ArrayList<ServerInfo>();
+
+        if (quality == ServerQuality.GOOD) {
+            serverInfos = servers.stream()
+                    .filter(x -> x.getRecord().getEndpoint().equals(endPoint) && protocolTypes.contains(x.getProtocol()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        } else {
+            // If we're marking this server for any failure, mark all endpoints for the host at the same time
+            var host = endPoint.getHostString();
+            serverInfos = servers.stream()
+                    .filter(x -> x.getRecord().getHost().equals(host))
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        if (serverInfos.isEmpty()) {
+            return false;
         }
 
         for (ServerInfo serverInfo : serverInfos) {
-            logger.debug("Marking " + serverInfo.getRecord().getEndpoint() + " - " + serverInfo.getProtocol() + " as " + quality);
             markServerCore(serverInfo, quality);
         }
 
-        return !serverInfos.isEmpty();
+        return true;
     }
 
     private void markServerCore(ServerInfo serverInfo, ServerQuality quality) {
@@ -156,37 +170,24 @@ public class SmartCMServerList {
     private ServerRecord getNextServerCandidateInternal(EnumSet<ProtocolTypes> supportedProtocolTypes) {
         resetOldScores();
 
-        List<ServerInfo> serverInfos = new ArrayList<>();
-        for (ServerInfo serverInfo : servers) {
-            if (supportedProtocolTypes.contains(serverInfo.getProtocol())) {
-                serverInfos.add(serverInfo);
-            }
-        }
+        var index = new AtomicInteger(0);
 
-        //noinspection ComparatorMethodParameterNotUsed
-        serverInfos.sort((o1, o2) -> {
-            if (o1.getLastBadConnection() == null && o2.getLastBadConnection() == null) {
-                return 1;
-            }
+        var result = servers.stream()
+                .filter(server -> supportedProtocolTypes.contains(server.getProtocol()))
+                .map(server -> new AbstractMap.SimpleEntry<>(server, index.getAndIncrement()))
+                .sorted(Comparator
+                        .comparing((AbstractMap.SimpleEntry<ServerInfo, Integer> entry) ->
+                                Optional.ofNullable(entry.getKey().getLastBadConnection()).orElse(new Date(0)))
+                        .thenComparing(AbstractMap.SimpleEntry::getValue))
+                .map(AbstractMap.SimpleEntry::getKey)
+                .findFirst();
 
-            if (o1.getLastBadConnection() == null) {
-                return -1;
-            }
-
-            if (o2.getLastBadConnection() == null) {
-                return 1;
-            }
-
-            return o1.getLastBadConnection().before(o2.getLastBadConnection()) ? -1 : 1;
-        });
-
-        if (serverInfos.isEmpty()) {
+        if (result.isEmpty()) {
             return null;
         }
 
-        ServerInfo result = serverInfos.get(0);
-
-        return new ServerRecord(result.getRecord().getEndpoint(), result.getProtocol());
+        var server = result.get();
+        return new ServerRecord(server.getRecord().getEndpoint(), server.getProtocol());
     }
 
     /**
@@ -221,29 +222,24 @@ public class SmartCMServerList {
      * @return An {@link List} array contains the {@link ServerRecord ServerRecords} of the servers in the list
      */
     public List<ServerRecord> getAllEndPoints() {
+        var endPoints = new ArrayList<ServerRecord>();
+
         try {
             startFetchingServers();
         } catch (IOException e) {
             return new ArrayList<>();
         }
 
-        List<ServerRecord> serverRecords = new ArrayList<>();
+        endPoints = servers.stream().map(ServerInfo::getRecord).distinct().collect(Collectors.toCollection(ArrayList::new));
 
-        for (ServerInfo server : servers) {
-            ServerRecord record = server.getRecord();
-            if (!serverRecords.contains(record)) {
-                serverRecords.add(record);
-            }
-        }
-
-        return serverRecords;
+        return endPoints;
     }
 
     public long getBadConnectionMemoryTimeSpan() {
-        return badConnectionMemoryTimeSpan;
+        return badConnectionMemoryTimeSpan.toMillis();
     }
 
     public void setBadConnectionMemoryTimeSpan(long badConnectionMemoryTimeSpan) {
-        this.badConnectionMemoryTimeSpan = badConnectionMemoryTimeSpan;
+        this.badConnectionMemoryTimeSpan = Duration.ofMillis(badConnectionMemoryTimeSpan);
     }
 }
