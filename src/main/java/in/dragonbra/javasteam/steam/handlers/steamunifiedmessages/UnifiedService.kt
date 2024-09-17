@@ -3,6 +3,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages
 import com.google.protobuf.GeneratedMessage
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.util.compat.FunctionCompat1
 import `in`.dragonbra.javasteam.util.log.LogManager
 import java.lang.reflect.Proxy
 
@@ -26,6 +27,32 @@ class UnifiedService<TService : Any>(
         private val logger = LogManager.getLogger(UnifiedService::class.java)
     }
 
+    // Maybe not needed...
+    /**
+     * Java Compat: Sends a message.
+     * Results are returned in a [ServiceMethodResponse].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
+     * @param TRequest The type of the protobuf object which is the request to the RPC call
+     * @param TResponse The type of the protobuf object which is the response to the RPC call.
+     * @param expr RPC call expression, e.g. x -> x.SomeMethodCall(message);
+     * @return The JobID of the request. This can be used to find the appropriate [ServiceMethodResponse].
+     */
+    fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessageCompat(
+        expr: FunctionCompat1<TService, TResponse>,
+    ): AsyncJobSingle<ServiceMethodResponse> = sendMessageOrNotification(expr, false)!!
+
+    // Maybe not needed...
+    /**
+     * Java Compat: Sends a notification.
+     * @param TRequest The type of the protobuf object which is the request to the RPC call.1
+     * @param TResponse The type of the protobuf object which is the response to the RPC call.
+     * @param expr RPC call expression, e.g. x -> x.SomeMethodCall(message);
+     * @return null
+     */
+    fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendNotificationCompat(
+        expr: FunctionCompat1<TService, TResponse>,
+    ): AsyncJobSingle<ServiceMethodResponse>? = sendMessageOrNotification(expr, true)
+
     /**
      * Sends a message.
      * Results are returned in a [ServiceMethodResponse].
@@ -37,7 +64,12 @@ class UnifiedService<TService : Any>(
      */
     fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessage(
         expr: (TService) -> TResponse,
-    ): AsyncJobSingle<ServiceMethodResponse> = sendMessageOrNotification(expr, false)!!
+    ): AsyncJobSingle<ServiceMethodResponse> {
+        val compatExpr = object : FunctionCompat1<TService, TResponse> {
+            override fun invoke(p1: TService): TResponse = expr(p1)
+        }
+        return sendMessageOrNotification(compatExpr, false)!!
+    }
 
     /**
      * Sends a notification.
@@ -48,10 +80,15 @@ class UnifiedService<TService : Any>(
      */
     fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendNotification(
         expr: (TService) -> TResponse,
-    ): AsyncJobSingle<ServiceMethodResponse>? = sendMessageOrNotification(expr, true)
+    ): AsyncJobSingle<ServiceMethodResponse>? {
+        val compatExpr = object : FunctionCompat1<TService, TResponse> {
+            override fun invoke(p1: TService): TResponse = expr(p1)
+        }
+        return sendMessageOrNotification(compatExpr, true)
+    }
 
     private fun <TRequest : GeneratedMessage.Builder<TRequest>, TResponse : GeneratedMessage> sendMessageOrNotification(
-        expr: (TService) -> TResponse,
+        expr: FunctionCompat1<TService, TResponse>,
         isNotification: Boolean,
     ): AsyncJobSingle<ServiceMethodResponse>? {
         var methodName: String? = null
