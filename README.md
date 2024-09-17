@@ -50,6 +50,13 @@ Maven
 
 [Non-Android | Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
 
+**4. (Optional) Working with protobufs.**
+
+If you plan on working with protobuf builders directly to perform actions a handler doesn't support, you will need to add the protobuf-java dependency.
+
+Note: To eliminate any errors or warnings, you should try and match the same version JavaSteam uses.<br>You can find the latest version being used [here](https://github.com/Longi94/JavaSteam/blob/master/gradle/libs.versions.toml).
+
+[Protobuf Java](https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java)
 
 ## Getting Started
 
