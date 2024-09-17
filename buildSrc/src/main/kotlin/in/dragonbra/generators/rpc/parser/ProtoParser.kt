@@ -1,7 +1,6 @@
 package `in`.dragonbra.generators.rpc.parser
 
 import com.squareup.kotlinpoet.*
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import `in`.dragonbra.generators.rpc.RpcGenTask
 import java.io.File
 import java.util.*
@@ -10,7 +9,6 @@ class ProtoParser(private val outputDir: File) {
 
     private companion object {
         private const val RPC_PACKAGE = "in.dragonbra.javasteam.rpc"
-        private const val SERVICE_PACKAGE = "${RPC_PACKAGE}.service"
         private const val INTERFACE_PACKAGE = "$RPC_PACKAGE.interfaces"
 
         private val suppressAnnotation = AnnotationSpec
@@ -21,20 +19,10 @@ class ProtoParser(private val outputDir: File) {
             .addMember("%S", "FunctionName") // Service messages might be case-sensitive, preserve it.
             .build()
 
-        private val classAsyncJobSingle = ClassName(
-            "in.dragonbra.javasteam.types",
-            "AsyncJobSingle"
-        )
-        private val classServiceMethodResponse = ClassName(
-            "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
-            "ServiceMethodResponse"
-        )
-
-        private val kDocNoResponse = """|No return value.""".trimMargin()
         private fun kDocReturns(requestClassName: ClassName, returnClassName: ClassName): String = """
                 |@param request The request.
                 |@see [${requestClassName.simpleName}]
-                |@returns [${returnClassName.canonicalName}]
+                |@returns [${returnClassName.simpleName}]
                 """.trimMargin()
     }
 
@@ -42,7 +30,7 @@ class ProtoParser(private val outputDir: File) {
      * Open a .proto file and find all service interfaces.
      * Then grab the name of the RPC interface name and everything between the curly braces
      * Then loop through all RPC interface methods, destructuring them to name, type, and response and put them in a list.
-     * Collect the items into a [Service] and pass it off to [buildInterface] and [buildClass]
+     * Collect the items into a [Service] and pass it off to [buildInterface]
      */
     fun parseFile(file: File) {
         Regex("""service\s+(\w+)\s*\{([^}]*)}""")
@@ -121,19 +109,21 @@ class ProtoParser(private val outputDir: File) {
                 .addModifiers(KModifier.ABSTRACT)
                 .addParameter("request", requestClassName)
 
-            // Add method kDoc
-            // Add `AsyncJobSingle<ServiceMethodResponse>` if there is a response
-            if (method.responseType == "NoResponse") {
-                funBuilder.addKdoc(kDocNoResponse)
+            // Add the appropriate return class
+            val returnPackageName = if (method.responseType == "NoResponse") {
+                "SteammessagesUnifiedBaseSteamclient"
             } else {
-                val returnClassName = ClassName(
-                    packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
-                    method.responseType
-                )
-                val kDoc = kDocReturns(requestClassName, returnClassName)
-                funBuilder.addKdoc(kDoc)
-                    .returns(returnClassName)
+                protoFileName
             }
+            val returnClassName = ClassName(
+                packageName = "in.dragonbra.javasteam.protobufs.steamclient.$returnPackageName",
+                method.responseType
+            )
+
+            // Add method kDoc
+            val kDoc = kDocReturns(requestClassName, returnClassName)
+            funBuilder.addKdoc(kDoc)
+                .returns(returnClassName)
 
             // Add the function to the interface class.
             iBuilder.addFunction(funBuilder.build())
