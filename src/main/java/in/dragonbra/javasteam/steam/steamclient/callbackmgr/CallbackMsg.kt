@@ -10,10 +10,10 @@ import `in`.dragonbra.javasteam.types.JobID
  * @author lngtr
  * @since 2018-02-22
  */
-abstract class CallbackMsg : ICallbackMsg {
+abstract class CallbackMsg {
 
     /**
      * Gets or sets the job ID this callback refers to. If it is not a job callback, it will be [JobID.INVALID].
      */
-    override var jobID: JobID = JobID.INVALID
+    var jobID: JobID = JobID.INVALID
 }

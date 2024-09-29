@@ -5,7 +5,7 @@ import `in`.dragonbra.javasteam.util.compat.Consumer
 import java.io.Closeable
 
 @Suppress("unused")
-class Callback<TCall : ICallbackMsg> @JvmOverloads constructor(
+class Callback<TCall : CallbackMsg> @JvmOverloads constructor(
     override val callbackType: Class<out TCall>,
     func: Consumer<TCall>?,
     private var mgr: ICallbackMgrInternals? = null,
