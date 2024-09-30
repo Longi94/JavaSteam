@@ -3,11 +3,9 @@ package in.dragonbra.javasteam.types;
 import in.dragonbra.javasteam.util.Passable;
 import in.dragonbra.javasteam.util.Strings;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
@@ -19,6 +17,8 @@ import java.util.TreeMap;
 public class KVTextReader extends PushbackInputStream {
 
     public static final Map<Character, Character> ESCAPED_MAPPING;
+
+    private final StringBuilder sb = new StringBuilder(128);
 
     static {
         Map<Character, Character> escapedMapping = new TreeMap<>();
@@ -141,8 +141,7 @@ public class KVTextReader extends PushbackInputStream {
             // "
             read();
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+            sb.setLength(0);
             while (!endOfStream()) {
                 if (peek() == '\\') {
                     read();
@@ -154,7 +153,7 @@ public class KVTextReader extends PushbackInputStream {
                         replacedChar = escapedChar;
                     }
 
-                    baos.write(replacedChar);
+                    sb.append((char) replacedChar);
 
                     continue;
                 }
@@ -163,14 +162,13 @@ public class KVTextReader extends PushbackInputStream {
                     break;
                 }
 
-                baos.write(read());
+                sb.append((char) read());
             }
 
             // "
             read();
 
-            // convert the output stream as an utf-8 supported string.
-            return baos.toString(StandardCharsets.UTF_8);
+            return sb.toString();
         }
 
         if (next == '{' || next == '}') {
@@ -180,7 +178,7 @@ public class KVTextReader extends PushbackInputStream {
 
         boolean bConditionalStart = false;
         int count = 0;
-        StringBuilder ret = new StringBuilder();
+        sb.setLength(0);
 
         while (!endOfStream()) {
             next = (char) peek();
@@ -202,14 +200,14 @@ public class KVTextReader extends PushbackInputStream {
             }
 
             if (count < 1023) {
-                ret.append(next);
+                sb.append(next);
             } else {
                 throw new IOException("ReadToken overflow");
             }
 
             read();
         }
-        return ret.toString();
+        return sb.toString();
     }
 
     private boolean endOfStream() {
