@@ -3,16 +3,17 @@ package in.dragonbra.javasteam.steam.discovery;
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
+import java.net.UnknownHostException;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lngtr
@@ -24,7 +25,7 @@ public class SmartCMServerListTest extends TestBase {
 
     @BeforeEach
     public void setUp() {
-        SteamConfiguration configuration = SteamConfiguration.create(b -> b.withDirectoryFetch(false));
+        var configuration = SteamConfiguration.create(b -> b.withDirectoryFetch(false));
         serverList = new SmartCMServerList(configuration);
     }
 
@@ -32,202 +33,256 @@ public class SmartCMServerListTest extends TestBase {
     public void tryMergeWithList_AddsToHead_AndMovesExisting() {
         serverList.getAllEndPoints();
 
-        List<ServerRecord> seedList = new ArrayList<>();
-        seedList.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27025)));
-        seedList.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27026)));
-        seedList.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27027)));
-        seedList.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27028)));
-
+        var seedList = List.of(
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27025)),
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27035)),
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27045)),
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27105))
+        );
         serverList.replaceList(seedList);
+        Assertions.assertEquals(4, seedList.size());
 
-        assertEquals(4, seedList.size());
-
-        List<ServerRecord> listToReplace = new ArrayList<>();
-        listToReplace.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015)));
-        listToReplace.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27035)));
-        listToReplace.add(ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27105)));
-
+        var listToReplace = List.of(
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015)),
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27035)),
+                ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27105))
+        );
         serverList.replaceList(listToReplace);
 
-        List<ServerRecord> addresses = serverList.getAllEndPoints();
-
-        assertEquals(3, addresses.size());
-        assertEquals(listToReplace.get(0), addresses.get(0));
-        assertEquals(listToReplace.get(1), addresses.get(1));
-        assertEquals(listToReplace.get(2), addresses.get(2));
+        var addresses = serverList.getAllEndPoints();
+        Assertions.assertEquals(3, addresses.size());
+        Assertions.assertEquals(listToReplace.get(0), addresses.get(0));
+        Assertions.assertEquals(listToReplace.get(1), addresses.get(1));
+        Assertions.assertEquals(listToReplace.get(2), addresses.get(2));
     }
 
     @Test
     public void getNextServerCandidate_ReturnsNull_IfListIsEmpty() {
-        ServerRecord endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertNull(endPoint);
+        var endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertNull(endPoint);
     }
 
     @Test
     public void getNextServerCandidate_ReturnsServer_IfListHasServers() {
         serverList.getAllEndPoints();
 
-        ServerRecord record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        var record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
+        serverList.replaceList(List.of(record));
 
-        ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(1, nextRecord.getProtocolTypes().size());
-        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+        var nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
+        Assertions.assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, nextRecord.getProtocolTypes().size());
     }
 
     @Test
     public void getNextServerCandidate_ReturnsServer_IfListHasServers_EvenIfAllServersAreBad() {
         serverList.getAllEndPoints();
 
-        ServerRecord record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        var record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
+        serverList.replaceList(List.of(record));
         serverList.tryMark(record.getEndpoint(), record.getProtocolTypes(), ServerQuality.BAD);
 
-        ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(1, nextRecord.getProtocolTypes().size());
-        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+        var nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertEquals(record.getEndpoint(), nextRecord.getEndpoint());
+        Assertions.assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, nextRecord.getProtocolTypes().size());
     }
 
     @Test
-    public void getNextServerCandidate_IsBiasedTowardsServerOrdering() {
+    public void getNextServerCandidate_IsBiasedTowardsServerOrdering() throws UnknownHostException {
         serverList.getAllEndPoints();
 
-        ServerRecord goodRecord = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        ServerRecord neutralRecord = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27016));
-        ServerRecord badRecord = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27017));
+        var serverA = InetAddress.getByName("10.0.0.1");
+        var serverB = InetAddress.getByName("10.0.0.2");
 
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(badRecord);
-        serverRecords.add(neutralRecord);
-        serverRecords.add(goodRecord);
-        serverList.replaceList(serverRecords);
+        var goodRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27015));
+        var neutralRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27016));
+        var badRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27017));
+        var serverBRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverB, 27017));
+
+        serverList.replaceList(List.of(badRecord, neutralRecord, goodRecord, serverBRecord));
+
+        serverList.tryMark(badRecord.getEndpoint(), badRecord.getProtocolTypes(), ServerQuality.BAD);
+        serverList.tryMark(goodRecord.getEndpoint(), goodRecord.getProtocolTypes(), ServerQuality.GOOD);
+
+        // Server A's endpoints were all marked bad, with goodRecord being recovered
+        var nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertEquals(goodRecord.getEndpoint(), nextRecord.getEndpoint());
+        Assertions.assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, nextRecord.getProtocolTypes().size());
+
+        serverList.tryMark(badRecord.getEndpoint(), badRecord.getProtocolTypes(), ServerQuality.GOOD);
+
+        // Server A's bad record is now at the front, having been marked good
+        nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertEquals(badRecord.getEndpoint(), nextRecord.getEndpoint());
+        Assertions.assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, nextRecord.getProtocolTypes().size());
+    }
+
+    @Test
+    public void getNextServerCandidate_AllEndpointsByHostAreBad() throws UnknownHostException {
+        serverList.getAllEndPoints();
+
+        var serverA = InetAddress.getByName("10.0.0.1");
+        var serverB = InetAddress.getByName("10.0.0.2");
+
+        var goodRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27015));
+        var neutralRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27016));
+        var badRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverA, 27017));
+        var serverBRecord = ServerRecord.createSocketServer(new InetSocketAddress(serverB, 27017));
+
+        serverList.replaceList(List.of(goodRecord, neutralRecord, badRecord, serverBRecord));
 
         serverList.tryMark(goodRecord.getEndpoint(), goodRecord.getProtocolTypes(), ServerQuality.GOOD);
         serverList.tryMark(badRecord.getEndpoint(), badRecord.getProtocolTypes(), ServerQuality.BAD);
 
-        ServerRecord nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertEquals(neutralRecord.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(1, nextRecord.getProtocolTypes().size());
-        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
-
-        serverList.tryMark(badRecord.getEndpoint(), badRecord.getProtocolTypes(), ServerQuality.GOOD);
-
-        nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertEquals(badRecord.getEndpoint(), nextRecord.getEndpoint());
-        assertEquals(1, nextRecord.getProtocolTypes().size());
-        assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
+        // Server A's endpoints are all bad. Server B is our next candidate.
+        var nextRecord = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertEquals(serverBRecord.getEndpoint(), nextRecord.getEndpoint());
+        Assertions.assertTrue(nextRecord.getProtocolTypes().contains(ProtocolTypes.TCP));
     }
 
     @Test
     public void getNextServerCandidate_OnlyReturnsMatchingServerOfType() {
-        ServerRecord record = ServerRecord.createWebSocketServer("localhost:443");
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        var record = ServerRecord.createWebSocketServer("localhost:443");
+        serverList.replaceList(List.of(record));
 
-        ServerRecord endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertNull(endPoint);
+        var endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
+        Assertions.assertNull(endPoint);
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-        assertNull(endPoint);
+        Assertions.assertNull(endPoint);
         endPoint = serverList.getNextServerCandidate(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
-        assertNull(endPoint);
+        Assertions.assertNull(endPoint);
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.WEB_SOCKET);
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.ALL);
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.WEB_SOCKET));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
 
         record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        serverList.replaceList(List.of(record));
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.WEB_SOCKET);
-        assertNull(endPoint);
+        Assertions.assertNull(endPoint);
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.UDP));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.UDP));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
 
         endPoint = serverList.getNextServerCandidate(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
 
         endPoint = serverList.getNextServerCandidate(ProtocolTypes.ALL);
-        assertEquals(record.getEndpoint(), endPoint.getEndpoint());
-        assertEquals(1, endPoint.getProtocolTypes().size());
-        assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+        Assertions.assertEquals(record.getEndpoint(), endPoint.getEndpoint());
+        Assertions.assertTrue(endPoint.getProtocolTypes().contains(ProtocolTypes.TCP));
+
+        Assertions.assertEquals(1, endPoint.getProtocolTypes().size());
+    }
+
+    @Test
+    public void getNextServerCandidate_MarkIterateAllCandidates() {
+        serverList.getAllEndPoints();
+
+        var recordA = ServerRecord.createWebSocketServer("10.0.0.1:27030");
+        var recordB = ServerRecord.createWebSocketServer("10.0.0.2:27030");
+        var recordC = ServerRecord.createWebSocketServer("10.0.0.3:27030");
+
+        // Add all candidates
+        serverList.replaceList(List.of(recordA, recordB, recordC));
+
+        var candidatesReturned = new HashSet<ServerRecord>();
+
+        Runnable dequeueAndMarkCandidate = () -> {
+            ServerRecord candidate = serverList.getNextServerCandidate(ProtocolTypes.WEB_SOCKET);
+            Assertions.assertTrue(candidatesReturned.add(candidate), "Candidate " + candidate.getEndpoint() + " already seen");
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            serverList.tryMark(candidate.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+        };
+
+        // We must dequeue all servers as they all get marked bad
+        dequeueAndMarkCandidate.run();
+        dequeueAndMarkCandidate.run();
+        dequeueAndMarkCandidate.run();
+        Assertions.assertEquals(3, candidatesReturned.size(), "All candidates returned");
+    }
+
+    @Test
+    public void getNextServerCandidate_MarkIterateAllBadCandidates() {
+        serverList.getAllEndPoints();
+
+        var recordA = ServerRecord.createWebSocketServer("10.0.0.1:27030");
+        var recordB = ServerRecord.createWebSocketServer("10.0.0.2:27030");
+        var recordC = ServerRecord.createWebSocketServer("10.0.0.3:27030");
+
+        // Add all candidates and mark them bad
+        serverList.replaceList(List.of(recordA, recordB, recordC));
+        serverList.tryMark(recordA.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+        serverList.tryMark(recordB.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+        serverList.tryMark(recordC.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+
+        var candidatesReturned = new HashSet<ServerRecord>();
+
+        Runnable dequeueAndMarkCandidate = () -> {
+            var candidate = serverList.getNextServerCandidate(ProtocolTypes.WEB_SOCKET);
+            Assertions.assertTrue(candidatesReturned.add(candidate), "Candidate " + candidate.getEndpoint() + " already seen");
+            try {
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            serverList.tryMark(candidate.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+        };
+
+        // We must dequeue all candidates from a bad list
+        dequeueAndMarkCandidate.run();
+        dequeueAndMarkCandidate.run();
+        dequeueAndMarkCandidate.run();
+        Assertions.assertEquals(3, candidatesReturned.size(), "All candidates returned");
     }
 
     @Test
     public void tryMark_ReturnsTrue_IfServerInList() {
-        ServerRecord record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        var record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
+        serverList.replaceList(List.of(record));
 
-        boolean marked = serverList.tryMark(record.getEndpoint(), record.getProtocolTypes(), ServerQuality.GOOD);
-        assertTrue(marked);
+        var marked = serverList.tryMark(record.getEndpoint(), record.getProtocolTypes(), ServerQuality.GOOD);
+        Assertions.assertTrue(marked);
     }
 
     @Test
     public void tryMark_ReturnsFalse_IfServerNotInList() {
-        ServerRecord record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record);
-        serverList.replaceList(serverRecords);
+        var record = ServerRecord.createSocketServer(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27015));
+        serverList.replaceList(List.of(record));
 
-        boolean marked = serverList.tryMark(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27016), record.getProtocolTypes(), ServerQuality.GOOD);
-        assertFalse(marked);
-    }
-
-    @Test
-    public void treatsProtocolsForSameServerIndividiually() {
-        ServerRecord record1 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27015, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
-        ServerRecord record2 = ServerRecord.createServer(InetAddress.getLoopbackAddress().toString(), 27016, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
-        List<ServerRecord> serverRecords = new ArrayList<>();
-        serverRecords.add(record1);
-        serverRecords.add(record2);
-        serverList.replaceList(serverRecords);
-
-        ServerRecord nextTcp = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        ServerRecord nextUdp = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-
-        assertEquals(record1.getEndpoint(), nextTcp.getEndpoint());
-        assertEquals(record1.getEndpoint(), nextUdp.getEndpoint());
-
-        serverList.tryMark(record1.getEndpoint(), ProtocolTypes.TCP, ServerQuality.BAD);
-
-        nextTcp = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        nextUdp = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-
-        assertEquals(record2.getEndpoint(), nextTcp.getEndpoint());
-        assertEquals(record1.getEndpoint(), nextUdp.getEndpoint());
-
-        serverList.tryMark(record1.getEndpoint(), ProtocolTypes.UDP, ServerQuality.BAD);
-
-        nextTcp = serverList.getNextServerCandidate(ProtocolTypes.TCP);
-        nextUdp = serverList.getNextServerCandidate(ProtocolTypes.UDP);
-
-        assertEquals(record2.getEndpoint(), nextTcp.getEndpoint());
-        assertEquals(record2.getEndpoint(), nextUdp.getEndpoint());
+        var marked = serverList.tryMark(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27016), record.getProtocolTypes(), ServerQuality.GOOD);
+        Assertions.assertFalse(marked);
     }
 }

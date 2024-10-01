@@ -11,7 +11,7 @@ import java.time.Instant
  * @author Lossy
  * @since 2023-03-17
  */
-abstract class AsyncJob(val client: SteamClient?, val jobID: JobID?) {
+abstract class AsyncJob(val client: SteamClient, val jobID: JobID) {
 
     private var jobStart = Instant.now()
 
@@ -20,16 +20,11 @@ abstract class AsyncJob(val client: SteamClient?, val jobID: JobID?) {
     val isTimedOut: Boolean
         get() = Instant.now() >= jobStart.plusMillis(timeout)
 
-    init {
-        requireNotNull(client) { "client must not be null" }
-        requireNotNull(jobID) { "jobId must not be null" }
-    }
-
     protected fun registerJob(client: SteamClient) {
         client.startJob(this)
     }
 
-    abstract fun addResult(callback: CallbackMsg?): Boolean
+    abstract fun addResult(callback: CallbackMsg): Boolean
 
     abstract fun setFailed(dueToRemoteFailure: Boolean)
 

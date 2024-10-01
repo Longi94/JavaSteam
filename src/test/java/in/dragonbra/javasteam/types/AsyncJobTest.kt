@@ -143,15 +143,6 @@ class AsyncJobTest {
     }
 
     @Test
-    fun asyncJobThrowsExceptionOnNullCallback() {
-        val client = SteamClient()
-
-        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
-
-        Assertions.assertThrows(IllegalArgumentException::class.java) { asyncJob.addResult(null) }
-    }
-
-    @Test
     fun asyncJobThrowsFailureExceptionOnFailure() {
         val client = SteamClient()
 
@@ -449,15 +440,6 @@ class AsyncJobTest {
         Assertions.assertTrue(result.failed, "ResultSet should be failed")
         Assertions.assertTrue(result.results.size == 1)
         Assertions.assertSame(onlyResult, result.results.first())
-    }
-
-    @Test
-    fun asyncJobMultipleThrowsExceptionOnNullCallback() {
-        val client = SteamClient()
-
-        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> true }
-
-        Assertions.assertThrows(IllegalArgumentException::class.java) { asyncJob.addResult(null) }
     }
 
     @Test
