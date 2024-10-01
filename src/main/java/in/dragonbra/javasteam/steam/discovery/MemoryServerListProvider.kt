@@ -1,32 +1,23 @@
-package in.dragonbra.javasteam.steam.discovery;
-
-import java.util.ArrayList;
-import java.util.List;
+package `in`.dragonbra.javasteam.steam.discovery
 
 /**
  * A server list provider that uses an in-memory list
  */
-public class MemoryServerListProvider implements IServerListProvider {
+class MemoryServerListProvider : IServerListProvider {
 
-    List<ServerRecord> _server = new ArrayList<>();
+    var servers: List<ServerRecord> = listOf()
 
     /**
      * Returns the stored server list in memory
-     *
      * @return List of servers if persisted, otherwise an empty list
      */
-    @Override
-    public List<ServerRecord> fetchServerList() {
-        return _server;
-    }
+    override fun fetchServerList(): List<ServerRecord> = servers
 
     /**
      * Stores the supplied list of servers in memory
-     *
      * @param endpoints List of endpoints (servers)
      */
-    @Override
-    public void updateServerList(List<ServerRecord> endpoints) {
-        _server = endpoints;
+    override fun updateServerList(endpoints: List<ServerRecord>) {
+        servers = endpoints
     }
 }

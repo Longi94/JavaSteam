@@ -1,39 +1,12 @@
-package in.dragonbra.javasteam.steam.discovery;
+package `in`.dragonbra.javasteam.steam.discovery
 
-import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-
-import java.util.Date;
+import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
+import java.time.Instant
 
 /**
  * @author lngtr
  * @since 2018-02-20
  */
-public class ServerInfo {
-
-    private final ServerRecord record;
-
-    private final ProtocolTypes protocol;
-
-    private Date lastBadConnection;
-
-    public ServerInfo(ServerRecord record, ProtocolTypes protocol) {
-        this.record = record;
-        this.protocol = protocol;
-    }
-
-    public ServerRecord getRecord() {
-        return record;
-    }
-
-    public ProtocolTypes getProtocol() {
-        return protocol;
-    }
-
-    public Date getLastBadConnection() {
-        return lastBadConnection;
-    }
-
-    public void setLastBadConnection(Date lastBadConnection) {
-        this.lastBadConnection = lastBadConnection;
-    }
+class ServerInfo(val record: ServerRecord, val protocol: ProtocolTypes) {
+    var lastBadConnectionTimeUtc: Instant? = null
 }

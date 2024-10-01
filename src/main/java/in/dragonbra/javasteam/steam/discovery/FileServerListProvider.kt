@@ -1,88 +1,78 @@
-package in.dragonbra.javasteam.steam.discovery;
+package `in`.dragonbra.javasteam.steam.discovery
 
-import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import in.dragonbra.javasteam.protobufs.steam.discovery.BasicServerListProtos.BasicServer;
-import in.dragonbra.javasteam.protobufs.steam.discovery.BasicServerListProtos.BasicServerList;
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
+import `in`.dragonbra.javasteam.protobufs.steam.discovery.BasicServerListProtos.BasicServer
+import `in`.dragonbra.javasteam.protobufs.steam.discovery.BasicServerListProtos.BasicServerList
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
 
 /**
  * Server provider that stores servers in a file using protobuf.
  */
-public class FileServerListProvider implements IServerListProvider {
-
-    private static final Logger logger = LogManager.getLogger(FileServerListProvider.class);
-
-    private final File file;
+class FileServerListProvider(private val file: File) : IServerListProvider {
 
     /**
-     * Instantiates a {@link FileServerListProvider} object.
-     *
+     * Instantiates a [FileServerListProvider] object.
      * @param file the file that will store the servers
      */
-    public FileServerListProvider(File file) {
-        if (file == null) {
-            throw new IllegalArgumentException("file is null");
+    init {
+        try {
+            file.absoluteFile.parentFile?.mkdirs()
+            file.createNewFile()
+        } catch (e: IOException) {
+            logger.error(e)
         }
-        this.file = file;
+    }
+
+    override fun fetchServerList(): List<ServerRecord> = try {
+        FileInputStream(file).use { fis ->
+            val serverList = BasicServerList.parseFrom(fis)
+            List(serverList.serversCount) { i ->
+                val server: BasicServer = serverList.getServers(i)
+                ServerRecord.createServer(
+                    server.getAddress(),
+                    server.port,
+                    ProtocolTypes.from(server.protocol)
+                )
+            }
+        }
+    } catch (e: FileNotFoundException) {
+        logger.error("servers list file not found", e)
+        emptyList()
+    } catch (e: IOException) {
+        logger.error("Failed to read server list file ${file.absolutePath}", e)
+        emptyList()
+    }
+
+    override fun updateServerList(endpoints: List<ServerRecord>) {
+        val builder = BasicServerList.newBuilder().apply {
+            endpoints.forEach { endpoint ->
+                addServers(
+                    BasicServer.newBuilder().apply {
+                        address = endpoint.host
+                        port = endpoint.port
+                        protocol = ProtocolTypes.code(endpoint.protocolTypes)
+                    }
+                )
+            }
+        }
 
         try {
-            if (!file.exists()) {
-                file.getAbsoluteFile().getParentFile().mkdirs();
-                file.createNewFile();
+            FileOutputStream(file, false).use { fos ->
+                builder.build().writeTo(fos)
+                fos.flush()
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (e: IOException) {
+            logger.error("Failed to write servers to file ${file.absolutePath}", e)
         }
     }
 
-    @Override
-    public List<ServerRecord> fetchServerList() {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            List<ServerRecord> records = new ArrayList<>();
-            BasicServerList serverList = BasicServerList.parseFrom(fis);
-            for (int i = 0; i < serverList.getServersCount(); i++) {
-                BasicServer server = serverList.getServers(i);
-                records.add(ServerRecord.createServer(
-                        server.getAddress(),
-                        server.getPort(),
-                        ProtocolTypes.from(server.getProtocol())
-                ));
-            }
-
-            fis.close();
-
-            return records;
-        } catch (FileNotFoundException e) {
-            logger.debug("servers list file not found");
-        } catch (IOException e) {
-            logger.debug("Failed to read server list file " + file.getAbsolutePath());
-        }
-        return null;
-    }
-
-    @Override
-    public void updateServerList(List<ServerRecord> endpoints) {
-        BasicServerList.Builder builder = BasicServerList.newBuilder();
-
-        for (ServerRecord endpoint : endpoints) {
-            builder.addServers(
-                    BasicServer.newBuilder()
-                            .setAddress(endpoint.getHost())
-                            .setPort(endpoint.getPort())
-                            .setProtocol(ProtocolTypes.code(endpoint.getProtocolTypes()))
-            );
-        }
-
-        try (FileOutputStream fos = new FileOutputStream(file, false)) {
-            builder.build().writeTo(fos);
-            fos.flush();
-        } catch (IOException e) {
-            logger.debug("Failed to write servers to file " + file.getAbsolutePath(), e);
-        }
+    companion object {
+        private val logger: Logger = LogManager.getLogger(FileServerListProvider::class.java)
     }
 }

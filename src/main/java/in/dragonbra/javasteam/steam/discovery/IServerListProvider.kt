@@ -1,23 +1,18 @@
-package in.dragonbra.javasteam.steam.discovery;
-
-import java.util.List;
+package `in`.dragonbra.javasteam.steam.discovery
 
 /**
  * An interface for persisting the server list for connection discovery
  */
-public interface IServerListProvider {
-
+interface IServerListProvider {
     /**
      * Ask a provider to fetch any servers that it has available
-     *
      * @return A list of IPEndPoints representing servers
      */
-    List<ServerRecord> fetchServerList();
+    fun fetchServerList(): List<ServerRecord>
 
     /**
      * Update the persistent list of endpoints
-     *
      * @param endpoints List of endpoints
      */
-    void updateServerList(List<ServerRecord> endpoints);
+    fun updateServerList(endpoints: List<ServerRecord>)
 }

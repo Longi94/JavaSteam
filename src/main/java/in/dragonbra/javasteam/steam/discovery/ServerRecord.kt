@@ -1,111 +1,118 @@
-package in.dragonbra.javasteam.steam.discovery;
+package `in`.dragonbra.javasteam.steam.discovery
 
-import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import in.dragonbra.javasteam.util.NetHelpers;
-
-import java.net.InetSocketAddress;
-import java.util.EnumSet;
+import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
+import `in`.dragonbra.javasteam.util.NetHelpers
+import java.net.InetSocketAddress
+import java.util.EnumSet
 
 /**
  * Represents the information needed to connect to a CM server
+ *
+ * @constructor
+ * @param endpoint The endpoint of the server to connect to.
+ * @param protocolTypes The various protocol types that can be used to communicate with this server.
  */
-public class ServerRecord {
+class ServerRecord private constructor(
+    val endpoint: InetSocketAddress,
+    val protocolTypes: EnumSet<ProtocolTypes>,
+) {
 
-    private final InetSocketAddress endpoint;
+    /**
+     *
+     */
+    internal constructor(endpoint: InetSocketAddress, protocolTypes: ProtocolTypes) :
+        this(endpoint, EnumSet.of(protocolTypes))
 
-    private final EnumSet<ProtocolTypes> protocolTypes;
+    /**
+     * Gets the host of the associated endpoint.
+     */
+    val host: String = endpoint.hostString
 
-    ServerRecord(InetSocketAddress endpoint, ProtocolTypes protocolTypes) {
-        this(endpoint, EnumSet.of(protocolTypes));
-    }
+    /**
+     * The endpoint of the server to connect to.
+     */
+    val port: Int = endpoint.port
 
-    private ServerRecord(InetSocketAddress endpoint, EnumSet<ProtocolTypes> protocolTypes) {
-        if (endpoint == null) {
-            throw new IllegalArgumentException("endpoint is null");
+    /**
+     * Determines whether the specified object is equal to the current object.
+     * @param other the object to compare to.
+     * @return true if the specified object is equal to the current object; otherwise, false.
+     */
+    override fun equals(other: Any?): Boolean {
+        if (other !is ServerRecord) {
+            return false
         }
 
-        this.endpoint = endpoint;
-        this.protocolTypes = protocolTypes;
-    }
-
-    public String getHost() {
-        return this.endpoint.getHostString();
-    }
-
-    public int getPort() {
-        return endpoint.getPort();
-    }
-
-    public InetSocketAddress getEndpoint() {
-        return endpoint;
-    }
-
-    public EnumSet<ProtocolTypes> getProtocolTypes() {
-        return protocolTypes;
-    }
-
-    public static ServerRecord createServer(String host, int port, ProtocolTypes protocolTypes) {
-        return createServer(host, port, EnumSet.of(protocolTypes));
-    }
-
-    public static ServerRecord createServer(String host, int port, EnumSet<ProtocolTypes> protocolTypes) {
-        return new ServerRecord(new InetSocketAddress(host, port), protocolTypes);
-    }
-
-    public static ServerRecord createSocketServer(InetSocketAddress endpoint) {
-        return new ServerRecord(endpoint, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
+        return endpoint == other.endpoint && protocolTypes == other.protocolTypes
     }
 
     /**
-     * Creates a Socket server given an IP endpoint.
-     *
-     * @param address The IP address and port of the server, as a string.
-     * @return A new [ServerRecord], if the address was able to be parsed. **null** otherwise.
+     * Hash function
+     * @return A hash code for the current object.
      */
-    public static ServerRecord tryCreateSocketServer(String address) {
-        InetSocketAddress endpoint;
+    override fun hashCode(): Int = endpoint.hashCode() xor protocolTypes.hashCode()
 
-        endpoint = NetHelpers.tryParseIPEndPoint(address);
+    companion object {
+        /**
+         * Creates a server record for a given endpoint.
+         * @param host The host to connect to.
+         * @param port The port to connect to.
+         * @param protocolTypes The protocol types that this server supports.
+         * @return A new [ServerRecord] instance
+         */
+        @JvmStatic
+        fun createServer(host: String, port: Int, protocolTypes: ProtocolTypes): ServerRecord =
+            createServer(host, port, EnumSet.of<ProtocolTypes>(protocolTypes))
 
-        if (endpoint == null) {
-            return null;
+        /**
+         * Creates a server record for a given endpoint.
+         * @param host The host to connect to.
+         * @param port The port to connect to.
+         * @param protocolTypes The protocol types that this server supports.
+         * @return A new [ServerRecord] instance
+         */
+        @JvmStatic
+        fun createServer(host: String, port: Int, protocolTypes: EnumSet<ProtocolTypes>): ServerRecord =
+            ServerRecord(InetSocketAddress(host, port), protocolTypes)
+
+        /**
+         * Creates a Socket server given an IP endpoint.
+         * @param endpoint The IP address and port of the server.
+         * @return A new [ServerRecord] instance
+         */
+        @JvmStatic
+        fun createSocketServer(endpoint: InetSocketAddress): ServerRecord =
+            ServerRecord(endpoint, EnumSet.of<ProtocolTypes>(ProtocolTypes.TCP, ProtocolTypes.UDP))
+
+        /**
+         * Creates a Socket server given an IP endpoint.
+         * @param address The IP address and port of the server, as a string.
+         * @return A new [ServerRecord], if the address was able to be parsed. **null** otherwise.
+         */
+        @JvmStatic
+        fun tryCreateSocketServer(address: String): ServerRecord? {
+            var endpoint = NetHelpers.tryParseIPEndPoint(address) ?: return null
+
+            return ServerRecord(endpoint, EnumSet.of<ProtocolTypes>(ProtocolTypes.TCP, ProtocolTypes.UDP))
         }
 
-        return new ServerRecord(endpoint, EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP));
-    }
+        /**
+         * Creates a WebSocket server given an address in the form of "hostname:port".
+         * @param address The name and port of the server
+         * @return A new [ServerRecord] instance
+         */
+        @JvmStatic
+        fun createWebSocketServer(address: String): ServerRecord {
+            val defaultPort = 443
 
-    public static ServerRecord createWebSocketServer(String address) {
-        if (address == null) {
-            throw new IllegalArgumentException("address is null");
+            val split = address.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            var endpoint = if (split.size > 1) {
+                InetSocketAddress(split[0], split[1].toInt())
+            } else {
+                InetSocketAddress(address, defaultPort)
+            }
+
+            return ServerRecord(endpoint, ProtocolTypes.WEB_SOCKET)
         }
-
-        final int defaultPort = 443;
-
-        String[] split = address.split(":");
-
-        InetSocketAddress endpoint;
-        if (split.length > 1) {
-            endpoint = new InetSocketAddress(split[0], Integer.parseInt(split[1]));
-        } else {
-            endpoint = new InetSocketAddress(address, defaultPort);
-        }
-
-        return new ServerRecord(endpoint, ProtocolTypes.WEB_SOCKET);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof ServerRecord)) {
-            return false;
-        }
-
-        ServerRecord o = (ServerRecord) obj;
-
-        return endpoint.equals(o.endpoint) && protocolTypes.equals(o.protocolTypes);
-    }
-
-    @Override
-    public int hashCode() {
-        return endpoint.hashCode() ^ protocolTypes.hashCode();
     }
 }

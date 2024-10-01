@@ -1,10 +1,9 @@
-package in.dragonbra.javasteam.steam.discovery;
+package `in`.dragonbra.javasteam.steam.discovery
 
 /**
  * Currently marked quality of a server. All servers start off as Undetermined.
  */
-public enum ServerQuality {
-
+enum class ServerQuality {
     /**
      * Known good server.
      */
@@ -13,5 +12,5 @@ public enum ServerQuality {
     /**
      * Known bad server.
      */
-    BAD
+    BAD,
 }
