@@ -1,111 +1,91 @@
-package in.dragonbra.javasteam.networking.steam3;
+package `in`.dragonbra.javasteam.networking.steam3
 
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.URI
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.Volatile
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.concurrent.atomic.AtomicReference;
+class WebSocketConnection :
+    Connection(),
+    WebSocketCMClient.WSListener {
+    private val client = AtomicReference<WebSocketCMClient?>(null)
 
-public class WebSocketConnection extends Connection implements WebSocketCMClient.WSListener {
+    @Volatile
+    private var userInitiated = false
 
-    private static final Logger logger = LogManager.getLogger(WebSocketConnection.class);
+    private var socketEndPoint: InetSocketAddress? = null
 
-    private final AtomicReference<WebSocketCMClient> client = new AtomicReference<>(null);
+    override fun connect(endPoint: InetSocketAddress, timeout: Int) {
+        logger.debug("Connecting to $endPoint...")
+        val newClient = WebSocketCMClient(getUri(endPoint), timeout, this)
+        val oldClient = client.getAndSet(newClient)
 
-    private volatile boolean userInitiated = false;
-
-    private InetSocketAddress socketEndPoint;
-
-    @Override
-    public void connect(InetSocketAddress endPoint, int timeout) {
-        logger.debug("Connecting to " + endPoint + "...");
-        WebSocketCMClient newClient = new WebSocketCMClient(getUri(endPoint), timeout, this);
-        WebSocketCMClient oldClient = client.getAndSet(newClient);
-        if (oldClient != null) {
-            logger.debug("Attempted to connect while already connected. Closing old connection...");
-            oldClient.close();
+        oldClient?.let {
+            logger.debug("Attempted to connect while already connected. Closing old connection...")
+            it.close()
         }
 
-        socketEndPoint = endPoint;
+        socketEndPoint = endPoint
 
-        newClient.connect();
+        newClient.connect()
     }
 
-    @Override
-    public void disconnect(boolean userInitiated) {
-        disconnectCore(userInitiated);
+    override fun disconnect(userInitiated: Boolean) {
+        disconnectCore(userInitiated)
     }
 
-    @Override
-    public void send(byte[] data) {
+    override fun send(data: ByteArray) {
         try {
-            if (client.get() == null) {
-                // If we're in the process of being disconnected using WebSocket,
-                // and our client is still sending data to steam during that process.
-                // Our `client` reference is most likely null and the exception doesn't handle it right.
-                logger.debug("WebSocket client is null");
-                return;
-            }
-
-            client.get().send(data);
-        } catch (Exception e) {
-            logger.debug("Exception while sending data", e);
-            disconnectCore(false);
+            client.get()?.send(data)
+        } catch (e: Exception) {
+            logger.debug("Exception while sending data", e)
+            disconnectCore(false)
         }
     }
 
-    @Override
-    public InetAddress getLocalIP() {
-        return client.get().getLocalSocketAddress().getAddress();
-    }
+    override fun getLocalIP(): InetAddress? = InetAddress.getLocalHost()
 
-    @Override
-    public InetSocketAddress getCurrentEndPoint() {
-        return socketEndPoint;
-    }
+    override fun getCurrentEndPoint(): InetSocketAddress = socketEndPoint!!
 
-    @Override
-    public ProtocolTypes getProtocolTypes() {
-        return ProtocolTypes.WEB_SOCKET;
-    }
+    override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
 
-    private void disconnectCore(boolean userInitiated) {
-        WebSocketCMClient oldClient = client.getAndSet(null);
+    private fun disconnectCore(userInitiated: Boolean) {
+        val oldClient = client.getAndSet(null)
 
-        if (oldClient != null) {
-            oldClient.close();
-            this.userInitiated = userInitiated;
+        oldClient?.let {
+            it.close()
+            this.userInitiated = userInitiated
         }
 
-        socketEndPoint = null;
+        socketEndPoint = null
     }
 
-    private static URI getUri(InetSocketAddress address) {
-        return URI.create("wss://" + address.getHostString() + ":" + address.getPort() + "/cmsocket/");
-    }
-
-    @Override
-    public void onData(byte[] data) {
-        if (data != null && data.length > 0) {
-            onNetMsgReceived(new NetMsgEventArgs(data, getCurrentEndPoint()));
+    override fun onData(data: ByteArray?) {
+        if (data != null && data.isNotEmpty()) {
+            onNetMsgReceived(NetMsgEventArgs(data, currentEndPoint))
         }
     }
 
-    @Override
-    public void onClose(boolean remote) {
-        onDisconnected(userInitiated && !remote);
+    override fun onClose(remote: Boolean) {
+        onDisconnected(userInitiated && !remote)
     }
 
-    @Override
-    public void onError(Exception ex) {
-        logger.debug("error in websocket", ex);
+    override fun onError(ex: Exception?) {
+        logger.error("error in websocket", ex)
     }
 
-    @Override
-    public void onOpen() {
-        logger.debug("Connected to " + getCurrentEndPoint());
-        onConnected();
+    override fun onOpen() {
+        logger.debug("Connected to $currentEndPoint")
+        onConnected()
+    }
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(WebSocketConnection::class.java)
+
+        private fun getUri(address: InetSocketAddress): URI =
+            URI.create("wss://" + address.hostString + ":" + address.port + "/cmsocket/")
     }
 }

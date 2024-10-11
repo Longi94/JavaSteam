@@ -1,65 +1,100 @@
-package in.dragonbra.javasteam.networking.steam3;
+package `in`.dragonbra.javasteam.networking.steam3
 
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.drafts.Draft_6455;
-import org.java_websocket.handshake.ServerHandshake;
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.wss
+import io.ktor.utils.io.CancellationException
+import io.ktor.websocket.Frame
+import io.ktor.websocket.readBytes
+import io.ktor.websocket.readText
+import io.ktor.websocket.send
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.net.URI
+import kotlin.time.Duration.Companion.seconds
 
-import java.net.URI;
-import java.nio.ByteBuffer;
-
-class WebSocketCMClient extends WebSocketClient {
-
-    private static final Logger logger = LogManager.getLogger(WebSocketCMClient.class);
-
-    private final WSListener listener;
-
-    WebSocketCMClient(URI serverUri, int timeout, WSListener listener) {
-        super(serverUri, new Draft_6455(), null, timeout);
-        this.listener = listener;
-    }
-
-    @Override
-    public void onOpen(ServerHandshake handshakeData) {
-        if (listener != null) {
-            listener.onOpen();
+internal class WebSocketCMClient(
+    private val serverUri: URI?,
+    timeout: Int,
+    private val listener: WSListener,
+) {
+    internal val client = HttpClient(CIO) {
+        install(WebSockets) {
+            pingIntervalMillis = timeout.seconds.inWholeMilliseconds
         }
     }
 
-    @Override
-    public void onMessage(String message) {
-        // ignore string messages
-        logger.debug("got string message: " + message);
-    }
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val sendChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
-    @Override
-    public void onMessage(ByteBuffer bytes) {
-        if (listener != null) {
-            byte[] data = new byte[bytes.remaining()];
-            bytes.get(data);
-            listener.onData(data);
+    internal fun send(data: ByteArray) {
+        scope.launch {
+            sendChannel.send(data)
         }
     }
 
-    @Override
-    public void onClose(int code, String reason, boolean remote) {
-        if (listener != null) {
-            listener.onClose(remote);
+    @OptIn(ExperimentalCoroutinesApi::class)
+    internal fun connect() {
+        logger.debug("Connecting to $serverUri")
+
+        scope.launch {
+            try {
+                client.wss(urlString = serverUri.toString()) {
+                    listener.onOpen()
+
+                    while (isActive) {
+                        if (!incoming.isEmpty) {
+                            when (val frame = incoming.receive()) {
+                                is Frame.Binary -> listener.onData(frame.readBytes())
+                                is Frame.Close -> listener.onClose(true)
+                                is Frame.Text -> logger.debug("Got string message: ${frame.readText()}")
+                                else -> Unit
+                            }
+                        }
+
+                        if (!sendChannel.isEmpty) {
+                            val data = sendChannel.receive()
+                            send(data)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    listener.onError(e)
+                }
+            } finally {
+                internalClose()
+            }
         }
     }
 
-    @Override
-    public void onError(Exception ex) {
-        if (listener != null) {
-            listener.onError(ex);
-        }
+    internal fun close() {
+        internalClose()
     }
 
-    interface WSListener {
-        void onData(byte[] data);
-        void onClose(boolean remote);
-        void onError(Exception ex);
-        void onOpen();
+    private fun internalClose() {
+        listener.onClose(false)
+        scope.cancel()
+        client.close()
+    }
+
+    internal interface WSListener {
+        fun onData(data: ByteArray?)
+        fun onClose(remote: Boolean)
+        fun onError(ex: Exception?)
+        fun onOpen()
+    }
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(WebSocketCMClient::class.java)
     }
 }

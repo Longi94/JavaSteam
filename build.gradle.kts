@@ -142,7 +142,8 @@ dependencies {
     implementation(libs.kotlin.stdib)
     implementation(libs.okHttp)
     implementation(libs.protobuf.java)
-    implementation(libs.webSocket)
+
+    implementation(libs.bundles.ktor)
 
     testImplementation(libs.bundles.testing)
 }
