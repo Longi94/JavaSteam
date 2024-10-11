@@ -129,7 +129,7 @@ public class UdpConnection extends Connection {
     }
 
     @Override
-    public void disconnect() {
+    public void disconnect(boolean userInitiated) {
         if (netThread == null) {
             return;
         }
@@ -149,7 +149,7 @@ public class UdpConnection extends Connection {
         // Advance this the same way that steam does, when a socket gets reused.
         SOURCE_CONN_ID += 256;
 
-        onDisconnected(true);
+        onDisconnected(userInitiated);
     }
 
     @Override

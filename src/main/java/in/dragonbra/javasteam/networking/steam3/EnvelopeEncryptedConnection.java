@@ -118,7 +118,7 @@ public class EnvelopeEncryptedConnection extends Connection {
 
         if (publicKey == null) {
             logger.debug("HandleEncryptRequest got request for invalid universe! Universe: " + connectedUniverse + " Protocol ver: " + protoVersion);
-            disconnect();
+            disconnect(false);
         }
 
         Msg<MsgChannelEncryptResponse> response = new Msg<>(MsgChannelEncryptResponse.class);
@@ -172,7 +172,7 @@ public class EnvelopeEncryptedConnection extends Connection {
             connected.handleEvent(this, EventArgs.EMPTY);
         } else {
             logger.debug("Encryption channel setup failed");
-            disconnect();
+            disconnect(false);
         }
     }
 
@@ -197,8 +197,8 @@ public class EnvelopeEncryptedConnection extends Connection {
     }
 
     @Override
-    public void disconnect() {
-        inner.disconnect();
+    public void disconnect(boolean userInitiated) {
+        inner.disconnect(userInitiated);
     }
 
     @Override

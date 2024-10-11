@@ -34,8 +34,8 @@ public class WebSocketConnection extends Connection implements WebSocketCMClient
     }
 
     @Override
-    public void disconnect() {
-        disconnectCore(true);
+    public void disconnect(boolean userInitiated) {
+        disconnectCore(userInitiated);
     }
 
     @Override

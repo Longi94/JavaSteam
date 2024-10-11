@@ -6,6 +6,7 @@ import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.generated.MsgClientLogon;
+import in.dragonbra.javasteam.generated.MsgClientServerUnavailable;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
@@ -78,7 +79,13 @@ public abstract class CMClient {
         getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
 
         isConnected = true;
-        onClientConnected();
+
+        try {
+            onClientConnected();
+        } catch (Exception ex) {
+            logger.error("Unhandled exception after connecting: ", ex);
+            disconnect(false);
+        }
     };
 
     private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
@@ -138,7 +145,7 @@ public abstract class CMClient {
     public void connect(ServerRecord cmServer) {
         synchronized (connectionLock) {
             try {
-                disconnect();
+                disconnect(true);
 
                 assert connection == null;
 
@@ -164,11 +171,15 @@ public abstract class CMClient {
      * Disconnects this client.
      */
     public void disconnect() {
+        disconnect(true);
+    }
+
+    private void disconnect(boolean userInitiated) {
         synchronized (connectionLock) {
             heartBeatFunc.stop();
 
             if (connection != null) {
-                connection.disconnect();
+                connection.disconnect(userInitiated);
             }
         }
     }
@@ -231,7 +242,7 @@ public abstract class CMClient {
     protected boolean onClientMsgReceived(IPacketMsg packetMsg) {
         if (packetMsg == null) {
             logger.debug("Packet message failed to parse, shutting down connection");
-            disconnect();
+            disconnect(false);
             return false;
         }
 
@@ -255,6 +266,9 @@ public abstract class CMClient {
                 break;
             case ClientLoggedOff: // to stop heart beating when we get logged off
                 handleLoggedOff(packetMsg);
+                break;
+            case ClientServerUnavailable:
+                handleServerUnavailable(packetMsg);
                 break;
             case ClientCMList:
                 handleCMList(packetMsg);
@@ -379,7 +393,7 @@ public abstract class CMClient {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -426,6 +440,15 @@ public abstract class CMClient {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
         }
+    }
+
+    private void handleServerUnavailable(IPacketMsg packetMsg) {
+        var msgServerUnavailable = new ClientMsg<>(MsgClientServerUnavailable.class, packetMsg);
+
+        logger.debug("A server of type " + msgServerUnavailable.getBody().getEServerTypeUnavailable() +
+                "was not available for request: " + EMsg.from(msgServerUnavailable.getBody().getEMsgSent()));
+
+        disconnect(false);
     }
 
     private void handleCMList(IPacketMsg packetMsg) {
