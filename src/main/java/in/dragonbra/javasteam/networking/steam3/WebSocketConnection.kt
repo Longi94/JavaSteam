@@ -11,6 +11,14 @@ import kotlin.concurrent.Volatile
 class WebSocketConnection :
     Connection(),
     WebSocketCMClient.WSListener {
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(WebSocketConnection::class.java)
+
+        private fun getUri(address: InetSocketAddress): URI =
+            URI.create("wss://${address.hostString}:${address.port}/cmsocket/")
+    }
+
     private val client = AtomicReference<WebSocketCMClient?>(null)
 
     @Volatile
@@ -19,7 +27,6 @@ class WebSocketConnection :
     private var socketEndPoint: InetSocketAddress? = null
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
-        logger.debug("Connecting to $endPoint...")
         val newClient = WebSocketCMClient(getUri(endPoint), timeout, this)
         val oldClient = client.getAndSet(newClient)
 
@@ -38,11 +45,13 @@ class WebSocketConnection :
     }
 
     override fun send(data: ByteArray) {
-        try {
-            client.get()?.send(data)
-        } catch (e: Exception) {
-            logger.debug("Exception while sending data", e)
-            disconnectCore(false)
+        client.get()?.let { client ->
+            try {
+                client.send(data)
+            } catch (e: Exception) {
+                logger.debug("Exception while sending data", e)
+                disconnectCore(false)
+            }
         }
     }
 
@@ -80,12 +89,5 @@ class WebSocketConnection :
     override fun onOpen() {
         logger.debug("Connected to $currentEndPoint")
         onConnected()
-    }
-
-    companion object {
-        private val logger: Logger = LogManager.getLogger(WebSocketConnection::class.java)
-
-        private fun getUri(address: InetSocketAddress): URI =
-            URI.create("wss://" + address.hostString + ":" + address.port + "/cmsocket/")
     }
 }

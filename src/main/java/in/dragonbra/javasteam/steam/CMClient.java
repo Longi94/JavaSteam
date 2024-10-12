@@ -73,6 +73,8 @@ public abstract class CMClient {
     private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> onClientMsgReceived(getPacketMsg(e.getData()));
 
     private final EventHandler<EventArgs> connected = (sender, e) -> {
+        logger.debug("EventHandler `connected` called, we're connected to steam.");
+
         getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
 
         isConnected = true;
@@ -88,6 +90,8 @@ public abstract class CMClient {
     private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
+            logger.debug("EventHandler `disconnected` called, we're disconnected to steam.");
+
             isConnected = false;
 
             if (!e.isUserInitiated() && !expectDisconnection) {

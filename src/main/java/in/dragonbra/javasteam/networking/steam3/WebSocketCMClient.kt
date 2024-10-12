@@ -3,14 +3,13 @@ package `in`.dragonbra.javasteam.networking.steam3
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.wss
 import io.ktor.utils.io.CancellationException
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readBytes
 import io.ktor.websocket.readText
-import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,26 +18,48 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import okhttp3.ConnectionSpec
+import okhttp3.OkHttpClient
+import okhttp3.TlsVersion
 import java.net.URI
-import kotlin.time.Duration.Companion.seconds
+import java.util.concurrent.TimeUnit
 
 internal class WebSocketCMClient(
     private val serverUri: URI?,
     timeout: Int,
     private val listener: WSListener,
 ) {
-    internal val client = HttpClient(CIO) {
-        install(WebSockets) {
-            pingIntervalMillis = timeout.seconds.inWholeMilliseconds
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(WebSocketCMClient::class.java)
+    }
+
+    // CIO doesnt support TLS 1.3 yet :/
+    internal val client = HttpClient(OkHttp) {
+        install(WebSockets)
+        engine {
+            config {
+                val spec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                    .tlsVersions(TlsVersion.TLS_1_3)
+                    .allEnabledCipherSuites()
+                    .build()
+
+                connectionSpecs(listOf(spec))
+            }
+            preconfigured = OkHttpClient.Builder()
+                .pingInterval(timeout.toLong(), TimeUnit.SECONDS)
+                .build()
         }
     }
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val sendChannel = Channel<ByteArray>(Channel.UNLIMITED)
+    private val sendChannel = Channel<ByteArray>(capacity = 128)
 
     internal fun send(data: ByteArray) {
         scope.launch {
-            sendChannel.send(data)
+            if (!sendChannel.trySend(data).isSuccess) {
+                logger.error("Send buffer is full, message dropped")
+            }
         }
     }
 
@@ -67,21 +88,18 @@ internal class WebSocketCMClient(
                         }
                     }
                 }
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    listener.onError(e)
-                }
+            } catch (e: CancellationException) {
+                logger.debug("Connection cancelled", e)
+            } catch (e: Throwable) {
+                logger.error("Unexpected error during WebSocket communication", e)
             } finally {
-                internalClose()
+                logger.debug("Shutting down WebSocket connection")
+                close()
             }
         }
     }
 
     internal fun close() {
-        internalClose()
-    }
-
-    private fun internalClose() {
         listener.onClose(false)
         scope.cancel()
         client.close()
@@ -92,9 +110,5 @@ internal class WebSocketCMClient(
         fun onClose(remote: Boolean)
         fun onError(ex: Exception?)
         fun onOpen()
-    }
-
-    companion object {
-        private val logger: Logger = LogManager.getLogger(WebSocketCMClient::class.java)
     }
 }
