@@ -151,7 +151,7 @@ public abstract class CMClient {
                     cmServer = getServers().getNextServerCandidate(configuration.getProtocolTypes());
                 }
 
-                connection = createConnection(configuration.getProtocolTypes());
+                connection = createConnection(cmServer.getProtocolTypes());
                 connection.getNetMsgReceived().addEventHandler(netMsgReceived);
                 connection.getConnected().addEventHandler(connected);
                 connection.getDisconnected().addEventHandler(disconnected);
