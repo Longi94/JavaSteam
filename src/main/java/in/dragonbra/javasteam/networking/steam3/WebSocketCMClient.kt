@@ -1,114 +1,99 @@
 package `in`.dragonbra.javasteam.networking.steam3
 
 import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.wss
-import io.ktor.utils.io.CancellationException
-import io.ktor.websocket.Frame
-import io.ktor.websocket.readBytes
-import io.ktor.websocket.readText
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import okhttp3.ConnectionSpec
-import okhttp3.OkHttpClient
-import okhttp3.TlsVersion
 import java.net.URI
 import java.util.concurrent.TimeUnit
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okio.ByteString
 
-internal class WebSocketCMClient(
-    private val serverUri: URI?,
+class WebSocketCMClient(
     timeout: Int,
+    private val serverUrl: URI,
     private val listener: WSListener,
-) {
+) : WebSocketListener() {
 
     companion object {
-        private val logger: Logger = LogManager.getLogger(WebSocketCMClient::class.java)
+        private val logger = LogManager.getLogger(WebSocketCMClient::class.java)
     }
 
-    // CIO doesnt support TLS 1.3 yet :/
-    internal val client = HttpClient(OkHttp) {
-        install(WebSockets)
-        engine {
-            config {
-                val spec = ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                    .tlsVersions(TlsVersion.TLS_1_3)
-                    .allEnabledCipherSuites()
-                    .build()
+    private val client = OkHttpClient.Builder()
+        .readTimeout(timeout.toLong(), TimeUnit.MILLISECONDS)
+        .build()
 
-                connectionSpecs(listOf(spec))
-            }
-            preconfigured = OkHttpClient.Builder()
-                .pingInterval(timeout.toLong(), TimeUnit.SECONDS)
-                .build()
-        }
+    private var webSocket: WebSocket? = null
+
+    /**
+     * Invoked when a web socket has been accepted by the remote peer and may begin transmitting
+     * messages.
+     */
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+        logger.debug("WebSocket connected to $serverUrl using TLS: ${response.handshake?.tlsVersion}")
+
+        listener.onOpen()
     }
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val sendChannel = Channel<ByteArray>(capacity = 128)
-
-    internal fun send(data: ByteArray) {
-        scope.launch {
-            if (!sendChannel.trySend(data).isSuccess) {
-                logger.error("Send buffer is full, message dropped")
-            }
-        }
+    /** Invoked when a text (type `0x1`) message has been received. */
+    override fun onMessage(webSocket: WebSocket, text: String) {
+        // Ignore string messages
+        logger.debug("Got string message: $text")
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    internal fun connect() {
-        logger.debug("Connecting to $serverUri")
-
-        scope.launch {
-            try {
-                client.wss(urlString = serverUri.toString()) {
-                    listener.onOpen()
-
-                    while (isActive) {
-                        if (!incoming.isEmpty) {
-                            when (val frame = incoming.receive()) {
-                                is Frame.Binary -> listener.onData(frame.readBytes())
-                                is Frame.Close -> listener.onClose(true)
-                                is Frame.Text -> logger.debug("Got string message: ${frame.readText()}")
-                                else -> Unit
-                            }
-                        }
-
-                        if (!sendChannel.isEmpty) {
-                            val data = sendChannel.receive()
-                            send(data)
-                        }
-                    }
-                }
-            } catch (e: CancellationException) {
-                logger.debug("Connection cancelled", e)
-            } catch (e: Throwable) {
-                logger.error("Unexpected error during WebSocket communication", e)
-            } finally {
-                logger.debug("Shutting down WebSocket connection")
-                close()
-            }
-        }
+    /** Invoked when a binary (type `0x2`) message has been received. */
+    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+        listener.onData(bytes.toByteArray())
     }
 
-    internal fun close() {
-        listener.onClose(false)
-        scope.cancel()
-        client.close()
+    /**
+     * Invoked when the remote peer has indicated that no more incoming messages will be transmitted.
+     */
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        logger.debug("Closing connection: $code")
     }
 
-    internal interface WSListener {
-        fun onData(data: ByteArray?)
+    /**
+     * Invoked when both peers have indicated that no more messages will be transmitted and the
+     * connection has been successfully released. No further calls to this listener will be made.
+     */
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        logger.debug("Closed connection: $code, reason: $reason")
+        listener.onClose(true)
+    }
+
+    /**
+     * Invoked when a web socket has been closed due to an error reading from or writing to the
+     * network. Both outgoing and incoming messages may have been lost. No further calls to this
+     * listener will be made.
+     */
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        listener.onError(t)
+    }
+
+    fun connect() {
+        val request = Request.Builder().url(serverUrl.toString()).build()
+        webSocket = client.newWebSocket(request, this)
+    }
+
+    fun send(data: ByteArray) {
+        webSocket?.send(ByteString.of(*data))
+    }
+
+    fun close() {
+        webSocket?.close(1000, null)
+
+        // Shutdown the okhttp client to prevent hanging.
+        client.dispatcher.executorService.shutdown()
+        client.connectionPool.evictAll()
+        client.cache?.close()
+    }
+
+    interface WSListener {
+        fun onData(data: ByteArray)
         fun onClose(remote: Boolean)
-        fun onError(ex: Exception?)
+        fun onError(t: Throwable)
         fun onOpen()
     }
 }
