@@ -161,7 +161,7 @@ public class SampleLogonAuthentication implements Runnable {
                 System.err.println("An error occurred:" + e.getMessage());
             }
 
-            steamClient.disconnect();
+            steamUser.logOff();
         }
     }
 

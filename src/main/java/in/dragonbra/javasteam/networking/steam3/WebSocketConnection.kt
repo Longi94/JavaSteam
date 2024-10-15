@@ -84,6 +84,7 @@ class WebSocketConnection :
 
     override fun onError(t: Throwable) {
         logger.error("Error in websocket", t)
+        onDisconnected(false)
     }
 
     override fun onOpen() {
