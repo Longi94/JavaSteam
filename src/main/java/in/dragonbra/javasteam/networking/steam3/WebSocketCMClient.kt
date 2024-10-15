@@ -31,15 +31,12 @@ class WebSocketCMClient(
      * messages.
      */
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        logger.debug("WebSocket connected to $serverUrl using TLS: ${response.handshake?.tlsVersion}")
-
-        listener.onOpen()
+        listener.onOpen(response)
     }
 
     /** Invoked when a text (type `0x1`) message has been received. */
     override fun onMessage(webSocket: WebSocket, text: String) {
-        // Ignore string messages
-        logger.debug("Got string message: $text")
+        listener.onTextData(text)
     }
 
     /** Invoked when a binary (type `0x2`) message has been received. */
@@ -51,7 +48,7 @@ class WebSocketCMClient(
      * Invoked when the remote peer has indicated that no more incoming messages will be transmitted.
      */
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-        logger.debug("Closing connection: $code")
+        listener.onClosing(code, reason)
     }
 
     /**
@@ -59,7 +56,6 @@ class WebSocketCMClient(
      * connection has been successfully released. No further calls to this listener will be made.
      */
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        logger.debug("Closed connection: $code, reason: $reason")
         listener.onClose(true)
     }
 
@@ -91,9 +87,11 @@ class WebSocketCMClient(
     }
 
     interface WSListener {
+        fun onTextData(data: String)
         fun onData(data: ByteArray)
         fun onClose(remote: Boolean)
+        fun onClosing(code: Int, reason: String)
         fun onError(t: Throwable)
-        fun onOpen()
+        fun onOpen(response: Response)
     }
 }

@@ -75,7 +75,9 @@ class SteamUser : ClientMsgHandler() {
             }.build().also(logon.body::setObfuscatedPrivateIp)
         } else {
             CMsgIPAddress.newBuilder().apply {
-                v4 = NetHelpers.getIPAddress(client.localIP) xor MsgClientLogon.ObfuscationMask
+                client.localIP?.let { localIp ->
+                    v4 = NetHelpers.getIPAddress(localIp) xor MsgClientLogon.ObfuscationMask
+                }
             }.build().also(logon.body::setObfuscatedPrivateIp)
         }
 

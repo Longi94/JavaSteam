@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.networking.steam3
 
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
+import okhttp3.Response
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.URI
@@ -54,11 +55,8 @@ class WebSocketConnection :
         }
     }
 
-    override fun getLocalIP(): InetAddress? {
-        // TODO get local ip
-        logger.debug("TODO getLocalIP()")
-        return null
-    }
+    // TODO get local ip? SK uses `IPAddress.None` here.
+    override fun getLocalIP(): InetAddress? = null
 
     override fun getCurrentEndPoint(): InetSocketAddress? = socketEndPoint
 
@@ -72,6 +70,11 @@ class WebSocketConnection :
         this.socketEndPoint = null
     }
 
+    override fun onTextData(data: String) {
+        // Ignore string messages
+        logger.debug("Got string message: $data")
+    }
+
     override fun onData(data: ByteArray) {
         if (data.isNotEmpty()) {
             onNetMsgReceived(NetMsgEventArgs(data, getCurrentEndPoint()))
@@ -79,7 +82,12 @@ class WebSocketConnection :
     }
 
     override fun onClose(remote: Boolean) {
+        logger.debug("Closed connection")
         onDisconnected(userInitiated && !remote)
+    }
+
+    override fun onClosing(code: Int, reason: String) {
+        logger.debug("Closing connection, code: $code")
     }
 
     override fun onError(t: Throwable) {
@@ -87,7 +95,8 @@ class WebSocketConnection :
         onDisconnected(false)
     }
 
-    override fun onOpen() {
+    override fun onOpen(response: Response) {
+        logger.debug("WebSocket connected to $socketEndPoint using TLS: ${response.handshake?.tlsVersion}")
         onConnected()
     }
 }
