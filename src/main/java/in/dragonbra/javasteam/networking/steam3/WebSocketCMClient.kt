@@ -1,6 +1,5 @@
 package `in`.dragonbra.javasteam.networking.steam3
 
-import `in`.dragonbra.javasteam.util.log.LogManager
 import java.net.URI
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
@@ -17,7 +16,7 @@ class WebSocketCMClient(
 ) : WebSocketListener() {
 
     companion object {
-        private val logger = LogManager.getLogger(WebSocketCMClient::class.java)
+        // private val logger = LogManager.getLogger(WebSocketCMClient::class.java)
     }
 
     private val client = OkHttpClient.Builder()
@@ -32,6 +31,7 @@ class WebSocketCMClient(
      */
     override fun onOpen(webSocket: WebSocket, response: Response) {
         listener.onOpen(response)
+        response.close()
     }
 
     /** Invoked when a text (type `0x1`) message has been received. */
@@ -56,7 +56,8 @@ class WebSocketCMClient(
      * connection has been successfully released. No further calls to this listener will be made.
      */
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-        listener.onClose(true)
+        listener.onClose(code, reason)
+        this.webSocket = null
     }
 
     /**
@@ -66,6 +67,7 @@ class WebSocketCMClient(
      */
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         listener.onError(t)
+        response?.close()
     }
 
     fun connect() {
@@ -89,7 +91,7 @@ class WebSocketCMClient(
     interface WSListener {
         fun onTextData(data: String)
         fun onData(data: ByteArray)
-        fun onClose(remote: Boolean)
+        fun onClose(code: Int, reason: String)
         fun onClosing(code: Int, reason: String)
         fun onError(t: Throwable)
         fun onOpen(response: Response)

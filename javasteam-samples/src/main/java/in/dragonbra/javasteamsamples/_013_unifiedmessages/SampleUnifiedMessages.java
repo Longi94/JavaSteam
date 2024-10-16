@@ -138,7 +138,16 @@ public class SampleUnifiedMessages implements Runnable {
     private void onDisconnected(DisconnectedCallback callback) {
         System.out.println("Disconnected from Steam");
 
-        isRunning = false;
+        if (callback.isUserInitiated()) {
+            isRunning = false;
+        } else {
+            try {
+                Thread.sleep(2000L);
+                steamClient.connect();
+            } catch (InterruptedException e) {
+                System.err.println("An Interrupted exception occurred. " + e.getMessage());
+            }
+        }
     }
 
     private void onLoggedOn(LoggedOnCallback callback) {

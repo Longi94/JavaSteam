@@ -23,8 +23,6 @@ class WebSocketConnection :
 
     private var socketEndPoint: InetSocketAddress? = null
 
-    private var userInitiated = false
-
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
         logger.debug("Connecting to $endPoint...")
 
@@ -35,6 +33,7 @@ class WebSocketConnection :
         oldClient?.let { oldClient ->
             logger.debug("Attempted to connect while already connected. Closing old connection...")
             oldClient.close()
+            onDisconnected(false)
         }
 
         socketEndPoint = endPoint
@@ -63,11 +62,14 @@ class WebSocketConnection :
     override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
 
     private fun disconnectCore(userInitiated: Boolean) {
-        val oldClient = client.getAndSet(null)
+        logger.debug("User initiated disconnection:  $userInitiated")
 
+        val oldClient = client.getAndSet(null)
         oldClient?.close()
-        this.userInitiated = userInitiated
-        this.socketEndPoint = null
+
+        onDisconnected(userInitiated)
+
+        socketEndPoint = null
     }
 
     override fun onTextData(data: String) {
@@ -81,18 +83,17 @@ class WebSocketConnection :
         }
     }
 
-    override fun onClose(remote: Boolean) {
-        logger.debug("Closed connection")
-        onDisconnected(userInitiated && !remote)
+    override fun onClose(code: Int, reason: String) {
+        logger.debug("Connection closed")
     }
 
     override fun onClosing(code: Int, reason: String) {
-        logger.debug("Closing connection, code: $code")
+        logger.debug("Closing connection")
     }
 
     override fun onError(t: Throwable) {
         logger.error("Error in websocket", t)
-        onDisconnected(false)
+        disconnectCore(false)
     }
 
     override fun onOpen(response: Response) {
