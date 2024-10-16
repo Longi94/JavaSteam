@@ -8,7 +8,7 @@ import `in`.dragonbra.javasteam.enums.EAccountFlags
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.generated.MsgClientLogOnResponse
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalSteamclient
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalObjects.ParentalSettings
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.SteamUser
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
@@ -123,7 +123,7 @@ class LoggedOnCallback : CallbackMsg {
     /**
      * Gets the Steam parental settings.
      */
-    var parentalSettings: SteammessagesParentalSteamclient.ParentalSettings? = null
+    var parentalSettings: ParentalSettings? = null
 
     constructor(packetMsg: IPacketMsg) {
         if (!packetMsg.isProto) {
@@ -167,7 +167,7 @@ class LoggedOnCallback : CallbackMsg {
 
         resp.parentalSettings?.let {
             try {
-                parentalSettings = SteammessagesParentalSteamclient.ParentalSettings.parseFrom(it)
+                parentalSettings = ParentalSettings.parseFrom(it)
             } catch (e: InvalidProtocolBufferException) {
                 e.printStackTrace()
             }
