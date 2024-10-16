@@ -17,7 +17,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.CancellationException;
 
@@ -153,24 +152,33 @@ public class SampleLogonAuthentication implements Runnable {
             // parseJsonWebToken(pollResponse.accessToken, "AccessToken");
             // parseJsonWebToken(pollResponse.refreshToken, "RefreshToken");
         } catch (Exception e) {
-            System.err.println(Arrays.toString(e.getSuppressed()));
-            System.err.println("onConnected:" + e.getMessage());
-
             // List a couple of exceptions that could be important to handle.
             if (e instanceof AuthenticationException) {
-                System.out.println("An Authentication error has occurred. " + e.getMessage());
+                System.err.println("An Authentication error has occurred. " + e.getMessage());
+            } else if (e instanceof CancellationException) {
+                System.err.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
+            } else {
+                System.err.println("An error occurred:" + e.getMessage());
             }
 
-            if (e instanceof CancellationException) {
-                System.out.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
-            }
+            steamUser.logOff();
         }
     }
 
     private void onDisconnected(DisconnectedCallback callback) {
-        System.out.println("Disconnected from Steam");
+        System.out.println("Disconnected from Steam. User initialized: " + callback.isUserInitiated());
 
-        isRunning = false;
+        // If the disconnection was not user initiated, we will retry connecting to steam again after a short delay.
+        if (callback.isUserInitiated()) {
+            isRunning = false;
+        } else {
+            try {
+                Thread.sleep(2000L);
+                steamClient.connect();
+            } catch (InterruptedException e) {
+                System.err.println("An Interrupted exception occurred. " + e.getMessage());
+            }
+        }
     }
 
     private void onLoggedOn(LoggedOnCallback callback) {

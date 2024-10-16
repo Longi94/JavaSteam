@@ -3,9 +3,9 @@ package in.dragonbra.javasteam.steam;
 import in.dragonbra.javasteam.base.*;
 import in.dragonbra.javasteam.enums.EMsg;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.enums.EServerType;
 import in.dragonbra.javasteam.enums.EUniverse;
 import in.dragonbra.javasteam.generated.MsgClientLogon;
+import in.dragonbra.javasteam.generated.MsgClientServerUnavailable;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
@@ -69,20 +69,28 @@ public abstract class CMClient {
 
     private final ScheduledFunction heartBeatFunc;
 
-    private final Map<EServerType, Set<InetSocketAddress>> serverMap;
-
     private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> onClientMsgReceived(getPacketMsg(e.getData()));
 
     private final EventHandler<EventArgs> connected = (sender, e) -> {
+        logger.debug("EventHandler `connected` called");
+
         getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
 
         isConnected = true;
-        onClientConnected();
+
+        try {
+            onClientConnected();
+        } catch (Exception ex) {
+            logger.error("Unhandled exception after connecting: ", ex);
+            disconnect(false);
+        }
     };
 
     private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
+            logger.debug("EventHandler `disconnected` called");
+
             isConnected = false;
 
             if (!e.isUserInitiated() && !expectDisconnection) {
@@ -109,7 +117,6 @@ public abstract class CMClient {
         }
 
         this.configuration = configuration;
-        this.serverMap = new HashMap<>();
 
         heartBeatFunc = new ScheduledFunction(() -> send(new ClientMsgProtobuf<CMsgClientHeartBeat.Builder>(CMsgClientHeartBeat.class, EMsg.ClientHeartBeat)), 5000);
     }
@@ -137,7 +144,7 @@ public abstract class CMClient {
     public void connect(ServerRecord cmServer) {
         synchronized (connectionLock) {
             try {
-                disconnect();
+                disconnect(true);
 
                 assert connection == null;
 
@@ -147,7 +154,7 @@ public abstract class CMClient {
                     cmServer = getServers().getNextServerCandidate(configuration.getProtocolTypes());
                 }
 
-                connection = createConnection(configuration.getProtocolTypes());
+                connection = createConnection(cmServer.getProtocolTypes());
                 connection.getNetMsgReceived().addEventHandler(netMsgReceived);
                 connection.getConnected().addEventHandler(connected);
                 connection.getDisconnected().addEventHandler(disconnected);
@@ -163,11 +170,15 @@ public abstract class CMClient {
      * Disconnects this client.
      */
     public void disconnect() {
+        disconnect(true);
+    }
+
+    private void disconnect(boolean userInitiated) {
         synchronized (connectionLock) {
             heartBeatFunc.stop();
 
             if (connection != null) {
-                connection.disconnect();
+                connection.disconnect(userInitiated);
             }
         }
     }
@@ -212,25 +223,10 @@ public abstract class CMClient {
         }
     }
 
-    /**
-     * Returns the list of servers matching the given type
-     *
-     * @param type Server type requested
-     * @return List of server endpoints
-     */
-    public List<InetSocketAddress> getServers(EServerType type) {
-        Set<InetSocketAddress> addresses = serverMap.get(type);
-        if (addresses != null) {
-            return new ArrayList<>(addresses);
-        }
-
-        return new ArrayList<>();
-    }
-
     protected boolean onClientMsgReceived(IPacketMsg packetMsg) {
         if (packetMsg == null) {
             logger.debug("Packet message failed to parse, shutting down connection");
-            disconnect();
+            disconnect(false);
             return false;
         }
 
@@ -254,6 +250,9 @@ public abstract class CMClient {
                 break;
             case ClientLoggedOff: // to stop heart beating when we get logged off
                 handleLoggedOff(packetMsg);
+                break;
+            case ClientServerUnavailable:
+                handleServerUnavailable(packetMsg);
                 break;
             case ClientSessionToken: // am session token
                 handleSessionToken(packetMsg);
@@ -279,9 +278,6 @@ public abstract class CMClient {
      * @param userInitiated whether the disconnect was initialized by the client
      */
     protected void onClientDisconnected(boolean userInitiated) {
-        for (Set<InetSocketAddress> set : serverMap.values()) {
-            set.clear();
-        }
     }
 
     private Connection createConnection(EnumSet<ProtocolTypes> protocol) {
@@ -422,6 +418,15 @@ public abstract class CMClient {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
         }
+    }
+
+    private void handleServerUnavailable(IPacketMsg packetMsg) {
+        var msgServerUnavailable = new ClientMsg<>(MsgClientServerUnavailable.class, packetMsg);
+
+        logger.debug("A server of type " + msgServerUnavailable.getBody().getEServerTypeUnavailable() +
+                "was not available for request: " + EMsg.from(msgServerUnavailable.getBody().getEMsgSent()));
+
+        disconnect(false);
     }
 
     private void handleSessionToken(IPacketMsg packetMsg) {

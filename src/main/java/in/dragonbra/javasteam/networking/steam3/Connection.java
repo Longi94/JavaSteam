@@ -59,7 +59,7 @@ public abstract class Connection {
     /**
      * Disconnects this instance.
      */
-    public abstract void disconnect();
+    public abstract void disconnect(boolean userInitiated);
 
     /**
      * Sends the specified data packet.

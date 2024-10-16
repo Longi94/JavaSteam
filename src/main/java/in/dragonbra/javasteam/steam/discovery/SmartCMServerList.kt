@@ -20,12 +20,13 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     private val servers: MutableList<ServerInfo> = mutableListOf()
 
     // Determines how long a server's bad connection state is remembered for.
+    @Suppress("MemberVisibilityCanBePrivate")
     var badConnectionMemoryTimeSpan: Duration = Duration.ofMinutes(5)
 
     @Throws(IOException::class)
     private fun startFetchingServers() {
         // if the server list has been populated, no need to perform any additional work
-        if (!servers.isEmpty()) {
+        if (servers.isNotEmpty()) {
             return
         }
 
@@ -59,6 +60,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     /**
      * Resets the scores of all servers which has a last bad connection more than [SmartCMServerList.badConnectionMemoryTimeSpan] ago.
      */
+    @Suppress("MemberVisibilityCanBePrivate")
     fun resetOldScores() {
         val cutoff = Instant.now().minus(badConnectionMemoryTimeSpan)
 
@@ -106,7 +108,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
         tryMark(endPoint, EnumSet.of(protocolTypes), quality)
 
     fun tryMark(endPoint: InetSocketAddress, protocolTypes: EnumSet<ProtocolTypes>, quality: ServerQuality): Boolean {
-        var serverInfos = listOf<ServerInfo>()
+        val serverInfos: List<ServerInfo>
 
         if (quality == ServerQuality.GOOD) {
             serverInfos = servers.filter { x ->

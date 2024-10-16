@@ -123,10 +123,10 @@ public class TcpConnection extends Connection {
     }
 
     @Override
-    public void disconnect() {
+    public void disconnect(boolean userInitiated) {
         synchronized (netLock) {
             if (netLoop != null) {
-                netLoop.stop(true);
+                netLoop.stop(userInitiated);
             }
         }
     }
