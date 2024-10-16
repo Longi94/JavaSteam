@@ -624,7 +624,7 @@ public class KeyValue {
         while (true) {
             Type type = Type.from(br.readByte());
 
-            if (type == Type.END) {
+            if (type == Type.END || type == Type.ALTERNATEEND) {
                 break;
             }
 
@@ -685,7 +685,8 @@ public class KeyValue {
         COLOR((byte) 6),
         UINT64((byte) 7),
         END((byte) 8),
-        INT64((byte) 10);
+        INT64((byte) 10),
+        ALTERNATEEND((byte) 11);
 
         private final byte code;
 
