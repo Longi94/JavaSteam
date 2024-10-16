@@ -551,6 +551,27 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
+    public void decodesBinaryWithAlternateEnd() {
+        var hex = "00546573744F626A656374000A6B65790001020304050607080B0B";
+        byte[] binary = null;
+        try {
+            binary = Hex.decodeHex(hex);
+        } catch (DecoderException e) {
+            Assertions.fail(e);
+        }
+        var kv = new KeyValue();
+
+        try (var ms = new MemoryStream(binary)) {
+            var read = kv.tryReadAsBinary(ms);
+            Assertions.assertTrue(read);
+        } catch (IOException e) {
+            Assertions.fail(e);
+        }
+
+        Assertions.assertEquals(0x0807060504030201L, kv.get("key").asLong());
+    }
+
+    @Test
     public void keyValuesHandlesEnum() {
         KeyValue kv = KeyValue.loadFromString("" +
                 "\"root\"" +
