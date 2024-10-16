@@ -42,7 +42,6 @@ import java.util.zip.GZIPInputStream;
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
  * the {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} class.
  */
-@SuppressWarnings("unused")
 public abstract class CMClient {
 
     private static final Logger logger = LogManager.getLogger(CMClient.class);
@@ -256,9 +255,6 @@ public abstract class CMClient {
             case ClientLoggedOff: // to stop heart beating when we get logged off
                 handleLoggedOff(packetMsg);
                 break;
-            case ClientCMList:
-                handleCMList(packetMsg);
-                break;
             case ClientSessionToken: // am session token
                 handleSessionToken(packetMsg);
                 break;
@@ -379,7 +375,7 @@ public abstract class CMClient {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("error in handleMulti()", e);
         }
     }
 
@@ -426,28 +422,6 @@ public abstract class CMClient {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
         }
-    }
-
-    private void handleCMList(IPacketMsg packetMsg) {
-        ClientMsgProtobuf<CMsgClientCMList.Builder> cmMsg = new ClientMsgProtobuf<>(CMsgClientCMList.class, packetMsg);
-
-        if (cmMsg.getBody().getCmPortsCount() != cmMsg.getBody().getCmAddressesCount()) {
-            logger.debug("HandleCMList received malformed message");
-        }
-
-        List<Integer> addresses = cmMsg.getBody().getCmAddressesList();
-        List<Integer> ports = cmMsg.getBody().getCmPortsList();
-
-        List<ServerRecord> cmList = new ArrayList<>();
-        for (int i = 0; i < Math.min(addresses.size(), ports.size()); i++) {
-            cmList.add(ServerRecord.createSocketServer(new InetSocketAddress(NetHelpers.getIPAddress(addresses.get(i)), ports.get(i))));
-        }
-
-        for (String s : cmMsg.getBody().getCmWebsocketAddressesList()) {
-            cmList.add(ServerRecord.createWebSocketServer(s));
-        }
-
-        getServers().replaceList(cmList);
     }
 
     private void handleSessionToken(IPacketMsg packetMsg) {

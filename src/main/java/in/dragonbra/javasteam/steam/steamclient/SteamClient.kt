@@ -22,7 +22,6 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats
 import `in`.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.ICallbackMsg
-import `in`.dragonbra.javasteam.steam.steamclient.callbacks.CMListCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
@@ -212,7 +211,6 @@ class SteamClient @JvmOverloads constructor(
 
         // we want to handle some of the clientMsg's before we pass them along to registered handlers
         when (packetMsg.getMsgType()) {
-            EMsg.ClientCMList -> handleCMList(packetMsg)
             EMsg.JobHeartbeat -> handleJobHeartbeat(packetMsg)
             EMsg.DestJobFailed -> handleJobFailed(packetMsg)
             else -> Unit
@@ -259,13 +257,7 @@ class SteamClient @JvmOverloads constructor(
         postCallback(DisconnectedCallback(userInitiated))
     }
 
-// fun clearHandlerCaches()
-
-    private fun handleCMList(packetMsg: IPacketMsg) {
-        val cmMsg = ClientMsgProtobuf<CMsgClientCMList.Builder>(CMsgClientCMList::class.java, packetMsg)
-
-        CMListCallback(cmMsg.body).let(::postCallback)
-    }
+    // fun clearHandlerCaches()
 
     private fun handleJobHeartbeat(packetMsg: IPacketMsg) {
         JobID(packetMsg.getTargetJobID()).let(jobManager::heartbeatJob)
