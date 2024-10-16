@@ -1,9 +1,7 @@
 package `in`.dragonbra.javasteam.steam.steamclient
 
-import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EMsg
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList
 import `in`.dragonbra.javasteam.steam.CMClient
 import `in`.dragonbra.javasteam.steam.authentication.SteamAuthentication
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler

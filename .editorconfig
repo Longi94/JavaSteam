@@ -8,6 +8,12 @@ trim_trailing_whitespace = true
 [*.{kt,kts}]
 ij_kotlin_packages_to_use_import_on_demand = java.util.**, in.dragonbra.javasteam.protobufs.steamclient.**, kotlinx.coroutines.**
 indent_size = 4
+max-line-length = 120
+
+# Not sure which method to properly choose
+# https://pinterest.github.io/ktlint/latest/rules/standard/#function-signature
+ktlint_standard_function-signature = disabled
+
 ktlint_code_style = intellij_idea
 ktlint_standard_package-name = disabled
 ktlint_standard_multiline-expression-wrapping = disabled
