@@ -68,6 +68,7 @@ class WebSocketCMClient(
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         listener.onError(t)
         response?.close()
+        this.webSocket = null
     }
 
     fun connect() {
