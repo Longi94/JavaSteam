@@ -1,13 +1,13 @@
 package `in`.dragonbra.javasteam.networking.steam3
 
-import java.net.URI
-import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import java.net.URI
+import java.util.concurrent.TimeUnit
 
 class WebSocketCMClient(
     timeout: Int,
