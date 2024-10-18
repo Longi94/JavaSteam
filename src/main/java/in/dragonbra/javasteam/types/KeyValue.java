@@ -442,6 +442,7 @@ public class KeyValue {
             return null;
         }
 
+        // TODO charsets?
         try (FileInputStream fis = new FileInputStream(file)) {
             // Massage the incoming file to be encoded as UTF-8.
             String fisString = IOUtils.toString(fis, Charset.defaultCharset());
