@@ -1,91 +1,123 @@
-package in.dragonbra.javasteam.types;
+package `in`.dragonbra.javasteam.types
 
-import in.dragonbra.javasteam.util.Passable;
-import in.dragonbra.javasteam.util.Strings;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PushbackInputStream;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
+import `in`.dragonbra.javasteam.util.Passable
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.lang.IllegalStateException
+import java.lang.StringBuilder
+import java.nio.charset.StandardCharsets
 
 /**
  * @author lngtr
  * @since 2018-02-26
  */
-public class KVTextReader extends PushbackInputStream {
+class KVTextReader
+internal constructor(
+    kv: KeyValue,
+    inputStream: InputStream,
+) : InputStreamReader(inputStream, StandardCharsets.UTF_8) {
 
-    public static final Map<Character, Character> ESCAPED_MAPPING;
-
-    private final StringBuilder sb = new StringBuilder(128);
-
-    static {
-        Map<Character, Character> escapedMapping = new TreeMap<>();
-
-        escapedMapping.put('n', '\n');
-        escapedMapping.put('r', '\r');
-        escapedMapping.put('t', '\t');
-        escapedMapping.put('\\', '\\');
-
-        ESCAPED_MAPPING = Collections.unmodifiableMap(escapedMapping);
+    companion object {
+        @JvmField
+        val ESCAPED_MAPPING = mapOf<Char, Char>(
+            '\\' to '\\',
+            'n' to '\n',
+            'r' to '\r',
+            't' to '\t',
+            // todo: any others?
+        )
     }
 
-    KVTextReader(KeyValue kv, InputStream is) throws IOException {
-        super(is);
-        Passable<Boolean> wasQuoted = new Passable<>(false);
-        Passable<Boolean> wasConditional = new Passable<>(false);
+    private val sb = StringBuilder(128)
 
-        KeyValue currentKey = kv;
+    private var peekedChar: Int? = null
+
+    // Mimics C# StreamReader 'Peek()'
+    val peek: Int
+        get() {
+            if (peekedChar == null) {
+                peekedChar = read()
+            }
+            return peekedChar ?: -1
+        }
+
+    // Mimics C# StreamReader 'EndOfStream'
+    val endOfStream: Boolean
+        get() {
+            return try {
+                peek == -1
+            } catch (_: IOException) {
+                true
+            }
+        }
+
+    init {
+        val wasQuoted = Passable<Boolean>(false)
+        val wasConditional = Passable<Boolean>(false)
+
+        var currentKey: KeyValue? = kv
 
         do {
-            String s = readToken(wasQuoted, wasConditional);
+            var s = readToken(wasQuoted, wasConditional)
 
-            if (Strings.isNullOrEmpty(s)) {
-                break;
+            if (s.isNullOrEmpty()) {
+                break
             }
 
             if (currentKey == null) {
-                currentKey = new KeyValue(s);
+                currentKey = KeyValue(s)
             } else {
-                currentKey.setName(s);
+                currentKey.name = s
             }
 
-            s = readToken(wasQuoted, wasConditional);
+            s = readToken(wasQuoted, wasConditional)
 
             if (wasConditional.getValue()) {
                 // Now get the '{'
-                s = readToken(wasQuoted, wasConditional);
+                s = readToken(wasQuoted, wasConditional)
             }
 
-            if (s.startsWith("{") && !wasQuoted.getValue()) {
+            if (s != null && s.startsWith("{") && !wasQuoted.getValue()) {
                 // header is valid so load the file
-                currentKey.recursiveLoadFromBuffer(this);
+                currentKey.recursiveLoadFromBuffer(this)
             } else {
-                throw new IllegalStateException("LoadFromBuffer: missing {");
+                throw IllegalStateException("LoadFromBuffer: missing {")
             }
 
-            currentKey = null;
-        } while (!endOfStream());
+            currentKey = null
+        } while (!endOfStream)
     }
 
-    private void eatWhiteSpace() throws IOException {
-        while (!endOfStream()) {
-            if (!Character.isWhitespace((char) peek())) {
-                break;
+    // override read() to peek the char.
+    override fun read(): Int {
+        if (peekedChar != null) {
+            val result = peekedChar!!
+            peekedChar = null
+            return result
+        }
+        return super.read()
+    }
+
+    @Throws(IOException::class)
+    private fun eatWhiteSpace() {
+        while (!endOfStream) {
+            if (!peek.toChar().isWhitespace()) {
+                break
             }
 
-            read();
+            read()
         }
     }
 
-    private boolean eatCPPComment() throws IOException {
-        if (!endOfStream()) {
-            char next = (char) peek();
+    @Throws(IOException::class)
+    private fun eatCPPComment(): Boolean {
+        if (!endOfStream) {
+            val next = peek.toChar()
 
             if (next == '/') {
-                readLine();
-                return true;
+                readLine()
+                return true
                 /*
                  *  As came up in parsing the Dota 2 units.txt file, the reference (Valve) implementation
                  *  of the KV format considers a single forward slash to be sufficient to comment out the
@@ -94,127 +126,112 @@ public class KVTextReader extends PushbackInputStream {
                  */
             }
 
-            return false;
+            return false
         }
-        return false;
+
+        return false
     }
 
-    private void readLine() throws IOException {
-        char c;
+    @Throws(IOException::class)
+    private fun readLine() {
+        var c: Char
         do {
-            c = (char) read();
-        } while (c != '\n' && !endOfStream());
+            c = read().toChar()
+        } while (c != '\n' && !endOfStream)
     }
 
-    private byte peek() throws IOException {
-        int p = read();
-        if (p >= 0) {
-            unread(p);
-        }
-        return (byte) p;
-    }
-
-    public String readToken(Passable<Boolean> wasQuoted, Passable<Boolean> wasConditional) throws IOException {
-        wasQuoted.setValue(false);
-        wasConditional.setValue(false);
+    @Throws(IOException::class)
+    fun readToken(wasQuoted: Passable<Boolean>, wasConditional: Passable<Boolean>): String? {
+        wasQuoted.value = false
+        wasConditional.value = false
 
         while (true) {
-            eatWhiteSpace();
+            eatWhiteSpace()
 
-            if (endOfStream()) {
-                return null;
+            if (endOfStream) {
+                return null
             }
 
             if (!eatCPPComment()) {
-                break;
+                break
             }
         }
 
-        if (endOfStream()) {
-            return null;
+        if (endOfStream) {
+            return null
         }
 
-        char next = (char) peek();
+        var next = peek.toChar()
         if (next == '"') {
-            wasQuoted.setValue(true);
+            wasQuoted.value = true
 
             // "
-            read();
+            read()
 
-            sb.setLength(0);
-            while (!endOfStream()) {
-                if (peek() == '\\') {
-                    read();
+            sb.clear()
+            while (!endOfStream) {
+                if (peek.toChar() == '\\') {
+                    read()
 
-                    char escapedChar = (char) read();
+                    val escapedChar = read().toChar()
+                    var replacedChar = ESCAPED_MAPPING[escapedChar] ?: escapedChar
 
-                    Character replacedChar = ESCAPED_MAPPING.get(escapedChar);
-                    if (replacedChar == null) {
-                        replacedChar = escapedChar;
-                    }
+                    sb.append(replacedChar)
 
-                    sb.append((char) replacedChar);
-
-                    continue;
+                    continue
                 }
 
-                if (peek() == '"') {
-                    break;
+                if (peek.toChar() == '"') {
+                    break
                 }
 
-                sb.append((char) read());
+                sb.append(read().toChar())
             }
 
             // "
-            read();
+            read()
 
-            return sb.toString();
+            return sb.toString()
         }
 
         if (next == '{' || next == '}') {
-            read();
-            return String.valueOf(next);
+            read()
+            return next.toString()
         }
 
-        boolean bConditionalStart = false;
-        int count = 0;
-        sb.setLength(0);
-
-        while (!endOfStream()) {
-            next = (char) peek();
+        var bConditionalStart = false
+        val count = 0
+        sb.clear()
+        while (!endOfStream) {
+            next = peek.toChar()
 
             if (next == '"' || next == '{' || next == '}') {
-                break;
+                break
             }
 
             if (next == '[') {
-                bConditionalStart = true;
+                bConditionalStart = true
             }
 
             if (next == ']' && bConditionalStart) {
-                wasConditional.setValue(true);
+                wasConditional.value = true
             }
 
-            if (Character.isWhitespace(next)) {
-                break;
+            if (next.isWhitespace()) {
+                break
             }
 
+            // count isn't used anymore, but still defined in SK.
+            @Suppress("KotlinConstantConditions")
             if (count < 1023) {
-                sb.append(next);
+                sb.append(next)
             } else {
-                throw new IOException("ReadToken overflow");
+                throw IOException("ReadToken overflow")
             }
 
-            read();
+            read()
         }
-        return sb.toString();
-    }
 
-    private boolean endOfStream() {
-        try {
-            return peek() == -1;
-        } catch (IOException e) {
-            return true;
-        }
+        return sb.toString()
     }
 }

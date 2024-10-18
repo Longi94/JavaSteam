@@ -9,8 +9,6 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.URI
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.*
 
 /**
@@ -89,14 +87,10 @@ class PICSProductInfo : CallbackMsg {
 
         if (appInfo.hasBuffer() && !appInfo.buffer.isEmpty) {
             try {
-                // get the buffer as a string using the jvm's default charset.
-                // note: IDK why, but we have to encode this using the default charset
-                val bufferString = appInfo.buffer.toString(Charset.defaultCharset())
-                // get the buffer as a byte array using utf-8 as a supported charset
-                val byteBuffer = bufferString.toByteArray(StandardCharsets.UTF_8)
                 // we don't want to read the trailing null byte
-                val ms = MemoryStream(byteBuffer, 0, byteBuffer.size - 1)
-                keyValues.readAsText(ms)
+                MemoryStream(appInfo.buffer.toByteArray(), 0, appInfo.buffer.size() - 1).use { ms ->
+                    keyValues.readAsText(ms)
+                }
             } catch (e: IOException) {
                 throw IllegalArgumentException("failed to read buffer", e)
             }
