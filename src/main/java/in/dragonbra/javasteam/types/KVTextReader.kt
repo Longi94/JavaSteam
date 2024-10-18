@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets
  * @since 2018-02-26
  */
 class KVTextReader
+@Throws(IllegalStateException::class, IOException::class)
 internal constructor(
     kv: KeyValue,
     inputStream: InputStream,
