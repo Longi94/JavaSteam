@@ -54,8 +54,9 @@ class PICSProductInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         isMetaDataOnly = msg.metaDataOnly
         isResponsePending = msg.responsePending
-        unknownPackages = Collections.unmodifiableList(msg.unknownPackageidsList)
-        unknownApps = Collections.unmodifiableList(msg.unknownAppidsList)
+
+        unknownPackages = msg.unknownPackageidsList
+        unknownApps = msg.unknownAppidsList
 
         apps = msg.appsList.associate { it.appid to PICSProductInfo(msg, it) }
         packages = msg.packagesList.associate { it.packageid to PICSProductInfo(it) }

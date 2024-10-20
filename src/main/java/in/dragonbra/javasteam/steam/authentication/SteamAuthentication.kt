@@ -53,7 +53,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @throws AuthenticationException if getting the public key failed.
      */
     @Throws(AuthenticationException::class)
-    private fun getPasswordRSAPublicKey(accountName: String?): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
+    private fun getPasswordRSAPublicKey(accountName: String): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
         val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder().apply {
             this.accountName = accountName
         }
@@ -145,11 +145,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @return [CredentialsAuthSession]
      */
     @Throws(AuthenticationException::class)
-    fun beginAuthSessionViaCredentials(authSessionDetails: AuthSessionDetails?): CredentialsAuthSession {
-        if (authSessionDetails == null) {
-            throw IllegalArgumentException("authSessionDetails is null")
-        }
-
+    fun beginAuthSessionViaCredentials(authSessionDetails: AuthSessionDetails): CredentialsAuthSession {
         if (authSessionDetails.username.isNullOrEmpty() || authSessionDetails.password.isNullOrEmpty()) {
             throw IllegalArgumentException(
                 "BeginAuthSessionViaCredentials requires a username and password to be set in authSessionDetails."
@@ -161,7 +157,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
         }
 
         // Encrypt the password
-        val passwordRSAPublicKey = getPasswordRSAPublicKey(authSessionDetails.username)
+        val passwordRSAPublicKey = getPasswordRSAPublicKey(authSessionDetails.username!!)
 
         val publicModulus = BigInteger(passwordRSAPublicKey.publickeyMod, 16)
         val publicExponent = BigInteger(passwordRSAPublicKey.publickeyExp, 16)

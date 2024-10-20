@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.generated.MsgClientGetLegacyGameKeyResponse
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import java.nio.charset.StandardCharsets
 
 /**
  * This callback is received in response to calling [SteamApps.getLegacyGameKey].
@@ -38,7 +39,7 @@ class LegacyGameKeyCallback(packetMsg: IPacketMsg) : CallbackMsg() {
         if (msg.length > 0) {
             val length: Int = msg.length - 1
             val payload = keyResponse.payload.toByteArray()
-            key = String(payload, 0, length)
+            key = String(payload, 0, length, StandardCharsets.US_ASCII)
         }
     }
 }

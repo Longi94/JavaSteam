@@ -8,17 +8,18 @@ import `in`.dragonbra.javasteam.generated.MsgClientChatEnter
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.ChatMemberInfo
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import java.io.ByteArrayInputStream
-import java.io.IOException
-import java.nio.charset.StandardCharsets
-import java.util.*
 
 /**
  * This callback is fired in response to attempting to join a chat.
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class ChatEnterCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+
+    companion object {
+        private val logger = LogManager.getLogger(ChatEnterCallback::class.java)
+    }
 
     /**
      * Gets the [SteamID] of the chat room.
@@ -90,19 +91,18 @@ class ChatEnterCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         numChatMembers = msg.numMembers
 
-        val bais = ByteArrayInputStream(chatEnter.payload.toByteArray())
-
+        val ms = chatEnter.payload
         try {
-            BinaryReader(bais).use { br ->
+            BinaryReader(ms).use { br ->
                 // steamclient always attempts to read the chat room name, regardless of the enter response
-                chatRoomName = br.readNullTermString(StandardCharsets.UTF_8)
+                chatRoomName = br.readNullTermString()
 
                 if (enterResponse != EChatRoomEnterResponse.Success) {
                     // the rest of the payload depends on a successful chat enter
                     return@use
                 }
 
-                val memberList: MutableList<ChatMemberInfo> = ArrayList<ChatMemberInfo>()
+                val memberList: MutableList<ChatMemberInfo> = mutableListOf()
 
                 for (i in 0 until numChatMembers) {
                     val memberInfo = ChatMemberInfo()
@@ -110,9 +110,11 @@ class ChatEnterCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
                     memberList.add(memberInfo)
                 }
-                chatMembers = Collections.unmodifiableList(memberList)
+
+                chatMembers = memberList.toList()
             }
-        } catch (ignored: IOException) {
+        } catch (e: Exception) {
+            logger.error("Failed to read chat enter info.", e)
         }
     }
 }

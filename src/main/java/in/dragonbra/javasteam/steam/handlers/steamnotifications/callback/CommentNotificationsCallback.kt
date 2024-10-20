@@ -30,9 +30,10 @@ class CommentNotificationsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
             CMsgClientCommentNotifications::class.java,
             packetMsg
         )
+        val msg = resp.body
 
-        commentCount = resp.body.countNewComments
-        commentOwnerCount = resp.body.countNewCommentsOwner
-        commentSubscriptionsCount = resp.body.countNewCommentsSubscriptions
+        commentCount = msg.countNewComments
+        commentOwnerCount = msg.countNewCommentsOwner
+        commentSubscriptionsCount = msg.countNewCommentsSubscriptions
     }
 }

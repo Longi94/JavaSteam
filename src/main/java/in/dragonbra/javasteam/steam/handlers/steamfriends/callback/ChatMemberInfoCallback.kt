@@ -8,8 +8,9 @@ import `in`.dragonbra.javasteam.generated.MsgClientChatMemberInfo
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.ChatMemberInfo
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import java.io.ByteArrayInputStream
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.IOException
 import java.util.*
 
@@ -18,6 +19,10 @@ import java.util.*
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+
+    companion object {
+        private val logger = LogManager.getLogger(ChatMemberInfoCallback::class.java)
+    }
 
     /**
      * Gets SteamId of the chat room.
@@ -42,7 +47,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
         type = msg.type
 
         when (type) {
-            EChatInfoType.StateChange -> stateChangeInfo = StateChangeDetails(membInfo.payload.toByteArray())
+            EChatInfoType.StateChange -> stateChangeInfo = StateChangeDetails(membInfo.payload)
             // todo: handle more types
             // based off disassembly
             //   - for InfoUpdate, a ChatMemberInfo object is present
@@ -55,7 +60,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * Represents state change information.
      */
-    class StateChangeDetails(data: ByteArray?) {
+    class StateChangeDetails(ms: MemoryStream) {
         /**
          * Gets the [SteamID] of the chatter that was acted on.
          */
@@ -79,7 +84,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         init {
             try {
-                BinaryReader(ByteArrayInputStream(data)).use { br ->
+                BinaryReader(ms).use { br ->
                     chatterActedOn = SteamID(br.readLong())
                     stateChange = EChatMemberStateChange.from(br.readInt())
                     chatterActedBy = SteamID(br.readLong())
@@ -88,7 +93,8 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                         memberInfo!!.readFromStream(br)
                     }
                 }
-            } catch (ignored: IOException) {
+            } catch (e: IOException) {
+                logger.error("Failed to read chat member info", e)
             }
         }
     }

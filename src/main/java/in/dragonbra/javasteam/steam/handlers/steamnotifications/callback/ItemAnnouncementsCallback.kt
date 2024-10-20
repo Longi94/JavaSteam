@@ -20,7 +20,8 @@ class ItemAnnouncementsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
             CMsgClientItemAnnouncements::class.java,
             packetMsg
         )
+        val msg = resp.body
 
-        count = resp.body.countNewItems
+        count = msg.countNewItems
     }
 }

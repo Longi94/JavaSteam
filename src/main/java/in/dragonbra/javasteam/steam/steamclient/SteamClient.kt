@@ -189,7 +189,7 @@ class SteamClient @JvmOverloads constructor(
         boxID = 0L
         processID = 0L
         sequentialCount = currentJobId.incrementAndGet()
-        setStartTime(processStartTime)
+        startTime = processStartTime
     }
 
     fun startJob(job: AsyncJob) {

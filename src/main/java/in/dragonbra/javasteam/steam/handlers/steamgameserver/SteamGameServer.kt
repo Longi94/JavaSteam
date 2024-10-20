@@ -8,6 +8,7 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EServerFlags
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGSServerType
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon
@@ -48,19 +49,19 @@ class SteamGameServer : ClientMsgHandler() {
 
         val gsId = SteamID(0, 0, client.universe, EAccountType.GameServer)
 
-        logon.protoHeader.setClientSessionid(0)
-        logon.protoHeader.setSteamid(gsId.convertToUInt64())
+        logon.protoHeader.clientSessionid = 0
+        logon.protoHeader.steamid = gsId.convertToUInt64()
 
-        val localIp: Int = NetHelpers.getIPAddress(client.localIP)
-        logon.body.setDeprecatedObfustucatedPrivateIp(localIp xor MsgClientLogon.ObfuscationMask) // TODO: Using deprecated method.
+        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
+        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp) // TODO validate
 
-        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
+        logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
 
-        logon.body.setClientOsType(Utils.getOSType().code())
-        logon.body.setGameServerAppId(details.appID)
-        logon.body.setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()))
+        logon.body.clientOsType = Utils.getOSType().code()
+        logon.body.gameServerAppId = details.appID
+        logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
-        logon.body.setGameServerToken(details.token)
+        logon.body.gameServerToken = details.token
 
         client.send(logon)
     }
@@ -83,17 +84,17 @@ class SteamGameServer : ClientMsgHandler() {
 
         val gsId = SteamID(0, 0, client.universe, EAccountType.AnonGameServer)
 
-        logon.protoHeader.setClientSessionid(0)
-        logon.protoHeader.setSteamid(gsId.convertToUInt64())
+        logon.protoHeader.clientSessionid = 0
+        logon.protoHeader.steamid = gsId.convertToUInt64()
 
-        val localIp: Int = NetHelpers.getIPAddress(client.localIP)
-        logon.body.setDeprecatedObfustucatedPrivateIp(localIp xor MsgClientLogon.ObfuscationMask) // TODO: Using deprecated method.
+        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
+        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp) // TODO: validate
 
-        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
+        logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
 
-        logon.body.setClientOsType(Utils.getOSType().code())
-        logon.body.setGameServerAppId(appId)
-        logon.body.setMachineId(ByteString.copyFrom(HardwareUtils.getMachineID()))
+        logon.body.clientOsType = Utils.getOSType().code()
+        logon.body.gameServerAppId = appId
+        logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
         client.send(logon)
     }
@@ -120,16 +121,20 @@ class SteamGameServer : ClientMsgHandler() {
     fun sendStatus(details: StatusDetails) {
         require(!(details.address != null && details.address is Inet6Address)) { "Only IPv4 addresses are supported." }
 
-        val status = ClientMsgProtobuf<CMsgGSServerType.Builder>(CMsgGSServerType::class.java, EMsg.GSServerType)
-        status.body.setAppIdServed(details.appID)
-        status.body.setFlags(EServerFlags.code(details.serverFlags))
-        status.body.setGameDir(details.gameDirectory)
-        status.body.setGamePort(details.port)
-        status.body.setGameQueryPort(details.queryPort)
-        status.body.setGameVersion(details.version)
+        val status = ClientMsgProtobuf<CMsgGSServerType.Builder>(
+            CMsgGSServerType::class.java,
+            EMsg.GSServerType
+        ).apply {
+            body.appIdServed = details.appID
+            body.flags = EServerFlags.code(details.serverFlags)
+            body.gameDir = details.gameDirectory
+            body.gamePort = details.port
+            body.gameQueryPort = details.queryPort
+            body.gameVersion = details.version
+        }
 
         details.address?.let {
-            status.body.setDeprecatedGameIpAddress(NetHelpers.getIPAddress(it)) // TODO: Using deprecated method.
+            status.body.deprecatedGameIpAddress = NetHelpers.getIPAddress(it) // TODO: validate
         }
 
         client.send(status)

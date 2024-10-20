@@ -54,8 +54,7 @@ class WebSocketConnection :
         }
     }
 
-    // TODO get local ip? SK uses `IPAddress.None` here.
-    override fun getLocalIP(): InetAddress? = null
+    override fun getLocalIP(): InetAddress? = InetAddress.getByAddress(byteArrayOf(0, 0, 0, 0))
 
     override fun getCurrentEndPoint(): InetSocketAddress? = socketEndPoint
 

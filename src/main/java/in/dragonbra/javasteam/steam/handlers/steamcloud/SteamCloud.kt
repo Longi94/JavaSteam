@@ -30,10 +30,11 @@ class SteamCloud : ClientMsgHandler() {
         val request = ClientMsgProtobuf<CMsgClientUFSGetUGCDetails.Builder>(
             CMsgClientUFSGetUGCDetails::class.java,
             EMsg.ClientUFSGetUGCDetails
-        )
-        request.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        request.body.setHcontent(ugcId.value)
+            body.hcontent = ugcId.value
+        }
 
         client.send(request)
 
@@ -52,11 +53,12 @@ class SteamCloud : ClientMsgHandler() {
         val request = ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfo.Builder>(
             CMsgClientUFSGetSingleFileInfo::class.java,
             EMsg.ClientUFSGetSingleFileInfo
-        )
-        request.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        request.body.setAppId(appId)
-        request.body.setFileName(filename)
+            body.appId = appId
+            body.fileName = filename
+        }
 
         client.send(request)
 
@@ -75,11 +77,12 @@ class SteamCloud : ClientMsgHandler() {
         val request = ClientMsgProtobuf<CMsgClientUFSShareFile.Builder>(
             CMsgClientUFSShareFile::class.java,
             EMsg.ClientUFSShareFile
-        )
-        request.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        request.body.setAppId(appId)
-        request.body.setFileName(filename)
+            body.appId = appId
+            body.fileName = filename
+        }
 
         client.send(request)
 

@@ -70,59 +70,64 @@ class SteamUser : ClientMsgHandler() {
 
         if (details.loginID != null) {
             // TODO: Support IPv6 login ids?
-            CMsgIPAddress.newBuilder().apply {
+            logon.body.obfuscatedPrivateIp = CMsgIPAddress.newBuilder().apply {
                 v4 = details.loginID!!
-            }.build().also(logon.body::setObfuscatedPrivateIp)
+            }.build()
         } else {
-            client.localIP?.let { clientIP ->
-                val msgIpAddr = NetHelpers.getMsgIPAddress(clientIP)
+            client.localIP?.let { localIP ->
+                val msgIpAddr = NetHelpers.getMsgIPAddress(localIP)
                 logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(msgIpAddr)
             }
         }
 
         // Legacy field, Steam client still sets it
         if (logon.body.obfuscatedPrivateIp.hasV4()) {
-            logon.body.setDeprecatedObfustucatedPrivateIp(logon.body.obfuscatedPrivateIp.getV4())
+            logon.body.deprecatedObfustucatedPrivateIp = logon.body.obfuscatedPrivateIp.v4
         }
 
-        logon.protoHeader.setClientSessionid(0)
-        logon.protoHeader.setSteamid(steamID.convertToUInt64())
+        logon.protoHeader.clientSessionid = 0
+        logon.protoHeader.steamid = steamID.convertToUInt64()
 
-        logon.body.setAccountName(details.username)
-        details.password?.let { logon.body.setPassword(it) }
-        logon.body.setShouldRememberPassword(details.shouldRememberPassword)
+        logon.body.accountName = details.username
+        logon.body.password = details.password
+        logon.body.shouldRememberPassword = details.shouldRememberPassword
 
-        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
-        logon.body.setClientOsType(details.clientOSType.code())
-        logon.body.setClientLanguage(details.clientLanguage)
-        logon.body.setCellId(details.cellID ?: client.configuration.cellID)
+        logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
+        logon.body.clientOsType = details.clientOSType.code()
+        logon.body.clientLanguage = details.clientLanguage
+        logon.body.cellId = details.cellID ?: client.configuration.cellID
 
-        logon.body.setSteam2TicketRequest(details.requestSteam2Ticket)
+        logon.body.steam2TicketRequest = details.requestSteam2Ticket
 
         // we're now using the latest steamclient package version, this is required to get a proper sentry file for steam guard
-        logon.body.setClientPackageVersion(1771) // todo: determine if this is still required
-        logon.body.setSupportsRateLimitResponse(true)
-        logon.body.setMachineName(details.machineName)
-        val machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
-        logon.body.setMachineId(machineId)
+        logon.body.clientPackageVersion = 1771 // todo: determine if this is still required
+        logon.body.supportsRateLimitResponse = true
+        logon.body.machineName = details.machineName
+        logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
         if (details.chatMode != ChatMode.DEFAULT) {
-            logon.body.setChatMode(details.chatMode.mode)
+            logon.body.chatMode = details.chatMode.mode
         }
 
         if (details.uiMode != EUIMode.Unknown) {
-            logon.body.setUiMode(details.uiMode.code())
+            logon.body.uiMode = details.uiMode.code()
         }
 
         if (details.isSteamDeck) {
-            logon.body.setIsSteamDeck(true)
+            logon.body.isSteamDeck = true
         }
 
         // steam guard
-        details.authCode?.let(logon.body::setAuthCode)
-        details.twoFactorCode?.let(logon.body::setTwoFactorCode)
+        if (details.authCode != null) {
+            logon.body.authCode = details.authCode
+        }
+        if (details.twoFactorCode != null) {
+            logon.body.twoFactorCode = details.twoFactorCode
+        }
 
-        details.accessToken?.let(logon.body::setAccessToken)
+        if (details.accessToken != null) {
+            logon.body.accessToken = details.accessToken
+        }
 
         client.send(logon)
     }
@@ -145,16 +150,15 @@ class SteamUser : ClientMsgHandler() {
 
         val auId = SteamID(0, 0, client.universe, EAccountType.AnonUser)
 
-        logon.protoHeader.setClientSessionid(0)
-        logon.protoHeader.setSteamid(auId.convertToUInt64())
+        logon.protoHeader.clientSessionid = 0
+        logon.protoHeader.steamid = auId.convertToUInt64()
 
-        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
-        logon.body.setClientOsType(details.clientOSType.code())
-        logon.body.setClientLanguage(details.clientLanguage)
-        logon.body.setCellId(details.cellID ?: client.configuration.cellID)
+        logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
+        logon.body.clientOsType = details.clientOSType.code()
+        logon.body.clientLanguage = details.clientLanguage
+        logon.body.cellId = details.cellID ?: client.configuration.cellID
 
-        val machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
-        logon.body.setMachineId(machineId)
+        logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
         client.send(logon)
     }

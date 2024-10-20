@@ -28,11 +28,12 @@ class SteamNetworking : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgClientNetworkingCertRequest.Builder>(
             CMsgClientNetworkingCertRequest::class.java,
             EMsg.ClientNetworkingCertRequest
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        msg.body.setAppId(appId)
-        msg.body.setKeyData(ByteString.copyFrom(publicKey))
+            body.appId = appId
+            body.keyData = ByteString.copyFrom(publicKey)
+        }
 
         client.send(msg)
 

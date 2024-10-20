@@ -4,6 +4,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverA
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.util.Strings
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.ByteArrayInputStream
@@ -16,6 +17,10 @@ import java.util.*
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 class PICSProductInfo : CallbackMsg {
+
+    companion object {
+        private val logger = LogManager.getLogger(PICSProductInfo::class.java)
+    }
 
     /**
      * Gets the ID of the app or package.
@@ -92,7 +97,7 @@ class PICSProductInfo : CallbackMsg {
                     keyValues.readAsText(ms)
                 }
             } catch (e: IOException) {
-                throw IllegalArgumentException("failed to read buffer", e)
+                logger.error("failed to read buffer", e)
             }
         }
 
@@ -112,6 +117,7 @@ class PICSProductInfo : CallbackMsg {
         if (packageInfo.hasBuffer()) {
             // we don't want to read the trailing null byte
             try {
+                // TODO memory stream like SK?
                 BinaryReader(ByteArrayInputStream(packageInfo.buffer.toByteArray())).use { br ->
                     // steamclient checks this value == 1 before it attempts to read the KV from the buffer
                     // see: CPackageInfo::UpdateFromBuffer(CSHA const&,uint,CUtlBuffer &)
@@ -120,7 +126,7 @@ class PICSProductInfo : CallbackMsg {
                     keyValues.tryReadAsBinary(br)
                 }
             } catch (e: IOException) {
-                throw IllegalArgumentException("failed to read buffer", e)
+                logger.error("failed to read buffer", e)
             }
         }
     }

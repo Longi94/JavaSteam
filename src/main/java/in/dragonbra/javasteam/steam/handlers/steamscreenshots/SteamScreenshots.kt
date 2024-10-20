@@ -27,20 +27,21 @@ class SteamScreenshots : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgClientUCMAddScreenshot.Builder>(
             CMsgClientUCMAddScreenshot::class.java,
             EMsg.ClientUCMAddScreenshot
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        details.gameID?.let {
-            msg.body.setAppid(it.appID)
+            if (details.gameID != null) {
+                body.appid = details.gameID!!.appID
+            }
+
+            body.caption = details.caption
+            body.filename = details.ufsImageFilePath
+            body.permissions = details.privacy.code()
+            body.thumbname = details.usfThumbnailFilePath
+            body.width = details.width
+            body.height = details.height
+            body.rtime32Created = (details.creationTime.time / 1000L).toInt()
         }
-
-        msg.body.setCaption(details.caption)
-        msg.body.setFilename(details.ufsImageFilePath)
-        msg.body.setPermissions(details.privacy.code())
-        msg.body.setThumbname(details.usfThumbnailFilePath)
-        msg.body.setWidth(details.width)
-        msg.body.setHeight(details.height)
-        msg.body.setRtime32Created((details.creationTime.time / 1000L).toInt())
 
         client.send(msg)
 

@@ -152,8 +152,8 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChangeStatus::class.java,
             EMsg.ClientChangeStatus
         ).apply {
-            body.setPersonaState(cache.localUser.personaState.code())
-            body.setPlayerName(name)
+            body.personaState = cache.localUser.personaState.code()
+            body.playerName = name
         }.also(client::send)
     }
 
@@ -176,8 +176,8 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChangeStatus::class.java,
             EMsg.ClientChangeStatus
         ).apply {
-            body.setPersonaState(state.code())
-            body.setPersonaSetByUser(true)
+            body.personaState = state.code()
+            body.personaSetByUser = true
         }.also(client::send)
     }
 
@@ -190,8 +190,8 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChangeStatus::class.java,
             EMsg.ClientChangeStatus
         ).apply {
-            body.setPersonaSetByUser(true)
-            body.setPersonaStateFlags(0)
+            body.personaSetByUser = true
+            body.personaStateFlags = 0
         }.also(client::send)
     }
 
@@ -212,8 +212,8 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChangeStatus::class.java,
             EMsg.ClientChangeStatus
         ).apply {
-            body.setPersonaSetByUser(true)
-            body.setPersonaStateFlags(flag.code())
+            body.personaSetByUser = true
+            body.personaStateFlags = flag.code()
         }.also(client::send)
     }
 
@@ -349,9 +349,9 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientFriendMsg::class.java,
             EMsg.ClientFriendMsg
         ).apply {
-            body.setSteamid(target.convertToUInt64())
-            body.setChatEntryType(type.code())
-            body.setMessage(ByteString.copyFrom(message, StandardCharsets.UTF_8))
+            body.steamid = target.convertToUInt64()
+            body.chatEntryType = type.code()
+            body.message = ByteString.copyFrom(message, StandardCharsets.UTF_8)
         }.also(client::send)
     }
 
@@ -365,7 +365,7 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientAddFriend::class.java,
             EMsg.ClientAddFriend
         ).apply {
-            body.setAccountnameOrEmailToAdd(accountNameOrEmail)
+            body.accountnameOrEmailToAdd = accountNameOrEmail
         }.also(client::send)
     }
 
@@ -379,7 +379,7 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientAddFriend::class.java,
             EMsg.ClientAddFriend
         ).apply {
-            body.setSteamidToAdd(steamID.convertToUInt64())
+            body.steamidToAdd = steamID.convertToUInt64()
         }.also(client::send)
     }
 
@@ -393,7 +393,7 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientRemoveFriend::class.java,
             EMsg.ClientRemoveFriend
         ).apply {
-            body.setFriendid(steamID.convertToUInt64())
+            body.friendid = steamID.convertToUInt64()
         }.also(client::send)
     }
 
@@ -469,11 +469,11 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChatInvite::class.java,
             EMsg.ClientChatInvite
         ).apply {
-            body.setSteamIdChat(chatID.convertToUInt64())
-            body.setSteamIdInvited(steamIdUser.convertToUInt64())
+            body.steamIdChat = chatID.convertToUInt64()
+            body.steamIdInvited = steamIdUser.convertToUInt64()
             // steamclient also sends the steamid of the user that did the invitation
             // we'll mimic that behavior
-            body.setSteamIdPatron(client.steamID.convertToUInt64())
+            body.steamIdPatron = client.steamID.convertToUInt64()
         }.also(client::send)
     }
 
@@ -548,7 +548,7 @@ class SteamFriends : ClientMsgHandler() {
             EMsg.ClientRequestFriendData
         ).apply {
             body.addAllFriends(steamIdList.map { it.convertToUInt64() })
-            body.setPersonaStateRequested(info)
+            body.personaStateRequested = info
         }.also(client::send)
     }
 
@@ -574,12 +574,13 @@ class SteamFriends : ClientMsgHandler() {
      */
     @JvmOverloads
     fun ignoreFriend(steamID: SteamID, setIgnore: Boolean = true): AsyncJobSingle<IgnoreFriendCallback> {
-        val ignore = ClientMsg(MsgClientSetIgnoreFriend::class.java)
-        ignore.setSourceJobID(client.getNextJobID())
+        val ignore = ClientMsg(MsgClientSetIgnoreFriend::class.java).apply {
+            sourceJobID = client.getNextJobID()
 
-        ignore.body.mySteamId = client.steamID
-        ignore.body.ignore = if (setIgnore) 1.toByte() else 0.toByte()
-        ignore.body.steamIdFriend = steamID
+            body.mySteamId = client.steamID
+            body.ignore = if (setIgnore) 1.toByte() else 0.toByte()
+            body.steamIdFriend = steamID
+        }
 
         client.send(ignore)
 
@@ -597,10 +598,11 @@ class SteamFriends : ClientMsgHandler() {
         val request = ClientMsgProtobuf<CMsgClientFriendProfileInfo.Builder>(
             CMsgClientFriendProfileInfo::class.java,
             EMsg.ClientFriendProfileInfo
-        )
-        request.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        request.body.setSteamidFriend(steamID.convertToUInt64())
+            body.steamidFriend = steamID.convertToUInt64()
+        }
 
         client.send(request)
 
@@ -618,7 +620,7 @@ class SteamFriends : ClientMsgHandler() {
             CMsgClientChatGetFriendMessageHistory::class.java,
             EMsg.ClientChatGetFriendMessageHistory
         ).apply {
-            body.setSteamid(steamID.convertToUInt64())
+            body.steamid = steamID.convertToUInt64()
         }.also(client::send)
     }
 
@@ -643,16 +645,16 @@ class SteamFriends : ClientMsgHandler() {
      * @return The Job ID of the request. This can be used to find the appropriate [NicknameCallback].
      */
     fun setFriendNickname(friendID: SteamID, nickname: String): JobID {
+        val jobID: JobID = client.getNextJobID()
         val request = ClientMsgProtobuf<CMsgClientSetPlayerNickname.Builder>(
             CMsgClientSetPlayerNickname::class.java,
             EMsg.AMClientSetPlayerNickname
-        )
-        val jobID: JobID = client.getNextJobID()
+        ).apply {
+            sourceJobID = jobID
 
-        request.setSourceJobID(jobID)
-
-        request.body.setSteamid(friendID.convertToUInt64())
-        request.body.setNickname(nickname)
+            body.steamid = friendID.convertToUInt64()
+            body.nickname = nickname
+        }
 
         client.send(request)
 
@@ -676,21 +678,21 @@ class SteamFriends : ClientMsgHandler() {
      * @return The Job ID of the request. This can be used to find the appropriate [AliasHistoryCallback].
      */
     fun requestAliasHistory(steamIDs: List<SteamID>): JobID {
+        val jobID: JobID = client.getNextJobID()
         val request = ClientMsgProtobuf<CMsgClientAMGetPersonaNameHistory.Builder>(
             CMsgClientAMGetPersonaNameHistory::class.java,
             EMsg.ClientAMGetPersonaNameHistory
-        )
-        val jobID: JobID = client.getNextJobID()
+        ).apply {
+            sourceJobID = jobID
 
-        request.setSourceJobID(jobID)
+            body.addAllIds(
+                steamIDs.map {
+                    CMsgClientAMGetPersonaNameHistory.IdInstance.newBuilder().setSteamid(it.convertToUInt64()).build()
+                }
+            )
 
-        request.body.addAllIds(
-            steamIDs.map {
-                CMsgClientAMGetPersonaNameHistory.IdInstance.newBuilder().setSteamid(it.convertToUInt64()).build()
-            }
-        )
-
-        request.body.setIdCount(request.body.idsCount)
+            body.idCount = body.idsCount
+        }
 
         client.send(request)
 
@@ -716,8 +718,8 @@ class SteamFriends : ClientMsgHandler() {
         val callback = getCallback(packetMsg)
 
         // Ignore messages that we don't have a handler function for
-        callback?.let {
-            client.postCallback(it)
+        if (callback != null) {
+            client.postCallback(callback)
             return
         }
 

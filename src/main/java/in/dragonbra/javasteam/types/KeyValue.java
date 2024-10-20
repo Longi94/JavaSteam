@@ -606,9 +606,10 @@ public class KeyValue {
      *
      * @param is The input {@link InputStream} to read from.
      * @return <b>true</b> if the read was successful; otherwise, <b>false</b>.
-     * @throws IOException exception while reading from the stream
+     * @throws IOException              exception while reading from the stream
+     * @throws IllegalArgumentException exception while reading from the stream
      */
-    public boolean tryReadAsBinary(InputStream is) throws IOException {
+    public boolean tryReadAsBinary(InputStream is) throws IllegalArgumentException, IOException {
         if (is == null) {
             throw new IllegalArgumentException("input stream is null");
         }

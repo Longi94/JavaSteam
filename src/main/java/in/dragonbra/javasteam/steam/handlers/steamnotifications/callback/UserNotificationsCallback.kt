@@ -21,7 +21,8 @@ class UserNotificationsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
             CMsgClientUserNotifications::class.java,
             packetMsg
         )
+        val msg = resp.body
 
-        notifications = resp.body.notificationsList.map(::Notification)
+        notifications = msg.notificationsList.map(::Notification)
     }
 }

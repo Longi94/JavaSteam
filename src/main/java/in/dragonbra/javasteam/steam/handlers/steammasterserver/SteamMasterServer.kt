@@ -26,19 +26,20 @@ class SteamMasterServer : ClientMsgHandler() {
         val query = ClientMsgProtobuf<CMsgClientGMSServerQuery.Builder>(
             CMsgClientGMSServerQuery::class.java,
             EMsg.ClientGMSServerQuery
-        )
-        query.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        query.body.setAppId(details.appID)
+            body.appId = details.appID
 
-        details.geoLocatedIP?.let {
-            query.body.geoLocationIp = NetHelpers.getIPAddress(it)
+            if (details.geoLocatedIP != null) {
+                body.geoLocationIp = NetHelpers.getIPAddress(details.geoLocatedIP!!)
+            }
+
+            body.filterText = details.filter
+            body.regionCode = details.region.code().toInt()
+
+            body.maxServers = details.maxServers
         }
-
-        query.body.setFilterText(details.filter)
-        query.body.setRegionCode(details.region.code().toInt())
-
-        query.body.setMaxServers(details.maxServers)
 
         client.send(query)
 

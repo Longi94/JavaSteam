@@ -154,7 +154,14 @@ public class BinaryReaderTest {
         Assertions.assertThrows(EOFException.class, () -> binaryReader.readByte());
         Assertions.assertThrows(EOFException.class, () -> binaryReader.readChar());
         Assertions.assertThrows(EOFException.class, () -> binaryReader.readInt());
-        Assertions.assertThrows(EOFException.class, () -> binaryReader.readNullTermString());
         Assertions.assertThrows(EOFException.class, () -> binaryReader.readShort());
+    }
+
+    @Test
+    void testEmptyNullTermString() throws IOException {
+        byte[] data = {};
+        binaryReader = new BinaryReader(new MemoryStream(data));
+
+        Assertions.assertEquals("", binaryReader.readNullTermString());
     }
 }

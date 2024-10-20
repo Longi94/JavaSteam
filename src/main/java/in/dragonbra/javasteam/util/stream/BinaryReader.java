@@ -136,18 +136,15 @@ public class BinaryReader extends FilterInputStream {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int b;
 
-        while ((b = in.read()) > 0) {
+        while ((b = in.read()) != 0) {
+            if (b <= 0) {
+                break;
+            }
             baos.write(b);
-            position += 1;
-        }
-
-        if (b == -1) {
-            throw new EOFException();
-        }
-
-        if (b == 0) {
             position++;
         }
+
+        position++; // Increment for the null terminator
 
         return baos.toString(StandardCharsets.UTF_8);
     }
