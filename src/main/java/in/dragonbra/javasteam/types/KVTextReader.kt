@@ -74,12 +74,12 @@ internal constructor(
 
             s = readToken(wasQuoted, wasConditional)
 
-            if (wasConditional.getValue()) {
+            if (wasConditional.value == true) {
                 // Now get the '{'
                 s = readToken(wasQuoted, wasConditional)
             }
 
-            if (s != null && s.startsWith("{") && !wasQuoted.getValue()) {
+            if (s != null && s.startsWith("{") && wasQuoted.value == false) {
                 // header is valid so load the file
                 currentKey.recursiveLoadFromBuffer(this)
             } else {
