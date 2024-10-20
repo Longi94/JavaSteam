@@ -1,56 +1,123 @@
-package in.dragonbra.javasteam.util;
+package `in`.dragonbra.javasteam.util
 
-import org.apache.commons.validator.routines.InetAddressValidator;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
+import com.google.protobuf.ByteString
+import `in`.dragonbra.javasteam.generated.MsgClientLogon
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
+import org.apache.commons.validator.routines.InetAddressValidator
+import java.lang.IllegalArgumentException
+import java.net.DatagramSocket
+import java.net.Inet6Address
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.nio.ByteBuffer
 
 /**
  * @author lngtr
  * @since 2018-02-22
  */
-public class NetHelpers {
+object NetHelpers {
 
-    public static InetAddress getIPAddress(int ipAddr) {
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.putInt(ipAddr);
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun getIPAddress(ipAddr: InetAddress): Int {
+        require(ipAddr.address.size == 4) { "only works with IPv4 addresses." }
 
-        byte[] result = b.array();
-
-        try {
-            return InetAddress.getByAddress(result);
-        } catch (UnknownHostException e) {
-            return null;
-        }
+        val byteBuffer = ByteBuffer.wrap(ipAddr.address)
+        return byteBuffer.int and 0xFFFFFFFFL.toInt()
     }
 
-    public static int getIPAddress(InetAddress ip) {
-        final ByteBuffer buff = ByteBuffer.wrap(ip.getAddress());
-        return (int) (buff.getInt() & 0xFFFFFFFFL);
+    @JvmStatic
+    @Throws(Exception::class)
+    fun getLocalIP(socket: Socket): InetAddress? = getLocalIP(socket.localAddress)
+
+    @JvmStatic
+    @Throws(IllegalArgumentException::class)
+    fun getLocalIP(datagramSocket: DatagramSocket): InetAddress? = getLocalIP(datagramSocket.localAddress)
+
+    @JvmStatic
+    fun getLocalIP(endpoint: InetAddress?): InetAddress? {
+        if (endpoint == null || endpoint.address == InetAddress.getByName("0.0.0.0")) {
+            return null
+        }
+
+        return endpoint
     }
 
+    @JvmStatic
+    fun getIPAddress(ipAddr: Int): InetAddress {
+        val result = byteArrayOf(
+            ((ipAddr shr 24) and 0xFF).toByte(),
+            ((ipAddr shr 16) and 0xFF).toByte(),
+            ((ipAddr shr 8) and 0xFF).toByte(),
+            (ipAddr and 0xFF).toByte()
+        )
+        return InetAddress.getByAddress(result)
+    }
 
-    public static InetSocketAddress tryParseIPEndPoint(String address) {
-        if (address == null) {
-            return null;
+    @JvmStatic
+    fun getIPAddress(ipAddr: CMsgIPAddress): InetAddress = if (ipAddr.hasV6()) {
+        InetAddress.getByAddress(ipAddr.v6.toByteArray())
+    } else {
+        getIPAddress(ipAddr.v4)
+    }
+
+    @JvmStatic
+    fun getMsgIPAddress(ipAddr: InetAddress): CMsgIPAddress {
+        val msgIpAddress = CMsgIPAddress.newBuilder()
+
+        if (ipAddr is Inet6Address) {
+            msgIpAddress.v6 = ByteString.copyFrom(ipAddr.address)
+        } else {
+            msgIpAddress.v4 = getIPAddress(ipAddr)
         }
 
-        String[] split = address.split(":");
+        return msgIpAddress.build()
+    }
 
-        if (!InetAddressValidator.getInstance().isValidInet4Address(split[0])) {
-            return null;
-        }
+    @JvmStatic
+    fun obfuscatePrivateIP(msgIpAddress: CMsgIPAddress): CMsgIPAddress {
+        val localIp = msgIpAddress.toBuilder()
 
-        try {
-            if (split.length > 1) {
-                return new InetSocketAddress(split[0], Integer.parseInt(split[1]));
+        if (localIp.hasV6()) {
+            val v6Bytes = msgIpAddress.v6.toByteArray()
+            for (i in 0..15 step 4) {
+                v6Bytes[i] = (v6Bytes[i].toInt() xor 0x0D).toByte()
+                v6Bytes[i + 1] = (v6Bytes[i + 1].toInt() xor 0xF0).toByte()
+                v6Bytes[i + 2] = (v6Bytes[i + 2].toInt() xor 0xAD).toByte()
+                v6Bytes[i + 3] = (v6Bytes[i + 3].toInt() xor 0xBA).toByte()
             }
-        } catch (IllegalArgumentException exception) {
-            // no-op
+            localIp.v6 = ByteString.copyFrom(v6Bytes)
+        } else {
+            localIp.v4 = msgIpAddress.v4 xor MsgClientLogon.ObfuscationMask
         }
 
-        return null;
+        return localIp.build()
+    }
+
+    @JvmStatic
+    fun tryParseIPEndPoint(stringValue: String): InetSocketAddress? {
+        try {
+            val split = stringValue.lastIndexOf(':')
+            if (split == -1) {
+                return null
+            }
+
+            var ip = stringValue.substring(0, split)
+            val port = stringValue.substring(split + 1).toInt()
+
+            if (ip.startsWith("[") && ip.endsWith("]")) {
+                ip = ip.substring(1, ip.length - 1) // Remove the brackets
+            }
+
+            val validator = InetAddressValidator.getInstance()
+            return if (validator.isValidInet4Address(ip) || validator.isValidInet6Address(ip)) {
+                InetSocketAddress(ip, port)
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            return null
+        }
     }
 }

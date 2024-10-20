@@ -32,7 +32,7 @@ class SteamMasterServer : ClientMsgHandler() {
         query.body.setAppId(details.appID)
 
         details.geoLocatedIP?.let {
-            query.body.setGeoLocationIp(NetHelpers.getIPAddress(it))
+            query.body.geoLocationIp = NetHelpers.getIPAddress(it)
         }
 
         query.body.setFilterText(details.filter)

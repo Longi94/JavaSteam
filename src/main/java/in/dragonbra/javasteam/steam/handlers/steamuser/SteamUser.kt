@@ -74,11 +74,10 @@ class SteamUser : ClientMsgHandler() {
                 v4 = details.loginID!!
             }.build().also(logon.body::setObfuscatedPrivateIp)
         } else {
-            CMsgIPAddress.newBuilder().apply {
-                client.localIP?.let { localIp ->
-                    v4 = NetHelpers.getIPAddress(localIp) xor MsgClientLogon.ObfuscationMask
-                }
-            }.build().also(logon.body::setObfuscatedPrivateIp)
+            client.localIP?.let { clientIP ->
+                val msgIpAddr = NetHelpers.getMsgIPAddress(clientIP)
+                logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(msgIpAddr)
+            }
         }
 
         // Legacy field, Steam client still sets it
