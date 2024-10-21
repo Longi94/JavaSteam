@@ -26,7 +26,7 @@ internal constructor(
             'n' to '\n',
             'r' to '\r',
             't' to '\t',
-            // todo: any others?
+            // todo: (SK) any others?
         )
     }
 

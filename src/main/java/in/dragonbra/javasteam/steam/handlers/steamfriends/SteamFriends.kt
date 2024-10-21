@@ -777,7 +777,7 @@ class SteamFriends : ClientMsgHandler() {
                 logger.debug("Unknown item in handlePersonaState(): $friendID")
             }
 
-            // todo: cache other details/account types?
+            // todo: (SK) cache other details/account types?
         }
 
         perState.body.friendsList.forEach { friend ->

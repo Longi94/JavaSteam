@@ -69,7 +69,7 @@ class SteamUser : ClientMsgHandler() {
         val steamID = SteamID(details.accountID, details.accountInstance, client.universe, EAccountType.Individual)
 
         if (details.loginID != null) {
-            // TODO: Support IPv6 login ids?
+            // TODO: (SK) Support IPv6 login ids?
             logon.body.obfuscatedPrivateIp = CMsgIPAddress.newBuilder().apply {
                 v4 = details.loginID!!
             }.build()
@@ -100,7 +100,7 @@ class SteamUser : ClientMsgHandler() {
         logon.body.steam2TicketRequest = details.requestSteam2Ticket
 
         // we're now using the latest steamclient package version, this is required to get a proper sentry file for steam guard
-        logon.body.clientPackageVersion = 1771 // todo: determine if this is still required
+        logon.body.clientPackageVersion = 1771 // todo: (SK) determine if this is still required
         logon.body.supportsRateLimitResponse = true
         logon.body.machineName = details.machineName
         logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())

@@ -29,6 +29,6 @@ class ChatRoomInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
         chatRoomID = msg.steamIdChat
         type = msg.type
 
-        // todo: handle inner payload based on the type similar to ChatMemberInfoCallback
+        // todo: (SK) handle inner payload based on the type similar to ChatMemberInfoCallback
     }
 }

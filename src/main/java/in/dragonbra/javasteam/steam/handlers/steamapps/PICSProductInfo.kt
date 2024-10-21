@@ -121,7 +121,7 @@ class PICSProductInfo : CallbackMsg {
                 BinaryReader(ByteArrayInputStream(packageInfo.buffer.toByteArray())).use { br ->
                     // steamclient checks this value == 1 before it attempts to read the KV from the buffer
                     // see: CPackageInfo::UpdateFromBuffer(CSHA const&,uint,CUtlBuffer &)
-                    // todo: we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
+                    // todo: (SK) we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
                     br.readInt()
                     keyValues.tryReadAsBinary(br)
                 }

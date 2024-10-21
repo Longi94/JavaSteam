@@ -48,7 +48,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         when (type) {
             EChatInfoType.StateChange -> stateChangeInfo = StateChangeDetails(membInfo.payload)
-            // todo: handle more types
+            // todo: (SK) handle more types
             // based off disassembly
             //   - for InfoUpdate, a ChatMemberInfo object is present
             //   - for MemberLimitChange, looks like an ignored uint64 (probably steamid) followed
