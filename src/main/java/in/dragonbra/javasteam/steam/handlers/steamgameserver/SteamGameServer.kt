@@ -53,7 +53,7 @@ class SteamGameServer : ClientMsgHandler() {
         logon.protoHeader.steamid = gsId.convertToUInt64()
 
         val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
-        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp) // TODO validate
+        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp)
 
         logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
 
@@ -88,7 +88,7 @@ class SteamGameServer : ClientMsgHandler() {
         logon.protoHeader.steamid = gsId.convertToUInt64()
 
         val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
-        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp) // TODO: validate
+        logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp)
 
         logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
 
@@ -133,8 +133,8 @@ class SteamGameServer : ClientMsgHandler() {
             body.gameVersion = details.version
         }
 
-        details.address?.let {
-            status.body.deprecatedGameIpAddress = NetHelpers.getIPAddress(it) // TODO: validate
+        if (details.address != null) {
+            status.body.deprecatedGameIpAddress = NetHelpers.getIPAddress(details.address!!)
         }
 
         client.send(status)

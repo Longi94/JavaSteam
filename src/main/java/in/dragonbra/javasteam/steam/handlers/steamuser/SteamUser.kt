@@ -89,7 +89,9 @@ class SteamUser : ClientMsgHandler() {
         logon.protoHeader.steamid = steamID.convertToUInt64()
 
         logon.body.accountName = details.username
-        logon.body.password = details.password
+        if (details.password != null) {
+            logon.body.password = details.password
+        }
         logon.body.shouldRememberPassword = details.shouldRememberPassword
 
         logon.body.protocolVersion = MsgClientLogon.CurrentProtocol

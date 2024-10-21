@@ -388,6 +388,8 @@ public abstract class CMClient {
         EResult logonResponse = EResult.from(logonResp.getBody().getEresult());
         logger.debug("handleLogOnResponse got response: " + logonResponse);
 
+        // Note: Sometimes if you sign in too many times, steam may confuse "InvalidPassword" with "RateLimitExceeded"
+
         if (logonResponse == EResult.OK) {
             sessionID = logonResp.getProtoHeader().getClientSessionid();
             steamID = new SteamID(logonResp.getProtoHeader().getSteamid());

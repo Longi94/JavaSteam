@@ -23,8 +23,7 @@ object NetHelpers {
     fun getIPAddress(ipAddr: InetAddress): Int {
         require(ipAddr.address.size == 4) { "only works with IPv4 addresses." }
 
-        val byteBuffer = ByteBuffer.wrap(ipAddr.address)
-        return byteBuffer.int and 0xFFFFFFFFL.toInt()
+        return ByteBuffer.wrap(ipAddr.address).int // and 0xFFFFFFFFL.toInt()
     }
 
     @JvmStatic
@@ -56,10 +55,12 @@ object NetHelpers {
     }
 
     @JvmStatic
-    fun getIPAddress(ipAddr: CMsgIPAddress): InetAddress = if (ipAddr.hasV6()) {
-        InetAddress.getByAddress(ipAddr.v6.toByteArray())
-    } else {
-        getIPAddress(ipAddr.v4)
+    fun getIPAddress(ipAddr: CMsgIPAddress): InetAddress {
+        return if (ipAddr.hasV6()) {
+            InetAddress.getByAddress(ipAddr.v6.toByteArray())
+        } else {
+            getIPAddress(ipAddr.v4)
+        }
     }
 
     @JvmStatic
@@ -80,6 +81,7 @@ object NetHelpers {
         val localIp = msgIpAddress.toBuilder()
 
         if (localIp.hasV6()) {
+            // TODO v6 validation
             val v6Bytes = msgIpAddress.v6.toByteArray()
             for (i in 0..15 step 4) {
                 v6Bytes[i] = (v6Bytes[i].toInt() xor 0x0D).toByte()
