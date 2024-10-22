@@ -3,13 +3,13 @@ package `in`.dragonbra.javasteam.util
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
-import org.apache.commons.validator.routines.InetAddressValidator
 import java.lang.IllegalArgumentException
 import java.net.DatagramSocket
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.UnknownHostException
 import java.nio.ByteBuffer
 
 /**
@@ -55,12 +55,10 @@ object NetHelpers {
     }
 
     @JvmStatic
-    fun getIPAddress(ipAddr: CMsgIPAddress): InetAddress {
-        return if (ipAddr.hasV6()) {
-            InetAddress.getByAddress(ipAddr.v6.toByteArray())
-        } else {
-            getIPAddress(ipAddr.v4)
-        }
+    fun getIPAddress(ipAddr: CMsgIPAddress): InetAddress = if (ipAddr.hasV6()) {
+        InetAddress.getByAddress(ipAddr.v6.toByteArray())
+    } else {
+        getIPAddress(ipAddr.v4)
     }
 
     @JvmStatic
@@ -106,16 +104,15 @@ object NetHelpers {
             }
 
             var ip = stringValue.substring(0, split)
-            val port = stringValue.substring(split + 1).toInt()
+            val port = stringValue.substring(split + 1).toIntOrNull() ?: return null
 
             if (ip.startsWith("[") && ip.endsWith("]")) {
                 ip = ip.substring(1, ip.length - 1) // Remove the brackets
             }
 
-            val validator = InetAddressValidator.getInstance()
-            return if (validator.isValidInet4Address(ip) || validator.isValidInet6Address(ip)) {
+            return try {
                 InetSocketAddress(ip, port)
-            } else {
+            } catch (e: UnknownHostException) {
                 null
             }
         } catch (_: Exception) {

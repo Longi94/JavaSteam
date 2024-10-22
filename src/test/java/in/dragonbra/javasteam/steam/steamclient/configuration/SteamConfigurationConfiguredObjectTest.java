@@ -6,9 +6,11 @@ import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
 import in.dragonbra.javasteam.steam.discovery.IServerListProvider;
 import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import okhttp3.OkHttpClient;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +94,11 @@ public class SteamConfigurationConfiguredObjectTest {
     }
 
     static class CustomServerListProvider implements IServerListProvider {
+        @Override
+        public @NotNull Instant getLastServerListRefresh() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
         @Override
         public List<ServerRecord> fetchServerList() {
             throw new UnsupportedOperationException("Not supported yet.");

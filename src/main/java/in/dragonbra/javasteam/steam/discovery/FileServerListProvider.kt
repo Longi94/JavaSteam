@@ -6,31 +6,48 @@ import `in`.dragonbra.javasteam.protobufs.steam.discovery.BasicServerListProtos.
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import java.time.Instant
 
 /**
  * Server provider that stores servers in a file using protobuf.
+ *
+ * @constructor Initialize a new instance of FileStorageServerListProvider
+ * @param file the filename that will store the servers
  */
-class FileServerListProvider(private val file: File) : IServerListProvider {
+class FileServerListProvider(val file: Path) : IServerListProvider {
 
     /**
      * Instantiates a [FileServerListProvider] object.
      * @param file the file that will store the servers
      */
+    constructor(file: File) : this(file.toPath())
+
+    /**
+     * Instantiates a [FileServerListProvider] object.
+     * @param filename the filename that will store the servers.
+     */
+    constructor(filename: String) : this(Path.of(filename))
+
     init {
-        try {
-            file.absoluteFile.parentFile?.mkdirs()
-            file.createNewFile()
-        } catch (e: IOException) {
-            logger.error(e)
-        }
+        require(file.fileName.toString().isNotBlank()) { "FileName must not be blank" }
     }
 
-    override fun fetchServerList(): List<ServerRecord> = try {
-        FileInputStream(file).use { fis ->
+    /**
+     * Returns the last time the file was written on disk
+     */
+    override val lastServerListRefresh: Instant
+        get() = Files.getLastModifiedTime(file).toInstant()
+
+    /**
+     * Read the stored list of servers from the file
+     * @return List of servers if persisted, otherwise an empty list
+     */
+    override fun fetchServerList(): List<ServerRecord> = runCatching {
+        Files.newInputStream(file).use { fis ->
             val serverList = BasicServerList.parseFrom(fis)
             List(serverList.serversCount) { i ->
                 val server: BasicServer = serverList.getServers(i)
@@ -41,34 +58,41 @@ class FileServerListProvider(private val file: File) : IServerListProvider {
                 )
             }
         }
-    } catch (e: FileNotFoundException) {
-        logger.error("servers list file not found", e)
-        emptyList()
-    } catch (e: IOException) {
-        logger.error("Failed to read server list file ${file.absolutePath}", e)
-        emptyList()
-    }
+    }.fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is NoSuchFileException -> logger.debug("File doesn't exist")
+                else -> logger.error("Unknown error occurred", error)
+            }
 
+            emptyList()
+        }
+    )
+
+    /**
+     * Writes the supplied list of servers to persistent storage
+     * @param endpoints List of server endpoints
+     */
     override fun updateServerList(endpoints: List<ServerRecord>) {
         val builder = BasicServerList.newBuilder().apply {
-            endpoints.forEach { endpoint ->
-                addServers(
-                    BasicServer.newBuilder().apply {
-                        address = endpoint.host
-                        port = endpoint.port
-                        protocol = ProtocolTypes.code(endpoint.protocolTypes)
-                    }
-                )
-            }
+            addAllServers(
+                endpoints.map { endpoint ->
+                    BasicServer.newBuilder()
+                        .setAddress(endpoint.host)
+                        .setPort(endpoint.port)
+                        .setProtocol(ProtocolTypes.code(endpoint.protocolTypes))
+                        .build()
+                }
+            )
         }
 
         try {
-            FileOutputStream(file, false).use { fos ->
+            Files.newOutputStream(file).use { fos ->
                 builder.build().writeTo(fos)
-                fos.flush()
             }
         } catch (e: IOException) {
-            logger.error("Failed to write servers to file ${file.absolutePath}", e)
+            logger.error("Failed to write servers to file ${file.fileName}", e)
         }
     }
 
