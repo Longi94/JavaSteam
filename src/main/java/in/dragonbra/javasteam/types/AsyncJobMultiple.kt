@@ -49,7 +49,7 @@ class AsyncJobMultiple<T : CallbackMsg>(
     }
 
     override fun setFailed(dueToRemoteFailure: Boolean) {
-        if (results.size == 0) {
+        if (results.isEmpty()) {
             // if we have zero callbacks in our result set, we cancel this task
             if (dueToRemoteFailure) {
                 // if we're canceling with a remote failure, post a job failure exception

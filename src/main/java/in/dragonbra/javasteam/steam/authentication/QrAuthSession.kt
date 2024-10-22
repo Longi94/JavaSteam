@@ -13,8 +13,8 @@ class QrAuthSession(
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,
-    clientId = response.clientId,
-    requestId = response.requestId.toByteArray(),
+    clientID = response.clientId,
+    requestID = response.requestId.toByteArray(),
     allowedConfirmations = response.allowedConfirmationsList,
     pollingInterval = response.interval
 ) {

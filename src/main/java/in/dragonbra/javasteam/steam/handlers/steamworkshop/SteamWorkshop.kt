@@ -26,12 +26,13 @@ class SteamWorkshop : ClientMsgHandler() {
         val enumRequest = ClientMsgProtobuf<CMsgClientUCMEnumeratePublishedFilesByUserAction.Builder>(
             CMsgClientUCMEnumeratePublishedFilesByUserAction::class.java,
             EMsg.ClientUCMEnumeratePublishedFilesByUserAction
-        )
-        enumRequest.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        enumRequest.body.setAction(details.userAction.code())
-        enumRequest.body.setAppId(details.appID)
-        enumRequest.body.setStartIndex(details.startIndex)
+            body.action = details.userAction.code()
+            body.appId = details.appID
+            body.startIndex = details.startIndex
+        }
 
         client.send(enumRequest)
 

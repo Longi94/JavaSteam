@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.networking.steam3;
 import in.dragonbra.javasteam.enums.EUdpPacketType;
 import in.dragonbra.javasteam.generated.ChallengeData;
 import in.dragonbra.javasteam.generated.ConnectData;
+import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
@@ -161,7 +162,7 @@ public class UdpConnection extends Connection {
 
     @Override
     public InetAddress getLocalIP() {
-        return sock.getLocalAddress();
+        return NetHelpers.getLocalIP(sock);
     }
 
     @Override

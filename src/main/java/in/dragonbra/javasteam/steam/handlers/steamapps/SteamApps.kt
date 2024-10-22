@@ -51,9 +51,9 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientGetAppOwnershipTicket::class.java,
             EMsg.ClientGetAppOwnershipTicket
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
-            body.setAppId(appId)
+            body.appId = appId
         }
 
         client.send(request)
@@ -74,10 +74,10 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientGetDepotDecryptionKey::class.java,
             EMsg.ClientGetDepotDecryptionKey
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
-            body.setDepotId(depotId)
-            body.setAppId(appId)
+            body.depotId = depotId
+            body.appId = appId
         }
 
         client.send(request)
@@ -95,8 +95,8 @@ class SteamApps : ClientMsgHandler() {
      */
     @JvmOverloads
     fun picsGetAccessTokens(app: Int? = null, `package`: Int? = null): AsyncJobSingle<PICSTokensCallback> {
-        val apps = mutableListOf<Int>().apply { app?.let { add(it) } }
-        val packages = mutableListOf<Int>().apply { `package`?.let { add(it) } }
+        val apps = listOfNotNull(app)
+        val packages = listOfNotNull(`package`)
 
         return picsGetAccessTokens(apps, packages)
     }
@@ -114,7 +114,7 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientPICSAccessTokenRequest::class.java,
             EMsg.ClientPICSAccessTokenRequest
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
             body.addAllAppids(appIds)
             body.addAllPackageids(packageIds)
@@ -144,11 +144,11 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientPICSChangesSinceRequest::class.java,
             EMsg.ClientPICSChangesSinceRequest
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
-            body.setSinceChangeNumber(lastChangeNumber)
-            body.setSendAppInfoChanges(sendAppChangeList)
-            body.setSendPackageInfoChanges(sendPackageChangelist)
+            body.sinceChangeNumber = lastChangeNumber
+            body.sendAppInfoChanges = sendAppChangeList
+            body.sendPackageInfoChanges = sendPackageChangelist
         }
 
         client.send(request)
@@ -171,8 +171,8 @@ class SteamApps : ClientMsgHandler() {
         `package`: PICSRequest? = null,
         metaDataOnly: Boolean = false,
     ): AsyncJobMultiple<PICSProductInfoCallback> {
-        val apps = mutableListOf<PICSRequest>().apply { app?.let { add(it) } }
-        val packages = mutableListOf<PICSRequest>().apply { `package`?.let { add(it) } }
+        val apps = listOfNotNull(app)
+        val packages = listOfNotNull(`package`)
 
         return picsGetProductInfo(apps, packages, metaDataOnly)
     }
@@ -196,28 +196,28 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientPICSProductInfoRequest::class.java,
             EMsg.ClientPICSProductInfoRequest
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
             apps.forEach { appRequest ->
-                val appInfo = CMsgClientPICSProductInfoRequest.AppInfo.newBuilder()
-
-                appInfo.setAccessToken(appRequest.accessToken)
-                appInfo.setAppid(appRequest.id)
-                appInfo.setOnlyPublicObsolete(false)
+                val appInfo = CMsgClientPICSProductInfoRequest.AppInfo.newBuilder().apply {
+                    accessToken = appRequest.accessToken
+                    appid = appRequest.id
+                    onlyPublicObsolete = false
+                }
 
                 body.addApps(appInfo)
             }
 
             packages.forEach { packageRequest ->
-                val packageInfo = CMsgClientPICSProductInfoRequest.PackageInfo.newBuilder()
-
-                packageInfo.setAccessToken(packageRequest.accessToken)
-                packageInfo.setPackageid(packageRequest.id)
+                val packageInfo = CMsgClientPICSProductInfoRequest.PackageInfo.newBuilder().apply {
+                    accessToken = packageRequest.accessToken
+                    packageid = packageRequest.id
+                }
 
                 body.addPackages(packageInfo)
             }
 
-            body.setMetaDataOnly(metaDataOnly)
+            body.metaDataOnly = metaDataOnly
         }
 
         client.send(request)
@@ -239,11 +239,11 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientGetCDNAuthToken::class.java,
             EMsg.ClientGetCDNAuthToken
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
-            body.setAppId(app)
-            body.setDepotId(depot)
-            body.setHostName(hostName)
+            body.appId = app
+            body.depotId = depot
+            body.hostName = hostName
         }
 
         client.send(request)
@@ -272,7 +272,7 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientRequestFreeLicense::class.java,
             EMsg.ClientRequestFreeLicense
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
             body.addAllAppids(apps)
         }
@@ -295,10 +295,10 @@ class SteamApps : ClientMsgHandler() {
             CMsgClientCheckAppBetaPassword::class.java,
             EMsg.ClientCheckAppBetaPassword
         ).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = client.getNextJobID()
 
-            body.setAppId(app)
-            body.setBetapassword(password)
+            body.appId = app
+            body.betapassword = password
         }
 
         client.send(request)
@@ -314,7 +314,7 @@ class SteamApps : ClientMsgHandler() {
      */
     fun getLegacyGameKey(appId: Int): AsyncJobSingle<LegacyGameKeyCallback> {
         val request = ClientMsg(MsgClientGetLegacyGameKey::class.java).apply {
-            setSourceJobID(client.getNextJobID())
+            sourceJobID = (client.getNextJobID())
             body.appId = appId
         }
 

@@ -27,10 +27,9 @@ class OfflineMessageNotificationCallback(packetMsg: IPacketMsg) : CallbackMsg() 
             CMsgClientOfflineMessageNotification::class.java,
             packetMsg
         )
+        val msg = resp.body
 
-        messageCount = resp.body.offlineMessages
-        friendsWithOfflineMessages = resp.body.friendsWithOfflineMessagesList.map {
-            SteamID(it.toLong())
-        }
+        messageCount = msg.offlineMessages
+        friendsWithOfflineMessages = msg.friendsWithOfflineMessagesList.map { SteamID(it.toLong()) }
     }
 }

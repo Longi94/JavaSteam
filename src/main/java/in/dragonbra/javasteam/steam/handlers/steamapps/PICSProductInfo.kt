@@ -4,13 +4,12 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverA
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.util.Strings
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.URI
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.*
 
 /**
@@ -18,6 +17,10 @@ import java.util.*
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
 class PICSProductInfo : CallbackMsg {
+
+    companion object {
+        private val logger = LogManager.getLogger(PICSProductInfo::class.java)
+    }
 
     /**
      * Gets the ID of the app or package.
@@ -89,16 +92,12 @@ class PICSProductInfo : CallbackMsg {
 
         if (appInfo.hasBuffer() && !appInfo.buffer.isEmpty) {
             try {
-                // get the buffer as a string using the jvm's default charset.
-                // note: IDK why, but we have to encode this using the default charset
-                val bufferString = appInfo.buffer.toString(Charset.defaultCharset())
-                // get the buffer as a byte array using utf-8 as a supported charset
-                val byteBuffer = bufferString.toByteArray(StandardCharsets.UTF_8)
                 // we don't want to read the trailing null byte
-                val ms = MemoryStream(byteBuffer, 0, byteBuffer.size - 1)
-                keyValues.readAsText(ms)
+                MemoryStream(appInfo.buffer.toByteArray(), 0, appInfo.buffer.size() - 1).use { ms ->
+                    keyValues.readAsText(ms)
+                }
             } catch (e: IOException) {
-                throw IllegalArgumentException("failed to read buffer", e)
+                logger.error("failed to read buffer", e)
             }
         }
 
@@ -118,15 +117,16 @@ class PICSProductInfo : CallbackMsg {
         if (packageInfo.hasBuffer()) {
             // we don't want to read the trailing null byte
             try {
+                // TODO memory stream like SK?
                 BinaryReader(ByteArrayInputStream(packageInfo.buffer.toByteArray())).use { br ->
                     // steamclient checks this value == 1 before it attempts to read the KV from the buffer
                     // see: CPackageInfo::UpdateFromBuffer(CSHA const&,uint,CUtlBuffer &)
-                    // todo: we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
+                    // todo: (SK) we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
                     br.readInt()
                     keyValues.tryReadAsBinary(br)
                 }
             } catch (e: IOException) {
-                throw IllegalArgumentException("failed to read buffer", e)
+                logger.error("failed to read buffer", e)
             }
         }
     }

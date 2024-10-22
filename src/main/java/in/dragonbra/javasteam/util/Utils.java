@@ -58,7 +58,8 @@ public class Utils {
         OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_BIG_SUR, EOSType.MacOS11);
         OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_MONTEREY, EOSType.MacOS12);
         OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_VENTURA, EOSType.MacOS13);
-        OSX_OS_MAP.put(checkOS("Mac OS X", "14"), EOSType.MacOS14);
+        OSX_OS_MAP.put(SystemUtils.IS_OS_MAC_OSX_SONOMA, EOSType.MacOS14);
+        OSX_OS_MAP.put(checkOS("Mac OS X", "15"), EOSType.MacOS15);
 
         LINUX_OS_MAP.put("2.2", EOSType.Linux22);
         LINUX_OS_MAP.put("2.4", EOSType.Linux24);

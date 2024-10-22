@@ -6,12 +6,17 @@ import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.generated.MsgClientUpdateGuestPassesList
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
+import `in`.dragonbra.javasteam.util.log.LogManager
 import java.io.IOException
 
 /**
  * This callback is received when the list of guest passes is updated.
  */
 class GuestPassListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+
+    companion object {
+        private val logger = LogManager.getLogger(GuestPassListCallback::class.java)
+    }
 
     /**
      * Gets the result of the operation.
@@ -49,7 +54,7 @@ class GuestPassListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                 tempList.add(kv)
             }
         } catch (e: IOException) {
-            throw IllegalArgumentException("failed to read guest passes", e)
+            logger.error("failed to read guest passes", e)
         }
 
         guestPasses = tempList.toList()

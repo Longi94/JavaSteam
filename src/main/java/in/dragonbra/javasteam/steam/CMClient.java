@@ -386,6 +386,9 @@ public abstract class CMClient {
         ClientMsgProtobuf<CMsgClientLogonResponse.Builder> logonResp = new ClientMsgProtobuf<>(CMsgClientLogonResponse.class, packetMsg);
 
         EResult logonResponse = EResult.from(logonResp.getBody().getEresult());
+        logger.debug("handleLogOnResponse got response: " + logonResponse);
+
+        // Note: Sometimes if you sign in too many times, steam may confuse "InvalidPassword" with "RateLimitExceeded"
 
         if (logonResponse == EResult.OK) {
             sessionID = logonResp.getProtoHeader().getClientSessionid();
@@ -414,9 +417,13 @@ public abstract class CMClient {
             ClientMsgProtobuf<CMsgClientLoggedOff.Builder> logoffMsg = new ClientMsgProtobuf<>(CMsgClientLoggedOff.class, packetMsg);
             EResult logoffResult = EResult.from(logoffMsg.getBody().getEresult());
 
+            logger.debug("handleLoggedOff got " + logoffResult);
+
             if (logoffResult == EResult.TryAnotherCM || logoffResult == EResult.ServiceUnavailable) {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
             }
+        } else {
+            logger.debug("handleLoggedOff got unexpected response: " + packetMsg.getMsgType());
         }
     }
 

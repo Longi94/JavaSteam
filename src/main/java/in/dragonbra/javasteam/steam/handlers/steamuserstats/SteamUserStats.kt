@@ -32,10 +32,11 @@ class SteamUserStats : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgDPGetNumberOfCurrentPlayers.Builder>(
             CMsgDPGetNumberOfCurrentPlayers::class.java,
             EMsg.ClientGetNumberOfCurrentPlayersDP
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        msg.body.setAppid(appId)
+            body.appid = appId
+        }
 
         client.send(msg)
 
@@ -55,15 +56,16 @@ class SteamUserStats : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder>(
             CMsgClientLBSFindOrCreateLB::class.java,
             EMsg.ClientLBSFindOrCreateLB
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = (client.getNextJobID())
 
-        // routing_appid has to be set correctly to receive a response
-        msg.protoHeader.setRoutingAppid(appId)
+            // routing_appid has to be set correctly to receive a response
+            protoHeader.routingAppid = appId
 
-        msg.body.setAppId(appId)
-        msg.body.setLeaderboardName(name)
-        msg.body.setCreateIfNotFound(false)
+            body.appId = appId
+            body.leaderboardName = name
+            body.createIfNotFound = false
+        }
 
         client.send(msg)
 
@@ -90,17 +92,18 @@ class SteamUserStats : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgClientLBSFindOrCreateLB.Builder>(
             CMsgClientLBSFindOrCreateLB::class.java,
             EMsg.ClientLBSFindOrCreateLB
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        // routing_appid has to be set correctly to receive a response
-        msg.protoHeader.setRoutingAppid(appId)
+            // routing_appid has to be set correctly to receive a response
+            protoHeader.routingAppid = appId
 
-        msg.body.setAppId(appId)
-        msg.body.setLeaderboardName(name)
-        msg.body.setLeaderboardDisplayType(displayType.code())
-        msg.body.setLeaderboardSortMethod(sortMethod.code())
-        msg.body.setCreateIfNotFound(true)
+            body.appId = appId
+            body.leaderboardName = name
+            body.leaderboardDisplayType = displayType.code()
+            body.leaderboardSortMethod = sortMethod.code()
+            body.createIfNotFound = true
+        }
 
         client.send(msg)
 
@@ -129,14 +132,15 @@ class SteamUserStats : ClientMsgHandler() {
         val msg = ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder>(
             CMsgClientLBSGetLBEntries::class.java,
             EMsg.ClientLBSGetLBEntries
-        )
-        msg.setSourceJobID(client.getNextJobID())
+        ).apply {
+            sourceJobID = client.getNextJobID()
 
-        msg.body.setAppId(appId)
-        msg.body.setLeaderboardId(id)
-        msg.body.setLeaderboardDataRequest(dataRequest.code())
-        msg.body.setRangeStart(rangeStart)
-        msg.body.setRangeEnd(rangeEnd)
+            body.appId = appId
+            body.leaderboardId = id
+            body.leaderboardDataRequest = dataRequest.code()
+            body.rangeStart = rangeStart
+            body.rangeEnd = rangeEnd
+        }
 
         client.send(msg)
 

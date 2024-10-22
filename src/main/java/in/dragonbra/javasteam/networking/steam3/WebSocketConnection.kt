@@ -54,8 +54,7 @@ class WebSocketConnection :
         }
     }
 
-    // TODO get local ip? SK uses `IPAddress.None` here.
-    override fun getLocalIP(): InetAddress? = null
+    override fun getLocalIP(): InetAddress? = InetAddress.getByAddress(byteArrayOf(0, 0, 0, 0))
 
     override fun getCurrentEndPoint(): InetSocketAddress? = socketEndPoint
 
@@ -88,7 +87,10 @@ class WebSocketConnection :
     }
 
     override fun onClosing(code: Int, reason: String) {
-        logger.debug("Closing connection")
+        logger.debug("Closing connection: $code, reason: ${reason.ifEmpty { "No reason given" }}")
+        // Steam can close a connection if there is nothing else it wants to send.
+        // For example: AccountLoginDeniedNeedTwoFactor, InvalidPassword, etc.
+        disconnectCore(code == 1000)
     }
 
     override fun onError(t: Throwable) {
