@@ -356,7 +356,7 @@ public class UdpConnection extends Connection {
 
         byte[] data = baos.toByteArray();
 
-        logger.debug("Dispatchin message: " + data.length + " bytes");
+        logger.debug("Dispatching message: " + data.length + " bytes");
 
         onNetMsgReceived(new NetMsgEventArgs(data, currentEndPoint));
 
