@@ -1,10 +1,20 @@
 package in.dragonbra.javasteam.util;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.types.ChunkData;
 import org.apache.commons.lang3.SystemUtils;
 
-import java.util.LinkedHashMap;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -171,9 +181,71 @@ public class Utils {
      * @return long value of the CRC32
      */
     public static long crc32(String s) {
+        return crc32(s.getBytes());
+    }
+    /**
+     * Convenience method for calculating the CRC2 checksum of a byte array.
+     *
+     * @param bytes the byte array
+     * @return long value of the CRC32
+     */
+    public static long crc32(byte[] bytes) {
         Checksum checksum = new CRC32();
-        byte[] bytes = s.getBytes();
         checksum.update(bytes, 0, bytes.length);
         return checksum.getValue();
+    }
+
+    /**
+     * Performs an Adler32 on the given input
+     */
+    public static int adlerHash(byte[] input) {
+        int a = 0, b = 0;
+        for (byte value : input) {
+            a = (a + value) % 65521;
+            b = (b + a) % 65521;
+        }
+
+        return a | (b << 16);
+    }
+
+    /**
+     * @source https://stackoverflow.com/a/65113433
+     */
+    public static String encodeHexString(byte[] input) {
+        return IntStream.range(0, input.length)
+            .mapToObj(i -> String.format("%02X", input[i]))
+            .collect(Collectors.joining()).toLowerCase();
+    }
+
+    /**
+     * Validate a file against Steam3 Chunk data
+     * @param fs FileInputStream to read from
+     * @param chunkData Array of ChunkData to validate against
+     * @return List of ChunkData that are needed
+     * @throws IOException If there's an error reading the file
+     */
+    public static List<ChunkData> validateSteam3FileChecksums(FileInputStream fs, ChunkData[] chunkData) throws IOException {
+        List<ChunkData> neededChunks = new ArrayList<>();
+        int read;
+
+        for (ChunkData data : chunkData) {
+            byte[] chunk = new byte[data.getUncompressedLength()];
+            fs.getChannel().position(data.getOffset());
+            read = fs.read(chunk, 0, data.getUncompressedLength());
+
+            byte[] tempChunk;
+            if (read < data.getUncompressedLength()) {
+                tempChunk = Arrays.copyOf(chunk, read);
+            } else {
+                tempChunk = chunk;
+            }
+
+            int adler = adlerHash(tempChunk);
+            if (adler != data.getChecksum()) {
+                neededChunks.add(data);
+            }
+        }
+
+        return neededChunks;
     }
 }

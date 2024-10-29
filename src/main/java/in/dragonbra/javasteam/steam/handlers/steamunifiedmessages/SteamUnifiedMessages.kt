@@ -22,6 +22,21 @@ import java.lang.reflect.Method
  * This handler is used for interacting with Steamworks unified messaging
  */
 class SteamUnifiedMessages : ClientMsgHandler() {
+    val handlers = mutableMapOf<String, UnifiedService>()
+
+    /**
+     * Creates a service that can be used to send messages and receive notifications via Steamworks unified messaging.
+     *
+     * @param TService The type of the service to create.
+     * @return The instance to create requests from.
+     */
+    inline fun <reified TService : UnifiedService> createService(): TService {
+        val service = TService::class.java
+            .getDeclaredConstructor(SteamUnifiedMessages::class.java)
+            .newInstance(this@SteamUnifiedMessages)
+
+        return (handlers.getOrPut(service.className) { service } as TService)
+    }
 
     /**
      * Handles a client message. This should not be called directly.

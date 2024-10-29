@@ -11,7 +11,7 @@ import `in`.dragonbra.javasteam.types.AsyncJobSingle
 @Suppress("unused")
 abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMessages) {
 
-    private val className: String
+    val className: String
         get() = this.javaClass.simpleName
 
     /**

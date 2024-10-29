@@ -78,3 +78,6 @@ server_list.bin
 # Kotlin 2.0
 /.kotlin/sessions/
 *.salive
+
+# MacOS
+.DS_Store

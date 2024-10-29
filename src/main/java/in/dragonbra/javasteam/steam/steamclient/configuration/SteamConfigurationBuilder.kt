@@ -3,6 +3,8 @@ package `in`.dragonbra.javasteam.steam.steamclient.configuration
 import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
 import `in`.dragonbra.javasteam.enums.EUniverse
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
+import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
+import `in`.dragonbra.javasteam.steam.contentdownloader.MemoryManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import `in`.dragonbra.javasteam.steam.discovery.MemoryServerListProvider
 import `in`.dragonbra.javasteam.steam.webapi.WebAPI
@@ -64,6 +66,11 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
         return this
     }
 
+    override fun withManifestProvider(provider: IManifestProvider): ISteamConfigurationBuilder {
+        state.depotManifestProvider = provider
+        return this
+    }
+
     override fun withUniverse(universe: EUniverse): ISteamConfigurationBuilder {
         state.universe = universe
         return this
@@ -94,6 +101,7 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
             httpClient = OkHttpClient(),
             protocolTypes = EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.WEB_SOCKET),
             serverListProvider = MemoryServerListProvider(),
+            depotManifestProvider = MemoryManifestProvider(),
             universe = EUniverse.Public,
             webAPIBaseAddress = WebAPI.DEFAULT_BASE_ADDRESS,
             cellID = 0,
