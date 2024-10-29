@@ -1,5 +1,7 @@
 package in.dragonbra.javasteam.util.stream;
 
+import com.google.protobuf.ByteString;
+
 import java.io.Closeable;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,6 +47,17 @@ public class MemoryStream extends InputStream implements Closeable {
         this.expandable = true;
         this.bufferVisible = true;
     }
+
+    /**
+     * Initializes a new non-resizable instance of the MemoryStream class based on the
+     * specified byte array.
+     *
+     * @param byteString The sequence of bytes from which to create the current stream.
+     */
+    public MemoryStream(ByteString byteString) {
+        this(byteString.toByteArray(), true);
+    }
+
 
     /**
      * Initializes a new non-resizable instance of the MemoryStream class based on the

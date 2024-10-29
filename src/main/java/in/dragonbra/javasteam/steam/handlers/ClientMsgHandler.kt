@@ -27,7 +27,7 @@ abstract class ClientMsgHandler {
      */
     protected var isExpectDisconnection: Boolean
         get() = client.isExpectDisconnection
-        protected set(expectDisconnection) {
+        set(expectDisconnection) {
             client.isExpectDisconnection = expectDisconnection
         }
 

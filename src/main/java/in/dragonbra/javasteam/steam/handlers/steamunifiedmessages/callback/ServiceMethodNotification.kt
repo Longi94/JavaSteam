@@ -54,7 +54,7 @@ class ServiceMethodNotification(messageType: Class<out AbstractMessage>, packetM
 
     init {
         // Note: JobID will be -1
-        methodName = clientMsg.header.proto.getTargetJobName()
+        methodName = clientMsg.header.proto.targetJobName
         body = clientMsg.body.build()
     }
 }

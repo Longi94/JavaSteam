@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.util.stream;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Basically DataInputStream, but the bytes are parsed in reverse order
@@ -99,13 +100,18 @@ public class BinaryReader extends FilterInputStream {
         position += 1;
         return ch != 0;
     }
+
     public String readNullTermString() throws IOException {
-        return readNullTermString(Charset.defaultCharset());
+        return readNullTermString(StandardCharsets.UTF_8);
     }
 
     public String readNullTermString(Charset charset) throws IOException {
         if (charset == null) {
             throw new IOException("charset is null");
+        }
+
+        if (charset.equals(StandardCharsets.UTF_8)) {
+            return readNullTermUtf8String();
         }
 
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(0);
@@ -124,6 +130,23 @@ public class BinaryReader extends FilterInputStream {
         byte[] bytes = buffer.toByteArray();
         position += bytes.length;
         return new String(bytes, charset);
+    }
+
+    private String readNullTermUtf8String() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int b;
+
+        while ((b = in.read()) != 0) {
+            if (b <= 0) {
+                break;
+            }
+            baos.write(b);
+            position++;
+        }
+
+        position++; // Increment for the null terminator
+
+        return baos.toString(StandardCharsets.UTF_8);
     }
 
     public int getPosition() {

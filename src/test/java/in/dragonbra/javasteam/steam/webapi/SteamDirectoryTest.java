@@ -54,7 +54,7 @@ public class SteamDirectoryTest extends TestBase {
 
             server.shutdown();
         } catch (Exception e) {
-            fail(e.getMessage());
+            fail(e);
         }
     }
 }

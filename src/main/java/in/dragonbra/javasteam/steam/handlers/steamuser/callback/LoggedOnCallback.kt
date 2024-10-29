@@ -14,6 +14,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuser.SteamUser
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.NetHelpers
+import `in`.dragonbra.javasteam.util.log.LogManager
 import java.net.InetAddress
 import java.util.*
 
@@ -22,6 +23,10 @@ import java.util.*
  */
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class LoggedOnCallback : CallbackMsg {
+
+    companion object {
+        private val logger = LogManager.getLogger(LoggedOnCallback::class.java)
+    }
 
     /**
      * Gets the result of the logon.
@@ -127,7 +132,7 @@ class LoggedOnCallback : CallbackMsg {
 
     constructor(packetMsg: IPacketMsg) {
         if (!packetMsg.isProto) {
-            handleNonProtoLogin(packetMsg)
+            handleNonProtoLogon(packetMsg)
             return
         }
 
@@ -143,7 +148,7 @@ class LoggedOnCallback : CallbackMsg {
         outOfGameSecsPerHeartbeat = resp.legacyOutOfGameHeartbeatSeconds
         inGameSecsPerHeartbeat = resp.heartbeatSeconds
 
-        publicIP = NetHelpers.getIPAddress(resp.publicIp.v4) // Has ipV6 support, but still using ipV4
+        publicIP = NetHelpers.getIPAddress(resp.publicIp)
 
         serverTime = Date(resp.rtime32ServerTime * 1000L)
 
@@ -165,11 +170,11 @@ class LoggedOnCallback : CallbackMsg {
         numLoginFailuresToMigrate = resp.countLoginfailuresToMigrate
         numDisconnectsToMigrate = resp.countDisconnectsToMigrate
 
-        resp.parentalSettings?.let {
+        if (resp.parentalSettings != null) {
             try {
-                parentalSettings = ParentalSettings.parseFrom(it)
+                parentalSettings = ParentalSettings.parseFrom(resp.parentalSettings)
             } catch (e: InvalidProtocolBufferException) {
-                e.printStackTrace()
+                logger.error("Failed to parse parental settings", e)
             }
         }
     }
@@ -178,7 +183,7 @@ class LoggedOnCallback : CallbackMsg {
         this.result = result
     }
 
-    private fun handleNonProtoLogin(packetMsg: IPacketMsg) {
+    private fun handleNonProtoLogon(packetMsg: IPacketMsg) {
         val loginResp = ClientMsg(MsgClientLogOnResponse::class.java, packetMsg)
         val resp = loginResp.body
 

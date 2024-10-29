@@ -1,7 +1,7 @@
 package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.enums.EOSType
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthTokenPlatformType
 import `in`.dragonbra.javasteam.util.Utils
 
 /**
@@ -29,8 +29,7 @@ class AuthSessionDetails {
      * Gets or sets the platform type that the login will be performed for.
      */
     @JvmField
-    var platformType: SteammessagesAuthSteamclient.EAuthTokenPlatformType =
-        SteammessagesAuthSteamclient.EAuthTokenPlatformType.k_EAuthTokenPlatformType_SteamClient
+    var platformType: EAuthTokenPlatformType = EAuthTokenPlatformType.k_EAuthTokenPlatformType_SteamClient
 
     /**
      * Gets or Sets the client operating system type.

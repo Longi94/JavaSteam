@@ -3,6 +3,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamuserstats
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntriesResponse
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.types.UGCHandle
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.IOException
@@ -12,6 +13,10 @@ import java.io.IOException
  */
 @Suppress("unused")
 class LeaderboardEntry(entry: CMsgClientLBSGetLBEntriesResponse.Entry) {
+
+    companion object {
+        private val logger = LogManager.getLogger(LeaderboardEntry::class.java)
+    }
 
     /**
      * Gets the [SteamID] for this entry.
@@ -39,7 +44,7 @@ class LeaderboardEntry(entry: CMsgClientLBSGetLBEntriesResponse.Entry) {
     val details: List<Int>
 
     init {
-        val entryDetails = mutableListOf<Int>()
+        val entryDetails: MutableList<Int> = mutableListOf()
 
         if (entry.details != null) {
             val ms = MemoryStream(entry.details.toByteArray())
@@ -50,7 +55,7 @@ class LeaderboardEntry(entry: CMsgClientLBSGetLBEntriesResponse.Entry) {
                     entryDetails.add(br.readInt())
                 }
             } catch (e: IOException) {
-                throw IllegalArgumentException("failed to read details", e)
+                logger.error("failed to read details", e)
             }
         }
 

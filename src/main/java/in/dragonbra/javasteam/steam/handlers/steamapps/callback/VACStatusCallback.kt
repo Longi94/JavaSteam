@@ -4,15 +4,19 @@ import `in`.dragonbra.javasteam.base.ClientMsg
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.generated.MsgClientVACBanStatus
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import java.io.ByteArrayInputStream
-import java.io.IOException
 import java.util.*
 
 /**
  * This callback is fired when the client receives its VAC banned status.
  */
 class VACStatusCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+
+    companion object {
+        private val logger = LogManager.getLogger(VACStatusCallback::class.java)
+    }
 
     /**
      * Gets a list of VAC banned apps the client is banned from.
@@ -31,8 +35,8 @@ class VACStatusCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                     tempList.add(br.readInt())
                 }
             }
-        } catch (e: IOException) {
-            throw IllegalArgumentException("failed to read bans", e)
+        } catch (e: Exception) {
+            logger.error("failed to read bans", e)
         }
 
         bannedApps = tempList.toList()

@@ -9,8 +9,7 @@ import `in`.dragonbra.javasteam.types.GlobalID
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import java.io.ByteArrayInputStream
-import java.io.IOException
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -35,10 +34,10 @@ class MarketingMessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         updateTime = Date(body.marketingMessageUpdateTime * 1000L)
 
-        val msgList: MutableList<Message> = ArrayList()
+        val msgList: MutableList<Message> = mutableListOf()
 
         try {
-            BinaryReader(ByteArrayInputStream(marketingMessage.payload.toByteArray())).use { br ->
+            BinaryReader(marketingMessage.payload).use { br ->
                 for (i in 0 until body.count) {
                     val dataLen = br.readInt() - 4 // total length includes the 4 byte length
                     val messageData = br.readBytes(dataLen)
@@ -46,8 +45,8 @@ class MarketingMessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                     msgList.add(Message(messageData))
                 }
             }
-        } catch (e: IOException) {
-            logger.debug(e)
+        } catch (e: Exception) {
+            logger.error("Failed to get marketing messages", e)
         }
 
         messages = msgList.toList()
@@ -78,13 +77,14 @@ class MarketingMessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         init {
             try {
-                BinaryReader(ByteArrayInputStream(data)).use { br ->
+                val ms = MemoryStream(data)
+                BinaryReader(ms).use { br ->
                     id = GlobalID(br.readLong())
                     url = br.readNullTermString(StandardCharsets.UTF_8)
                     flags = EMarketingMessageFlags.from(br.readInt())
                 }
-            } catch (e: IOException) {
-                logger.debug(e)
+            } catch (e: Exception) {
+                logger.error("Failed to parse marketing messages", e)
             }
         }
     }

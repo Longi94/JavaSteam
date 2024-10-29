@@ -7,14 +7,18 @@ import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientPurchaseResponse
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import java.io.IOException
 
 /**
  * This callback is received in a response to activating a Steam key.
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class PurchaseResponseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+
+    companion object {
+        private val logger = LogManager.getLogger(PurchaseResponseCallback::class.java)
+    }
 
     /**
      * Gets Result of the operation
@@ -47,8 +51,8 @@ class PurchaseResponseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
             try {
                 val ms = MemoryStream(msg.purchaseReceiptInfo.toByteArray())
                 purchaseReceiptInfo.tryReadAsBinary(ms)
-            } catch (exception: IOException) {
-                throw IllegalArgumentException("input stream is null")
+            } catch (e: Exception) {
+                logger.error("Failed to read purchase receipt info", e)
             }
         }
     }

@@ -7,6 +7,7 @@ import in.dragonbra.javasteam.util.stream.SeekOrigin;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This class provides a payload backing to client messages.
@@ -107,7 +108,7 @@ public abstract class AbstractMsgBase {
     }
 
     public void writeString(String data) throws IOException {
-        writeString(data, Charset.defaultCharset());
+        writeString(data, StandardCharsets.UTF_8);
     }
 
     public void writeString(String data, Charset charset) throws IOException {
@@ -123,7 +124,7 @@ public abstract class AbstractMsgBase {
     }
 
     public void writeNullTermString(String data) throws IOException {
-        writeNullTermString(data, Charset.defaultCharset());
+        writeNullTermString(data, StandardCharsets.UTF_8);
     }
 
     public void writeNullTermString(String data, Charset charset) throws IOException {
@@ -132,7 +133,7 @@ public abstract class AbstractMsgBase {
     }
 
     public String readNullTermString() throws IOException {
-        return readNullTermString(Charset.defaultCharset());
+        return readNullTermString(StandardCharsets.UTF_8);
     }
 
     public String readNullTermString(Charset charset) throws IOException {

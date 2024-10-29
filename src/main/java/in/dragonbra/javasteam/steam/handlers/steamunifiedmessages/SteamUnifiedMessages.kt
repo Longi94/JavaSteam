@@ -72,8 +72,8 @@ class SteamUnifiedMessages : ClientMsgHandler() {
         }
 
         ClientMsgProtobuf<TRequest>(message.javaClass, eMsg).apply {
-            setSourceJobID(jobID)
-            header.proto.setTargetJobName(rpcName)
+            sourceJobID = jobID
+            header.proto.targetJobName = rpcName
             body!!.mergeFrom(message)
         }.also(client::send)
 
@@ -98,7 +98,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
         }
 
         ClientMsgProtobuf<TRequest>(message.javaClass, eMsg).apply {
-            header.proto.setTargetJobName(rpcName)
+            header.proto.targetJobName = rpcName
             body!!.mergeFrom(message)
         }.also(client::send)
     }
@@ -113,7 +113,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
     private fun handleServiceMethod(packetMsg: IPacketMsg) {
         require(packetMsg is PacketClientMsgProtobuf) { "Packet message is expected to be protobuf." }
 
-        val jobName = packetMsg.header.proto.getTargetJobName()
+        val jobName = packetMsg.header.proto.targetJobName
 
         if (jobName.isNullOrEmpty()) {
             logger.debug("Job name is null or empty")
@@ -145,7 +145,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
 
                 client.postCallback(ServiceMethodNotification(argumentType, packetMsg))
             }
-        } catch (e: ClassNotFoundException) {
+        } catch (_: ClassNotFoundException) {
             // The RPC service implementation was not implemented.
             // Either the .proto is missing, or the service was not converted to an interface yet.
             logger.debug("Service Method: $serviceName, was not found")
