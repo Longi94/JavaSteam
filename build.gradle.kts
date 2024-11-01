@@ -141,6 +141,7 @@ dependencies {
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.stdib)
     implementation(libs.okHttp)
+    implementation(libs.xz)
     implementation(libs.protobuf.java)
 
     testImplementation(libs.bundles.testing)

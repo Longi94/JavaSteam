@@ -5,6 +5,7 @@ import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.steam.cdn.ClientPool
 import `in`.dragonbra.javasteam.steam.cdn.DepotChunk
 import `in`.dragonbra.javasteam.steam.cdn.Server
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSRequest
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSProductInfoCallback
@@ -24,7 +25,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
-import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -49,38 +50,52 @@ class ContentDownloader(val steamClient: SteamClient) {
         return@async Pair(callback?.result ?: EResult.Fail, callback?.depotKey ?: ByteArray(0))
     }
     private fun getDepotManifestId(
-        appId: Int,
+        app: PICSProductInfo,
         depotId: Int,
         branchId: String,
         parentScope: CoroutineScope
     ): Deferred<Pair<Int, Long>> = parentScope.async {
+        val depot = app.keyValues["depots"][depotId.toString()]
+        if (depot == KeyValue.INVALID) {
+            logger.error("Could not find depot $depotId of ${app.id}")
+            return@async Pair(app.id, INVALID_MANIFEST_ID)
+        }
+        val manifest = depot["manifests"][branchId]
+        if (manifest != KeyValue.INVALID) {
+            return@async Pair(app.id, manifest["gid"].asLong())
+        }
+        val depotFromApp = depot["depotfromapp"].asInteger(INVALID_APP_ID)
+        if (depotFromApp == app.id || depotFromApp == INVALID_APP_ID) {
+            logger.error("Failed to find manifest of app ${app.id} within depot $depotId on branch $branchId")
+            return@async Pair(app.id, INVALID_MANIFEST_ID)
+        }
+        val innerApp = getAppInfo(depotFromApp, parentScope).await()
+        if (innerApp == null) {
+            logger.error("Failed to find manifest of app ${app.id} within depot $depotId on branch $branchId")
+            return@async Pair(app.id, INVALID_MANIFEST_ID)
+        }
+
+        return@async getDepotManifestId(innerApp, depotId, branchId, parentScope).await()
+    }
+    private fun getAppDirName(app: PICSProductInfo): String {
+        val installDirKeyValue = app.keyValues["config"]["installdir"]
+        return if (installDirKeyValue != KeyValue.INVALID) installDirKeyValue.value else app.id.toString()
+    }
+    private fun getAppInfo(
+        appId: Int,
+        parentScope: CoroutineScope
+    ): Deferred<PICSProductInfo?> = parentScope.async {
         val steamApps = steamClient.getHandler(SteamApps::class.java)
         val callback = steamApps?.picsGetProductInfo(PICSRequest(appId))?.toDeferred()?.await()
         val apps = callback?.results?.flatMap { (it as PICSProductInfoCallback).apps.values }
         if (apps.isNullOrEmpty()) {
             logger.error("Received empty apps list in PICSProductInfo response for $appId")
-            return@async Pair(appId, INVALID_MANIFEST_ID)
+            return@async null
         }
         if (apps.size > 1) {
             logger.debug("Received ${apps.size} apps from PICSProductInfo for $appId, using first result")
         }
-        val app = apps.first()
-        val depot = app.keyValues["depots"][depotId.toString()]
-        if (depot == KeyValue.INVALID) {
-            logger.error("Could not find depot $depotId of $appId")
-            return@async Pair(appId, INVALID_MANIFEST_ID)
-        }
-        val manifest = depot["manifests"][branchId]
-        if (manifest != KeyValue.INVALID) {
-            return@async Pair(appId, manifest["gid"].asLong())
-        }
-        val depotFromApp = depot["depotfromapp"].asInteger(INVALID_APP_ID)
-        if (depotFromApp == appId || depotFromApp == INVALID_APP_ID) {
-            logger.error("Failed to find manifest of app $appId within depot $depotId on branch $branchId")
-            return@async Pair(appId, INVALID_MANIFEST_ID)
-        }
-
-        return@async getDepotManifestId(depotFromApp, depotId, branchId, parentScope).await()
+        return@async apps.first()
     }
     fun downloadApp(
         appId: Int,
@@ -93,7 +108,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         parentScope: CoroutineScope
     ): Deferred<Boolean> = parentScope.async {
         if (!isActive) {
-            System.err.println("App $appId was not completely downloaded. Operation was canceled.")
+            logger.error("App $appId was not completely downloaded. Operation was canceled.")
             return@async false
         }
 
@@ -101,7 +116,12 @@ class ContentDownloader(val steamClient: SteamClient) {
 
         val shiftedAppId: Int
         val manifestId: Long
-        getDepotManifestId(appId, depotId, branch, parentScope).await().apply {
+        val appInfo = getAppInfo(appId, parentScope).await()
+        if (appInfo == null) {
+            logger.error("Could not retrieve PICSProductInfo of $appId")
+            return@async false
+        }
+        getDepotManifestId(appInfo, depotId, branch, parentScope).await().apply {
             shiftedAppId = first
             manifestId = second
         }
@@ -134,12 +154,14 @@ class ContentDownloader(val steamClient: SteamClient) {
             }
 
             val downloadCounter = GlobalDownloadCounter()
+            val installDir = Paths.get(installPath, getAppDirName(appInfo)).toString()
+            val stagingDir = Paths.get(stagingPath, getAppDirName(appInfo)).toString()
             val depotFileData = DepotFilesData(
-                depotDownloadInfo = DepotDownloadInfo(depotId, shiftedAppId, manifestId, branch, installPath, depotKey),
+                depotDownloadInfo = DepotDownloadInfo(depotId, shiftedAppId, manifestId, branch, installDir, depotKey),
                 depotCounter = DepotDownloadCounter(
                     completeDownloadSize = newProtoManifest.first.totalUncompressedSize
                 ),
-                stagingDir = stagingPath,
+                stagingDir = stagingDir,
                 manifest = newProtoManifest.first,
                 previousManifest = oldProtoManifest?.first
             )
@@ -150,10 +172,10 @@ class ContentDownloader(val steamClient: SteamClient) {
             logger.debug("Depot $depotId - Downloaded ${depotFileData.depotCounter.depotBytesCompressed} bytes (${depotFileData.depotCounter.depotBytesUncompressed} bytes uncompressed)")
             return@async true
 //        } catch (e: CancellationException) {
-//            System.err.println("App $appId was not completely downloaded. Operation was canceled.")
+//            logger.error("App $appId was not completely downloaded. Operation was canceled.")
 //            return@async false
         } catch (e: Exception) {
-            System.err.println("Error occurred while downloading app $shiftedAppId: ${e.message}")
+            logger.error("Error occurred while downloading app $shiftedAppId: ${e.message}")
             e.printStackTrace()
             return@async false
         }
@@ -171,8 +193,8 @@ class ContentDownloader(val steamClient: SteamClient) {
             return@async
 
         depotFilesData.manifest.files.forEach { file ->
-            val fileFinalPath = Path.of(depotFilesData.depotDownloadInfo.installDir, file.fileName).toString()
-            val fileStagingPath = Path.of(depotFilesData.stagingDir, file.fileName).toString()
+            val fileFinalPath = Paths.get(depotFilesData.depotDownloadInfo.installDir, file.fileName).toString()
+            val fileStagingPath = Paths.get(depotFilesData.stagingDir, file.fileName).toString()
 
             if (file.flags.contains(EDepotFileFlag.Directory)) {
                 File(fileFinalPath).mkdirs()
@@ -187,9 +209,12 @@ class ContentDownloader(val steamClient: SteamClient) {
         logger.debug("Downloading depot ${depotFilesData.depotDownloadInfo.depotId}")
 
         val files = depotFilesData.manifest.files.filter { !it.flags.contains(EDepotFileFlag.Directory) }.toTypedArray()
+        logger.debug("Filtered files in manifest list")
         val networkChunkQueue = ConcurrentLinkedQueue<Triple<FileStreamData, FileData, ChunkData>>()
+        logger.debug("Prepared network chunk queue")
 
         val downloadSemaphore = Semaphore(maxDownloads)
+        logger.debug("Prepared download semaphore")
         files.map { file ->
             async {
                 downloadSemaphore.withPermit {
@@ -197,6 +222,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                 }
             }
         }.awaitAll()
+        logger.debug("Downloaded depot files")
 
         networkChunkQueue.map { (fileStreamData, fileData, chunk) ->
             async {
@@ -206,6 +232,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                 }
             }
         }.awaitAll()
+        logger.debug("Downloaded depot file chunks")
 
         // Check for deleted files if updating the depot.
         depotFilesData.previousManifest?.let { previousManifest ->
@@ -215,7 +242,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             previousFilteredFiles.removeAll(depotFilesData.manifest.files.map { it.fileName }.toSet())
 
             for (existingFileName in previousFilteredFiles) {
-                val fileFinalPath = Path.of(depotFilesData.depotDownloadInfo.installDir, existingFileName).toString()
+                val fileFinalPath = Paths.get(depotFilesData.depotDownloadInfo.installDir, existingFileName).toString()
 
                 if (!File(fileFinalPath).exists()) continue
 
@@ -223,6 +250,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                 logger.debug("Deleted $fileFinalPath")
             }
         }
+        logger.debug("Removed files exclusive to previous manifest")
     }
 
     private fun downloadDepotFile(
@@ -238,8 +266,8 @@ class ContentDownloader(val steamClient: SteamClient) {
         val depotDownloadCounter = depotFilesData.depotCounter
         val oldManifestFile = depotFilesData.previousManifest?.files?.find { it.fileName == file.fileName }
 
-        val fileFinalPath = Path.of(depotFilesData.depotDownloadInfo.installDir, file.fileName).toString()
-        val fileStagingPath = Path.of(depotFilesData.stagingDir, file.fileName).toString()
+        val fileFinalPath = Paths.get(depotFilesData.depotDownloadInfo.installDir, file.fileName).toString()
+        val fileStagingPath = Paths.get(depotFilesData.stagingDir, file.fileName).toString()
 
         // This may still exist if the previous run exited before cleanup
         File(fileStagingPath).takeIf { it.exists() }?.delete()
@@ -320,9 +348,9 @@ class ContentDownloader(val steamClient: SteamClient) {
                 // No old manifest or file not in old manifest. We must validate.
 
                 FileInputStream(fileFinalPath).use { fs ->
-                    if (fi.length() != file.totalSize) {
-                        fs.channel.truncate(file.totalSize)
-                    }
+//                    if (fi.length() != file.totalSize) {
+//                        fs.channel.truncate(file.totalSize)
+//                    }
 
                     logger.debug("Validating $fileFinalPath")
                     neededChunks = Utils.validateSteam3FileChecksums(fs, file.chunks.sortedBy { it.offset }.toTypedArray())
@@ -408,7 +436,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             try {
                 connection = cdnPool.getConnection().await()
 
-                logger.debug("Downloading chunk $chunkID from $connection with ${cdnPool.proxyServer ?: "no proxy"}")
+                logger.debug("Downloading chunk $chunkID from $connection through ${cdnPool.proxyServer ?: "no proxy"}")
                 outputChunkData = ByteArray(chunkInfo.uncompressedLength)
                 writtenBytes = cdnPool.cdnClient.downloadDepotChunk(
                     depotId = depot.depotId,
@@ -443,7 +471,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                 cdnPool.returnBrokenConnection(connection)
                 logger.error("Encountered unexpected error downloading chunk $chunkID: ${e.message}")
             }
-        } while (writtenBytes <= 0)
+        } while (writtenBytes <= 0 && isActive)
 
         if (writtenBytes <= 0) {
             logger.debug("Failed to find any server with chunk $chunkID for depot ${depot.depotId}. Aborting.")
@@ -454,7 +482,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             fileStreamData.fileLock.acquire()
 
             if (fileStreamData.fileStream == null) {
-                val fileFinalPath = Path.of(depot.installDir, file.fileName).toString()
+                val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
                 fileStreamData.fileStream = FileOutputStream(fileFinalPath, true).channel
             }
 
@@ -487,7 +515,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         }
 
         if (remainingChunks == 0) {
-            val fileFinalPath = Path.of(depot.installDir, file.fileName).toString()
+            val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
             logger.debug("${sizeDownloaded.toFloat() / depotDownloadCounter.completeDownloadSize * 100f}% $fileFinalPath")
         }
 
@@ -542,7 +570,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         logger.debug("Downloading depot manifest...")
 
         var depotManifest: DepotManifest? = null
-        var manifestRequestCode: Long = 0
+        var manifestRequestCode = 0UL
         var manifestRequestCodeExpiration = Instant.MIN
 
         do {
@@ -559,22 +587,25 @@ class ContentDownloader(val steamClient: SteamClient) {
                 val now = Instant.now()
 
                 // In order to download this manifest, we need the current manifest request code
-                // The manifest request code is only valid for a specific period in time
-                if (manifestRequestCode == 0L || now >= manifestRequestCodeExpiration) {
-                    logger.debug("Manifest request code or expiration time is bad")
-                    val steamContent = cdnPool.steamClient.getHandler(SteamContent::class.java)!!
+                // The manifest request code is only valid for a specific period of time
+//                if (manifestRequestCode == 0L || now >= manifestRequestCodeExpiration) {
+                if (now >= manifestRequestCodeExpiration) {
+                    logger.debug("Manifest request code expired, requesting a new one")
+                    val steamContent = steamClient.getHandler(SteamContent::class.java)!!
                     manifestRequestCode = steamContent.getManifestRequestCode(depotId, appId, manifestId, branch, parentScope = parentScope).await()
                     // This code will hopefully be valid for one period following the issuing period
                     manifestRequestCodeExpiration = now.plus(5, ChronoUnit.MINUTES)
 
                     // If we could not get the manifest code, this is a fatal error
-                    if (manifestRequestCode == 0L) {
+                    if (manifestRequestCode == 0UL) {
                         logger.error("No manifest request code was returned for $depotId $manifestId")
-                        throw CancellationException("No manifest request code")
-                    }
+                        cancel("No manifest request code")
+//                        throw CancellationException("No manifest request code")
+                    } else
+                        logger.debug("Received manifest request code $manifestRequestCode")
                 }
 
-                logger.debug("Downloading manifest $manifestId from $connection with ${cdnPool.proxyServer?.toString() ?: "no proxy"}")
+                logger.debug("Downloading manifest $manifestId from $connection through ${cdnPool.proxyServer?.toString() ?: "no proxy"}")
                 depotManifest = cdnPool.cdnClient.downloadManifest(
                     depotId,
                     manifestId,
@@ -585,8 +616,8 @@ class ContentDownloader(val steamClient: SteamClient) {
                 )
 
                 cdnPool.returnConnection(connection)
-            } catch (e: CancellationException) {
-                logger.error("Connection timeout downloading depot manifest $depotId $manifestId")
+//            } catch (e: CancellationException) {
+//                logger.error("Connection timeout downloading depot manifest $depotId $manifestId")
 //                return@async null
             } catch (e: SteamKitWebRequestException) {
                 cdnPool.returnBrokenConnection(connection)
@@ -598,8 +629,6 @@ class ContentDownloader(val steamClient: SteamClient) {
                         logger.error("Encountered error downloading manifest for depot $depotId $manifestId: ${e.statusCode}")
                 }
                 return@async null
-//            } catch (e: CancellationException) {
-//                return@async null
             } catch (e: Exception) {
                 cdnPool.returnBrokenConnection(connection)
                 logger.error("Encountered error downloading manifest for depot $depotId $manifestId: ${e.message}")
@@ -615,7 +644,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         }
 
         val newProtoManifest = DepotManifest(depotManifest)
-        val checksum = cdnPool.steamClient.configuration.depotManifestProvider.updateManifest(newProtoManifest)
+        val checksum = steamClient.configuration.depotManifestProvider.updateManifest(newProtoManifest)
         return@async Pair(newProtoManifest, checksum)
     }
 }

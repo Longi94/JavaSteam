@@ -1,10 +1,10 @@
 package `in`.dragonbra.javasteam.util
 
-import java.io.InputStream
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.util.zip.ZipInputStream
 
 object ZipUtil {
-    fun decompress(ms: InputStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
+    fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         ZipInputStream(ms).use { zip ->
             val entry = zip.nextEntry ?: throw IllegalArgumentException("Expected the zip to contain at least one file")
 

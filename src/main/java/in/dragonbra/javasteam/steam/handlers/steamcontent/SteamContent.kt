@@ -12,18 +12,12 @@ import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.webapi.ContentServerDirectoryService
-import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.*
 
 /**
  * This handler is used for interacting with content server directory on the Steam network.
  */
 class SteamContent : ClientMsgHandler() {
-    companion object {
-        private val logger: Logger = LogManager.getLogger(SteamContent::class.java)
-    }
-
     /**
      * Load a list of servers from the Content Server Directory Service.
      * This is an alternative to [ContentServerDirectoryService.loadAsync] (does not exist in JS atm).
@@ -70,7 +64,7 @@ class SteamContent : ClientMsgHandler() {
         branch: String? = null,
         branchPasswordHash: String? = null,
         parentScope: CoroutineScope
-    ): Deferred<Long> = parentScope.async {
+    ): Deferred<ULong> = parentScope.async {
         var localBranch = branch
         var localBranchPasswordHash = branchPasswordHash
 
@@ -92,18 +86,14 @@ class SteamContent : ClientMsgHandler() {
         }.build()
 
         val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
-        logger.debug("Got handler for unified messages $unifiedMessages")
         val contentService = unifiedMessages.createService<ContentServerDirectory>()
-        logger.debug("Created content service $contentService")
         val message = contentService.getManifestRequestCode(request).toDeferred().await()
-        logger.debug("Raw message response of manifest request code received $message")
         val response = message
             .getDeserializedResponse<CContentServerDirectory_GetManifestRequestCode_Response.Builder>(
                 CContentServerDirectory_GetManifestRequestCode_Response::class.java
             ).build()
-        logger.debug("Deserialized response $response")
 
-        return@async response.manifestRequestCode
+        return@async response.manifestRequestCode.toULong()
     }
 
     /**

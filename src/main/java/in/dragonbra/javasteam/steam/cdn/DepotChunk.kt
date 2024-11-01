@@ -4,6 +4,10 @@ import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.VZipUtil
 import `in`.dragonbra.javasteam.util.ZipUtil
+import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import javax.crypto.Cipher
@@ -14,6 +18,8 @@ import javax.crypto.spec.SecretKeySpec
  * Provides a helper function to decrypt and decompress a single depot chunk.
  */
 object DepotChunk {
+    private val logger: Logger = LogManager.getLogger(DepotChunk::class.java)
+
     /**
      * Processes the specified depot key by decrypting the data with the given depot encryption key, and then by decompressing the data.
      * If the chunk has already been processed, this function does nothing.
@@ -39,14 +45,13 @@ object DepotChunk {
 
         assert(depotKey.size == 32) { "Tried to decrypt depot chunk with non 32 byte key!" }
 
-        val aes = Cipher.getInstance("AES/CBC/PKCS7Padding")
+        val aes = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
         val keySpec = SecretKeySpec(depotKey, "AES")
 
         // first 16 bytes of input is the ECB encrypted IV
-        val iv = ByteArray(16)
-        val ecbCipher = Cipher.getInstance("AES/ECB/NoPadding")
+        val ecbCipher = Cipher.getInstance("AES/ECB/NoPadding", CryptoHelper.SEC_PROV)
         ecbCipher.init(Cipher.DECRYPT_MODE, keySpec)
-        ecbCipher.doFinal(data, 0, iv.size, iv)
+        val iv = ecbCipher.doFinal(data, 0, 16)
 
         // With CBC and padding, the decrypted size will always be smaller
 //            val buffer = ByteArray(data.size - iv.size)
@@ -56,15 +61,16 @@ object DepotChunk {
         try {
             aes.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(iv))
             val decrypted = aes.doFinal(data, iv.size, data.size - iv.size)
-            val decryptedStream = ByteArrayInputStream(decrypted)
 
-            writtenDecompressed = if (decrypted.size > 1 && decrypted[0] == 'V'.code.toByte() && decrypted[1] == 'Z'.code.toByte()) {
-                VZipUtil.decompress(decryptedStream, destination, verifyChecksum = false)
+            writtenDecompressed = if (decrypted.size > 1 && decrypted[0] == 'V'.toByte() && decrypted[1] == 'Z'.toByte()) {
+                VZipUtil.decompress(MemoryStream(decrypted), destination, verifyChecksum = false)
             } else {
-                ZipUtil.decompress(decryptedStream, destination, verifyChecksum = false)
+                ZipUtil.decompress(MemoryStream(decrypted), destination, verifyChecksum = false)
             }
+        } catch (e: Exception) {
+            logger.error("Failed to decompress chunk ${Utils.encodeHexString(info.chunkID)}: $e")
         } finally {
-            // No need for explicit buffer return in Kotlin/JVM
+                // No need for explicit buffer return in Kotlin/JVM
         }
 
         if (info.uncompressedLength != writtenDecompressed) {

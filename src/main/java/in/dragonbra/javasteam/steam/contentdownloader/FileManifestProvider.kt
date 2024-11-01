@@ -68,7 +68,7 @@ class FileManifestProvider(private val file: File) : IManifestProvider {
             val buffer = ByteBuffer.allocate(Long.SIZE_BYTES)
             buffer.putLong(manifestID)
             zip.write(buffer.array())
-            zip.closeEntry()
+//            zip.closeEntry()
         }
     }
 
@@ -76,7 +76,7 @@ class FileManifestProvider(private val file: File) : IManifestProvider {
         ZipOutputStream(FileOutputStream(file)).use { zip ->
             zip.putNextEntry(ZipEntry("${manifest.depotID}${File.separator}${manifest.manifestGID}"))
             val checksum = manifest.serialize(zip)
-            zip.closeEntry()
+//            zip.closeEntry()
             return checksum
         }
     }

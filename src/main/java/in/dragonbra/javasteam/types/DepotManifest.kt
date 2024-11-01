@@ -1,29 +1,21 @@
 package `in`.dragonbra.javasteam.types
 
 import com.google.protobuf.ByteString
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestSignature
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestMetadata
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestPayload
+import `in`.dragonbra.javasteam.base.ContentManifest.*
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.DataOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.ByteArrayOutputStream
+import java.io.*
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.Date
-import java.util.Base64
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.NoSuchElementException
 
 
 /**
@@ -35,6 +27,7 @@ class DepotManifest {
         const val PROTOBUF_METADATA_MAGIC = 0x1F4812BE
         const val PROTOBUF_SIGNATURE_MAGIC = 0x1B81B817
         const val PROTOBUF_ENDOFMANIFEST_MAGIC = 0x32C415AB
+        private val logger: Logger = LogManager.getLogger(DepotManifest::class.java)
 
         /**
          * Initializes a new instance of the [DepotManifest] class.
@@ -43,10 +36,7 @@ class DepotManifest {
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
         fun deserialize(stream: InputStream): Pair<DepotManifest, ByteArray> {
-            val manifest = DepotManifest()
-            val checksum = CryptoHelper.shaHash(stream.readBytes())
-            manifest.internalDeserialize(stream)
-            return Pair(manifest, checksum)
+            return deserialize(stream.readBytes())
         }
 
         /**
@@ -56,7 +46,12 @@ class DepotManifest {
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
         fun deserialize(data: ByteArray): Pair<DepotManifest, ByteArray> {
-            return MemoryStream(data).use { ms -> deserialize(ms) }
+            val checksum = CryptoHelper.shaHash(data)
+            return MemoryStream(data).use { ms ->
+                val manifest = DepotManifest()
+                manifest.internalDeserialize(ms)
+                Pair(manifest, checksum)
+            }
         }
 
         /**
@@ -158,50 +153,46 @@ class DepotManifest {
         assert(encryptionKey.size == 32) { "Decrypt filenames used with non 32 byte key!" }
 
         // This was originally copy-pasted in the SteamKit2 source from CryptoHelper.SymmetricDecrypt to avoid allocating Aes instance for every filename
-        // and now ported to Kotlin with the help of Claude 3.5 Sonnet
-        val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
+        val ecbCipher = Cipher.getInstance("AES/ECB/NoPadding", CryptoHelper.SEC_PROV)
+        val aes = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
         val secretKey = SecretKeySpec(encryptionKey, "AES")
-        val iv = ByteArray(16)
-        var filenameLength = 0
-        var bufferDecoded = ByteArray(256)
-        var bufferDecrypted = ByteArray(256)
+        var iv: ByteArray
+//        var filenameLength: Int
 
         try {
             for (file in files) {
-                val decodedLength = file.fileName.length / 4 * 3 // This may be higher due to padding
+                val decoded = Base64.getUrlDecoder().decode(file.fileName
+                    .replace('+', '-')
+                    .replace('/', '_')
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .replace(" ", "")
+                )
 
-                // Majority of filenames are short, even when they are encrypted and base64 encoded,
-                // so this resize will be hit *very* rarely
-                if (decodedLength > bufferDecoded.size) {
-                    bufferDecoded = ByteArray(decodedLength)
-                    bufferDecrypted = ByteArray(decodedLength)
-                }
-
-                val decoded = Base64.getDecoder().decode(file.fileName)
-                if (decoded == null) {
-                    assert(false) { "Failed to base64 decode the filename." }
-                    return false
-                }
-                System.arraycopy(decoded, 0, bufferDecoded, 0, decoded.size)
-
+                val bufferDecrypted: ByteArray
                 try {
-                    val encryptedFilename = bufferDecoded.sliceArray(decoded.indices)
-
                     // Extract IV from the first 16 bytes
-                    System.arraycopy(encryptedFilename, 0, iv, 0, 16)
+                    iv = ByteArray(16)
+//                    System.arraycopy(decoded, 0, iv, 0, iv.size)
+                    ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
+                    ecbCipher.doFinal(decoded, 0, iv.size, iv)
+//                    iv = ecbCipher.doFinal(iv)
 
                     // Decrypt filename
-                    cipher.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(iv))
-                    filenameLength = cipher.doFinal(encryptedFilename, 16, encryptedFilename.size - 16, bufferDecrypted)
+                    aes.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(iv))
+                    bufferDecrypted = aes.doFinal(decoded, iv.size, decoded.size - iv.size)
+//                    bufferDecrypted = ByteArray(decoded.size - iv.size)
+//                    filenameLength = aes.doFinal(decoded, iv.size, decoded.size - iv.size, bufferDecrypted)
                 } catch (e: Exception) {
-                    assert(false) { "Failed to decrypt the filename." }
+                    logger.error("Failed to decrypt the filename.")
                     return false
                 }
 
                 // Trim the ending null byte, safe for UTF-8
-                if (filenameLength > 0 && bufferDecrypted[filenameLength] == 0.toByte()) {
-                    filenameLength--
-                }
+                val filenameLength = bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
+//                if (filenameLength > 0 && bufferDecrypted[filenameLength] == 0.toByte()) {
+//                    filenameLength--
+//                }
 
                 // ASCII is subset of UTF-8, so it safe to replace the raw bytes here
 //                bufferDecrypted.forEachIndexed { index, byte ->
@@ -235,7 +226,7 @@ class DepotManifest {
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    internal fun internalDeserialize(stream: InputStream) {
+    internal fun internalDeserialize(stream: MemoryStream) {
         var payload: ContentManifestPayload? = null
         var metadata: ContentManifestMetadata? = null
         var signature: ContentManifestSignature? = null
@@ -409,7 +400,7 @@ class DepotManifest {
         val payloadData = payload.build().toByteArray()
         val len = payloadData.size
         val data = ByteArray(Int.SIZE_BYTES + len)
-        System.arraycopy(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(len), 0, data, 0, 4)
+        System.arraycopy(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(len).array(), 0, data, 0, 4)
         System.arraycopy(payloadData, 0, data, 4, len)
         val crc32 = Utils.crc32(payloadData).toInt()
 

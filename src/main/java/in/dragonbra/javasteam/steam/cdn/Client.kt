@@ -45,24 +45,33 @@ class Client(steamClient: SteamClient) : Closeable {
             query: String? = null,
             proxyServer: Server? = null
         ): HttpUrl {
-            val uriBuilder = HttpUrl.Builder()
-                .scheme(if (server.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
-                .host(server.vHost)
-                .port(server.port)
-                .encodedPath(command)
-                .query(query ?: "")
-
+            val httpUrl: HttpUrl
             if (proxyServer != null && proxyServer.useAsProxy && proxyServer.proxyRequestPathTemplate != null) {
-                var pathTemplate = proxyServer.proxyRequestPathTemplate!!
-                pathTemplate = pathTemplate.replace("%host%", server.vHost)
-                pathTemplate = pathTemplate.replace("%path%", "/${command}")
-                uriBuilder.scheme(if (proxyServer.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
-                uriBuilder.host(proxyServer.vHost)
-                uriBuilder.port(proxyServer.port)
-                uriBuilder.encodedPath(pathTemplate)
+//                var pathTemplate = proxyServer.proxyRequestPathTemplate!!.replace("/", "")
+//                pathTemplate = pathTemplate.replace("%host%", server.vHost)
+//                pathTemplate = pathTemplate.replace("%path%", "/${command}")
+                httpUrl = HttpUrl.Builder()
+                    .scheme(if (proxyServer.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
+                    .host(proxyServer.vHost)
+                    .port(proxyServer.port)
+                    .addPathSegment(server.vHost)
+                    .addPathSegments(command)
+                    .run {
+                        query?.let { this.query(it) } ?: this
+                    }.build()
+            } else {
+                httpUrl = HttpUrl.Builder()
+                    .scheme(if (server.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
+                    .host(server.vHost)
+                    .port(server.port)
+                    .addPathSegments(command)
+                    .run {
+                        query?.let { this.query(it) } ?: this
+                    }.build()
             }
 
-            return uriBuilder.build()
+            logger.debug("Built Url $httpUrl")
+            return httpUrl
         }
     }
 
@@ -92,7 +101,7 @@ class Client(steamClient: SteamClient) : Closeable {
      suspend fun downloadManifest(
         depotId: Int,
         manifestId: Long,
-        manifestRequestCode: Long,
+        manifestRequestCode: ULong,
         server: Server,
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
@@ -100,11 +109,11 @@ class Client(steamClient: SteamClient) : Closeable {
     ): DepotManifest {
         require(server != null) { "server cannot be null" }
 
-        val MANIFEST_VERSION = 5U
-        val url = if (manifestRequestCode > 0) {
-            "depot/$depotId/manifest/$manifestId/$MANIFEST_VERSION/$manifestRequestCode"
+        val manifestVersion = 5
+        val url = if (manifestRequestCode > 0U) {
+            "depot/$depotId/manifest/$manifestId/$manifestVersion/$manifestRequestCode"
         } else {
-            "depot/$depotId/manifest/$manifestId/$MANIFEST_VERSION"
+            "depot/$depotId/manifest/$manifestId/$manifestVersion"
         }
 
         val request = Request.Builder()
@@ -146,6 +155,7 @@ class Client(steamClient: SteamClient) : Closeable {
                     }
                     // Decompress the zipped manifest data
                     ZipInputStream(contentBytes.inputStream()).use { zip ->
+                        zip.nextEntry
                         DepotManifest.deserialize(zip).first
                     }
                 }
@@ -214,60 +224,68 @@ class Client(steamClient: SteamClient) : Closeable {
             .build()
 
         return withTimeout(requestTimeout) {
-            val response = httpClient.newCall(request).execute()
+            httpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw SteamKitWebRequestException("Response status code does not indicate success: ${response.code} (${response.message})", response)
+                }
 
-            if (!response.isSuccessful) {
-                throw SteamKitWebRequestException("Response status code does not indicate success: ${response.code} (${response.message})", response)
+                var contentLength = chunk.compressedLength
+
+                response.header("Content-Length")?.toLongOrNull()?.let { responseContentLength ->
+                    contentLength = responseContentLength.toInt()
+
+                    // assert that lengths match only if the chunk has a length assigned.
+                    if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
+                        throw IllegalStateException("Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})")
+                    }
+                } ?: run {
+                    if (contentLength > 0) {
+                        logger.debug("Response does not have Content-Length, falling back to chunk.compressedLength.")
+                    } else {
+                        throw SteamKitWebRequestException("Response does not have Content-Length and chunk.compressedLength is not set.", response)
+                    }
+                }
+//                response.body.use { content ->
+//                    contentLength = content.contentLength().toInt()
+//                    // assert that lengths match only if the chunk has a length assigned.
+//                    if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
+//                        throw IllegalStateException("Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})")
+//                    }
+//                }
+
+                // If no depot key is provided, stream into the destination buffer without renting
+                if (depotKey == null) {
+                    val bytesRead = response.body.byteStream().use { input ->
+                        input.read(destination, 0, contentLength)
+                    }
+
+                    if (bytesRead != contentLength) {
+                        throw IOException("Length mismatch after downloading depot chunk! (was $bytesRead, but should be $contentLength)")
+                    }
+
+                    return@withTimeout contentLength
+                }
+
+                // We have to stream into a temporary buffer because a decryption will need to be performed
+                val buffer = ByteArray(contentLength)
+
+                try {
+                    val bytesRead = response.body.byteStream().use { input ->
+                        input.read(buffer, 0, contentLength)
+                    }
+
+                    if (bytesRead != contentLength) {
+                        throw IOException("Length mismatch after downloading encrypted depot chunk! (was $bytesRead, but should be $contentLength)")
+                    }
+
+                    // process the chunk immediately
+                    DepotChunk.process(chunk, buffer, destination, depotKey)
+                } catch (ex: Exception) {
+                    logger.debug("Failed to download a depot chunk ${request.url}: ${ex.message}")
+                    throw ex
+                }
             }
 
-            var contentLength = chunk.compressedLength
-
-            response.header("Content-Length")?.toLongOrNull()?.let { responseContentLength ->
-                contentLength = responseContentLength.toInt()
-
-                // assert that lengths match only if the chunk has a length assigned.
-                if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
-                    throw IllegalStateException("Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})")
-                }
-            } ?: run {
-                if (contentLength > 0) {
-                    logger.debug("Response does not have Content-Length, falling back to chunk.compressedLength.")
-                } else {
-                    throw SteamKitWebRequestException("Response does not have Content-Length and chunk.compressedLength is not set.", response)
-                }
-            }
-
-            // If no depot key is provided, stream into the destination buffer without renting
-            if (depotKey == null) {
-                val bytesRead = response.body.byteStream().use { input ->
-                    input.read(destination, 0, contentLength)
-                }
-
-                if (bytesRead != contentLength) {
-                    throw IOException("Length mismatch after downloading depot chunk! (was $bytesRead, but should be $contentLength)")
-                }
-
-                return@withTimeout contentLength
-            }
-
-            // We have to stream into a temporary buffer because a decryption will need to be performed
-            val buffer = ByteArray(contentLength)
-
-            try {
-                val bytesRead = response.body.byteStream().use { input ->
-                    input.read(buffer, 0, contentLength)
-                }
-
-                if (bytesRead != contentLength) {
-                    throw IOException("Length mismatch after downloading depot chunk! (was $bytesRead, but should be $contentLength)")
-                }
-
-                // process the chunk immediately
-                DepotChunk.process(chunk, buffer, destination, depotKey)
-            } catch (ex: Exception) {
-                logger.debug("Failed to download a depot chunk ${request.url}: ${ex.message}")
-                throw ex
-            }
         }
     }
 }
