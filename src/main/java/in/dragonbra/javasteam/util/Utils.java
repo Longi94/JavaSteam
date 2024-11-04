@@ -200,10 +200,20 @@ public class Utils {
     /**
      * Performs an Adler32 on the given input
      */
+//    public static int adlerHash(byte[] input) {
+//        int a = 0, b = 0;
+//        for (byte value : input) {
+//            a = (a + value) % 65521;
+//            b = (b + a) % 65521;
+//        }
+//
+//        return a | (b << 16);
+//    }
     public static int adlerHash(byte[] input) {
         int a = 0, b = 0;
         for (byte value : input) {
-            a = (a + value) % 65521;
+            // Use bitwise AND with 0xFF to treat byte as unsigned
+            a = (a + (value & 0xFF)) % 65521;
             b = (b + a) % 65521;
         }
 

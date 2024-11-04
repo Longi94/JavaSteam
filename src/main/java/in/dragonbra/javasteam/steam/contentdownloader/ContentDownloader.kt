@@ -24,6 +24,7 @@ import kotlinx.coroutines.sync.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.file.Paths
 import java.time.Instant
@@ -487,16 +488,32 @@ class ContentDownloader(val steamClient: SteamClient) {
 
         logger.debug("Finished downloading, decrypting, and extracting chunk $chunkID")
 
+//        try {
+//            fileStreamData.fileLock.acquire()
+//
+//            if (fileStreamData.fileStream == null) {
+//                val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
+//                fileStreamData.fileStream = FileOutputStream(fileFinalPath, true).channel
+//            }
+//
+//            fileStreamData.fileStream?.position(chunkInfo.offset)
+//            fileStreamData.fileStream?.write(ByteBuffer.wrap(outputChunkData, 0, writtenBytes))
+//        } finally {
+//            fileStreamData.fileLock.release()
+//        }
         try {
             fileStreamData.fileLock.acquire()
 
             if (fileStreamData.fileStream == null) {
                 val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
-                fileStreamData.fileStream = FileOutputStream(fileFinalPath, true).channel
+                // Use RandomAccessFile instead of FileOutputStream
+                val randomAccessFile = RandomAccessFile(fileFinalPath, "rw")
+                fileStreamData.fileStream = randomAccessFile.channel
             }
 
             fileStreamData.fileStream?.position(chunkInfo.offset)
-            fileStreamData.fileStream?.write(ByteBuffer.wrap(outputChunkData))
+            // Create a ByteBuffer that only contains the written bytes
+            fileStreamData.fileStream?.write(ByteBuffer.wrap(outputChunkData, 0, writtenBytes))
         } finally {
             fileStreamData.fileLock.release()
         }

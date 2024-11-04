@@ -46,7 +46,7 @@ object VZipUtil {
 //            val remainder: Int = propertyBits / 9
 //            val lp = remainder % 5
 //            val pb = remainder / 5
-//            if (pb > kNumPosStatesBitsMax || dictionarySize < (1 shl 12)) throw InvalidParamException()
+//            if (pb > kNumPosStatesBitsMax || dictionarySize < (1 shl 12)) throw IllegalArgumentException("VZip has bad pb or dictionary size")
 
             // jump to the end of the buffer to read the footer
 
