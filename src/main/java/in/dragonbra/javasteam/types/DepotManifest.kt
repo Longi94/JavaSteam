@@ -157,7 +157,6 @@ class DepotManifest {
         val aes = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
         val secretKey = SecretKeySpec(encryptionKey, "AES")
         var iv: ByteArray
-//        var filenameLength: Int
 
         try {
             for (file in files) {
@@ -172,39 +171,31 @@ class DepotManifest {
                 val bufferDecrypted: ByteArray
                 try {
                     // Extract IV from the first 16 bytes
-                    iv = ByteArray(16)
-//                    System.arraycopy(decoded, 0, iv, 0, iv.size)
                     ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
-                    ecbCipher.doFinal(decoded, 0, iv.size, iv)
-//                    iv = ecbCipher.doFinal(iv)
+                    iv = ecbCipher.doFinal(decoded, 0, 16)
 
                     // Decrypt filename
                     aes.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(iv))
                     bufferDecrypted = aes.doFinal(decoded, iv.size, decoded.size - iv.size)
-//                    bufferDecrypted = ByteArray(decoded.size - iv.size)
-//                    filenameLength = aes.doFinal(decoded, iv.size, decoded.size - iv.size, bufferDecrypted)
                 } catch (e: Exception) {
-                    logger.error("Failed to decrypt the filename.")
+                    logger.error("Failed to decrypt the filename: $e")
                     return false
                 }
 
                 // Trim the ending null byte, safe for UTF-8
                 val filenameLength = bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
-//                if (filenameLength > 0 && bufferDecrypted[filenameLength] == 0.toByte()) {
-//                    filenameLength--
-//                }
 
                 // ASCII is subset of UTF-8, so it safe to replace the raw bytes here
 //                bufferDecrypted.forEachIndexed { index, byte ->
-//                    if (byte == altDirChar.toByte()) {
+//                    if (byte == '\\'.toByte()) {
 //                        bufferDecrypted[index] = File.separatorChar.toByte()
 //                    }
 //                }
 
-                file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8)
+                file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8).replace('\\', File.separatorChar)
             }
-        } finally {
-            // In Kotlin, we don't need to explicitly return buffers to a pool
+        } catch (e: Exception) {
+            logger.error("Failed to decrypt filenames: $e")
         }
 
         // Sort file entries alphabetically because that's what Steam does
@@ -241,6 +232,7 @@ class DepotManifest {
 
                 when(magic) {
                     Steam3Manifest.MAGIC -> {
+                        logger.debug("Manifest is of type Steam3, deserializing...")
                         val binaryManifest = Steam3Manifest.deserialize(br)
                         parseBinaryManifest(binaryManifest)
 
@@ -249,14 +241,17 @@ class DepotManifest {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
                     }
                     PROTOBUF_PAYLOAD_MAGIC -> {
+                        logger.debug("Found Protobuf payload, parsing payload...")
                         val payloadLength = br.readInt()
                         payload = ContentManifestPayload.parseFrom(stream.readNBytes(payloadLength))
                     }
                     PROTOBUF_METADATA_MAGIC -> {
+                        logger.debug("Found Protobuf metadata, parsing metadata...")
                         val metadataLength = br.readInt()
                         metadata = ContentManifestMetadata.parseFrom(stream.readNBytes(metadataLength))
                     }
                     PROTOBUF_SIGNATURE_MAGIC -> {
+                        logger.debug("Found Protobuf signature, parsing signature...")
                         val signatureLength = br.readInt()
                         signature = ContentManifestSignature.parseFrom(stream.readNBytes(signatureLength))
                     }
@@ -326,6 +321,7 @@ class DepotManifest {
             }
             files.add(fileData)
         }
+        logger.debug("Found ${files.size} file(s) in Protobuf manifest")
     }
     internal fun parseProtobufManifestMetadata(metadata: ContentManifestMetadata) {
         filenamesEncrypted = metadata.filenamesEncrypted

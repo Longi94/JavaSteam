@@ -1,6 +1,8 @@
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.StreamReader
 import java.time.Instant
@@ -100,9 +102,9 @@ class Steam3Manifest(
             val fileMapping = mutableListOf<FileMapping>()
             var size = fileMappingSize
             while (size > 0) {
-                val start = ds.position.toInt()
+                val start = ds.position
                 fileMapping.add(FileMapping.deserialize(ds))
-                size -= ds.position.toInt() - start
+                size -= ds.position - start
             }
             return Steam3Manifest(
                 version = version,

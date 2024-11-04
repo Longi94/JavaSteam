@@ -6,6 +6,7 @@ import org.apache.commons.lang3.SystemUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -224,6 +225,8 @@ public class Utils {
      * @param chunkData Array of ChunkData to validate against
      * @return List of ChunkData that are needed
      * @throws IOException If there's an error reading the file
+     * @throws ClosedChannelException If this channel is closed
+     * @throws IllegalArgumentException If the new position is negative
      */
     public static List<ChunkData> validateSteam3FileChecksums(FileInputStream fs, ChunkData[] chunkData) throws IOException {
         List<ChunkData> neededChunks = new ArrayList<>();
@@ -232,7 +235,7 @@ public class Utils {
         for (ChunkData data : chunkData) {
             byte[] chunk = new byte[data.getUncompressedLength()];
             fs.getChannel().position(data.getOffset());
-            read = fs.read(chunk, 0, data.getUncompressedLength());
+            read = fs.readNBytes(chunk, 0, data.getUncompressedLength());
 
             byte[] tempChunk;
             if (read < data.getUncompressedLength()) {

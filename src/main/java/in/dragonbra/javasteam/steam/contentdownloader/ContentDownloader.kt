@@ -44,10 +44,10 @@ class ContentDownloader(val steamClient: SteamClient) {
         appId: Int,
         depotId: Int,
         parentScope: CoroutineScope
-    ): Deferred<Pair<EResult, ByteArray>> = parentScope.async {
+    ): Deferred<Pair<EResult, ByteArray?>> = parentScope.async {
         val steamApps = steamClient.getHandler(SteamApps::class.java)
         val callback = steamApps?.getDepotDecryptionKey(depotId, appId)?.toDeferred()?.await()
-        return@async Pair(callback?.result ?: EResult.Fail, callback?.depotKey ?: ByteArray(0))
+        return@async Pair(callback?.result ?: EResult.Fail, callback?.depotKey ?: null)
     }
     private fun getDepotManifestId(
         app: PICSProductInfo,
@@ -126,9 +126,9 @@ class ContentDownloader(val steamClient: SteamClient) {
             manifestId = second
         }
         val depotKeyResult = requestDepotKey(shiftedAppId, depotId, parentScope).await()
-        if (depotKeyResult.first != EResult.OK)
+        if (depotKeyResult.first != EResult.OK || depotKeyResult.second == null)
             return@async false
-        val depotKey = depotKeyResult.second
+        val depotKey = depotKeyResult.second!!
 
         var newProtoManifest = steamClient.configuration.depotManifestProvider.fetchManifest(depotId, manifestId)
         var oldProtoManifest = steamClient.configuration.depotManifestProvider.fetchLatestManifest(depotId)
@@ -224,6 +224,19 @@ class ContentDownloader(val steamClient: SteamClient) {
         }.awaitAll()
         logger.debug("Downloaded depot files")
 
+//        networkChunkQueue.forEach { (fileStreamData, fileData, chunk) ->
+//            // Process one at a time, completely
+//            downloadSteam3DepotFileChunk(
+//                cdnPool,
+//                downloadCounter,
+//                depotFilesData,
+//                fileData,
+//                fileStreamData,
+//                chunk,
+//                onDownloadProgress,
+//                parentScope
+//            ).await()
+//        }
         networkChunkQueue.map { (fileStreamData, fileData, chunk) ->
             async {
                 downloadSemaphore.withPermit {
@@ -310,8 +323,8 @@ class ContentDownloader(val steamClient: SteamClient) {
                         for (match in orderedChunks) {
                             fsOld.channel.position(match.oldChunk.offset)
 
-                            val tmp = ByteArray(match.oldChunk.uncompressedLength.toInt())
-                            fsOld.read(tmp)
+                            val tmp = ByteArray(match.oldChunk.uncompressedLength)
+                            fsOld.readNBytes(tmp, 0, tmp.size)
 
                             val adler = Utils.adlerHash(tmp)
                             if (adler != match.oldChunk.checksum) {
@@ -333,7 +346,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                                     fsOld.channel.position(match.oldChunk.offset)
 
                                     val tmp = ByteArray(match.oldChunk.uncompressedLength)
-                                    fsOld.read(tmp)
+                                    fsOld.readNBytes(tmp, 0, tmp.size)
 
                                     fs.channel.position(match.newChunk.offset)
                                     fs.write(tmp)
@@ -362,9 +375,9 @@ class ContentDownloader(val steamClient: SteamClient) {
                     depotDownloadCounter.sizeDownloaded += file.totalSize
                 }
 
-                onDownloadProgress?.let {
+                onDownloadProgress?.apply {
                     val totalPercent = depotFilesData.depotCounter.sizeDownloaded.toFloat() / depotFilesData.depotCounter.completeDownloadSize
-                    it(totalPercent)
+                    this(totalPercent)
                 }
 
                 return@async
@@ -374,9 +387,9 @@ class ContentDownloader(val steamClient: SteamClient) {
             synchronized(depotDownloadCounter) {
                 depotDownloadCounter.sizeDownloaded += sizeOnDisk
             }
-            onDownloadProgress?.let {
+            onDownloadProgress?.apply {
                 val totalPercent = depotFilesData.depotCounter.sizeDownloaded.toFloat() / depotFilesData.depotCounter.completeDownloadSize
-                it(totalPercent)
+                this(totalPercent)
             }
         }
 
@@ -416,13 +429,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
         val chunkID = Utils.encodeHexString(chunk.chunkID)
 
-        val chunkInfo = ChunkData(
-            chunkID = chunk.chunkID,
-            checksum = chunk.checksum,
-            offset = chunk.offset,
-            compressedLength = chunk.compressedLength,
-            uncompressedLength = chunk.uncompressedLength
-        )
+        val chunkInfo = ChunkData(chunk)
 
         var outputChunkData = ByteArray(chunkInfo.uncompressedLength)
         var writtenBytes = 0
@@ -446,11 +453,11 @@ class ContentDownloader(val steamClient: SteamClient) {
                     depotKey = depot.depotKey,
                     proxyServer = cdnPool.proxyServer
                 )
-                if (writtenBytes > 0 && depot.depotKey != null) {
-                    val tempOutput = ByteArray(chunkInfo.uncompressedLength)
-                    writtenBytes = DepotChunk.process(chunkInfo, outputChunkData, tempOutput, depot.depotKey)
-                    outputChunkData = tempOutput
-                }
+//                if (writtenBytes > 0 && depot.depotKey != null) {
+//                    val tempOutput = ByteArray(chunkInfo.uncompressedLength)
+//                    writtenBytes = DepotChunk.process(chunkInfo, outputChunkData, tempOutput, depot.depotKey)
+//                    outputChunkData = tempOutput
+//                }
 
                 cdnPool.returnConnection(connection)
 //            } catch (e: TaskCanceledException) {
@@ -469,7 +476,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 //                break
             } catch (e: Exception) {
                 cdnPool.returnBrokenConnection(connection)
-                logger.error("Encountered unexpected error downloading chunk $chunkID: ${e.message}")
+                logger.error("Encountered unexpected error downloading chunk $chunkID: $e\n${e.stackTraceToString()}")
             }
         } while (writtenBytes <= 0 && isActive)
 
@@ -477,6 +484,8 @@ class ContentDownloader(val steamClient: SteamClient) {
             logger.debug("Failed to find any server with chunk $chunkID for depot ${depot.depotId}. Aborting.")
             throw CancellationException("Failed to download chunk")
         }
+
+        logger.debug("Finished downloading, decrypting, and extracting chunk $chunkID")
 
         try {
             fileStreamData.fileLock.acquire()
@@ -492,6 +501,8 @@ class ContentDownloader(val steamClient: SteamClient) {
             fileStreamData.fileLock.release()
         }
 
+        logger.debug("Wrote chunk $chunkID to file ${file.fileName}")
+
         var remainingChunks: Int
         synchronized(fileStreamData) {
             remainingChunks = fileStreamData.chunksToDownload--
@@ -501,7 +512,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             fileStreamData.fileLock.release()
         }
 
-        var sizeDownloaded: Long = 0
+        var sizeDownloaded: Long
         synchronized(depotDownloadCounter) {
             sizeDownloaded = depotDownloadCounter.sizeDownloaded + outputChunkData.size
             depotDownloadCounter.sizeDownloaded = sizeDownloaded
@@ -519,9 +530,9 @@ class ContentDownloader(val steamClient: SteamClient) {
             logger.debug("${sizeDownloaded.toFloat() / depotDownloadCounter.completeDownloadSize * 100f}% $fileFinalPath")
         }
 
-        onDownloadProgress?.let {
+        onDownloadProgress?.apply {
             val totalPercent = depotFilesData.depotCounter.sizeDownloaded.toFloat() / depotFilesData.depotCounter.completeDownloadSize
-            it(totalPercent)
+            this(totalPercent)
         }
     }
 
