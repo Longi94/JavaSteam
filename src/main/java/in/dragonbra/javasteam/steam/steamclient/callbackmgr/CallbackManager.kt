@@ -26,7 +26,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
      * @return true if a callback has been run, false otherwise.
      */
     fun runCallbacks(): Boolean {
-        val call: ICallbackMsg = steamClient.getCallback() ?: return false
+        val call = steamClient.getCallback() ?: return false
 
         handle(call)
         return true
@@ -40,7 +40,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
      * @return true if a callback has been run, false otherwise.
      */
     fun runWaitCallbacks(timeout: Long): Boolean {
-        val call: ICallbackMsg = steamClient.waitForCallback(timeout) ?: return false
+        val call = steamClient.waitForCallback(timeout) ?: return false
 
         handle(call)
         return true
@@ -90,7 +90,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
      * @param callbackFunc The function to invoke with the callback.
      * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc .
      */
-    fun <TCallback : ICallbackMsg> subscribe(
+    fun <TCallback : CallbackMsg> subscribe(
         callbackType: Class<out TCallback>,
         jobID: JobID,
         callbackFunc: Consumer<TCallback>,
@@ -107,7 +107,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
      * @param callbackFunc The function to invoke with the callback.
      * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc.
      */
-    fun <TCallback : ICallbackMsg> subscribe(
+    fun <TCallback : CallbackMsg> subscribe(
         callbackType: Class<out TCallback>,
         callbackFunc: Consumer<TCallback>,
     ): Closeable = subscribe(callbackType, JobID.INVALID, callbackFunc)
@@ -124,7 +124,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
         registeredCallbacks.remove(callback)
     }
 
-    private fun handle(call: ICallbackMsg) {
+    private fun handle(call: CallbackMsg) {
         val type = call.javaClass
 
         // find handlers interested in this callback
