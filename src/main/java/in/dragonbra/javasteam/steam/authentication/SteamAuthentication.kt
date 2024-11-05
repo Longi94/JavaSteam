@@ -3,11 +3,8 @@ package `in`.dragonbra.javasteam.steam.authentication
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.ESessionPersistence
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_AccessToken_GenerateForApp_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_DeviceDetails
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_GetPasswordRSAPublicKey_Response
@@ -33,17 +30,13 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 class SteamAuthentication(private val steamClient: SteamClient) {
 
-    companion object {
-        // private val logger = LogManager.getLogger(SteamAuthentication::class.java)
-    }
-
     internal val authenticationService: Authentication
 
     init {
         val unifiedMessages = steamClient.getHandler(SteamUnifiedMessages::class.java)
             ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
 
-        authenticationService = Authentication(unifiedMessages)
+        authenticationService = unifiedMessages.createService<Authentication>()
     }
 
     /**
@@ -58,13 +51,13 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             this.accountName = accountName
         }
 
-        val message = authenticationService.getPasswordRSAPublicKey(request.build()).runBlock()
+        val response = authenticationService.getPasswordRSAPublicKey(request.build()).runBlock()
 
-        if (message.result != EResult.OK) {
-            throw AuthenticationException("Failed to get password public key", message.result)
+        if (response.result != EResult.OK) {
+            throw AuthenticationException("Failed to get password public key", response.result)
         }
 
-        return message.getDeserializedResponse(CAuthentication_GetPasswordRSAPublicKey_Response::class.java)
+        return response.body
     }
 
     /**
@@ -90,17 +83,13 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             }
         }
 
-        val message = authenticationService.generateAccessTokenForApp(request.build()).runBlock()
+        val response = authenticationService.generateAccessTokenForApp(request.build()).runBlock()
 
-        if (message.result != EResult.OK) {
-            throw IllegalArgumentException("Failed to generate token ${message.result}")
+        if (response.result != EResult.OK) {
+            throw IllegalArgumentException("Failed to generate token ${response.result}")
         }
 
-        val response = message.getDeserializedResponse<CAuthentication_AccessToken_GenerateForApp_Response.Builder>(
-            CAuthentication_AccessToken_GenerateForApp_Response::class.java
-        )
-
-        return AccessTokenGenerateResult(response)
+        return AccessTokenGenerateResult(response.body)
     }
 
     /**
@@ -126,17 +115,13 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             this.deviceDetails = deviceDetails.build()
         }
 
-        val message = authenticationService.beginAuthSessionViaQR(request.build()).runBlock()
+        val response = authenticationService.beginAuthSessionViaQR(request.build()).runBlock()
 
-        if (message.result != EResult.OK) {
-            throw AuthenticationException("Failed to begin QR auth session", message.result)
+        if (response.result != EResult.OK) {
+            throw AuthenticationException("Failed to begin QR auth session", response.result)
         }
 
-        val response = message.getDeserializedResponse<CAuthentication_BeginAuthSessionViaQR_Response.Builder>(
-            CAuthentication_BeginAuthSessionViaQR_Response::class.java
-        )
-
-        return QrAuthSession(this, authSessionDetails.authenticator, response)
+        return QrAuthSession(this, authSessionDetails.authenticator, response.body)
     }
 
     /**
@@ -199,16 +184,12 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             request.guardData = authSessionDetails.guardData
         }
 
-        val message = authenticationService.beginAuthSessionViaCredentials(request.build()).runBlock()
+        val response = authenticationService.beginAuthSessionViaCredentials(request.build()).runBlock()
 
-        if (message.result != EResult.OK) {
-            throw AuthenticationException("Authentication failed", message.result)
+        if (response.result != EResult.OK) {
+            throw AuthenticationException("Authentication failed", response.result)
         }
 
-        val response = message.getDeserializedResponse<CAuthentication_BeginAuthSessionViaCredentials_Response.Builder>(
-            CAuthentication_BeginAuthSessionViaCredentials_Response::class.java
-        )
-
-        return CredentialsAuthSession(this, authSessionDetails.authenticator, response)
+        return CredentialsAuthSession(this, authSessionDetails.authenticator, response.body)
     }
 }

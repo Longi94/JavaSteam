@@ -2,12 +2,19 @@ package in.dragonbra.javasteamsamples._013_unifiedmessages;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.enums.EUIMode;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesChatSteamclient.CChatRoom_IncomingChatMessage_Notification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesFriendmessagesSteamclient.CFriendMessages_IncomingMessage_Notification;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesGamenotificationsSteamclient.CGameNotifications_OnNotificationsRequested_Notification;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesPlayerSteamclient.*;
+import in.dragonbra.javasteam.rpc.service.ChatRoomClient;
+import in.dragonbra.javasteam.rpc.service.FriendMessagesClient;
+import in.dragonbra.javasteam.rpc.service.GameNotificationsClient;
 import in.dragonbra.javasteam.rpc.service.Player;
+import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
+import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
+import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodNotification;
-import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse;
 import in.dragonbra.javasteam.steam.handlers.steamuser.ChatMode;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -18,6 +25,7 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.types.JobID;
+import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
@@ -45,6 +53,8 @@ public class SampleUnifiedMessages implements Runnable {
     private SteamUser steamUser;
 
     private SteamUnifiedMessages steamUnifiedMessages;
+
+    private Player playerService;
 
     private boolean isRunning;
 
@@ -93,6 +103,9 @@ public class SampleUnifiedMessages implements Runnable {
         // The SteamUnifiedMessages handler can be removed if it's not needed.
         // steamClient.removeHandler(SteamUnifiedMessages.class);
 
+        // we also want to create our local service interface, which will help us build requests to the unified api
+        playerService = steamUnifiedMessages.createService(Player.class);
+
         // register a few callbacks we're interested in
         // these are registered upon creation to a callback manager, which will then route the callbacks
         // to the functions specified
@@ -102,8 +115,23 @@ public class SampleUnifiedMessages implements Runnable {
         manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
         manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
 
-        manager.subscribe(ServiceMethodResponse.class, this::onMethodResponse);
-        manager.subscribe(ServiceMethodNotification.class, this::onMethodNotification);
+        // subscribe to incoming messages from the GameNotificationsClient service
+        manager.subscribeServiceNotification(
+                GameNotificationsClient.class,
+                CGameNotifications_OnNotificationsRequested_Notification.Builder.class,
+                this::onGameStartedNotification
+        );
+        // subscribe to others
+        manager.subscribeServiceNotification(
+                ChatRoomClient.class,
+                CChatRoom_IncomingChatMessage_Notification.Builder.class,
+                this::onIncomingChatRoomMessage
+        );
+        manager.subscribeServiceNotification(
+                FriendMessagesClient.class,
+                CFriendMessages_IncomingMessage_Notification.Builder.class,
+                this::onIncomingMessage
+        );
 
         isRunning = true;
 
@@ -122,17 +150,29 @@ public class SampleUnifiedMessages implements Runnable {
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
 
-        LogOnDetails details = new LogOnDetails();
-        details.setUsername(user);
-        details.setPassword(pass);
-        details.setUiMode(EUIMode.Unknown);
-        details.setChatMode(ChatMode.NEW_STEAM_CHAT);
+        AuthSessionDetails authDetails = new AuthSessionDetails();
+        authDetails.username = user;
+        authDetails.password = pass;
+        authDetails.authenticator = new UserConsoleAuthenticator();
 
-        // Set LoginID to a non-zero value if you have another client connected using the same account,
-        // the same private ip, and same public ip.
-        details.setLoginID(149);
+        try {
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails);
 
-        steamUser.logOn(details);
+            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
+
+            LogOnDetails details = new LogOnDetails();
+            details.setUsername(pollResponse.getAccountName());
+            details.setAccessToken(pollResponse.getRefreshToken());
+            details.setUiMode(EUIMode.Unknown);
+            details.setChatMode(ChatMode.NEW_STEAM_CHAT);
+
+            steamUser.logOn(details);
+        } catch (Exception e) {
+            System.err.println("An error occurred:" + e.getMessage());
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
+            steamUser.logOff();
+        }
     }
 
     private void onDisconnected(DisconnectedCallback callback) {
@@ -174,20 +214,40 @@ public class SampleUnifiedMessages implements Runnable {
         // at this point, we'd be able to perform actions on Steam
 
         // first, build our request object, these are autogenerated and can normally be found in the in.dragonbra.javasteam.protobufs.steamclient package
-        CPlayer_GetFavoriteBadge_Request.Builder favoriteBadgeRequest = CPlayer_GetFavoriteBadge_Request.newBuilder();
-        favoriteBadgeRequest.setSteamid(steamClient.getSteamID().convertToUInt64());
+        CPlayer_GetGameBadgeLevels_Request req = CPlayer_GetGameBadgeLevels_Request.newBuilder()
+                .setAppid(440) // we want to know our 440 (TF2) badge level
+                .build();
 
-        // now let's send the request, this is done by building a class based off the IPlayer interface.
-        Player playerService = new Player(steamUnifiedMessages);
-        favoriteBadge = playerService.getFavoriteBadge(favoriteBadgeRequest.build()).getJobID();
-
-        // second, build our request object, these are autogenerated and can normally be found in the in.dragonbra.javasteam.protobufs.steamclient package
-        CPlayer_GetGameBadgeLevels_Request.Builder badgeLevelsRequest = CPlayer_GetGameBadgeLevels_Request.newBuilder();
-        badgeLevelsRequest.setAppid(440);
+        // now let's send the request and await for the response
+        var response = playerService.getGameBadgeLevels(req).runBlock();
+        System.out.println("Main Request:");
+        if (response.getResult() != EResult.OK) {
+            System.err.println("Unified service request failed with " + response.getResult());
+        }
+        System.out.println("Our player level is " + response.getBody().getPlayerLevel());
+        for (var badge : response.getBody().getBadgesList()) {
+            System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+        }
 
         // alternatively, the request can be made using SteamUnifiedMessages directly, but then you must build the service request name manually
         // the name format is in the form of <Service>.<Method>#<Version>
-        badgeRequest = steamUnifiedMessages.sendMessage("Player.GetGameBadgeLevels#1", badgeLevelsRequest.build()).getJobID();
+        var responseAlt = steamUnifiedMessages.sendMessage(
+                CPlayer_GetGameBadgeLevels_Response.Builder.class,
+                "Player.GetGameBadgeLevels#1",
+                req
+        ).runBlock();
+
+        System.out.println("Alt Request");
+        if (responseAlt.getResult() != EResult.OK) {
+            System.err.println("Unified service request failed with " + responseAlt.getResult());
+        }
+        System.out.println("Our player level is " + responseAlt.getBody().getPlayerLevel());
+        for (var badge : responseAlt.getBody().getBadgesList()) {
+            System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+        }
+
+        // now that we've completed our task, lets log off after a few seconds to receive possible notifications
+        // steamUser.logOff();
     }
 
     private void onLoggedOff(LoggedOffCallback callback) {
@@ -196,70 +256,33 @@ public class SampleUnifiedMessages implements Runnable {
         isRunning = false;
     }
 
-    private void onMethodResponse(ServiceMethodResponse callback) {
-        System.out.println("ServiceMethodResponse result: " + callback.getResult());
+    // Below demonstrates some incoming notifications from Service Methods via Unified.
 
-        // and check for success
-        if (callback.getResult() != EResult.OK) {
-            System.out.println("Unified service request failed with " + callback.getResult());
-            return;
-        }
-
-        // retrieve the deserialized response for the request we made
-        // notice the naming pattern
-        // for requests: CMyService_Method_Request
-        // for responses: CMyService_Method_Response
-
-        if (callback.getJobID().equals(badgeRequest)) {
-            CPlayer_GetGameBadgeLevels_Response.Builder response = callback.getDeserializedResponse(CPlayer_GetGameBadgeLevels_Response.class);
-
-            System.out.println("Our player level is " + response.getPlayerLevel());
-
-            // If we have a list of badges, we'll print them out by series and level.
-            response.getBadgesList().forEach(x ->
-                    System.out.println("Badge series " + x.getSeries() + " is level " + x.getLevel())
-            );
-
-            badgeRequest = JobID.INVALID;
-        }
-
-        if (callback.getJobID().equals(favoriteBadge)) {
-            CPlayer_GetFavoriteBadge_Response.Builder response = callback.getDeserializedResponse(CPlayer_GetFavoriteBadge_Response.class);
-
-            System.out.println(
-                    "Has favorite badge: " + response.hasHasFavoriteBadge() +
-                            "\nBadge ID: " + response.getBadgeid() +
-                            "\nCommunity item ID: " + response.getCommunityitemid() +
-                            "\nItem Type: " + response.getItemType() +
-                            "\nBorder Color: " + response.getBorderColor() +
-                            "\nApp ID: " + response.getAppid() +
-                            "\nLevel: " + response.getLevel()
-            );
-
-            favoriteBadge = JobID.INVALID;
-        }
+    private void onGameStartedNotification(
+            ServiceMethodNotification<CGameNotifications_OnNotificationsRequested_Notification.Builder> notification
+    ) {
+        System.out.println("User with id " + notification.getBody().getSteamid() + " started the game: " + notification.getBody().getAppid());
     }
 
-    // This demonstrates some incoming notifications from Service Methods via Unified.
-    void onMethodNotification(ServiceMethodNotification callback) {
-        Object cbObject = callback.getBody();
+    private void onIncomingChatRoomMessage(
+            ServiceMethodNotification<CChatRoom_IncomingChatMessage_Notification.Builder> notification
+    ) {
+        System.out.println("onIncomingChatMessage");
+        System.out.println("Group ID: " + notification.getBody().clearChatGroupId());
+        System.out.println("Chat Name: " + notification.getBody().getChatName());
+        System.out.println("Sender: " + new SteamID(notification.getBody().getSteamidSender()).convertToUInt64());
+        System.out.println("Message: " + notification.getBody().getMessage());
+    }
 
-        // There's an incoming message coming.
-        if (cbObject instanceof CFriendMessages_IncomingMessage_Notification) {
-            CFriendMessages_IncomingMessage_Notification message = (CFriendMessages_IncomingMessage_Notification) cbObject;
-
-            if (message.getChatEntryType() == 2)
-                System.out.println("Friend is typing...");
-
-            if (message.getChatEntryType() == 1)
-                System.out.println("Message: " + message.getMessage());
+    private void onIncomingMessage(
+            ServiceMethodNotification<CFriendMessages_IncomingMessage_Notification.Builder> notification
+    ) {
+        System.out.println("onIncomingChatMessage");
+        if (notification.getBody().getChatEntryType() == 2) {
+            System.out.println("Friend is typing...");
         }
-
-        // There's a player preference change
-        if (cbObject instanceof CPlayer_PerFriendPreferencesChanged_Notification) {
-            CPlayer_PerFriendPreferencesChanged_Notification message = (CPlayer_PerFriendPreferencesChanged_Notification) cbObject;
-            System.out.println("SteamID: " + message.getAccountid());
-            System.out.println("NickName: " + message.getPreferences().getNickname());
+        if (notification.getBody().getChatEntryType() == 1) {
+            System.out.println("Message: " + notification.getBody().getMessage());
         }
     }
 }

@@ -1,60 +1,38 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback
 
 import com.google.protobuf.AbstractMessage
+import com.google.protobuf.GeneratedMessage
 import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
-import `in`.dragonbra.javasteam.base.IPacketMsg
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase
+import `in`.dragonbra.javasteam.base.PacketClientMsgProtobuf
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.types.JobID
 
 /**
  * @author Lossy
- * @since 2023-01-04
- *
+ * @since 2024-10-22
  *
  * This callback represents a service notification received though [SteamUnifiedMessages].
  */
-@Suppress("unused", "MemberVisibilityCanBePrivate")
-class ServiceMethodNotification(messageType: Class<out AbstractMessage>, packetMsg: IPacketMsg) : CallbackMsg() {
+@Suppress("MemberVisibilityCanBePrivate")
+class ServiceMethodNotification<T : GeneratedMessage.Builder<T>>(
+    clazz: Class<out AbstractMessage>,
+    packetMsg: PacketClientMsgProtobuf,
+) : CallbackMsg() {
 
     /**
-     * Gets the name of the Service.
+     * The name of the job, in the format Service.Method#Version.
      */
-    val serviceName: String
-        get() = methodName.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+    val jobName: String
 
     /**
-     * Gets the name of the RPC method.
+     * The protobuf body.
      */
-    val rpcName: String
-        get() = methodName.substring(serviceName.length + 1)
-            .split("#".toRegex())
-            .dropLastWhile { it.isEmpty() }
-            .toTypedArray()[0]
-
-    /**
-     * Gets the full name of the service method.
-     */
-    val methodName: String
-
-    /**
-     * Gets the protobuf notification body.
-     */
-    val body: Any
-
-    /**
-     * Gets the client message, See [ClientMsgProtobuf]
-     */
-    val clientMsg: ClientMsgProtobuf<*> = ClientMsgProtobuf(messageType, packetMsg) // Bounce into generic-land.
-
-    /**
-     * Gets the Proto Header, See [SteammessagesBase.CMsgProtoBufHeader]
-     */
-    val protoHeader: SteammessagesBase.CMsgProtoBufHeader = clientMsg.header.proto.build()
+    val body: T
 
     init {
-        // Note: JobID will be -1
-        methodName = clientMsg.header.proto.targetJobName
-        body = clientMsg.body.build()
+        jobID = JobID.INVALID
+        jobName = packetMsg.header.proto.targetJobName
+        body = ClientMsgProtobuf<T>(clazz, packetMsg).body
     }
 }
