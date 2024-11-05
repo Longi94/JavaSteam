@@ -36,7 +36,7 @@ object NetHelpers {
 
     @JvmStatic
     fun getLocalIP(endpoint: InetAddress?): InetAddress? {
-        if (endpoint == null || endpoint.address == InetAddress.getByName("0.0.0.0")) {
+        if (endpoint == null || endpoint.address.contentEquals(InetAddress.getByName("0.0.0.0").address)) {
             return null
         }
 
