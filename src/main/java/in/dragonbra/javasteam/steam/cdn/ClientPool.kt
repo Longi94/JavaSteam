@@ -24,8 +24,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
     private val availableServerEndpoints = ConcurrentLinkedQueue<Server>()
 
     private val populatePoolEvent = CountDownLatch(1)
-//    private val shutdownJob = Job()
-//    internal var exhaustedJob: Job? = null
 
     private val monitorJob: Job
 
@@ -37,10 +35,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
 
     fun shutdown() {
         monitorJob.cancel()
-//        shutdownJob.cancel()
-//        runBlocking {
-//            monitorJob.join()
-//        }
     }
 
     private fun fetchBootstrapServerList(): Deferred<List<Server>?> = parentScope.async {
@@ -63,7 +57,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
 
                 if (servers.isNullOrEmpty()) {
                     logger.error("Servers is empty or null, exiting connection pool monitor")
-//                    exhaustedJob?.cancel()
                     parentScope.cancel()
                     return@async
                 }
@@ -86,7 +79,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
                 didPopulate = true
             } else if (availableServerEndpoints.isEmpty() && !steamClient.isConnected && didPopulate) {
                 logger.error("Available server endpoints is empty and steam is not connected, exiting connection pool monitor")
-//                exhaustedJob?.cancel()
                 parentScope.cancel()
                 return@async
             }
@@ -95,7 +87,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
 
     private fun buildConnection(): Deferred<Server?> = parentScope.async {
         return@async try {
-            logger.debug("Attempting to build connection for client pool")
             if (availableServerEndpoints.size < SERVER_ENDPOINT_MIN_SIZE) {
                 populatePoolEvent.countDown()
             }
@@ -114,9 +105,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
 
     internal fun getConnection(): Deferred<Server?> = parentScope.async {
         return@async try {
-            logger.debug("Retrieving connection from client pool")
             val server = activeConnectionPool.poll() ?: buildConnection().await()
-            logger.debug("Received server: $server")
             server
         } catch(e: Exception) {
             logger.error("Failed to get/build connection: $e")

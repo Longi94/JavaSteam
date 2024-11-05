@@ -1,7 +1,9 @@
 package `in`.dragonbra.javasteam.types
 
 import com.google.protobuf.ByteString
-import `in`.dragonbra.javasteam.base.ContentManifest.*
+import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestPayload
+import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestMetadata
+import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestSignature
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
@@ -9,10 +11,17 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import java.io.*
+import java.io.InputStream
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.io.OutputStream
+import java.io.File
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.*
+import java.util.Date
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
@@ -185,13 +194,6 @@ class DepotManifest {
                 // Trim the ending null byte, safe for UTF-8
                 val filenameLength = bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
 
-                // ASCII is subset of UTF-8, so it safe to replace the raw bytes here
-//                bufferDecrypted.forEachIndexed { index, byte ->
-//                    if (byte == '\\'.toByte()) {
-//                        bufferDecrypted[index] = File.separatorChar.toByte()
-//                    }
-//                }
-
                 file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8).replace('\\', File.separatorChar)
             }
         } catch (e: Exception) {
@@ -232,7 +234,6 @@ class DepotManifest {
 
                 when(magic) {
                     Steam3Manifest.MAGIC -> {
-                        logger.debug("Manifest is of type Steam3, deserializing...")
                         val binaryManifest = Steam3Manifest.deserialize(br)
                         parseBinaryManifest(binaryManifest)
 
@@ -241,17 +242,14 @@ class DepotManifest {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
                     }
                     PROTOBUF_PAYLOAD_MAGIC -> {
-                        logger.debug("Found Protobuf payload, parsing payload...")
                         val payloadLength = br.readInt()
                         payload = ContentManifestPayload.parseFrom(stream.readNBytes(payloadLength))
                     }
                     PROTOBUF_METADATA_MAGIC -> {
-                        logger.debug("Found Protobuf metadata, parsing metadata...")
                         val metadataLength = br.readInt()
                         metadata = ContentManifestMetadata.parseFrom(stream.readNBytes(metadataLength))
                     }
                     PROTOBUF_SIGNATURE_MAGIC -> {
-                        logger.debug("Found Protobuf signature, parsing signature...")
                         val signatureLength = br.readInt()
                         signature = ContentManifestSignature.parseFrom(stream.readNBytes(signatureLength))
                     }
@@ -321,7 +319,6 @@ class DepotManifest {
             }
             files.add(fileData)
         }
-        logger.debug("Found ${files.size} file(s) in Protobuf manifest")
     }
     internal fun parseProtobufManifestMetadata(metadata: ContentManifestMetadata) {
         filenamesEncrypted = metadata.filenamesEncrypted

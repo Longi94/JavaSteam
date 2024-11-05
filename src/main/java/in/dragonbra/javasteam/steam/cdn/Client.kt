@@ -11,12 +11,13 @@ import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import kotlinx.coroutines.*
+import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.util.zip.*
+import java.util.zip.ZipInputStream
+import java.util.zip.DataFormatException
 
 /**
  * The [Client] class is used for downloading game content from the Steam servers.
@@ -48,9 +49,6 @@ class Client(steamClient: SteamClient) : Closeable {
         ): HttpUrl {
             val httpUrl: HttpUrl
             if (proxyServer != null && proxyServer.useAsProxy && proxyServer.proxyRequestPathTemplate != null) {
-//                var pathTemplate = proxyServer.proxyRequestPathTemplate!!.replace("/", "")
-//                pathTemplate = pathTemplate.replace("%host%", server.vHost)
-//                pathTemplate = pathTemplate.replace("%path%", "/${command}")
                 httpUrl = HttpUrl.Builder()
                     .scheme(if (proxyServer.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
                     .host(proxyServer.vHost)
@@ -71,7 +69,6 @@ class Client(steamClient: SteamClient) : Closeable {
                     }.build()
             }
 
-            logger.debug("Built Url $httpUrl")
             return httpUrl
         }
     }
@@ -131,7 +128,6 @@ class Client(steamClient: SteamClient) : Closeable {
             val depotManifest = withTimeout(responseBodyTimeout) {
 
                 val contentLength = response.header("Content-Length")?.toIntOrNull()
-//                val buffer = contentLength?.let { ByteArray(it) }
 
                 if (contentLength == null) {
                     logger.debug("Manifest response does not have Content-Length, falling back to unbuffered read.")
@@ -160,7 +156,6 @@ class Client(steamClient: SteamClient) : Closeable {
                     MemoryStream(contentBytes).use { ms ->
                         ZipInputStream(ms).use { zip ->
                             zip.nextEntry
-                            logger.debug("Deserializing depot manifest from zip entry")
                             DepotManifest.deserialize(zip).first
                         }
                     }
@@ -234,7 +229,6 @@ class Client(steamClient: SteamClient) : Closeable {
 
             response.header("Content-Length")?.toLongOrNull()?.let { responseContentLength ->
                 contentLength = responseContentLength.toInt()
-                logger.debug("Got content length of $chunkID from header to be $contentLength\ncompressed length should be ${chunk.compressedLength} and uncompressed length should be ${chunk.uncompressedLength}\ndestination size is ${destination.size}")
 
                 // assert that lengths match only if the chunk has a length assigned.
                 if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {

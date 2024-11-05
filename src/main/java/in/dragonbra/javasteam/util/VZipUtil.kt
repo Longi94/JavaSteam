@@ -1,8 +1,6 @@
 package `in`.dragonbra.javasteam.util
 
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
-import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.BinaryWriter
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
@@ -11,7 +9,7 @@ import org.tukaani.xz.LZMA2Options
 import org.tukaani.xz.LZMAInputStream
 import org.tukaani.xz.LZMAOutputStream
 import java.io.ByteArrayOutputStream
-import java.util.zip.*
+import java.util.zip.DataFormatException
 import kotlin.math.max
 
 
@@ -20,9 +18,8 @@ object VZipUtil {
     private const val VZIP_FOOTER: Short = 0x767A // "vz" in hex
     private const val HEADER_LENGTH = 7 // magic + version + timestamp/crc
     private const val FOOTER_LENGTH = 10 // crc + decompressed size + magic
+
     private const val VERSION = 'a'
-    private const val kNumPosStatesBitsMax = 4
-    private val logger: Logger = LogManager.getLogger(VZipUtil::class.java)
 
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         BinaryReader(ms).use { reader ->
@@ -35,6 +32,7 @@ object VZipUtil {
 
             // Sometimes this is a creation timestamp (e.g. for Steam Client VZips).
             // Sometimes this is a CRC32 (e.g. for depot chunks).
+            /* val creationTimestampOrSecondaryCRC: UInt = */
             reader.readInt()
 
             // this is 5 bytes of LZMA properties
@@ -42,17 +40,8 @@ object VZipUtil {
             val dictionarySize = reader.readInt()
             val compressedBytesOffset = ms.position
 
-//            val lc: Int = propertyBits % 9
-//            val remainder: Int = propertyBits / 9
-//            val lp = remainder % 5
-//            val pb = remainder / 5
-//            if (pb > kNumPosStatesBitsMax || dictionarySize < (1 shl 12)) throw IllegalArgumentException("VZip has bad pb or dictionary size")
-
             // jump to the end of the buffer to read the footer
-
-            // Calculate compressed data boundaries
             ms.seek((-FOOTER_LENGTH).toLong(), SeekOrigin.END)
-            var sizeCompressed = ms.position - compressedBytesOffset
             val outputCrc = reader.readInt()
             val sizeDecompressed = reader.readInt()
 
@@ -67,51 +56,16 @@ object VZipUtil {
             // jump back to the beginning of the compressed data
             ms.position = compressedBytesOffset
 
+            // If the value of dictionary size in properties is smaller than (1 << 12),
+            // the LZMA decoder must set the dictionary size variable to (1 << 12).
             val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
             val bytesRead = LZMAInputStream(ms, sizeDecompressed.toLong(), propertyBits, dictionarySize, windowBuffer).use { lzmaInput ->
                 lzmaInput.readNBytes(destination, 0, sizeDecompressed)
-//                val output = lzmaInput.readAllBytes()
-//                System.arraycopy(output, 0, destination, 0, destination.size)
-//                output.size
             }
-//            val bytesRead = LZMAInputStream(ms, sizeDecompressed.toLong(), lc, lp, pb, dictionarySize, windowBuffer).use { lzmaInput ->
-//                lzmaInput.readNBytes(destination, 0, sizeDecompressed)
-//            }
 
             if (verifyChecksum && Utils.crc32(destination).toInt() != outputCrc) {
                 throw DataFormatException("CRC does not match decompressed data. VZip data may be corrupted.")
             }
-
-//            val startPos = ms.position
-//            if (reader.readShort() != VZIP_HEADER) {
-//                throw IllegalArgumentException("Expecting VZipHeader at start of stream")
-//            }
-//            if (reader.readChar() != VERSION) {
-//                throw IllegalArgumentException("Expecting VZip version 'a'")
-//            }
-//
-//            // Sometimes this is a creation timestamp (e.g. for Steam Client VZips).
-//            // Sometimes this is a CRC32 (e.g. for depot chunks).
-//            reader.readInt()
-//
-//            // this is 5 bytes of LZMA properties
-//            val propertyBits = reader.readByte()
-//            val dictionarySize = reader.readInt()
-//            val compressedBytesOffset = ms.position
-//
-//            // jump to the end of the buffer to read the footer
-//
-//            // Calculate compressed data boundaries
-//            ms.seek((-FOOTER_LENGTH).toLong(), SeekOrigin.END)
-//            var sizeCompressed = ms.position - compressedBytesOffset
-//            val outputCrc = reader.readInt()
-//            val sizeDecompressed = reader.readInt()
-//
-//            ms.position = startPos
-//            val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
-//            val bytesRead = LZMAInputStream(ms, sizeDecompressed.toLong(), propertyBits, dictionarySize, windowBuffer).use { lzmaInput ->
-//                lzmaInput.readNBytes(destination, 0, sizeDecompressed)
-//            }
 
             return bytesRead
         }
