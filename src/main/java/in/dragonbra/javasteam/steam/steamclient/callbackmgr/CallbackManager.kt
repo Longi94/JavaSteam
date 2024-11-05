@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @constructor Initializes a new instance of the [CallbackManager] class.
  *  @param steamClient The [SteamClient] instance to handle the callbacks of.
  */
-class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrInternals {
+class CallbackManager(private val steamClient: SteamClient) {
 
     private val registeredCallbacks: MutableSet<CallbackBase> = Collections.newSetFromMap(ConcurrentHashMap())
 
@@ -96,7 +96,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
         callbackFunc: Consumer<TCallback>,
     ): Closeable {
         val callback = Callback(callbackType, callbackFunc, this, jobID)
-        return Subscription(this, callback)
+        return callback
     }
 
     /**
@@ -112,7 +112,7 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
         callbackFunc: Consumer<TCallback>,
     ): Closeable = subscribe(callbackType, JobID.INVALID, callbackFunc)
 
-    override fun register(callback: CallbackBase) {
+    internal fun register(callback: CallbackBase) {
         if (registeredCallbacks.contains(callback)) {
             return
         }
@@ -120,15 +120,16 @@ class CallbackManager(private val steamClient: SteamClient) : ICallbackMgrIntern
         registeredCallbacks.add(callback)
     }
 
-    override fun unregister(callback: CallbackBase) {
+    internal fun unregister(callback: CallbackBase) {
         registeredCallbacks.remove(callback)
     }
 
     private fun handle(call: CallbackMsg) {
+        val callbacks = registeredCallbacks
         val type = call.javaClass
 
         // find handlers interested in this callback
-        registeredCallbacks.forEach { callback ->
+        callbacks.forEach { callback ->
             if (callback.callbackType.isAssignableFrom(type)) {
                 callback.run(call)
             }
