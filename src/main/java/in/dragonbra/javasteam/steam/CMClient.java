@@ -490,6 +490,17 @@ public abstract class CMClient {
     }
 
     /**
+     * Gets a value indicating whether isConnected and connection is not connected to the remote CM server.
+     * Inverse alternative to {@link CMClient#isConnected()}
+     *
+     * @return <b>true</b> is this instance is disconnected, otherwise, <b>false</b>.
+     */
+    // > "since the client can technically not be connected but still have a connection"
+    public boolean isDisconnected() {
+        return !isConnected && connection == null;
+    }
+
+    /**
      * @return the session token assigned to this client from the AM.
      */
     public long getSessionToken() {
