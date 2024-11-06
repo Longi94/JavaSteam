@@ -1,10 +1,7 @@
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
-import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import `in`.dragonbra.javasteam.util.stream.StreamReader
 import java.time.Instant
 import java.util.Date
 import java.util.EnumSet

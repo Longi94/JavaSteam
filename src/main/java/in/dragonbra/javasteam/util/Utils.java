@@ -6,6 +6,7 @@ import org.apache.commons.lang3.SystemUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.channels.ClosedChannelException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -229,17 +230,17 @@ public class Utils {
      * @throws ClosedChannelException If this channel is closed
      * @throws IllegalArgumentException If the new position is negative
      */
-    public static List<ChunkData> validateSteam3FileChecksums(FileInputStream fs, ChunkData[] chunkData) throws IOException {
+    public static List<ChunkData> validateSteam3FileChecksums(RandomAccessFile fs, ChunkData[] chunkData) throws IOException {
         List<ChunkData> neededChunks = new ArrayList<>();
         int read;
 
         for (ChunkData data : chunkData) {
             byte[] chunk = new byte[data.getUncompressedLength()];
             fs.getChannel().position(data.getOffset());
-            read = fs.readNBytes(chunk, 0, data.getUncompressedLength());
+            read = fs.read(chunk, 0, data.getUncompressedLength());
 
             byte[] tempChunk;
-            if (read < data.getUncompressedLength()) {
+            if (read > 0 && read < data.getUncompressedLength()) {
                 tempChunk = Arrays.copyOf(chunk, read);
             } else {
                 tempChunk = chunk;
