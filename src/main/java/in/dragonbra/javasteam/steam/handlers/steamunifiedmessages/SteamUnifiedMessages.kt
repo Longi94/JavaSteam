@@ -22,6 +22,7 @@ import java.lang.reflect.Method
  * This handler is used for interacting with Steamworks unified messaging
  */
 class SteamUnifiedMessages : ClientMsgHandler() {
+
     val handlers = mutableMapOf<String, UnifiedService>()
 
     /**
@@ -126,6 +127,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
         val serviceName = splitByDot[0]
         val methodName = splitByHash[0]
 
+        @Suppress("SpellCheckingInspection")
         val serviceInterfaceName = "in.dragonbra.javasteam.rpc.interfaces.I$serviceName"
         try {
             logger.debug("Handling Service Method: $serviceInterfaceName")

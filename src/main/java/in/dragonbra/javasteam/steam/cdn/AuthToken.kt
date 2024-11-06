@@ -9,6 +9,7 @@ import java.util.Date
  * This is received when a CDN auth token is received
  */
 class AuthToken(message: ServiceMethodResponse) {
+
     /**
      * Result of the operation
      */

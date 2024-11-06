@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.types.DepotManifest
  * An interface for persisting depot manifests for Steam content downloading
  */
 interface IManifestProvider {
+
     /**
      * Ask a provider to fetch a specific depot manifest
      * @return A [Pair] object with a [DepotManifest] and its checksum if it exists otherwise null

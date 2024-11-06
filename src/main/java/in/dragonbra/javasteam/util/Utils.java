@@ -4,12 +4,9 @@ import in.dragonbra.javasteam.enums.EOSType;
 import in.dragonbra.javasteam.types.ChunkData;
 import org.apache.commons.lang3.SystemUtils;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.ClosedChannelException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -213,7 +210,7 @@ public class Utils {
     }
 
     /**
-     * @source https://stackoverflow.com/a/65113433
+     * @source <a href="https://stackoverflow.com/a/65113433">StackOverflow</a>
      */
     public static String encodeHexString(byte[] input) {
         return IntStream.range(0, input.length)
@@ -230,6 +227,7 @@ public class Utils {
      * @throws ClosedChannelException If this channel is closed
      * @throws IllegalArgumentException If the new position is negative
      */
+    @SuppressWarnings("resource")
     public static List<ChunkData> validateSteam3FileChecksums(RandomAccessFile fs, ChunkData[] chunkData) throws IOException {
         List<ChunkData> neededChunks = new ArrayList<>();
         int read;

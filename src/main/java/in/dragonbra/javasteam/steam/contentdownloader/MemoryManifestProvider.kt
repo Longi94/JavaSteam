@@ -3,6 +3,7 @@ package `in`.dragonbra.javasteam.steam.contentdownloader
 import `in`.dragonbra.javasteam.types.DepotManifest
 
 class MemoryManifestProvider : IManifestProvider {
+
     private val depotManifests = mutableMapOf<Int, MutableMap<Long, DepotManifest>>()
     private val latestManifests = mutableMapOf<Int, Long>()
 

@@ -11,6 +11,7 @@ import java.util.concurrent.*
  * [ClientPool] provides a pool of connections to CDN endpoints, requesting CDN tokens as needed
  */
 class ClientPool(internal val steamClient: SteamClient, private val appId: Int, private val parentScope: CoroutineScope) {
+
     companion object {
         private const val SERVER_ENDPOINT_MIN_SIZE = 8
     }
@@ -118,6 +119,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         server?.let { activeConnectionPool.push(it) }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     internal fun returnBrokenConnection(server: Server?) {
         // Broken connections are not returned to the pool
     }

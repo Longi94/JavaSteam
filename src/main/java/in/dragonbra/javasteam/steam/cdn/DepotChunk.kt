@@ -15,6 +15,7 @@ import javax.crypto.spec.SecretKeySpec
  * Provides a helper function to decrypt and decompress a single depot chunk.
  */
 object DepotChunk {
+
     /**
      * Processes the specified depot key by decrypting the data with the given depot encryption key, and then by decompressing the data.
      * If the chunk has already been processed, this function does nothing.
@@ -22,7 +23,7 @@ object DepotChunk {
      * @param data The encrypted chunk data.
      * @param destination The buffer to receive the decrypted chunk data.
      * @param depotKey The depot decryption key.
-     * @exception IOException Thrown if the processed data does not match the expected checksum given in it's chunk information.
+     * @exception IOException Thrown if the processed data does not match the expected checksum given in its chunk information.
      * @exception IllegalArgumentException Thrown if the destination size is too small or the depot key is not 32 bytes long
      */
     fun process(

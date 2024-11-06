@@ -1,12 +1,9 @@
 package `in`.dragonbra.javasteam.util
 
-import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.util.zip.ZipInputStream
 
 object ZipUtil {
-    private val logger: Logger = LogManager.getLogger(ZipUtil::class.java)
 
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         ZipInputStream(ms, Charsets.UTF_8).use { zip ->

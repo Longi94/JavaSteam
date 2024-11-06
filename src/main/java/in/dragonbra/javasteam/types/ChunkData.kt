@@ -4,6 +4,7 @@ package `in`.dragonbra.javasteam.types
  * Represents a single chunk within a file.
  */
 class ChunkData {
+
     /**
      * Gets or sets the SHA-1 hash chunk id.
      */

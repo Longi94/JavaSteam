@@ -7,6 +7,7 @@ import java.util.EnumSet
  * Represents a single file within a manifest.
  */
 class FileData {
+
     /**
      * Gets the name of the file.
      */

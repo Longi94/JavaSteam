@@ -13,7 +13,9 @@ import java.util.zip.DataFormatException
 import kotlin.math.max
 
 
+@Suppress("SpellCheckingInspection", "unused")
 object VZipUtil {
+
     private const val VZIP_HEADER: Short = 0x5A56 // "VZ" in hex
     private const val VZIP_FOOTER: Short = 0x767A // "vz" in hex
     private const val HEADER_LENGTH = 7 // magic + version + timestamp/crc
@@ -71,6 +73,9 @@ object VZipUtil {
         }
     }
 
+    /**
+     * Ported from SteamKit2 and is untested, use at your own risk
+     */
     fun compress(buffer: ByteArray): ByteArray {
         ByteArrayOutputStream().use { ms ->
             BinaryWriter(ms).use { writer ->

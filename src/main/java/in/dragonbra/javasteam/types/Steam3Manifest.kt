@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
@@ -26,6 +28,7 @@ class Steam3Manifest(
     val flags: Int,
     val fileMapping: List<FileMapping>,
 ) {
+
     class FileMapping(
         val fileName: String,
         val totalSize: Long,
@@ -35,6 +38,7 @@ class Steam3Manifest(
         val numChunks: Int,
         val chunks: Array<Chunk>
     ) {
+
         class Chunk(
             val chunkGID: ByteArray, // sha1 hash for this chunk
             val checksum: Int,
@@ -42,6 +46,7 @@ class Steam3Manifest(
             val decompressedSize: Int,
             val compressedSize: Int
         ) {
+
             companion object {
                 internal fun deserialize(ds: BinaryReader): Chunk {
                     return Chunk(

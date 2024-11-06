@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.steam.contentdownloader
 
+@Suppress("ArrayInDataClass")
 data class DepotDownloadInfo(
     val depotId: Int,
     val appId: Int,

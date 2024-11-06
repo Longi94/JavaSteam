@@ -270,6 +270,6 @@ class SteamClient @JvmOverloads constructor(
     companion object {
         private val logger: Logger = LogManager.getLogger(SteamClient::class.java)
 
-        private const val HANDLERS_COUNT = 13
+        private const val HANDLERS_COUNT = 14
     }
 }

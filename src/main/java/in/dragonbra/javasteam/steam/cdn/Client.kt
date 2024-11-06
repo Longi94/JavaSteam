@@ -26,6 +26,7 @@ import java.util.zip.DataFormatException
  * The SteamClient instance must be connected and logged onto Steam.
  */
 class Client(steamClient: SteamClient) : Closeable {
+
     private val httpClient: OkHttpClient = steamClient.configuration.httpClient
 
     companion object {
@@ -89,7 +90,7 @@ class Client(steamClient: SteamClient) : Closeable {
      * @param depotKey The depot decryption key for the depot that will be downloaded.
      * This is used for decrypting filenames (if needed) in depot manifests.
      * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
-     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContentOld.getCDNAuthToken].
+     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
      * @return A [DepotManifest] instance that contains information about the files present within a depot.
      * @exception IllegalArgumentException [server] was null.
      * @exception IOException A network error occurred when performing the request.
@@ -105,8 +106,6 @@ class Client(steamClient: SteamClient) : Closeable {
         proxyServer: Server? = null,
         cdnAuthToken: String? = null
     ): DepotManifest {
-        require(server != null) { "server cannot be null" }
-
         val manifestVersion = 5
         val url = if (manifestRequestCode > 0U) {
             "depot/$depotId/manifest/$manifestId/$manifestVersion/$manifestRequestCode"

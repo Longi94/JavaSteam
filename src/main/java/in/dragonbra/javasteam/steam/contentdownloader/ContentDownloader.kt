@@ -36,7 +36,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
 
+@Suppress("unused", "SpellCheckingInspection")
 class ContentDownloader(val steamClient: SteamClient) {
+
     companion object {
         private const val HTTP_UNAUTHORIZED = 401
         private const val HTTP_FORBIDDEN = 403
@@ -242,8 +244,8 @@ class ContentDownloader(val steamClient: SteamClient) {
         }.awaitAll()
 
         // Check for deleted files if updating the depot.
-        depotFilesData.previousManifest?.let { previousManifest ->
-            val previousFilteredFiles = previousManifest.files.asSequence().map { it.fileName }.toMutableSet()
+        depotFilesData.previousManifest?.apply {
+            val previousFilteredFiles = files.asSequence().map { it.fileName }.toMutableSet()
 
             // Of the list of files in the previous manifest, remove any file names that exist in the current set of all file names
             previousFilteredFiles.removeAll(depotFilesData.manifest.files.map { it.fileName }.toSet())
@@ -506,36 +508,6 @@ class ContentDownloader(val steamClient: SteamClient) {
             this(totalPercent)
         }
     }
-
-//    internal suspend fun getStoredManifestOf(depotId: Int, steamClient: SteamClient): DepotManifest? {
-//        var oldProtoManifest: DepotManifest? = null
-////        val steamData = SteamService.getOrCreateInstance().getSteamData()
-//        val lastManifestId = if (steamData.depotManifestIdExists(depotId)) steamData.getLatestDepotManifestId(depotId) else INVALID_MANIFEST_ID
-//
-//        if (lastManifestId != INVALID_MANIFEST_ID) {
-////            val oldManifestFileName = Path.of(Paths.manifestsDirPath(), "${depotId}_${lastManifestId}.bin").toString()
-//
-//            if (File(oldManifestFileName).exists()) {
-//                val expectedChecksum = try {
-//                    File("$oldManifestFileName.sha").readBytes()
-//                } catch (e: IOException) {
-//                    null
-//                }
-//
-//                var currentChecksum: ByteArray?
-//                steamClient.configuration.depotManifestProvider.fetchManifest(depotId, lastManifestId)
-////                DepotManifest.loadFromFile(oldManifestFileName).apply {
-////                    oldProtoManifest = this.first
-////                    currentChecksum = this.second
-////                }
-//
-//                if (expectedChecksum == null || !expectedChecksum.contentEquals(currentChecksum)) {
-//                    oldProtoManifest = null
-//                }
-//            }
-//        }
-//        return oldProtoManifest
-//    }
 
     private fun downloadFilesManifestOf(
         appId: Int,

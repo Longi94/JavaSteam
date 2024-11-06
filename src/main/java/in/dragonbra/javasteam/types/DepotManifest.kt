@@ -1,10 +1,10 @@
 package `in`.dragonbra.javasteam.types
 
 import com.google.protobuf.ByteString
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestPayload
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestMetadata
-import `in`.dragonbra.javasteam.base.ContentManifest.ContentManifestSignature
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
+import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestPayload
+import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestMetadata
+import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestSignature
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.log.LogManager
@@ -15,7 +15,6 @@ import java.io.InputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
 import java.io.OutputStream
 import java.io.File
 import java.nio.ByteBuffer
@@ -30,7 +29,9 @@ import javax.crypto.spec.SecretKeySpec
 /**
  * Represents a Steam3 depot manifest.
  */
+@Suppress("MemberVisibilityCanBePrivate", "SpellCheckingInspection")
 class DepotManifest {
+
     companion object {
         const val PROTOBUF_PAYLOAD_MAGIC = 0x71F617D0
         const val PROTOBUF_METADATA_MAGIC = 0x1F4812BE
@@ -70,6 +71,7 @@ class DepotManifest {
          * and the second is the checksum if the deserialization was successful or else the values will be null.
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
+        @Suppress("unused")
         fun loadFromFile(filename: String): Pair<DepotManifest, ByteArray>? {
             val file = File(filename)
             if (!file.exists())
@@ -158,7 +160,6 @@ class DepotManifest {
             return true
         }
 
-        assert(files != null) { "Files was null when attempting to decrypt filenames." }
         assert(encryptionKey.size == 32) { "Decrypt filenames used with non 32 byte key!" }
 
         // This was originally copy-pasted in the SteamKit2 source from CryptoHelper.SymmetricDecrypt to avoid allocating Aes instance for every filename
@@ -212,9 +213,10 @@ class DepotManifest {
      * Serializes depot manifest and saves the output to a file.
      * @param filename Output file name.
      */
+    @Suppress("unused")
     fun saveToFile(filename: String): ByteArray {
         FileOutputStream(File(filename)).use { fs ->
-            return serialize(fs)
+            return serialize(fs).second
         }
     }
 
@@ -333,10 +335,9 @@ class DepotManifest {
     /**
      * Serializes the depot manifest into the provided output stream.
      * @param output The stream to which the serialized depot manifest will be written.
+     * @return A pair object containing the amount of bytes written and the checksum of the manifest
      */
-    fun serialize(output: OutputStream): ByteArray {
-        assert(files != null) { "Files was null when attempting to serialize manifest." }
-
+    fun serialize(output: OutputStream): Pair<Int, ByteArray> {
         val payload = ContentManifestPayload.newBuilder()
         val uniqueChunks = hashSetOf<ByteArray>()
 
@@ -406,8 +407,7 @@ class DepotManifest {
         }
 
         // Write the manifest to the stream and return the checksum
-        val manifestBytes: ByteArray
-        ByteArrayOutputStream().use { bw ->
+        val manifestBytes = ByteArrayOutputStream().use { bw ->
             // Write Protobuf payload
             bw.write(PROTOBUF_PAYLOAD_MAGIC)
             bw.write(payloadData.size)
@@ -426,17 +426,15 @@ class DepotManifest {
             // Write EOF marker
             bw.write(PROTOBUF_ENDOFMANIFEST_MAGIC)
 
-            manifestBytes = bw.toByteArray()
+            bw.toByteArray()
         }
-        DataOutputStream(output).use { bw ->
-            bw.write(manifestBytes)
-        }
-        return CryptoHelper.shaHash(manifestBytes)
+        output.write(manifestBytes)
+        return Pair(manifestBytes.size, CryptoHelper.shaHash(manifestBytes))
     }
 
     fun calculateChecksum(): ByteArray {
         return ByteArrayOutputStream().use { bs ->
-            serialize(bs)
+            serialize(bs).second
         }
     }
 }

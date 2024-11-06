@@ -19,6 +19,7 @@ class Server(
     proxyRequestPathTemplate: String? = null,
     allowedAppIds: IntArray = IntArray(0),
 ) {
+
     /**
      * The protocol used to connect to this server
      */
@@ -64,6 +65,7 @@ class Server(
     /**
      * Gets the SourceID this server belongs to.
      */
+    @Suppress("unused")
     var sourceID = sourceID
         internal set
 

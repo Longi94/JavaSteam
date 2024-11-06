@@ -81,7 +81,7 @@ interface ISteamConfigurationBuilder {
     /**
      * Configures the server list provider for this [SteamConfiguration].
      *
-     * @param provider The server list provider to use..
+     * @param provider The server list provider to use.
      * @return A builder with modified configuration.
      */
     fun withServerListProvider(provider: IServerListProvider): ISteamConfigurationBuilder
@@ -89,7 +89,7 @@ interface ISteamConfigurationBuilder {
     /**
      * Configures the depot manifest provider for this [SteamConfiguration].
      *
-     * @param provider The depot manifest provider to use..
+     * @param provider The depot manifest provider to use.
      * @return A builder with modified configuration.
      */
     fun withManifestProvider(provider: IManifestProvider): ISteamConfigurationBuilder
