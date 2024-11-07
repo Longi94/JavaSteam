@@ -13,10 +13,12 @@ class FileData {
      */
     var fileName: String
         internal set
+
     /**
      * Gets SHA-1 hash of this file's name.
      */
     val fileNameHash: ByteArray
+
     /**
      * Gets the chunks that this file is composed of.
      */
@@ -31,10 +33,12 @@ class FileData {
      * Gets the total size of this file.
      */
     val totalSize: Long
+
     /**
      * Gets SHA-1 hash of this file.
      */
     val fileHash: ByteArray
+
     /**
      * Gets symlink target of this file.
      */
@@ -47,7 +51,7 @@ class FileData {
         flags: EnumSet<EDepotFileFlag>,
         totalSize: Long,
         fileHash: ByteArray,
-        linkTarget: String
+        linkTarget: String,
     ) {
         this.fileName = fileName
         this.fileNameHash = fileNameHash

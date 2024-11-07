@@ -9,10 +9,12 @@ class ChunkData {
      * Gets or sets the SHA-1 hash chunk id.
      */
     val chunkID: ByteArray?
+
     /**
      * Gets or sets the expected Adler32 checksum of this chunk.
      */
     val checksum: Int
+
     /**
      * Gets or sets the chunk offset.
      */
@@ -22,6 +24,7 @@ class ChunkData {
      * Gets or sets the compressed length of this chunk.
      */
     val compressedLength: Int
+
     /**
      * Gets or sets the decompressed length of this chunk.
      */

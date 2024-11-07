@@ -2,29 +2,29 @@ package `in`.dragonbra.javasteam.types
 
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
-import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestPayload
 import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestMetadata
+import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestPayload
 import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestSignature
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import `in`.dragonbra.javasteam.util.stream.BinaryWriter
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import java.io.InputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.OutputStream
-import java.io.File
 import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.Date
 import java.util.Base64
+import java.util.Date
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-
 
 /**
  * Represents a Steam3 depot manifest.
@@ -45,9 +45,7 @@ class DepotManifest {
          * @param stream Raw depot manifest stream to deserialize.
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
-        fun deserialize(stream: InputStream): Pair<DepotManifest, ByteArray> {
-            return deserialize(stream.readBytes())
-        }
+        fun deserialize(stream: InputStream): DepotManifest = deserialize(stream.readBytes())
 
         /**
          * Initializes a new instance of the [DepotManifest] class.
@@ -55,13 +53,10 @@ class DepotManifest {
          * @param data Raw depot manifest data to deserialize.
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
-        fun deserialize(data: ByteArray): Pair<DepotManifest, ByteArray> {
-            val checksum = CryptoHelper.shaHash(data)
-            return MemoryStream(data).use { ms ->
-                val manifest = DepotManifest()
-                manifest.internalDeserialize(ms)
-                Pair(manifest, checksum)
-            }
+        fun deserialize(data: ByteArray): DepotManifest = MemoryStream(data).use { ms ->
+            val manifest = DepotManifest()
+            manifest.internalDeserialize(ms)
+            manifest
         }
 
         /**
@@ -72,10 +67,11 @@ class DepotManifest {
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
         @Suppress("unused")
-        fun loadFromFile(filename: String): Pair<DepotManifest, ByteArray>? {
+        fun loadFromFile(filename: String): DepotManifest? {
             val file = File(filename)
-            if (!file.exists())
+            if (!file.exists()) {
                 return null
+            }
 
             return FileInputStream(file).use { fs ->
                 deserialize(fs)
@@ -87,6 +83,7 @@ class DepotManifest {
      * Gets the list of files within this manifest.
      */
     val files: MutableList<FileData>
+
     /**
      * Gets a value indicating whether filenames within this depot are encrypted.
      */
@@ -170,12 +167,13 @@ class DepotManifest {
 
         try {
             for (file in files) {
-                val decoded = Base64.getUrlDecoder().decode(file.fileName
-                    .replace('+', '-')
-                    .replace('/', '_')
-                    .replace("\n", "")
-                    .replace("\r", "")
-                    .replace(" ", "")
+                val decoded = Base64.getUrlDecoder().decode(
+                    file.fileName
+                        .replace('+', '-')
+                        .replace('/', '_')
+                        .replace("\n", "")
+                        .replace("\r", "")
+                        .replace(" ", "")
                 )
 
                 val bufferDecrypted: ByteArray
@@ -214,9 +212,9 @@ class DepotManifest {
      * @param filename Output file name.
      */
     @Suppress("unused")
-    fun saveToFile(filename: String): ByteArray {
+    fun saveToFile(filename: String) {
         FileOutputStream(File(filename)).use { fs ->
-            return serialize(fs).second
+            serialize(fs)
         }
     }
 
@@ -234,14 +232,15 @@ class DepotManifest {
                     break
                 }
 
-                when(magic) {
+                when (magic) {
                     Steam3Manifest.MAGIC -> {
                         val binaryManifest = Steam3Manifest.deserialize(br)
                         parseBinaryManifest(binaryManifest)
 
                         val marker = br.readInt()
-                        if (marker != magic)
+                        if (marker != magic) {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
+                        }
                     }
                     PROTOBUF_PAYLOAD_MAGIC -> {
                         val payloadLength = br.readInt()
@@ -287,13 +286,15 @@ class DepotManifest {
             )
 
             for (chunk in fileMapping.chunks) {
-                fileData.chunks.add(ChunkData(
-                    chunkID = chunk.chunkGID,
-                    checksum = chunk.checksum,
-                    offset = chunk.offset,
-                    compressedLength = chunk.compressedSize,
-                    uncompressedLength = chunk.decompressedSize
-                ))
+                fileData.chunks.add(
+                    ChunkData(
+                        chunkID = chunk.chunkGID,
+                        checksum = chunk.checksum,
+                        offset = chunk.offset,
+                        compressedLength = chunk.compressedSize,
+                        uncompressedLength = chunk.decompressedSize
+                    )
+                )
             }
             files.add(fileData)
         }
@@ -312,12 +313,15 @@ class DepotManifest {
             )
 
             for (chunk in fileMapping.chunksList) {
-                fileData.chunks.add(ChunkData(
-                    chunkID = chunk.sha.toByteArray(),
-                    checksum = chunk.crc,
-                    offset = chunk.offset,
-                    compressedLength = chunk.cbCompressed,
-                    uncompressedLength = chunk.cbOriginal))
+                fileData.chunks.add(
+                    ChunkData(
+                        chunkID = chunk.sha.toByteArray(),
+                        checksum = chunk.crc,
+                        offset = chunk.offset,
+                        compressedLength = chunk.cbCompressed,
+                        uncompressedLength = chunk.cbOriginal
+                    )
+                )
             }
             files.add(fileData)
         }
@@ -337,7 +341,16 @@ class DepotManifest {
      * @param output The stream to which the serialized depot manifest will be written.
      * @return A pair object containing the amount of bytes written and the checksum of the manifest
      */
-    fun serialize(output: OutputStream): Pair<Int, ByteArray> {
+    fun serialize(output: OutputStream): Int {
+        val manifestBytes = toByteArray()
+        output.write(manifestBytes)
+        return manifestBytes.size
+    }
+
+    /**
+     * Serializes the depot manifest into a byte array.
+     */
+    fun toByteArray(): ByteArray {
         val payload = ContentManifestPayload.newBuilder()
         val uniqueChunks = hashSetOf<ByteArray>()
 
@@ -353,10 +366,11 @@ class DepotManifest {
                 protoFile.setFilename(file.fileName.replace('/', '\\'))
                 protoFile.setShaFilename(
                     ByteString.copyFrom(
-                        CryptoHelper.shaHash(file.fileName
-                            .replace('/', '\\')
-                            .lowercase()
-                            .toByteArray(Charsets.UTF_8)
+                        CryptoHelper.shaHash(
+                            file.fileName
+                                .replace('/', '\\')
+                                .lowercase()
+                                .toByteArray(Charsets.UTF_8)
                         )
                     )
                 )
@@ -407,34 +421,33 @@ class DepotManifest {
         }
 
         // Write the manifest to the stream and return the checksum
-        val manifestBytes = ByteArrayOutputStream().use { bw ->
-            // Write Protobuf payload
-            bw.write(PROTOBUF_PAYLOAD_MAGIC)
-            bw.write(payloadData.size)
-            bw.write(payloadData)
+        return ByteArrayOutputStream().use { bw ->
+            BinaryWriter(bw).use { writer ->
+                // Write Protobuf payload
+                writer.writeInt(PROTOBUF_PAYLOAD_MAGIC)
+                writer.writeInt(payloadData.size)
+                writer.write(payloadData, 0, payloadData.size)
 
-            // Write Protobuf metadata
-            val metadataData = metadata.build().toByteArray()
-            bw.write(PROTOBUF_METADATA_MAGIC)
-            bw.write(metadataData.size)
-            bw.write(metadataData)
+                // Write Protobuf metadata
+                val metadataData = metadata.build().toByteArray()
+                writer.writeInt(PROTOBUF_METADATA_MAGIC)
+                writer.writeInt(metadataData.size)
+                writer.write(metadataData, 0, metadataData.size)
 
-            // Write empty signature section
-            bw.write(PROTOBUF_SIGNATURE_MAGIC)
-            bw.write(0)
+                // Write empty signature section
+                writer.writeInt(PROTOBUF_SIGNATURE_MAGIC)
+                writer.writeInt(0)
 
-            // Write EOF marker
-            bw.write(PROTOBUF_ENDOFMANIFEST_MAGIC)
-
+                // Write EOF marker
+                writer.writeInt(PROTOBUF_ENDOFMANIFEST_MAGIC)
+            }
             bw.toByteArray()
         }
-        output.write(manifestBytes)
-        return Pair(manifestBytes.size, CryptoHelper.shaHash(manifestBytes))
     }
 
-    fun calculateChecksum(): ByteArray {
-        return ByteArrayOutputStream().use { bs ->
-            serialize(bs).second
-        }
-    }
+    /**
+     * Calculates the checksum of the depot manifest.
+     */
+    @Suppress("unused")
+    fun calculateChecksum(): ByteArray = CryptoHelper.shaHash(toByteArray())
 }

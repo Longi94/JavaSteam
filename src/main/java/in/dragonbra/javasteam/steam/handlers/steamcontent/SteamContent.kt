@@ -2,17 +2,19 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetCDNAuthToken_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Response
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Response
 import `in`.dragonbra.javasteam.rpc.service.ContentServerDirectory
 import `in`.dragonbra.javasteam.steam.cdn.AuthToken
-import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.cdn.Server
+import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.webapi.ContentServerDirectoryService
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 
 /**
  * This handler is used for interacting with content server directory on the Steam network.
@@ -30,7 +32,7 @@ class SteamContent : ClientMsgHandler() {
     fun getServersForSteamPipe(
         cellId: Int? = null,
         maxNumServers: Int? = null,
-        parentScope: CoroutineScope
+        parentScope: CoroutineScope,
     ): Deferred<List<Server>> = parentScope.async {
         val request = CContentServerDirectory_GetServersForSteamPipe_Request.newBuilder().apply {
             this.cellId = cellId ?: client.cellID?.toInt() ?: 0
@@ -64,7 +66,7 @@ class SteamContent : ClientMsgHandler() {
         manifestId: Long,
         branch: String? = null,
         branchPasswordHash: String? = null,
-        parentScope: CoroutineScope
+        parentScope: CoroutineScope,
     ): Deferred<ULong> = parentScope.async {
         var localBranch = branch
         var localBranchPasswordHash = branchPasswordHash
@@ -110,7 +112,7 @@ class SteamContent : ClientMsgHandler() {
         app: Int,
         depot: Int,
         hostName: String,
-        parentScope: CoroutineScope
+        parentScope: CoroutineScope,
     ): Deferred<AuthToken> = parentScope.async {
         val request = CContentServerDirectory_GetCDNAuthToken_Request.newBuilder().apply {
             this.appId = app

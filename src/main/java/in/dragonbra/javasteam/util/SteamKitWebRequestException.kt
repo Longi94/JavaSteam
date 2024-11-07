@@ -8,7 +8,7 @@ import java.lang.Exception
  * Thrown when an HTTP request fails.
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class SteamKitWebRequestException(message: String): Exception(message) {
+class SteamKitWebRequestException(message: String) : Exception(message) {
 
     /**
      * Represents the status code of the HTTP response.

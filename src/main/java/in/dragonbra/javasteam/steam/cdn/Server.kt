@@ -32,7 +32,7 @@ class Server(
         /**
          * Server advertises it supports HTTPS, connection made over HTTPS
          */
-        HTTPS
+        HTTPS,
     }
 
     /**
@@ -40,16 +40,19 @@ class Server(
      */
     var protocol = protocol
         internal set
+
     /**
      * Gets the hostname of the server.
      */
     var host = host
         internal set
+
     /**
      * Gets the virtual hostname of the server.
      */
     var vHost = vHost
         internal set
+
     /**
      * Gets the port of the server.
      */
@@ -80,26 +83,31 @@ class Server(
      */
     var load = load
         internal set
+
     /**
      * Gets the weighted load.
      */
     var weightedLoad = weightedLoad
         internal set
+
     /**
      * Gets the number of entries this server is worth.
      */
     var numEntries = numEntries
         internal set
+
     /**
      * Gets the flag whether this server is for Steam China only.
      */
     var steamChinaOnly = steamChinaOnly
         internal set
+
     /**
      * Gets the download proxy status.
      */
     var useAsProxy = useAsProxy
         internal set
+
     /**
      * Gets the transformation template applied to request paths.
      */
@@ -115,7 +123,5 @@ class Server(
     /**
      * Returns a string that represents this server.
      */
-    override fun toString(): String {
-        return "$host:$port ($type)"
-    }
+    override fun toString(): String = "$host:$port ($type)"
 }

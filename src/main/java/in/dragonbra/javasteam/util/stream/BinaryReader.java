@@ -63,7 +63,7 @@ public class BinaryReader extends FilterInputStream {
     }
 
     public long readLong() throws IOException {
-        in.readNBytes(readBuffer, 0, 8);
+        in.read(readBuffer, 0, 8);
         position += 8;
         return (((long) readBuffer[7] << 56) +
                 ((long) (readBuffer[6] & 255) << 48) +

@@ -4,8 +4,18 @@ import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import kotlinx.coroutines.*
-import java.util.concurrent.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentLinkedDeque
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * [ClientPool] provides a pool of connections to CDN endpoints, requesting CDN tokens as needed
@@ -108,7 +118,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         return@async try {
             val server = activeConnectionPool.poll() ?: buildConnection().await()
             server
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             logger.error("Failed to get/build connection: $e")
             e.printStackTrace()
             null

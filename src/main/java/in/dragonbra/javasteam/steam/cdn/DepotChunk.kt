@@ -30,7 +30,7 @@ object DepotChunk {
         info: ChunkData,
         data: ByteArray,
         destination: ByteArray,
-        depotKey: ByteArray
+        depotKey: ByteArray,
     ): Int {
         require(destination.size >= info.uncompressedLength) {
             "The destination buffer must be longer than the chunk ${ChunkData::uncompressedLength.name}."
@@ -74,7 +74,7 @@ object DepotChunk {
 
         val dataCrc = Utils.adlerHash(destination.sliceArray(0 until writtenDecompressed))
 
-        if(dataCrc != info.checksum) {
+        if (dataCrc != info.checksum) {
             throw IOException("Processed data checksum is incorrect ($dataCrc != ${info.checksum})! Downloaded depot chunk is corrupt or invalid/wrong depot key?")
         }
 

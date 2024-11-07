@@ -11,13 +11,13 @@ interface IManifestProvider {
      * Ask a provider to fetch a specific depot manifest
      * @return A [Pair] object with a [DepotManifest] and its checksum if it exists otherwise null
      */
-    fun fetchManifest(depotID: Int, manifestID: Long): Pair<DepotManifest, ByteArray>?
+    fun fetchManifest(depotID: Int, manifestID: Long): DepotManifest?
 
     /**
      * Ask a provider to fetch the most recent manifest used of a depot
      * @return A [Pair] object with a [DepotManifest] and its checksum if it exists otherwise null
      */
-    fun fetchLatestManifest(depotID: Int): Pair<DepotManifest, ByteArray>?
+    fun fetchLatestManifest(depotID: Int): DepotManifest?
 
     /**
      * Ask a provider to set the most recent manifest ID used of a depot
@@ -29,5 +29,5 @@ interface IManifestProvider {
      * @param manifest The depot manifest
      * @return The checksum of the depot manifest
      */
-    fun updateManifest(manifest: DepotManifest): ByteArray
+    fun updateManifest(manifest: DepotManifest)
 }

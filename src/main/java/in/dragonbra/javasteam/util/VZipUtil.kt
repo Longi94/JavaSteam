@@ -12,7 +12,6 @@ import java.io.ByteArrayOutputStream
 import java.util.zip.DataFormatException
 import kotlin.math.max
 
-
 @Suppress("SpellCheckingInspection", "unused")
 object VZipUtil {
 
@@ -86,9 +85,9 @@ object VZipUtil {
 
                 // Configure LZMA options to match SteamKit2's settings
                 val options = LZMA2Options().apply {
-                    dictSize = 1 shl 23  // 8MB dictionary
-                    setPreset(2)  // Algorithm setting
-                    niceLen = 128  // numFastBytes equivalent
+                    dictSize = 1 shl 23 // 8MB dictionary
+                    setPreset(2) // Algorithm setting
+                    niceLen = 128 // numFastBytes equivalent
                     matchFinder = LZMA2Options.MF_BT4
                     mode = LZMA2Options.MODE_NORMAL
                 }

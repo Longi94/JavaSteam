@@ -36,7 +36,7 @@ class Steam3Manifest(
         val hashFileName: ByteArray,
         val hashContent: ByteArray,
         val numChunks: Int,
-        val chunks: Array<Chunk>
+        val chunks: Array<Chunk>,
     ) {
 
         class Chunk(
@@ -44,19 +44,17 @@ class Steam3Manifest(
             val checksum: Int,
             val offset: Long,
             val decompressedSize: Int,
-            val compressedSize: Int
+            val compressedSize: Int,
         ) {
 
             companion object {
-                internal fun deserialize(ds: BinaryReader): Chunk {
-                    return Chunk(
-                        chunkGID = ds.readNBytes(20),
-                        checksum = ds.readInt(),
-                        offset = ds.readLong(),
-                        decompressedSize = ds.readInt(),
-                        compressedSize = ds.readInt()
-                    )
-                }
+                internal fun deserialize(ds: BinaryReader): Chunk = Chunk(
+                    chunkGID = ds.readNBytes(20),
+                    checksum = ds.readInt(),
+                    offset = ds.readLong(),
+                    decompressedSize = ds.readInt(),
+                    compressedSize = ds.readInt()
+                )
             }
         }
 

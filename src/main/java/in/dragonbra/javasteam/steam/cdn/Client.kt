@@ -1,11 +1,9 @@
 package `in`.dragonbra.javasteam.steam.cdn
 
+import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
-import okhttp3.OkHttpClient
-import java.io.Closeable
 import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
-import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.log.LogManager
@@ -13,11 +11,13 @@ import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.ByteArrayOutputStream
+import java.io.Closeable
 import java.io.IOException
-import java.util.zip.ZipInputStream
 import java.util.zip.DataFormatException
+import java.util.zip.ZipInputStream
 
 /**
  * The [Client] class is used for downloading game content from the Steam servers.
@@ -46,7 +46,7 @@ class Client(steamClient: SteamClient) : Closeable {
             server: Server,
             command: String,
             query: String? = null,
-            proxyServer: Server? = null
+            proxyServer: Server? = null,
         ): HttpUrl {
             val httpUrl: HttpUrl
             if (proxyServer != null && proxyServer.useAsProxy && proxyServer.proxyRequestPathTemplate != null) {
@@ -97,14 +97,14 @@ class Client(steamClient: SteamClient) : Closeable {
      * @exception SteamKitWebRequestException A network error occurred when performing the request.
      * @exception DataFormatException When the data received is not as expected
      */
-     suspend fun downloadManifest(
+    suspend fun downloadManifest(
         depotId: Int,
         manifestId: Long,
         manifestRequestCode: ULong,
         server: Server,
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
-        cdnAuthToken: String? = null
+        cdnAuthToken: String? = null,
     ): DepotManifest {
         val manifestVersion = 5
         val url = if (manifestRequestCode > 0U) {
@@ -125,7 +125,6 @@ class Client(steamClient: SteamClient) : Closeable {
             }
 
             val depotManifest = withTimeout(responseBodyTimeout) {
-
                 val contentLength = response.header("Content-Length")?.toIntOrNull()
 
                 if (contentLength == null) {
@@ -155,7 +154,7 @@ class Client(steamClient: SteamClient) : Closeable {
                     MemoryStream(contentBytes).use { ms ->
                         ZipInputStream(ms).use { zip ->
                             zip.nextEntry
-                            DepotManifest.deserialize(zip).first
+                            DepotManifest.deserialize(zip)
                         }
                     }
                 }
@@ -196,7 +195,7 @@ class Client(steamClient: SteamClient) : Closeable {
         destination: ByteArray,
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
-        cdnAuthToken: String? = null
+        cdnAuthToken: String? = null,
     ): Int {
         require(chunk.chunkID != null) { "Chunk must have a ChunkID." }
 
