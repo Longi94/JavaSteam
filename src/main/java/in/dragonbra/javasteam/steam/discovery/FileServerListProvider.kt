@@ -13,13 +13,11 @@ import java.io.IOException
 
 /**
  * Server provider that stores servers in a file using protobuf.
+ * @constructor Instantiates a [FileServerListProvider] object.
+ * @param file the file that will store the servers
  */
 class FileServerListProvider(private val file: File) : IServerListProvider {
 
-    /**
-     * Instantiates a [FileServerListProvider] object.
-     * @param file the file that will store the servers
-     */
     init {
         try {
             file.absoluteFile.parentFile?.mkdirs()

@@ -14,6 +14,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+/**
+ * Depot manifest provider that stores depot manifests in a zip file.
+ * @constructor Instantiates a [FileManifestProvider] object.
+ * @param file the file that will store the depot manifests
+ *
+ * @author Oxters
+ * @since 2024-11-06
+ */
 @Suppress("unused")
 class FileManifestProvider(private val file: File) : IManifestProvider {
 
@@ -65,10 +73,6 @@ class FileManifestProvider(private val file: File) : IManifestProvider {
         }
     }
 
-    /**
-     * Instantiates a [FileManifestProvider] object.
-     * @param file the file that will store the depot manifests
-     */
     init {
         try {
             file.absoluteFile.parentFile?.mkdirs()

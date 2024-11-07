@@ -23,7 +23,7 @@ class SteamContent : ClientMsgHandler() {
 
     /**
      * Load a list of servers from the Content Server Directory Service.
-     * This is an alternative to 'ContentServerDirectoryService.loadAsync' (does not exist in JS atm).
+     * This is an alternative to `ContentServerDirectoryService.loadAsync` (does not exist in JS atm).
      *
      * @param cellId Preferred steam cell id
      * @param maxNumServers Max number of servers to return.

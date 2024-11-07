@@ -2,6 +2,10 @@ package `in`.dragonbra.javasteam.steam.contentdownloader
 
 import `in`.dragonbra.javasteam.types.DepotManifest
 
+/**
+ * @author Oxters
+ * @since 2024-11-06
+ */
 class MemoryManifestProvider : IManifestProvider {
 
     private val depotManifests = mutableMapOf<Int, MutableMap<Long, DepotManifest>>()

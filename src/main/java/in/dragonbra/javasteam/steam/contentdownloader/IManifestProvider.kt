@@ -4,6 +4,9 @@ import `in`.dragonbra.javasteam.types.DepotManifest
 
 /**
  * An interface for persisting depot manifests for Steam content downloading
+ *
+ * @author Oxters
+ * @since 2024-11-06
  */
 interface IManifestProvider {
 
