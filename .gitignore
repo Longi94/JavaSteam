@@ -74,6 +74,7 @@ cellid.txt
 loginkey.txt
 sentry.bin
 server_list.bin
+steamapps/
 
 # Kotlin 2.0
 /.kotlin/sessions/
