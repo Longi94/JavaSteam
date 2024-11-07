@@ -186,24 +186,17 @@ open class AuthSession(
             requestId = ByteString.copyFrom(requestID)
         }
 
-        val message = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
+        val result = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
 
         // eResult can be Expired, FileNotFound, Fail
-        if (message.result != EResult.OK) {
-            throw AuthenticationException("Failed to poll status", message.result)
+        if (result.result != EResult.OK) {
+            throw AuthenticationException("Failed to poll status", result.result)
         }
 
-        val response: CAuthentication_PollAuthSessionStatus_Response.Builder =
-            message.getDeserializedResponse(CAuthentication_PollAuthSessionStatus_Response::class.java)
+        handlePollAuthSessionStatusResponse(result.body)
 
-        if (response.newClientId > 0) {
-            clientID = response.newClientId
-        }
-
-        handlePollAuthSessionStatusResponse(response)
-
-        if (response.refreshToken.isNotEmpty()) {
-            return AuthPollResult(response)
+        if (result.body.refreshToken.isNotEmpty()) {
+            return AuthPollResult(result.body)
         }
 
         return null

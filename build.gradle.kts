@@ -1,4 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jmailen.gradle.kotlinter.tasks.FormatTask
+import org.jmailen.gradle.kotlinter.tasks.LintTask
 
 plugins {
     `maven-publish`
@@ -132,6 +134,14 @@ tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
 // tasks["build"].finalizedBy(dokkaJavadocJar)
+
+/* Kotlinter */
+tasks.withType<LintTask> {
+    this.source = this.source.minus(fileTree("build/generated")).asFileTree
+}
+tasks.withType<FormatTask> {
+    this.source = this.source.minus(fileTree("build/generated")).asFileTree
+}
 
 dependencies {
     implementation(libs.commons.io)

@@ -6,6 +6,5 @@ package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
  */
 abstract class CallbackBase {
     abstract val callbackType: Class<*>
-
     abstract fun run(callback: Any)
 }

@@ -356,7 +356,7 @@ public class UdpConnection extends Connection {
 
         byte[] data = baos.toByteArray();
 
-        logger.debug("Dispatchin message: " + data.length + " bytes");
+        logger.debug("Dispatching message: " + data.length + " bytes");
 
         onNetMsgReceived(new NetMsgEventArgs(data, currentEndPoint));
 
@@ -548,7 +548,7 @@ public class UdpConnection extends Connection {
                     while (received) {
 
                         // Ignore packets that aren't sent by the server we're connected to.
-                        if (!packet.getAddress().equals(currentEndPoint.getAddress()) && packet.getPort() != packet.getPort()) {
+                        if (!packet.getAddress().equals(currentEndPoint.getAddress()) && packet.getPort() != currentEndPoint.getPort()) {
                             continue;
                         }
 

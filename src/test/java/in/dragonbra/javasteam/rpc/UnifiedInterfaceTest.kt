@@ -12,25 +12,6 @@ import java.io.File
 class UnifiedInterfaceTest {
 
     @Test
-    fun testInterfaceCount() {
-        val interfaceDir = File(INTERFACE_PATH)
-
-        Assertions.assertTrue(
-            interfaceDir.exists() && interfaceDir.isDirectory,
-            "${interfaceDir.name} should exist to test"
-        )
-
-        val fileCount = interfaceDir.listFiles()
-
-        Assertions.assertNotNull(fileCount, "Couldn't count files")
-
-        Assertions.assertTrue(
-            knownServiceTypes.count() == fileCount!!.size,
-            "Interface count doesn't match known file types! Did something change in the .proto files?"
-        )
-    }
-
-    @Test
     fun testServiceCount() {
         val interfaceDir = File(SERVICE_PATH)
 
@@ -50,14 +31,6 @@ class UnifiedInterfaceTest {
     }
 
     @Test
-    fun testKnownInterfaces() {
-        for (filename in knownServiceTypes) {
-            val file = File(INTERFACE_PATH, "I$filename")
-            Assertions.assertTrue(file.exists() && file.isFile, "File I$filename should exist")
-        }
-    }
-
-    @Test
     fun testKnownServices() {
         for (filename in knownServiceTypes) {
             val file = File(SERVICE_PATH, filename)
@@ -67,7 +40,6 @@ class UnifiedInterfaceTest {
 
     private companion object {
         const val DIR_PATH = "build/generated/source/javasteam/main/java/in/dragonbra/javasteam/rpc/"
-        const val INTERFACE_PATH = "$DIR_PATH/interfaces"
         const val SERVICE_PATH = "$DIR_PATH/service"
 
         /**
@@ -88,6 +60,8 @@ class UnifiedInterfaceTest {
             "EmbeddedClient.kt",
             "FriendMessages.kt",
             "FriendMessagesClient.kt",
+            "GameNotifications.kt",
+            "GameNotificationsClient.kt",
             "Inventory.kt",
             "InventoryClient.kt",
             "Parental.kt",

@@ -8,7 +8,6 @@ import in.dragonbra.javasteam.generated.MsgClientLogon;
 import in.dragonbra.javasteam.generated.MsgClientServerUnavailable;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientCMList;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHello;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
@@ -21,8 +20,8 @@ import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.IDebugNetworkListener;
 import in.dragonbra.javasteam.util.MsgUtil;
-import in.dragonbra.javasteam.util.NetHelpers;
 import in.dragonbra.javasteam.util.NetHookNetworkListener;
+import in.dragonbra.javasteam.util.Strings;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
@@ -294,7 +293,7 @@ public abstract class CMClient {
 
     public static IPacketMsg getPacketMsg(byte[] data) {
         if (data.length < 4) {
-            logger.debug("PacketMsg too small to contain a message, was only {0} bytes. Message: 0x{1}");
+            logger.debug("PacketMsg too small to contain a message, was only " + data.length + " bytes. Message: " + Strings.toHex(data));
             return null;
         }
 
@@ -321,6 +320,7 @@ public abstract class CMClient {
 
         try {
             if (MsgUtil.isProtoBuf(rawEMsg)) {
+                // if the emsg is flagged, we're a proto message
                 return new PacketClientMsgProtobuf(eMsg, data);
             } else {
                 return new PacketClientMsg(eMsg, data);
@@ -487,6 +487,17 @@ public abstract class CMClient {
      */
     public boolean isConnected() {
         return isConnected;
+    }
+
+    /**
+     * Gets a value indicating whether isConnected and connection is not connected to the remote CM server.
+     * Inverse alternative to {@link CMClient#isConnected()}
+     *
+     * @return <b>true</b> is this instance is disconnected, otherwise, <b>false</b>.
+     */
+    // > "since the client can technically not be connected but still have a connection"
+    public boolean isDisconnected() {
+        return !isConnected && connection == null;
     }
 
     /**

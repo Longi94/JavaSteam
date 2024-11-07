@@ -1,0 +1,134 @@
+import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_base.proto";
+import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_unified_base.steamclient.proto";
+
+option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
+
+option optimize_for = SPEED;
+option java_generic_services = false;
+
+message CGameNotifications_Variable {
+  optional string key = 1;
+  optional string value = 2;
+}
+
+message CGameNotifications_LocalizedText {
+  optional string token = 1;
+  repeated .CGameNotifications_Variable variables = 2;
+  optional string rendered_text = 3;
+}
+
+message CGameNotifications_UserStatus {
+  optional fixed64 steamid = 1;
+  optional string state = 2;
+  optional .CGameNotifications_LocalizedText title = 3;
+  optional .CGameNotifications_LocalizedText message = 4;
+}
+
+message CGameNotifications_CreateSession_Request {
+  optional uint32 appid = 1;
+  optional uint64 context = 2;
+  optional .CGameNotifications_LocalizedText title = 3;
+  repeated .CGameNotifications_UserStatus users = 4;
+  optional fixed64 steamid = 5;
+}
+
+message CGameNotifications_CreateSession_Response {
+  optional uint64 sessionid = 1;
+}
+
+message CGameNotifications_DeleteSession_Request {
+  optional uint64 sessionid = 1;
+  optional uint32 appid = 2;
+  optional fixed64 steamid = 3;
+}
+
+message CGameNotifications_DeleteSession_Response {
+}
+
+message CGameNotifications_UpdateSession_Request {
+  optional uint64 sessionid = 1;
+  optional uint32 appid = 2;
+  optional .CGameNotifications_LocalizedText title = 3;
+  repeated .CGameNotifications_UserStatus users = 4;
+  optional fixed64 steamid = 6;
+}
+
+message CGameNotifications_UpdateSession_Response {
+}
+
+message CGameNotifications_EnumerateSessions_Request {
+  optional uint32 appid = 1;
+  optional bool include_all_user_messages = 3;
+  optional bool include_auth_user_message = 4;
+  optional string language = 5;
+}
+
+message CGameNotifications_Session {
+  optional uint64 sessionid = 1;
+  optional uint64 appid = 2;
+  optional uint64 context = 3;
+  optional .CGameNotifications_LocalizedText title = 4;
+  optional uint32 time_created = 5;
+  optional uint32 time_updated = 6;
+  repeated .CGameNotifications_UserStatus user_status = 7;
+}
+
+message CGameNotifications_EnumerateSessions_Response {
+  repeated .CGameNotifications_Session sessions = 1;
+}
+
+message CGameNotifications_GetSessionDetails_Request {
+  message RequestedSession {
+    optional uint64 sessionid = 1;
+    optional bool include_auth_user_message = 3;
+  }
+
+  repeated .CGameNotifications_GetSessionDetails_Request.RequestedSession sessions = 1;
+  optional uint32 appid = 2;
+  optional string language = 3;
+}
+
+message CGameNotifications_GetSessionDetails_Response {
+  repeated .CGameNotifications_Session sessions = 1;
+}
+
+message GameNotificationSettings {
+  optional uint32 appid = 1;
+  optional bool allow_notifications = 2;
+}
+
+message CGameNotifications_UpdateNotificationSettings_Request {
+  repeated .GameNotificationSettings game_notification_settings = 1;
+}
+
+message CGameNotifications_UpdateNotificationSettings_Response {
+}
+
+message CGameNotifications_OnNotificationsRequested_Notification {
+  optional fixed64 steamid = 1;
+  optional uint32 appid = 2;
+}
+
+message CGameNotifications_OnUserStatusChanged_Notification {
+  optional fixed64 steamid = 1;
+  optional uint64 sessionid = 2;
+  optional uint32 appid = 3;
+  optional .CGameNotifications_UserStatus status = 4;
+  optional bool removed = 5;
+}
+
+service GameNotifications {
+  rpc UserCreateSession (.CGameNotifications_CreateSession_Request) returns (.CGameNotifications_CreateSession_Response);
+  rpc UserDeleteSession (.CGameNotifications_DeleteSession_Request) returns (.CGameNotifications_DeleteSession_Response);
+  rpc UserUpdateSession (.CGameNotifications_UpdateSession_Request) returns (.CGameNotifications_UpdateSession_Response);
+  rpc EnumerateSessions (.CGameNotifications_EnumerateSessions_Request) returns (.CGameNotifications_EnumerateSessions_Response);
+  rpc GetSessionDetails (.CGameNotifications_GetSessionDetails_Request) returns (.CGameNotifications_GetSessionDetails_Response);
+  rpc UpdateNotificationSettings (.CGameNotifications_UpdateNotificationSettings_Request) returns (.CGameNotifications_UpdateNotificationSettings_Response);
+}
+
+service GameNotificationsClient {
+  option (service_execution_site) = k_EProtoExecutionSiteSteamClient;
+
+  rpc OnNotificationsRequested (.CGameNotifications_OnNotificationsRequested_Notification) returns (.NoResponse);
+  rpc OnUserStatusChanged (.CGameNotifications_OnUserStatusChanged_Notification) returns (.NoResponse);
+}

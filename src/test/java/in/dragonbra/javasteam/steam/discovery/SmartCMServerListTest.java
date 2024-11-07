@@ -222,7 +222,7 @@ public class SmartCMServerListTest extends TestBase {
             try {
                 TimeUnit.MILLISECONDS.sleep(10);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Assertions.fail(e);
             }
             serverList.tryMark(candidate.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
         };
@@ -256,7 +256,7 @@ public class SmartCMServerListTest extends TestBase {
             try {
                 TimeUnit.MILLISECONDS.sleep(10);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Assertions.fail(e);
             }
             serverList.tryMark(candidate.getEndpoint(), ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
         };

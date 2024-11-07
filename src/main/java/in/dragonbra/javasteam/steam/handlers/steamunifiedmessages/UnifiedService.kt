@@ -1,13 +1,15 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages
 
-import com.google.protobuf.GeneratedMessage
-import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
-import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.base.PacketClientMsgProtobuf
 
 /**
  * @author Lossy
- * @since 2023-01-04
+ * @since 2024-10-22
+ *
+ * Abstract definition of a steam unified messages service.
+ * @constructor unifiedMessages A reference to the [SteamUnifiedMessages] instance this service was created from.
  */
+abstract class UnifiedService(val unifiedMessages: SteamUnifiedMessages? = null) {
 @Suppress("unused")
 abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMessages) {
 
@@ -15,54 +17,21 @@ abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMess
         get() = this.javaClass.simpleName
 
     /**
-     * Sends a message.
-     *
-     * Results are returned in a [ServiceMethodResponse].
-     *
-     * @param message    The message to send.
-     * @param methodName The Target Job Name.
-     * @return The JobID of the message. This can be used to find the appropriate [ServiceMethodResponse].
+     * Handles a response message for this service. This should not be called directly.
+     * @param methodName The name of the method the service should handle.
+     * @param packetMsg The packet message that contains the data.
      */
-    fun sendMessage(message: GeneratedMessage, methodName: String): AsyncJobSingle<ServiceMethodResponse> {
-        val rpcEndpoint = getRpcEndpoint(className, methodName)
-
-        return sendMessageOrNotification(rpcEndpoint, message, false)!!
-    }
+    abstract fun handleResponseMsg(methodName: String, packetMsg: PacketClientMsgProtobuf)
 
     /**
-     * Sends a notification.
-     *
-     * @param message    The message to send.
-     * @param methodName The Target Job Name.
+     * Handles a notification message for this service. This should not be called directly.
+     * @param methodName The name of the method the service should handle.
+     * @param packetMsg The packet message that contains the data.
      */
-    fun sendNotification(message: GeneratedMessage, methodName: String) {
-        val rpcEndpoint = getRpcEndpoint(className, methodName)
+    abstract fun handleNotificationMsg(methodName: String, packetMsg: PacketClientMsgProtobuf)
 
-        sendMessageOrNotification(rpcEndpoint, message, true)
-    }
-
-    private fun sendMessageOrNotification(
-        rpcName: String,
-        message: GeneratedMessage,
-        isNotification: Boolean,
-    ): AsyncJobSingle<ServiceMethodResponse>? {
-        if (isNotification) {
-            steamUnifiedMessages.sendNotification(rpcName, message)
-            return null
-        }
-
-        return steamUnifiedMessages.sendMessage(rpcName, message)
-    }
-
-    companion object {
-        // val logger = LogManager.getLogger(UnifiedService.class)
-
-        /**
-         * @param parentClassName The parent class name, ie: Player
-         * @param methodName      The calling method name, ie: GetGameBadgeLevels
-         * @return The name of the RPC endpoint as formatted ServiceName.RpcName. ie: Player.GetGameBadgeLevels#1
-         */
-        private fun getRpcEndpoint(parentClassName: String, methodName: String): String =
-            String.format("%s.%s#%s", parentClassName, methodName, 1)
-    }
+    /**
+     * The name of the steam unified messages service.
+     */
+    abstract val serviceName: String
 }

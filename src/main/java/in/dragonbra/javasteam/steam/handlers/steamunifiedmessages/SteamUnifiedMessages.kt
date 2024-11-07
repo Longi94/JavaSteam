@@ -10,151 +10,166 @@ import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodNotification
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
-import `in`.dragonbra.javasteam.types.JobID
-import `in`.dragonbra.javasteam.util.log.LogManager
-import `in`.dragonbra.javasteam.util.log.Logger
-import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author Lossy
- * @since 2023-01-04
+ * @since 2024-10-22
  *
- * This handler is used for interacting with Steamworks unified messaging
+ * This handler is used for interacting with Steamworks unified messaging.
  */
 class SteamUnifiedMessages : ClientMsgHandler() {
 
-    val handlers = mutableMapOf<String, UnifiedService>()
+    internal val handlers = ConcurrentHashMap<String, UnifiedService>()
 
     /**
      * Creates a service that can be used to send messages and receive notifications via Steamworks unified messaging.
-     *
      * @param TService The type of the service to create.
      * @return The instance to create requests from.
      */
-    inline fun <reified TService : UnifiedService> createService(): TService {
-        val service = TService::class.java
-            .getDeclaredConstructor(SteamUnifiedMessages::class.java)
-            .newInstance(this@SteamUnifiedMessages)
+    // Kotlin Compat
+    @JvmSynthetic
+    inline fun <reified TService : UnifiedService> createService(): TService = createService(TService::class.java)
 
-        return (handlers.getOrPut(service.className) { service } as TService)
+    /**
+     * Creates a service that can be used to send messages and receive notifications via Steamworks unified messaging.
+     * @param TService The type of the service to create.
+     * @param serviceClass The type of the service to create.
+     * @return The instance to create requests.
+     */
+    // Java Compat
+    @Suppress("UNCHECKED_CAST")
+    fun <TService : UnifiedService> createService(serviceClass: Class<TService>): TService =
+        serviceClass.getDeclaredConstructor(SteamUnifiedMessages::class.java)
+            .newInstance(this@SteamUnifiedMessages)
+            .let { service ->
+                handlers.getOrPut(service.serviceName) { service } as TService
+            }
+
+    /**
+     * Removes a service so it no longer can be used to send messages or receive notifications.
+     * @param TService The type of the service to remove.
+     */
+    // Kotlin Compat
+    @Suppress("unused")
+    @JvmSynthetic
+    inline fun <reified TService : UnifiedService> removeService() {
+        removeService(TService::class.java)
     }
 
     /**
-     * Handles a client message. This should not be called directly.
-     *
-     * @param packetMsg The packet message that contains the data.
+     * Removes a service so it no longer can be used to send messages or receive notifications.
+     * @param TService The type of the service to remove.
+     * @param serviceClass The type of the service to remove.
      */
-    override fun handleMsg(packetMsg: IPacketMsg) {
-        when (packetMsg.msgType) {
-            EMsg.ServiceMethodResponse -> handleServiceMethodResponse(packetMsg)
-            EMsg.ServiceMethod -> handleServiceMethod(packetMsg)
-            else -> Unit
-        }
+    fun <TService : UnifiedService> removeService(serviceClass: Class<TService>) {
+        val serviceName = serviceClass.getDeclaredConstructor(SteamUnifiedMessages::class.java)
+            .newInstance(null)
+            .serviceName
+        handlers.remove(serviceName)
     }
 
     /**
      * Sends a message.
-     * Results are returned in a [ServiceMethodResponse].
-     *
-     * @param rpcName Name of the RPC endpoint. Takes the format ServiceName.RpcName
-     * @param message The message to send.
+     * Results are returned in a [ServiceMethodResponse] with type [TResult].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
      * @param TRequest The type of protobuf object.
+     * @param TResult The type of the result of the request.
+     * @param name Name of the RPC endpoint. Takes the format ServiceName.RpcName.
+     * @param message The message to send.
      * @return The JobID of the request. This can be used to find the appropriate [ServiceMethodResponse].
      */
-    fun <TRequest : GeneratedMessage.Builder<TRequest>> sendMessage(
-        rpcName: String,
+    @Suppress("UNUSED_PARAMETER")
+    fun <TRequest : GeneratedMessage.Builder<TRequest>, TResult : GeneratedMessage.Builder<TResult>> sendMessage(
+        responseClass: Class<out TResult>, // Type Casting
+        name: String,
         message: GeneratedMessage,
-    ): AsyncJobSingle<ServiceMethodResponse> {
-        val jobID: JobID = client.getNextJobID()
+    ): AsyncJobSingle<ServiceMethodResponse<TResult>> {
         val eMsg = if (client.steamID == null) {
             EMsg.ServiceMethodCallFromClientNonAuthed
         } else {
             EMsg.ServiceMethodCallFromClient
         }
 
-        ClientMsgProtobuf<TRequest>(message.javaClass, eMsg).apply {
-            sourceJobID = jobID
-            header.proto.targetJobName = rpcName
-            body!!.mergeFrom(message)
-        }.also(client::send)
+        val msg = ClientMsgProtobuf<TRequest>(message::class.java, eMsg).apply {
+            sourceJobID = client.getNextJobID()
+            header.proto.targetJobName = name
+            body.mergeFrom(message)
+        }
 
-        return AsyncJobSingle(client, jobID)
+        client.send(msg)
+
+        return AsyncJobSingle(client, msg.sourceJobID)
     }
 
     /**
      * Sends a notification.
-     *
-     * @param rpcName Name of the RPC endpoint. Takes the format ServiceName.RpcName
-     * @param message The message to send.
      * @param TRequest The type of protobuf object.
+     * @param name Name of the RPC endpoint. Takes the format ServiceName.RpcName.
+     * @param message The message to send.
      */
     fun <TRequest : GeneratedMessage.Builder<TRequest>> sendNotification(
-        rpcName: String,
+        name: String,
         message: GeneratedMessage,
     ) {
+        // Notifications do not set source jobid, otherwise Steam server will actively reject this message
+        // if the method being used is a "Notification"
         val eMsg = if (client.steamID == null) {
             EMsg.ServiceMethodCallFromClientNonAuthed
         } else {
             EMsg.ServiceMethodCallFromClient
         }
+        val msg = ClientMsgProtobuf<TRequest>(message::class.java, eMsg).apply {
+            header.proto.targetJobName = name
+            body.mergeFrom(message)
+        }
 
-        ClientMsgProtobuf<TRequest>(message.javaClass, eMsg).apply {
-            header.proto.targetJobName = rpcName
-            body!!.mergeFrom(message)
-        }.also(client::send)
+        client.send(msg)
     }
 
-    private fun handleServiceMethodResponse(packetMsg: IPacketMsg) {
-        require(packetMsg is PacketClientMsgProtobuf) { "Packet message is expected to be protobuf." }
+    /**
+     * Handles a client message. This should not be called directly.
+     * @param packetMsg The packet message that contains the data.
+     */
+    override fun handleMsg(packetMsg: IPacketMsg) {
+        val packetMsgProto = packetMsg as? PacketClientMsgProtobuf ?: return
 
-        val callback = ServiceMethodResponse(packetMsg)
-        client.postCallback(callback)
-    }
-
-    private fun handleServiceMethod(packetMsg: IPacketMsg) {
-        require(packetMsg is PacketClientMsgProtobuf) { "Packet message is expected to be protobuf." }
-
-        val jobName = packetMsg.header.proto.targetJobName
-
-        if (jobName.isNullOrEmpty()) {
-            logger.debug("Job name is null or empty")
+        if (packetMsg.msgType != EMsg.ServiceMethod && packetMsg.msgType != EMsg.ServiceMethodResponse) {
             return
         }
 
-        val splitByDot = jobName.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        val splitByHash = splitByDot[1].split("#".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val jobName = packetMsgProto.header.proto.targetJobName
+        if (jobName.isEmpty()) return
 
-        val serviceName = splitByDot[0]
-        val methodName = splitByHash[0]
+        // format: Service.Method#Version
+        val dot = jobName.indexOf('.')
+        val hash = jobName.lastIndexOf('#')
+        if (dot < 0 || hash < 0) return
 
-        @Suppress("SpellCheckingInspection")
-        val serviceInterfaceName = "in.dragonbra.javasteam.rpc.interfaces.I$serviceName"
-        try {
-            logger.debug("Handling Service Method: $serviceInterfaceName")
+        val serviceName = jobName.substring(0, dot)
+        val handler = handlers[serviceName] ?: return
+        val methodName = jobName.substring(dot + 1, hash)
 
-            val serviceInterfaceType = Class.forName(serviceInterfaceName)
-
-            var method: Method? = null
-            for (m in serviceInterfaceType.declaredMethods) {
-                if (m.name == methodName) {
-                    method = m
-                }
-            }
-
-            if (method != null) {
-                @Suppress("UNCHECKED_CAST")
-                val argumentType = method.parameterTypes[0] as Class<out AbstractMessage>
-
-                client.postCallback(ServiceMethodNotification(argumentType, packetMsg))
-            }
-        } catch (_: ClassNotFoundException) {
-            // The RPC service implementation was not implemented.
-            // Either the .proto is missing, or the service was not converted to an interface yet.
-            logger.debug("Service Method: $serviceName, was not found")
+        when (packetMsgProto.msgType) {
+            EMsg.ServiceMethodResponse -> handler.handleResponseMsg(methodName, packetMsgProto)
+            EMsg.ServiceMethod -> handler.handleNotificationMsg(methodName, packetMsgProto)
+            else -> Unit // Ignore everything else.
         }
     }
 
-    companion object {
-        private val logger: Logger = LogManager.getLogger(SteamUnifiedMessages::class.java)
+    internal fun <TService : GeneratedMessage.Builder<TService>> handleResponseMsg(
+        serviceClass: Class<out AbstractMessage>,
+        packetMsg: PacketClientMsgProtobuf,
+    ) {
+        val callback = ServiceMethodResponse<TService>(serviceClass, packetMsg)
+        client.postCallback(callback)
+    }
+
+    internal fun <TService : GeneratedMessage.Builder<TService>> handleNotificationMsg(
+        serviceClass: Class<out AbstractMessage>,
+        packetMsg: PacketClientMsgProtobuf,
+    ) {
+        val callback = ServiceMethodNotification<TService>(serviceClass, packetMsg)
+        client.postCallback(callback)
     }
 }
