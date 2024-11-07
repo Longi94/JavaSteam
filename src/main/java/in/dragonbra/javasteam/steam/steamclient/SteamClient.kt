@@ -19,7 +19,6 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuser.SteamUser
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats
 import `in`.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.ICallbackMsg
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
@@ -54,7 +53,7 @@ class SteamClient @JvmOverloads constructor(
 
     private val processStartTime: Date
 
-    private val callbackQueue = Channel<ICallbackMsg>(Channel.UNLIMITED)
+    private val callbackQueue = Channel<CallbackMsg>(Channel.UNLIMITED)
 
     internal val jobManager: AsyncJobManager // What does this even do now?
 
@@ -139,13 +138,13 @@ class SteamClient @JvmOverloads constructor(
      * Gets the next callback object in the queue, and removes it.
      * @return The next callback in the queue, or null if no callback is waiting.
      */
-    fun getCallback(): ICallbackMsg? = callbackQueue.tryReceive().getOrNull()
+    fun getCallback(): CallbackMsg? = callbackQueue.tryReceive().getOrNull()
 
     /**
      * Blocks the calling thread until a callback object is posted to the queue, and removes it.
      * @return The callback object from the queue.
      */
-    fun waitForCallback(): ICallbackMsg = runBlocking(Dispatchers.Default) {
+    fun waitForCallback(): CallbackMsg = runBlocking(Dispatchers.Default) {
         callbackQueue.receive()
     }
 
@@ -153,14 +152,14 @@ class SteamClient @JvmOverloads constructor(
      * Asynchronously awaits until a callback object is posted to the queue, and removes it.
      * @return The callback object from the queue.
      */
-    suspend fun waitForCallbackAsync(): ICallbackMsg = callbackQueue.receive()
+    suspend fun waitForCallbackAsync(): CallbackMsg = callbackQueue.receive()
 
     /**
      * Blocks the calling thread until a callback object is posted to the queue, or null after the timeout has elapsed.
      * @param timeout The length of time to block in ms.
      * @return A callback object from the queue if a callback has been posted, or null if the timeout has elapsed.
      */
-    fun waitForCallback(timeout: Long): ICallbackMsg? = runBlocking {
+    fun waitForCallback(timeout: Long): CallbackMsg? = runBlocking {
         withTimeoutOrNull(timeout) {
             callbackQueue.receive()
         }

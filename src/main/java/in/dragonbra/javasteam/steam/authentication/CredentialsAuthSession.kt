@@ -3,7 +3,6 @@ package `in`.dragonbra.javasteam.steam.authentication
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaCredentials_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
 import `in`.dragonbra.javasteam.types.SteamID
 
@@ -41,19 +40,15 @@ class CredentialsAuthSession(
             this.codeType = codeType
         }
 
-        val message = authentication.authenticationService
+        val response = authentication.authenticationService
             .updateAuthSessionWithSteamGuardCode(request.build())
             .runBlock()
-
-        @Suppress("UNUSED_VARIABLE")
-        val response: CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response.Builder =
-            message.getDeserializedResponse(CAuthentication_UpdateAuthSessionWithSteamGuardCode_Response::class.java)
 
         // Observed results can be InvalidLoginAuthCode, TwoFactorCodeMismatch, Expired, DuplicateRequest.
         // DuplicateRequest happens when accepting the prompt in the mobile app, and then trying to send guard code here,
         // we do not throw on it here because authentication will succeed on the next poll.
-        if (message.result != EResult.OK && message.result != EResult.DuplicateRequest) {
-            throw AuthenticationException("Failed to send steam guard code", message.result)
+        if (response.result != EResult.OK && response.result != EResult.DuplicateRequest) {
+            throw AuthenticationException("Failed to send steam guard code", response.result)
         }
 
         // response may contain agreement_session_url
