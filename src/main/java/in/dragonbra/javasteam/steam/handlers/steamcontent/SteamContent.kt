@@ -3,9 +3,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetCDNAuthToken_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Response
 import `in`.dragonbra.javasteam.rpc.service.ContentServerDirectory
 import `in`.dragonbra.javasteam.steam.cdn.AuthToken
 import `in`.dragonbra.javasteam.steam.cdn.Server
@@ -42,10 +40,7 @@ class SteamContent : ClientMsgHandler() {
         val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
         val contentService = unifiedMessages.createService<ContentServerDirectory>()
         val message = contentService.getServersForSteamPipe(request).toDeferred().await()
-        val response = message
-            .getDeserializedResponse<CContentServerDirectory_GetServersForSteamPipe_Response.Builder>(
-                CContentServerDirectory_GetServersForSteamPipe_Response::class.java
-            ).build()
+        val response = message.body.build()
 
         return@async ContentServerDirectoryService.convertServerList(response)
     }
@@ -91,10 +86,7 @@ class SteamContent : ClientMsgHandler() {
         val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
         val contentService = unifiedMessages.createService<ContentServerDirectory>()
         val message = contentService.getManifestRequestCode(request).toDeferred().await()
-        val response = message
-            .getDeserializedResponse<CContentServerDirectory_GetManifestRequestCode_Response.Builder>(
-                CContentServerDirectory_GetManifestRequestCode_Response::class.java
-            ).build()
+        val response = message.body.build()
 
         return@async response.manifestRequestCode.toULong()
     }

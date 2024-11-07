@@ -40,7 +40,14 @@ class FileServerListProvider(val file: Path) : IServerListProvider {
      * Returns the last time the file was written on disk
      */
     override val lastServerListRefresh: Instant
-        get() = Files.getLastModifiedTime(file).toInstant()
+        get() {
+            // C# File.GetLastWriteTimeUtc(filename) returns default value if file not found (DateTime.MinValue)
+            return try {
+                Files.getLastModifiedTime(file).toInstant()
+            } catch (_: Exception) {
+                Instant.MIN
+            }
+        }
 
     /**
      * Read the stored list of servers from the file

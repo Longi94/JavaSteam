@@ -9,12 +9,8 @@ import `in`.dragonbra.javasteam.base.PacketClientMsgProtobuf
  * Abstract definition of a steam unified messages service.
  * @constructor unifiedMessages A reference to the [SteamUnifiedMessages] instance this service was created from.
  */
-abstract class UnifiedService(val unifiedMessages: SteamUnifiedMessages? = null) {
 @Suppress("unused")
-abstract class UnifiedService(private val steamUnifiedMessages: SteamUnifiedMessages) {
-
-    val className: String
-        get() = this.javaClass.simpleName
+abstract class UnifiedService(val unifiedMessages: SteamUnifiedMessages? = null) {
 
     /**
      * Handles a response message for this service. This should not be called directly.

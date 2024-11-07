@@ -8,7 +8,7 @@ import java.util.Date
 /**
  * This is received when a CDN auth token is received
  */
-class AuthToken(message: ServiceMethodResponse) {
+class AuthToken(message: ServiceMethodResponse<CContentServerDirectory_GetCDNAuthToken_Response.Builder>) {
 
     /**
      * Result of the operation
@@ -26,9 +26,7 @@ class AuthToken(message: ServiceMethodResponse) {
     val expiration: Date
 
     init {
-        val response = message.getDeserializedResponse<CContentServerDirectory_GetCDNAuthToken_Response.Builder>(
-            CContentServerDirectory_GetCDNAuthToken_Response::class.java
-        )
+        val response = message.body.build()
         result = message.result
         token = response.token
         expiration = Date(response.expirationTime * 1000L)
