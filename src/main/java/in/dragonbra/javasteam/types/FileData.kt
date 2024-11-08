@@ -1,6 +1,7 @@
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
+import java.io.File
 import java.util.EnumSet
 
 /**
@@ -52,8 +53,13 @@ class FileData {
         totalSize: Long,
         fileHash: ByteArray,
         linkTarget: String,
+        encrypted: Boolean,
     ) {
-        this.fileName = fileName
+        if (encrypted) {
+            this.fileName = fileName
+        } else {
+            this.fileName = fileName.replace('\\', File.separatorChar)
+        }
         this.fileNameHash = fileNameHash
         this.chunks = chunks
         this.flags = flags

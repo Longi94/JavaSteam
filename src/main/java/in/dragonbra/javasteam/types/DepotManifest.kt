@@ -282,7 +282,8 @@ class DepotManifest {
                 flags = fileMapping.flags,
                 totalSize = fileMapping.totalSize,
                 fileHash = fileMapping.hashContent,
-                linkTarget = ""
+                linkTarget = "",
+                encrypted = filenamesEncrypted
             )
 
             for (chunk in fileMapping.chunks) {
@@ -309,7 +310,8 @@ class DepotManifest {
                 flags = EDepotFileFlag.from(fileMapping.flags),
                 totalSize = fileMapping.size,
                 fileHash = fileMapping.shaContent.toByteArray(),
-                linkTarget = fileMapping.linktarget
+                linkTarget = fileMapping.linktarget,
+                encrypted = filenamesEncrypted
             )
 
             for (chunk in fileMapping.chunksList) {
