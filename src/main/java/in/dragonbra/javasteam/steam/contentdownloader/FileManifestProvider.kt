@@ -5,10 +5,11 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 import java.util.zip.CRC32
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -20,10 +21,26 @@ import java.util.zip.ZipOutputStream
  * @param file the file that will store the depot manifests
  *
  * @author Oxters
- * @since 2024-11-06
+ * @since 2024-11-07
  */
 @Suppress("unused")
-class FileManifestProvider(private val file: File) : IManifestProvider {
+class FileManifestProvider(private val file: Path) : IManifestProvider {
+
+    /**
+     * Instantiates a [FileManifestProvider] object.
+     * @param file the file that will store the depot manifests.
+     */
+    constructor(file: File) : this(file.toPath())
+
+    /**
+     * Instantiates a [FileManifestProvider] object.
+     * @param filename the filename that will store the depot manifests.
+     */
+    constructor(filename: String) : this(Path.of(filename))
+
+    init {
+        require(file.fileName.toString().isNotBlank()) { "FileName must not be blank" }
+    }
 
     companion object {
         private val logger: Logger = LogManager.getLogger(FileManifestProvider::class.java)
@@ -73,56 +90,80 @@ class FileManifestProvider(private val file: File) : IManifestProvider {
         }
     }
 
-    init {
-        try {
-            file.absoluteFile.parentFile?.mkdirs()
-            file.createNewFile()
-        } catch (e: IOException) {
-            logger.error(e)
-        }
-    }
-
-    override fun fetchManifest(depotID: Int, manifestID: Long): DepotManifest? = FileInputStream(file).use { fs ->
-        ZipInputStream(fs).use { zip ->
-            seekToEntry(zip, getEntryName(depotID, manifestID))?.let {
-                if (it.size > 0) {
-                    DepotManifest.deserialize(zip)
-                } else {
-                    null
+    override fun fetchManifest(depotID: Int, manifestID: Long): DepotManifest? = runCatching {
+        Files.newInputStream(file).use { fis ->
+            ZipInputStream(fis).use { zip ->
+                seekToEntry(zip, getEntryName(depotID, manifestID))?.let {
+                    if (it.size > 0) {
+                        DepotManifest.deserialize(zip)
+                    } else {
+                        null
+                    }
                 }
             }
         }
-    }
+    }.fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is NoSuchFileException -> logger.debug("File doesn't exist")
+                else -> logger.error("Unknown error occurred", error)
+            }
 
-    override fun fetchLatestManifest(depotID: Int): DepotManifest? = FileInputStream(file).use { fs ->
-        ZipInputStream(fs).use { zip ->
-            seekToEntry(zip, getLatestEntryName(depotID))?.let { idEntry ->
-                if (idEntry.size > 0) {
-                    ByteBuffer.wrap(zip.readNBytes(idEntry.size.toInt())).getLong()
-                } else {
-                    null
+            null
+        }
+    )
+
+    override fun fetchLatestManifest(depotID: Int): DepotManifest? = runCatching {
+        Files.newInputStream(file).use { fis ->
+            ZipInputStream(fis).use { zip ->
+                seekToEntry(zip, getLatestEntryName(depotID))?.let { idEntry ->
+                    if (idEntry.size > 0) {
+                        ByteBuffer.wrap(zip.readNBytes(idEntry.size.toInt())).getLong()
+                    } else {
+                        null
+                    }
                 }
             }
+        }?.let { manifestId ->
+            fetchManifest(depotID, manifestId)
         }
-    }?.let { manifestId ->
-        fetchManifest(depotID, manifestId)
-    }
+    }.fold(
+        onSuccess = { it },
+        onFailure = { error ->
+            when (error) {
+                is NoSuchFileException -> logger.debug("File doesn't exist")
+                else -> logger.error("Unknown error occurred", error)
+            }
+
+            null
+        }
+    )
 
     override fun setLatestManifestId(depotID: Int, manifestID: Long) {
         ByteArrayOutputStream().use { bs ->
             ZipOutputStream(bs).use { zip ->
-                FileInputStream(file).use { fs ->
-                    ZipInputStream(fs).use { zs ->
-                        copyZip(zs, zip, getLatestEntryName(depotID))
+                // copy old file only if it exists
+                if (Files.exists(file)) {
+                    Files.newInputStream(file).use { fis ->
+                        ZipInputStream(fis).use { zs ->
+                            copyZip(zs, zip, getLatestEntryName(depotID))
+                        }
                     }
                 }
+                // write manifest id as uncompressed data
                 ByteBuffer.allocate(Long.SIZE_BYTES).apply {
                     putLong(manifestID)
                     zipUncompressed(zip, getLatestEntryName(depotID), array())
                 }
             }
-            FileOutputStream(file).use { fs ->
-                fs.write(bs.toByteArray())
+            // save all data to the file
+            try {
+                Files.newOutputStream(file).use { fos ->
+                    fos.write(bs.toByteArray())
+                }
+            } catch (e: IOException) {
+                logger.error("Failed to write manifest ID to file ${file.fileName}", e)
             }
         }
     }
@@ -130,15 +171,24 @@ class FileManifestProvider(private val file: File) : IManifestProvider {
     override fun updateManifest(manifest: DepotManifest) {
         ByteArrayOutputStream().use { bs ->
             ZipOutputStream(bs).use { zip ->
-                FileInputStream(file).use { fs ->
-                    ZipInputStream(fs).use { zs ->
-                        copyZip(zs, zip, getEntryName(manifest.depotID, manifest.manifestGID))
+                // copy old file only if it exists
+                if (Files.exists(file)) {
+                    Files.newInputStream(file).use { fis ->
+                        ZipInputStream(fis).use { zs ->
+                            copyZip(zs, zip, getEntryName(manifest.depotID, manifest.manifestGID))
+                        }
                     }
                 }
+                // add manifest as uncompressed data
                 zipUncompressed(zip, getEntryName(manifest.depotID, manifest.manifestGID), manifest.toByteArray())
             }
-            FileOutputStream(file).use { fs ->
-                fs.write(bs.toByteArray())
+            // save all data to the file
+            try {
+                Files.newOutputStream(file).use { fos ->
+                    fos.write(bs.toByteArray())
+                }
+            } catch (e: IOException) {
+                logger.error("Failed to write manifest to file ${file.fileName}", e)
             }
         }
     }
