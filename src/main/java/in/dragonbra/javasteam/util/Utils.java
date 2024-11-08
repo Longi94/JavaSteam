@@ -1,10 +1,17 @@
 package in.dragonbra.javasteam.util;
 
 import in.dragonbra.javasteam.enums.EOSType;
+import in.dragonbra.javasteam.types.ChunkData;
 import org.apache.commons.lang3.SystemUtils;
 
-import java.util.LinkedHashMap;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -172,9 +179,67 @@ public class Utils {
      * @return long value of the CRC32
      */
     public static long crc32(String s) {
+        return crc32(s.getBytes());
+    }
+
+    /**
+     * Convenience method for calculating the CRC2 checksum of a byte array.
+     *
+     * @param bytes the byte array
+     * @return long value of the CRC32
+     */
+    public static long crc32(byte[] bytes) {
         Checksum checksum = new CRC32();
-        byte[] bytes = s.getBytes();
         checksum.update(bytes, 0, bytes.length);
         return checksum.getValue();
+    }
+
+    /**
+     * Performs an Adler32 on the given input
+     */
+    public static int adlerHash(byte[] input) {
+        int a = 0, b = 0;
+        for (byte value : input) {
+            // Use bitwise AND with 0xFF to treat byte as unsigned
+            a = (a + (value & 0xFF)) % 65521;
+            b = (b + a) % 65521;
+        }
+
+        return a | (b << 16);
+    }
+
+    /**
+     * Validate a file against Steam3 Chunk data
+     * @param fs FileInputStream to read from
+     * @param chunkData Array of ChunkData to validate against
+     * @return List of ChunkData that are needed
+     * @throws IOException If there's an error reading the file
+     * @throws ClosedChannelException If this channel is closed
+     * @throws IllegalArgumentException If the new position is negative
+     */
+    @SuppressWarnings("resource")
+    public static List<ChunkData> validateSteam3FileChecksums(RandomAccessFile fs, ChunkData[] chunkData) throws IOException {
+        List<ChunkData> neededChunks = new ArrayList<>();
+        int read;
+
+        for (ChunkData data : chunkData) {
+            byte[] chunk = new byte[data.getUncompressedLength()];
+            fs.getChannel().position(data.getOffset());
+            read = fs.read(chunk, 0, data.getUncompressedLength());
+
+            byte[] tempChunk;
+            if (read > 0 && read < data.getUncompressedLength()) {
+                tempChunk = Arrays.copyOf(chunk, read);
+            } else {
+                tempChunk = chunk;
+            }
+
+            int adler = adlerHash(tempChunk);
+            if (adler != data.getChecksum()) {
+                neededChunks.add(data);
+            }
+        }
+
+        return neededChunks;
     }
 }

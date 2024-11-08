@@ -7,7 +7,6 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.generated.MsgClientGetLegacyGameKey
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicket
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPassword
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetCDNAuthToken
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKey
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicense
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenRequest
@@ -15,7 +14,6 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverA
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.AppOwnershipTicketCallback
-import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.CDNAuthTokenCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.CheckAppBetaPasswordCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.DepotKeyCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.FreeLicenseCallback
@@ -226,32 +224,6 @@ class SteamApps : ClientMsgHandler() {
     }
 
     /**
-     * Request product information for an app or package
-     * Results are returned in a [CDNAuthTokenCallback] callback.
-     *
-     * @param app      App id requested.
-     * @param depot    Depot id requested.
-     * @param hostName CDN host name being requested.
-     * @return The Job ID of the request. This can be used to find the appropriate [CDNAuthTokenCallback].
-     */
-    fun getCDNAuthToken(app: Int, depot: Int, hostName: String): AsyncJobSingle<CDNAuthTokenCallback> {
-        val request = ClientMsgProtobuf<CMsgClientGetCDNAuthToken.Builder>(
-            CMsgClientGetCDNAuthToken::class.java,
-            EMsg.ClientGetCDNAuthToken
-        ).apply {
-            sourceJobID = client.getNextJobID()
-
-            body.appId = app
-            body.depotId = depot
-            body.hostName = hostName
-        }
-
-        client.send(request)
-
-        return AsyncJobSingle(client, request.sourceJobID)
-    }
-
-    /**
      * Request a free license for given appid, can be used for free on demand apps
      * Results are returned in a [FreeLicenseCallback] callback.
      *
@@ -350,7 +322,6 @@ class SteamApps : ClientMsgHandler() {
             EMsg.ClientPICSChangesSinceResponse -> PICSChangesCallback(packetMsg)
             EMsg.ClientPICSProductInfoResponse -> PICSProductInfoCallback(packetMsg)
             EMsg.ClientUpdateGuestPassesList -> GuestPassListCallback(packetMsg)
-            EMsg.ClientGetCDNAuthTokenResponse -> CDNAuthTokenCallback(packetMsg)
             EMsg.ClientCheckAppBetaPasswordResponse -> CheckAppBetaPasswordCallback(packetMsg)
             else -> null
         }
