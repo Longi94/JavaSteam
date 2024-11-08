@@ -27,6 +27,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
     }
 
     val cdnClient: Client = Client(steamClient)
+
     var proxyServer: Server? = null
         private set
 
@@ -52,7 +53,8 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         return@async try {
             steamClient.getHandler(SteamContent::class.java)?.getServersForSteamPipe(parentScope = parentScope)?.await()
         } catch (ex: Exception) {
-            logger.error("Failed to retrieve content server list: ${ex.message}")
+            logger.error("Failed to retrieve content server list", ex)
+
             null
         }
     }
@@ -63,6 +65,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         while (isActive) {
             populatePoolEvent.await(1, TimeUnit.SECONDS)
 
+            @Suppress("UsePropertyAccessSyntax")
             if (availableServerEndpoints.size < SERVER_ENDPOINT_MIN_SIZE && steamClient.isConnected) {
                 val servers = fetchBootstrapServerList().await()
 
@@ -90,7 +93,9 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
                 didPopulate = true
             } else if (availableServerEndpoints.isEmpty() && !steamClient.isConnected && didPopulate) {
                 logger.error("Available server endpoints is empty and steam is not connected, exiting connection pool monitor")
+
                 parentScope.cancel()
+
                 return@async
             }
         }
@@ -103,13 +108,15 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
             }
 
             var output: Server? = null
+
             while (isActive && availableServerEndpoints.poll().also { output = it } == null) {
                 delay(1000)
             }
+
             output
         } catch (e: Exception) {
-            logger.error("Failed to build connection: $e")
-            e.printStackTrace()
+            logger.error("Failed to build connection", e)
+
             null
         }
     }
@@ -119,8 +126,8 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
             val server = activeConnectionPool.poll() ?: buildConnection().await()
             server
         } catch (e: Exception) {
-            logger.error("Failed to get/build connection: $e")
-            e.printStackTrace()
+            logger.error("Failed to get/build connection", e)
+
             null
         }
     }
@@ -129,7 +136,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         server?.let { activeConnectionPool.push(it) }
     }
 
-    @Suppress("UNUSED_PARAMETER")
+    @Suppress("unused")
     internal fun returnBrokenConnection(server: Server?) {
         // Broken connections are not returned to the pool
     }

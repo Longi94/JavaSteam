@@ -12,8 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -183,6 +181,7 @@ public class Utils {
     public static long crc32(String s) {
         return crc32(s.getBytes());
     }
+
     /**
      * Convenience method for calculating the CRC2 checksum of a byte array.
      *
@@ -207,15 +206,6 @@ public class Utils {
         }
 
         return a | (b << 16);
-    }
-
-    /**
-     * @source <a href="https://stackoverflow.com/a/65113433">StackOverflow</a>
-     */
-    public static String encodeHexString(byte[] input) {
-        return IntStream.range(0, input.length)
-            .mapToObj(i -> String.format("%02X", input[i]))
-            .collect(Collectors.joining()).toLowerCase();
     }
 
     /**

@@ -8,9 +8,15 @@ import `in`.dragonbra.javasteam.steam.cdn.Server
  */
 object ContentServerDirectoryService {
 
-    internal fun convertServerList(response: CContentServerDirectory_GetServersForSteamPipe_Response): List<Server> = response.serversList.map { child ->
+    internal fun convertServerList(
+        response: CContentServerDirectory_GetServersForSteamPipe_Response,
+    ): List<Server> = response.serversList.map { child ->
         val httpsSupport = child.httpsSupport
-        val protocol = if (httpsSupport == "mandatory") Server.ConnectionProtocol.HTTPS else Server.ConnectionProtocol.HTTP
+        val protocol = if (httpsSupport == "mandatory") {
+            Server.ConnectionProtocol.HTTPS
+        } else {
+            Server.ConnectionProtocol.HTTP
+        }
 
         Server(
             protocol = protocol,

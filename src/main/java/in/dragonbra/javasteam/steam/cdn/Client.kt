@@ -5,7 +5,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
-import `in`.dragonbra.javasteam.util.Utils
+import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
@@ -121,7 +121,10 @@ class Client(steamClient: SteamClient) : Closeable {
             val response = httpClient.newCall(request).execute()
 
             if (!response.isSuccessful) {
-                throw SteamKitWebRequestException("Response status code does not indicate success: ${response.code} (${response.message})", response)
+                throw SteamKitWebRequestException(
+                    "Response status code does not indicate success: ${response.code} (${response.message})",
+                    response
+                )
             }
 
             val depotManifest = withTimeout(responseBodyTimeout) {
@@ -135,10 +138,13 @@ class Client(steamClient: SteamClient) : Closeable {
 
                 ByteArrayOutputStream().use { bs ->
                     val bytesRead = inputStream.copyTo(bs, contentLength ?: DEFAULT_BUFFER_SIZE)
+
                     if (bytesRead != contentLength?.toLong()) {
                         throw DataFormatException("Length mismatch after downloading depot manifest! (was $bytesRead, but should be $contentLength)")
                     }
+
                     val contentBytes = bs.toByteArray()
+
                     MemoryStream(contentBytes).use { ms ->
                         ZipInputStream(ms).use { zip ->
                             var entryCount = 0
@@ -150,6 +156,7 @@ class Client(steamClient: SteamClient) : Closeable {
                             }
                         }
                     }
+
                     // Decompress the zipped manifest data
                     MemoryStream(contentBytes).use { ms ->
                         ZipInputStream(ms).use { zip ->
@@ -209,7 +216,7 @@ class Client(steamClient: SteamClient) : Closeable {
             }
         }
 
-        val chunkID = Utils.encodeHexString(chunk.chunkID)
+        val chunkID = Strings.toHex(chunk.chunkID)
         val url = "depot/$depotId/chunk/$chunkID"
 
         val request = Request.Builder()
@@ -220,7 +227,10 @@ class Client(steamClient: SteamClient) : Closeable {
             httpClient.newCall(request).execute()
         }.use { response ->
             if (!response.isSuccessful) {
-                throw SteamKitWebRequestException("Response status code does not indicate success: ${response.code} (${response.message})", response)
+                throw SteamKitWebRequestException(
+                    "Response status code does not indicate success: ${response.code} (${response.message})",
+                    response
+                )
             }
 
             var contentLength = chunk.compressedLength
@@ -236,7 +246,10 @@ class Client(steamClient: SteamClient) : Closeable {
                 if (contentLength > 0) {
                     logger.debug("Response does not have Content-Length, falling back to chunk.compressedLength.")
                 } else {
-                    throw SteamKitWebRequestException("Response does not have Content-Length and chunk.compressedLength is not set.", response)
+                    throw SteamKitWebRequestException(
+                        "Response does not have Content-Length and chunk.compressedLength is not set.",
+                        response
+                    )
                 }
             }
 
@@ -272,7 +285,7 @@ class Client(steamClient: SteamClient) : Closeable {
                 // process the chunk immediately
                 return DepotChunk.process(chunk, buffer, destination, depotKey)
             } catch (ex: Exception) {
-                logger.error("Failed to download a depot chunk ${request.url}: ${ex.message}")
+                logger.error("Failed to download a depot chunk ${request.url}", ex)
                 throw ex
             }
         }

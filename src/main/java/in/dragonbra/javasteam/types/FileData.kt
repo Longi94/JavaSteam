@@ -67,6 +67,7 @@ class FileData {
         this.fileHash = fileHash
         this.linkTarget = linkTarget
     }
+
     constructor(fileData: FileData) {
         fileName = fileData.fileName
         fileNameHash = fileData.fileNameHash

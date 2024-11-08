@@ -8,7 +8,6 @@ import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file.Files
-import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import java.util.zip.CRC32
 import java.util.zip.ZipEntry
@@ -50,27 +49,34 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
 
         private fun seekToEntry(zipStream: ZipInputStream, entryName: String): ZipEntry? {
             var zipEntry: ZipEntry?
+
             do {
                 zipEntry = zipStream.nextEntry
                 if (zipEntry?.name.equals(entryName, true)) {
                     break
                 }
             } while (zipEntry != null)
+
             return zipEntry
         }
 
         private fun copyZip(from: ZipInputStream, to: ZipOutputStream, vararg excludeEntries: String) {
             var entry = from.nextEntry
+
             while (entry != null) {
                 if (!excludeEntries.contains(entry.name) && (entry.isDirectory || (!entry.isDirectory && entry.size > 0))) {
                     to.putNextEntry(entry)
+
                     if (!entry.isDirectory) {
                         val entryBytes = ByteArray(entry.size.toInt())
+
                         from.readNBytes(entryBytes, 0, entryBytes.size)
                         to.write(entryBytes)
                     }
+
                     to.closeEntry()
                 }
+
                 entry = from.nextEntry
             }
         }
@@ -84,6 +90,7 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
                 update(bytes)
                 value
             }
+
             zip.putNextEntry(entry)
             zip.write(bytes)
             zip.closeEntry()

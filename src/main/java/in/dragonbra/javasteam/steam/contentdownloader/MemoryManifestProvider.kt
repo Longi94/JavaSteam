@@ -11,9 +11,11 @@ class MemoryManifestProvider : IManifestProvider {
     private val depotManifests = mutableMapOf<Int, MutableMap<Long, DepotManifest>>()
     private val latestManifests = mutableMapOf<Int, Long>()
 
-    override fun fetchManifest(depotID: Int, manifestID: Long): DepotManifest? = depotManifests[depotID]?.get(manifestID)
+    override fun fetchManifest(depotID: Int, manifestID: Long): DepotManifest? =
+        depotManifests[depotID]?.get(manifestID)
 
-    override fun fetchLatestManifest(depotID: Int): DepotManifest? = latestManifests[depotID]?.let { fetchManifest(depotID, it) }
+    override fun fetchLatestManifest(depotID: Int): DepotManifest? =
+        latestManifests[depotID]?.let { fetchManifest(depotID, it) }
 
     override fun setLatestManifestId(depotID: Int, manifestID: Long) {
         latestManifests[depotID] = manifestID

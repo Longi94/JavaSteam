@@ -37,6 +37,7 @@ class DepotManifest {
         const val PROTOBUF_METADATA_MAGIC = 0x1F4812BE
         const val PROTOBUF_SIGNATURE_MAGIC = 0x1B81B817
         const val PROTOBUF_ENDOFMANIFEST_MAGIC = 0x32C415AB
+
         private val logger: Logger = LogManager.getLogger(DepotManifest::class.java)
 
         /**
@@ -136,6 +137,7 @@ class DepotManifest {
         totalCompressedSize = 0
         encryptedCRC = 0
     }
+
     constructor(manifest: DepotManifest) {
         files = manifest.files.map { FileData(it) }.toMutableList()
         filenamesEncrypted = manifest.filenamesEncrypted
@@ -191,9 +193,11 @@ class DepotManifest {
                 }
 
                 // Trim the ending null byte, safe for UTF-8
-                val filenameLength = bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
+                val filenameLength =
+                    bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
 
-                file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8).replace('\\', File.separatorChar)
+                file.fileName =
+                    String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8).replace('\\', File.separatorChar)
             }
         } catch (e: Exception) {
             logger.error("Failed to decrypt filenames: $e")
@@ -242,30 +246,35 @@ class DepotManifest {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
                         }
                     }
+
                     PROTOBUF_PAYLOAD_MAGIC -> {
                         val payloadLength = br.readInt()
                         payload = ContentManifestPayload.parseFrom(stream.readNBytes(payloadLength))
                     }
+
                     PROTOBUF_METADATA_MAGIC -> {
                         val metadataLength = br.readInt()
                         metadata = ContentManifestMetadata.parseFrom(stream.readNBytes(metadataLength))
                     }
+
                     PROTOBUF_SIGNATURE_MAGIC -> {
                         val signatureLength = br.readInt()
                         signature = ContentManifestSignature.parseFrom(stream.readNBytes(signatureLength))
                     }
+
                     else -> throw NoSuchElementException("Unrecognized magic value ${magic.toHexString(HexFormat.Default)} in depot manifest.")
                 }
             }
         }
 
         if (payload != null && metadata != null && signature != null) {
-            parseProtobufManifestMetadata(metadata!!)
-            parseProtobufManifestPayload(payload!!)
+            parseProtobufManifestMetadata(metadata)
+            parseProtobufManifestPayload(payload)
         } else {
             throw NoSuchElementException("Missing ContentManifest sections required for parsing depot manifest")
         }
     }
+
     internal fun parseBinaryManifest(manifest: Steam3Manifest) {
         files.clear()
         filenamesEncrypted = manifest.areFileNamesEncrypted
@@ -297,9 +306,11 @@ class DepotManifest {
                     )
                 )
             }
+
             files.add(fileData)
         }
     }
+
     internal fun parseProtobufManifestPayload(payload: ContentManifestPayload) {
         files.clear()
 
@@ -325,9 +336,11 @@ class DepotManifest {
                     )
                 )
             }
+
             files.add(fileData)
         }
     }
+
     internal fun parseProtobufManifestMetadata(metadata: ContentManifestMetadata) {
         filenamesEncrypted = metadata.filenamesEncrypted
         depotID = metadata.depotId
@@ -360,6 +373,7 @@ class DepotManifest {
             val protoFile = ContentManifestPayload.FileMapping.newBuilder()
             protoFile.setSize(file.totalSize)
             protoFile.setFlags(EDepotFileFlag.code(file.flags))
+
             if (filenamesEncrypted) {
                 // Assume the name is unmodified
                 protoFile.setFilename(file.fileName)
@@ -377,7 +391,9 @@ class DepotManifest {
                     )
                 )
             }
+
             protoFile.setShaContent(ByteString.copyFrom(file.fileHash))
+
             if (file.linkTarget.isNotBlank()) {
                 protoFile.linktarget = file.linkTarget
             }
@@ -410,8 +426,10 @@ class DepotManifest {
         val payloadData = payload.build().toByteArray()
         val len = payloadData.size
         val data = ByteArray(Int.SIZE_BYTES + len)
+
         System.arraycopy(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(len).array(), 0, data, 0, 4)
         System.arraycopy(payloadData, 0, data, 4, len)
+
         val crc32 = Utils.crc32(payloadData).toInt()
 
         if (filenamesEncrypted) {
@@ -443,6 +461,7 @@ class DepotManifest {
                 // Write EOF marker
                 writer.writeInt(PROTOBUF_ENDOFMANIFEST_MAGIC)
             }
+
             bw.toByteArray()
         }
     }

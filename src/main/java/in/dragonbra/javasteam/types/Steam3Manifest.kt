@@ -46,7 +46,6 @@ class Steam3Manifest(
             val decompressedSize: Int,
             val compressedSize: Int,
         ) {
-
             companion object {
                 internal fun deserialize(ds: BinaryReader): Chunk = Chunk(
                     chunkGID = ds.readNBytes(20),
@@ -66,6 +65,7 @@ class Steam3Manifest(
                 val hashContent = ds.readNBytes(20)
                 val hashFileName = ds.readNBytes(20)
                 val numChunks = ds.readInt()
+
                 return FileMapping(
                     fileName = fileName,
                     totalSize = totalSize,
@@ -101,11 +101,13 @@ class Steam3Manifest(
 
             val fileMapping = mutableListOf<FileMapping>()
             var size = fileMappingSize
+
             while (size > 0) {
                 val start = ds.position
                 fileMapping.add(FileMapping.deserialize(ds))
                 size -= ds.position - start
             }
+
             return Steam3Manifest(
                 version = version,
                 depotID = depotID,

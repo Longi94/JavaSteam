@@ -1,6 +1,7 @@
 package `in`.dragonbra.javasteam.steam.cdn
 
 import `in`.dragonbra.javasteam.types.ChunkData
+import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.VZipUtil
 import `in`.dragonbra.javasteam.util.ZipUtil
@@ -35,14 +36,17 @@ object DepotChunk {
         require(destination.size >= info.uncompressedLength) {
             "The destination buffer must be longer than the chunk ${ChunkData::uncompressedLength.name}."
         }
+
         require(depotKey.size == 32) { "Tried to decrypt depot chunk with non 32 byte key!" }
 
         // first 16 bytes of input is the ECB encrypted IV
         val keySpec = SecretKeySpec(depotKey, "AES")
         val ecbCipher = Cipher.getInstance("AES/ECB/NoPadding", CryptoHelper.SEC_PROV)
         ecbCipher.init(Cipher.DECRYPT_MODE, keySpec)
+
         val iv = ByteArray(16)
         val ivBytesRead = ecbCipher.doFinal(data, 0, iv.size, iv)
+
         require(iv.size == ivBytesRead) { "Failed to decrypt depot chunk iv (${iv.size} != $ivBytesRead)" }
 
         // With CBC and padding, the decrypted size will always be smaller
@@ -65,7 +69,7 @@ object DepotChunk {
                 }
             }
         } catch (e: Exception) {
-            throw IOException("Failed to decompress chunk ${Utils.encodeHexString(info.chunkID)}: $e\n${e.stackTraceToString()}")
+            throw IOException("Failed to decompress chunk ${Strings.toHex(info.chunkID)}: $e\n${e.stackTraceToString()}")
         }
 
         if (info.uncompressedLength != writtenDecompressed) {

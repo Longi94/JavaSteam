@@ -43,6 +43,7 @@ class ChunkData {
         this.compressedLength = compressedLength
         this.uncompressedLength = uncompressedLength
     }
+
     constructor(chunkData: ChunkData) {
         chunkID = chunkData.chunkID
         checksum = chunkData.checksum

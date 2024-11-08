@@ -27,6 +27,7 @@ object VZipUtil {
             if (reader.readShort() != VZIP_HEADER) {
                 throw IllegalArgumentException("Expecting VZipHeader at start of stream")
             }
+
             if (reader.readChar() != VERSION) {
                 throw IllegalArgumentException("Expecting VZip version 'a'")
             }
@@ -43,6 +44,7 @@ object VZipUtil {
 
             // jump to the end of the buffer to read the footer
             ms.seek((-FOOTER_LENGTH).toLong(), SeekOrigin.END)
+
             val outputCrc = reader.readInt()
             val sizeDecompressed = reader.readInt()
 
@@ -60,7 +62,13 @@ object VZipUtil {
             // If the value of dictionary size in properties is smaller than (1 << 12),
             // the LZMA decoder must set the dictionary size variable to (1 << 12).
             val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
-            val bytesRead = LZMAInputStream(ms, sizeDecompressed.toLong(), propertyBits, dictionarySize, windowBuffer).use { lzmaInput ->
+            val bytesRead = LZMAInputStream(
+                ms,
+                sizeDecompressed.toLong(),
+                propertyBits,
+                dictionarySize,
+                windowBuffer
+            ).use { lzmaInput ->
                 lzmaInput.readNBytes(destination, 0, sizeDecompressed)
             }
 

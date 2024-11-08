@@ -7,7 +7,8 @@ object ZipUtil {
 
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         ZipInputStream(ms, Charsets.UTF_8).use { zip ->
-            val entry = zip.nextEntry ?: throw IllegalArgumentException("Did not find any zip entries in the given stream")
+            val entry =
+                zip.nextEntry ?: throw IllegalArgumentException("Did not find any zip entries in the given stream")
 
             val sizeDecompressed = entry.size.toInt()
 
