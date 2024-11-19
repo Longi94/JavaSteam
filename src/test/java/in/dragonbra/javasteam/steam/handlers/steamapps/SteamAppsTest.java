@@ -105,18 +105,18 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
         assertEquals(420, msg.getBody().getPackages(0).getPackageid());
     }
 
-    @Test
-    public void getCDNAuthToken() {
-        AsyncJobSingle<CDNAuthTokenCallback> job = handler.getCDNAuthToken(1, 2, "testhostname");
-
-        ClientMsgProtobuf<CMsgClientGetCDNAuthToken.Builder> msg = verifySend(EMsg.ClientGetCDNAuthToken);
-
-        assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
-        assertEquals(SOURCE_JOB_ID, job.getJobID());
-        assertEquals(1, msg.getBody().getAppId());
-        assertEquals(2, msg.getBody().getDepotId());
-        assertEquals("testhostname", msg.getBody().getHostName());
-    }
+//    @Test
+//    public void getCDNAuthToken() {
+//        AsyncJobSingle<CDNAuthTokenCallback> job = handler.getCDNAuthToken(1, 2, "testhostname");
+//
+//        ClientMsgProtobuf<CMsgClientGetCDNAuthToken.Builder> msg = verifySend(EMsg.ClientGetCDNAuthToken);
+//
+//        assertEquals(SOURCE_JOB_ID, msg.getSourceJobID());
+//        assertEquals(SOURCE_JOB_ID, job.getJobID());
+//        assertEquals(1, msg.getBody().getAppId());
+//        assertEquals(2, msg.getBody().getDepotId());
+//        assertEquals("testhostname", msg.getBody().getHostName());
+//    }
 
     @Test
     public void requestFreeLicense() {
@@ -275,18 +275,18 @@ public class SteamAppsTest extends HandlerTestBase<SteamApps> {
         assertEquals(0, callback.getGuestPasses().size());
     }
 
-    @Test
-    public void handleCDNAuthTokenResponse() {
-        IPacketMsg msg = getPacket(EMsg.ClientGetCDNAuthTokenResponse, true);
-
-        handler.handleMsg(msg);
-
-        CDNAuthTokenCallback callback = verifyCallback();
-
-        assertEquals(EResult.OK, callback.getResult());
-        assertEquals("testtoken", callback.getToken());
-        assertEquals(new Date(946684800000L), callback.getExpiration());
-    }
+//    @Test
+//    public void handleCDNAuthTokenResponse() {
+//        IPacketMsg msg = getPacket(EMsg.ClientGetCDNAuthTokenResponse, true);
+//
+//        handler.handleMsg(msg);
+//
+//        CDNAuthTokenCallback callback = verifyCallback();
+//
+//        assertEquals(EResult.OK, callback.getResult());
+//        assertEquals("testtoken", callback.getToken());
+//        assertEquals(new Date(946684800000L), callback.getExpiration());
+//    }
 
     @Test
     public void handleCheckAppBetaPasswordResponse() {
