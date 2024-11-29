@@ -18,6 +18,11 @@ import kotlinx.coroutines.async
  * This handler is used for interacting with content server directory on the Steam network.
  */
 class SteamContent : ClientMsgHandler() {
+    private val contentService: ContentServerDirectory by lazy {
+        val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)
+            ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
+        unifiedMessages.createService<ContentServerDirectory>()
+    }
 
     /**
      * Load a list of servers from the Content Server Directory Service.
@@ -37,8 +42,6 @@ class SteamContent : ClientMsgHandler() {
             maxNumServers?.let { this.maxServers = it }
         }.build()
 
-        val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
-        val contentService = unifiedMessages.createService<ContentServerDirectory>()
         val message = contentService.getServersForSteamPipe(request).toDeferred().await()
         val response = message.body.build()
 
@@ -83,8 +86,6 @@ class SteamContent : ClientMsgHandler() {
             localBranchPasswordHash?.let { this.branchPasswordHash = it }
         }.build()
 
-        val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
-        val contentService = unifiedMessages.createService<ContentServerDirectory>()
         val message = contentService.getManifestRequestCode(request).toDeferred().await()
         val response = message.body.build()
 
@@ -112,8 +113,6 @@ class SteamContent : ClientMsgHandler() {
             this.hostName = hostName
         }.build()
 
-        val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)!!
-        val contentService = unifiedMessages.createService<ContentServerDirectory>()
         val message = contentService.getCDNAuthToken(request).toDeferred().await()
 
         return@async AuthToken(message)
