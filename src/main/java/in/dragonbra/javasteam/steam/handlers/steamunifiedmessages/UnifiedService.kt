@@ -1,13 +1,15 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages
 
+import com.google.protobuf.AbstractMessage
+import com.google.protobuf.GeneratedMessage
 import `in`.dragonbra.javasteam.base.PacketClientMsgProtobuf
 
 /**
  * @author Lossy
  * @since 2024-10-22
  *
- * Abstract definition of a steam unified messages service.
- * @constructor unifiedMessages A reference to the [SteamUnifiedMessages] instance this service was created from.
+ * @constructor Abstract definition of a steam unified messages service.
+ * @property unifiedMessages A reference to the [SteamUnifiedMessages] instance this service was created from.
  */
 @Suppress("unused")
 abstract class UnifiedService(val unifiedMessages: SteamUnifiedMessages? = null) {
@@ -25,6 +27,32 @@ abstract class UnifiedService(val unifiedMessages: SteamUnifiedMessages? = null)
      * @param packetMsg The packet message that contains the data.
      */
     abstract fun handleNotificationMsg(methodName: String, packetMsg: PacketClientMsgProtobuf)
+
+    /**
+     * Dispatches the provided data as a service method response.
+     * @param TResponse The type of the response.
+     * @param serviceClass The proto class of the response
+     * @param packetMsg The packet message that contains the data.
+     */
+    protected fun <TResponse : GeneratedMessage.Builder<TResponse>> postResponseMsg(
+        serviceClass: Class<out AbstractMessage>,
+        packetMsg: PacketClientMsgProtobuf,
+    ) {
+        unifiedMessages?.handleResponseMsg(serviceClass, packetMsg)
+    }
+
+    /**
+     * Dispatches the provided data as a service method notification.
+     * @param TNotification The type of the notification.
+     * @param serviceClass The proto class of the notification
+     * @param packetMsg The packet message that contains the data.
+     */
+    protected fun <TNotification : GeneratedMessage.Builder<TNotification>> postNotificationMsg(
+        serviceClass: Class<out AbstractMessage>,
+        packetMsg: PacketClientMsgProtobuf,
+    ) {
+        unifiedMessages?.handleNotificationMsg(serviceClass, packetMsg)
+    }
 
     /**
      * The name of the steam unified messages service.
