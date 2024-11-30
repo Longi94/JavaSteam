@@ -36,6 +36,7 @@ public class SampleDownloadApp implements Runnable {
 
     private final int ROCKY_MAYHEM_APP_ID = 1303350;
     private final int ROCKY_MAYHEM_DEPOT_ID = 1303351;
+    private final long ROCKY_MAYHEM_MANIFEST_ID = 6150762840934915019L;
 
     private SteamClient steamClient;
 
@@ -179,6 +180,8 @@ public class SampleDownloadApp implements Runnable {
         contentDownloader.downloadApp(
                 ROCKY_MAYHEM_APP_ID,
                 ROCKY_MAYHEM_DEPOT_ID,
+                ROCKY_MAYHEM_MANIFEST_ID,
+                "Rocky Mayhem",
                 "steamapps/",
                 "steamapps/staging/",
                 "public",

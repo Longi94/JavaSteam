@@ -4,16 +4,12 @@ import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.steam.cdn.ClientPool
 import `in`.dragonbra.javasteam.steam.cdn.Server
-import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo
-import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSRequest
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
-import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSProductInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.types.FileData
-import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Utils
@@ -68,70 +64,14 @@ class ContentDownloader(val steamClient: SteamClient) {
         return@async Pair(callback?.result ?: EResult.Fail, callback?.depotKey)
     }
 
-    private fun getDepotManifestId(
-        app: PICSProductInfo,
-        depotId: Int,
-        branchId: String,
-        parentScope: CoroutineScope,
-    ): Deferred<Pair<Int, Long>> = parentScope.async {
-        val depot = app.keyValues["depots"][depotId.toString()]
-        if (depot == KeyValue.INVALID) {
-            logger.error("Could not find depot $depotId of ${app.id}")
-            return@async Pair(app.id, INVALID_MANIFEST_ID)
-        }
-
-        val manifest = depot["manifests"][branchId]
-        if (manifest != KeyValue.INVALID) {
-            return@async Pair(app.id, manifest["gid"].asLong())
-        }
-
-        val depotFromApp = depot["depotfromapp"].asInteger(INVALID_APP_ID)
-        if (depotFromApp == app.id || depotFromApp == INVALID_APP_ID) {
-            logger.error("Failed to find manifest of app ${app.id} within depot $depotId on branch $branchId")
-            return@async Pair(app.id, INVALID_MANIFEST_ID)
-        }
-
-        val innerApp = getAppInfo(depotFromApp, parentScope).await()
-        if (innerApp == null) {
-            logger.error("Failed to find manifest of app ${app.id} within depot $depotId on branch $branchId")
-            return@async Pair(app.id, INVALID_MANIFEST_ID)
-        }
-
-        return@async getDepotManifestId(innerApp, depotId, branchId, parentScope).await()
-    }
-
-    private fun getAppDirName(app: PICSProductInfo): String {
-        val installDirKeyValue = app.keyValues["config"]["installdir"]
-
-        return if (installDirKeyValue != KeyValue.INVALID) installDirKeyValue.value else app.id.toString()
-    }
-
-    private fun getAppInfo(
-        appId: Int,
-        parentScope: CoroutineScope,
-    ): Deferred<PICSProductInfo?> = parentScope.async {
-        val steamApps = steamClient.getHandler(SteamApps::class.java)
-        val callback = steamApps?.picsGetProductInfo(PICSRequest(appId))?.toDeferred()?.await()
-        val apps = callback?.results?.flatMap { (it as PICSProductInfoCallback).apps.values }
-
-        if (apps.isNullOrEmpty()) {
-            logger.error("Received empty apps list in PICSProductInfo response for $appId")
-            return@async null
-        }
-
-        if (apps.size > 1) {
-            logger.debug("Received ${apps.size} apps from PICSProductInfo for $appId, using first result")
-        }
-
-        return@async apps.first()
-    }
-
     /**
      * Kotlin coroutines version
      */
     fun downloadApp(
         appId: Int,
         depotId: Int,
+        manifestId: Long,
+        appName: String,
         installPath: String,
         stagingPath: String,
         branch: String = "public",
@@ -142,6 +82,8 @@ class ContentDownloader(val steamClient: SteamClient) {
         downloadAppInternal(
             appId = appId,
             depotId = depotId,
+            manifestId = manifestId,
+            appName = appName,
             installPath = installPath,
             stagingPath = stagingPath,
             branch = branch,
@@ -158,6 +100,8 @@ class ContentDownloader(val steamClient: SteamClient) {
     fun downloadApp(
         appId: Int,
         depotId: Int,
+        manifestId: Long,
+        appName: String,
         installPath: String,
         stagingPath: String,
         branch: String = "public",
@@ -167,6 +111,8 @@ class ContentDownloader(val steamClient: SteamClient) {
         downloadAppInternal(
             appId = appId,
             depotId = depotId,
+            manifestId = manifestId,
+            appName = appName,
             installPath = installPath,
             stagingPath = stagingPath,
             branch = branch,
@@ -179,6 +125,8 @@ class ContentDownloader(val steamClient: SteamClient) {
     private suspend fun downloadAppInternal(
         appId: Int,
         depotId: Int,
+        manifestId: Long,
+        appName: String,
         installPath: String,
         stagingPath: String,
         branch: String = "public",
@@ -193,21 +141,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
         val cdnPool = ClientPool(steamClient, appId, scope)
 
-        val shiftedAppId: Int
-        val manifestId: Long
-        val appInfo = getAppInfo(appId, scope).await()
-
-        if (appInfo == null) {
-            logger.error("Could not retrieve PICSProductInfo of $appId")
-            return false
-        }
-
-        getDepotManifestId(appInfo, depotId, branch, scope).await().apply {
-            shiftedAppId = first
-            manifestId = second
-        }
-
-        val depotKeyResult = requestDepotKey(shiftedAppId, depotId, scope).await()
+        val depotKeyResult = requestDepotKey(appId, depotId, scope).await()
 
         if (depotKeyResult.first != EResult.OK || depotKeyResult.second == null) {
             logger.error("Depot key request for $appId failed with result ${depotKeyResult.first}")
@@ -229,13 +163,13 @@ class ContentDownloader(val steamClient: SteamClient) {
         try {
             if (newProtoManifest == null) {
                 newProtoManifest =
-                    downloadFilesManifestOf(shiftedAppId, depotId, manifestId, branch, depotKey, cdnPool, scope).await()
+                    downloadFilesManifestOf(appId, depotId, manifestId, branch, depotKey, cdnPool, scope).await()
             } else {
                 logger.debug("Already have manifest $manifestId for depot $depotId.")
             }
 
             if (newProtoManifest == null) {
-                logger.error("Failed to retrieve files manifest for app: $shiftedAppId depot: $depotId manifest: $manifestId branch: $branch")
+                logger.error("Failed to retrieve files manifest for app: $appId depot: $depotId manifest: $manifestId branch: $branch")
                 return false
             }
 
@@ -244,10 +178,10 @@ class ContentDownloader(val steamClient: SteamClient) {
             }
 
             val downloadCounter = GlobalDownloadCounter()
-            val installDir = Paths.get(installPath, getAppDirName(appInfo)).toString()
-            val stagingDir = Paths.get(stagingPath, getAppDirName(appInfo)).toString()
+            val installDir = Paths.get(installPath, appName).toString()
+            val stagingDir = Paths.get(stagingPath, appName).toString()
             val depotFileData = DepotFilesData(
-                depotDownloadInfo = DepotDownloadInfo(depotId, shiftedAppId, manifestId, branch, installDir, depotKey),
+                depotDownloadInfo = DepotDownloadInfo(depotId, appId, manifestId, branch, installDir, depotKey),
                 depotCounter = DepotDownloadCounter(
                     completeDownloadSize = newProtoManifest.totalUncompressedSize
                 ),
@@ -276,7 +210,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
             return false
         } catch (e: Exception) {
-            logger.error("Error occurred while downloading app $shiftedAppId", e)
+            logger.error("Error occurred while downloading app $appId", e)
 
             return false
         }
