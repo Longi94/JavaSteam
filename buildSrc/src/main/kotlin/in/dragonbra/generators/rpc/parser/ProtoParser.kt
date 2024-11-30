@@ -133,7 +133,7 @@ class ProtoParser(private val outputDir: File) {
                     method.responseType
                 )
                 responseBlock.addStatement(
-                    "\"${method.methodName}\" -> unifiedMessages!!.handleResponseMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
+                    "\"${method.methodName}\" -> postResponseMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
                     className,
                     className
                 )
@@ -145,7 +145,7 @@ class ProtoParser(private val outputDir: File) {
                     method.requestType
                 )
                 notificationBlock.addStatement(
-                    "\"${method.methodName}\" -> unifiedMessages!!.handleNotificationMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
+                    "\"${method.methodName}\" -> postNotificationMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
                     className,
                     className
                 )
