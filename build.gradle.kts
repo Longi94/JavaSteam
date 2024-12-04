@@ -25,29 +25,6 @@ repositories {
     mavenCentral()
 }
 
-// TODO remove (all this) once kotlinter supports ktlint 1.3.2+ once that's released.
-buildscript {
-    configurations.classpath {
-        resolutionStrategy {
-            repositories {
-                maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots") }
-            }
-            force(
-                "com.pinterest.ktlint:ktlint-cli-reporter-checkstyle:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-cli-reporter-core:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-cli-reporter-html:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-cli-reporter-json:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-cli-reporter-plain:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-cli-reporter-sarif:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-rule-engine-core:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-rule-engine:1.4.0-SNAPSHOT",
-                "com.pinterest.ktlint:ktlint-ruleset-standard:1.4.0-SNAPSHOT"
-            )
-        }
-    }
-}
-// end to-do
-
 java {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
