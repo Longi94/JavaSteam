@@ -8,7 +8,7 @@
 java = "11"
 kotlin = "2.0.20" # https://kotlinlang.org/docs/releases.html#release-details
 dokka = "1.9.20" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
-kotlinter = "4.4.1" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
+kotlinter = "4.5.0" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 
 # Standard Library versions
 bouncyCastle = "1.78.1" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
