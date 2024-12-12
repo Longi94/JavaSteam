@@ -6,10 +6,9 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile
+import `in`.dragonbra.javasteam.steam.cloud.SteamCloudService
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
-import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback
-import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback
-import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.*
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.UGCHandle
@@ -18,6 +17,11 @@ import `in`.dragonbra.javasteam.types.UGCHandle
  * This handler is used for interacting with remote storage and user generated content.
  */
 class SteamCloud : ClientMsgHandler() {
+
+    /**
+     * Handler used for managing user cloud data on Steam.
+     */
+    val cloudService: SteamCloudService by lazy { SteamCloudService(client) }
 
     /**
      * Requests details for a specific item of user generated content from the Steam servers.
