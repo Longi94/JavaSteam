@@ -5,9 +5,9 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamcli
 import java.util.Date
 
 class AppFileInfo(response: CCloud_AppFileInfo) {
-    val fileName: String = response.fileName
+    val filename: String = response.fileName
     val shaFile: ByteArray = response.shaFile.toByteArray()
-    val timeStamp: Date = Date(response.timeStamp * 1000L)
+    val timestamp: Date = Date(response.timeStamp * 1000L)
     val rawFileSize: Int = response.rawFileSize
     val persistState: ECloudStoragePersistState = response.persistState
     val platformsToSync: Int = response.platformsToSync
