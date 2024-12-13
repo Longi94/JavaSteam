@@ -1,4 +1,4 @@
-package `in`.dragonbra.javasteam.steam.cloud
+package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetAppFileChangelist_Response
 

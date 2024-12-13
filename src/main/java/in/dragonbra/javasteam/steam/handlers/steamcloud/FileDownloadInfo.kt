@@ -1,14 +1,9 @@
-package `in`.dragonbra.javasteam.steam.cloud
+package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientFileDownload_Response
 import java.util.Date
 
 class FileDownloadInfo(response: CCloud_ClientFileDownload_Response.Builder) {
-    data class HttpHeaders(
-        val name: String,
-        val value: String
-    )
-
     val appID: Int = response.appid
     val fileSize: Int = response.fileSize
     val rawFileSize: Int = response.rawFileSize

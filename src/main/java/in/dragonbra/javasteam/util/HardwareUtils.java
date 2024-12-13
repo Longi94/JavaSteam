@@ -3,6 +3,7 @@ package in.dragonbra.javasteam.util;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.util.Scanner;
 
 /**
@@ -14,6 +15,7 @@ public class HardwareUtils {
     // Everything taken from here
     // https://stackoverflow.com/questions/1986732/how-to-get-a-unique-computer-identifier-in-java-like-disk-id-or-motherboard-id
     private static String SERIAL_NUMBER;
+    private static String MACHINE_NAME;
 
     public static byte[] getMachineID() {
         // the aug 25th 2015 CM update made well-formed machine MessageObjects required for logon
@@ -183,5 +185,58 @@ public class HardwareUtils {
         }
 
         return sn;
+    }
+
+    // this part is written by Claude 3.5 Sonnet with some minor modifications
+    public static String getMachineName() {
+        if (MACHINE_NAME != null) {
+            return MACHINE_NAME;
+        }
+
+        if (SystemUtils.IS_OS_ANDROID) {
+            MACHINE_NAME = getAndroidDeviceName();
+        } else {
+            MACHINE_NAME = getDeviceName();
+        }
+
+        if (MACHINE_NAME == null || MACHINE_NAME.isEmpty()) {
+            MACHINE_NAME = "Unknown";
+        }
+
+        return MACHINE_NAME;
+    }
+
+    private static String getDeviceName() {
+        try {
+            Process process = Runtime.getRuntime().exec("hostname");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                return reader.readLine().trim();
+            }
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    private static String getAndroidDeviceName() {
+        String manufacturer = getAndroidSystemProperty("ro.product.manufacturer");
+        String model = getAndroidSystemProperty("ro.product.model");
+
+        if (manufacturer == null || model == null) {
+            return "Android Device";
+        }
+
+        if (model.startsWith(manufacturer)) {
+            return model;
+        }
+        return manufacturer + " " + model;
+    }
+
+    private static String getAndroidSystemProperty(String key) {
+        try {
+            Class<?> systemProperties = Class.forName("android.os.SystemProperties");
+            Method get = systemProperties.getMethod("get", String.class);
+            return (String) get.invoke(null, key);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
