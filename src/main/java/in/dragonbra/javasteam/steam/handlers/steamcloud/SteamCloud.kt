@@ -7,6 +7,7 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.ESteamRealm
+import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.EBluetoothDeviceType
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile
@@ -266,8 +267,8 @@ class SteamCloud : ClientMsgHandler() {
      * Tells Steam that the app upload batch has completed and waits for an empty response acknowledging
      * the notification
      *
-     * @param appId   The ID of the app the upload batch belonged to
-     * @param batchId The ID of the batch
+     * @param appId        The ID of the app the upload batch belonged to
+     * @param batchId      The ID of the batch
      * @param batchEResult The result of the upload batch
      */
     // JavaSteam Addition
@@ -294,7 +295,6 @@ class SteamCloud : ClientMsgHandler() {
      * @param clientId    The ID given when authenticating the user [AuthSession.clientID]
      * @param machineName The name of the machine that is launching the app
      * @param osType      The OS type of the machine launching the app
-     * @param deviceType  The device type of the machine launching the app
      * @return A list of the pending remote operations, empty if none
      */
     // JavaSteam Addition
@@ -305,7 +305,8 @@ class SteamCloud : ClientMsgHandler() {
         machineName: String = HardwareUtils.getMachineName(),
         ignorePendingOperations: Boolean? = null,
         osType: EOSType,
-        deviceType: Int,
+        // I doubt this is EBluetoothDeviceType, but it's the only enum I can find that has to do with device type
+        deviceType: EBluetoothDeviceType = EBluetoothDeviceType.k_BluetoothDeviceType_Unknown,
     ): List<PendingRemoteOperation> {
         val request = CCloud_AppLaunchIntent_Request.newBuilder().apply {
             this.appid = appId
@@ -313,7 +314,7 @@ class SteamCloud : ClientMsgHandler() {
             this.machineName = machineName
             ignorePendingOperations?.let { this.ignorePendingOperations = it }
             this.osType = osType.code()
-            this.deviceType = deviceType
+            this.deviceType = deviceType.number
         }
 
         val response = cloudService.signalAppLaunchIntent(request.build()).runBlock()
@@ -324,8 +325,8 @@ class SteamCloud : ClientMsgHandler() {
     /**
      * Notifies Steam that the sync process has finished
      *
-     * @param appId            The ID of the app who finished syncing
-     * @param clientId         The ID given when authenticating the user [AuthSession.clientID]
+     * @param appId    The ID of the app who finished syncing
+     * @param clientId The ID given when authenticating the user [AuthSession.clientID]
      */
     // JavaSteam Addition
     fun signalAppExitSyncDone(
@@ -347,16 +348,16 @@ class SteamCloud : ClientMsgHandler() {
     /**
      * Notifies Steam of the metrics for a past transfer of a specific cloud user file
      *
-     * @param host The URL host of the URL the file was transferred through
-     * @param path The URL path of the URL the file was transferred through
-     * @param isUpload Whether the transfer was an upload or a download
-     * @param success Whether the transfer was successful
+     * @param host           The URL host of the URL the file was transferred through
+     * @param path           The URL path of the URL the file was transferred through
+     * @param isUpload       Whether the transfer was an upload or a download
+     * @param success        Whether the transfer was successful
      * @param httpStatusCode The HTTP status code of the transfer
-     * @param bytesExpected The expected size in bytes of the file
-     * @param bytesActual The actual size in bytes of the file
-     * @param durationMs The duration of the transfer in milliseconds
-     * @param cellId The cell ID
-     * @param proxied Whether the transfer was through a proxy
+     * @param bytesExpected  The expected size in bytes of the file
+     * @param bytesActual    The actual size in bytes of the file
+     * @param durationMs     The duration of the transfer in milliseconds
+     * @param cellId         The cell ID
+     * @param proxied        Whether the transfer was through a proxy
      */
     // JavaSteam Addition
     @JvmOverloads
