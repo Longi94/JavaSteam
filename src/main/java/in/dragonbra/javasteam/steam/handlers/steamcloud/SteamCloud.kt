@@ -21,7 +21,11 @@ import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
-import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.future
+import java.util.Date
+import java.util.concurrent.CompletableFuture
 
 /**
  * This handler is used for interacting with remote storage and user generated content.
@@ -114,7 +118,11 @@ class SteamCloud : ClientMsgHandler() {
      */
     // JavaSteam Addition
     @JvmOverloads
-    fun getAppFileListChange(appId: Int, syncedChangeNumber: Long = 0): AppFileChangeList {
+    fun getAppFileListChange(
+        appId: Int,
+        syncedChangeNumber: Long = 0,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<AppFileChangeList> = parentScope.future {
         val request = CCloud_GetAppFileChangelist_Request.newBuilder().apply {
             this.appid = appId
             this.syncedChangeNumber = syncedChangeNumber
@@ -122,7 +130,7 @@ class SteamCloud : ClientMsgHandler() {
 
         val response = cloudService.getAppFileChangelist(request.build()).runBlock()
 
-        return AppFileChangeList(response.body)
+        AppFileChangeList(response.body)
     }
 
     /**
@@ -140,8 +148,9 @@ class SteamCloud : ClientMsgHandler() {
         appId: Int,
         fileName: String,
         realm: ESteamRealm = ESteamRealm.SteamGlobal,
-        forceProxy: Boolean = false
-    ): FileDownloadInfo {
+        forceProxy: Boolean = false,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<FileDownloadInfo> = parentScope.future {
         val request = CCloud_ClientFileDownload_Request.newBuilder().apply {
             this.appid = appId
             this.filename = fileName
@@ -151,7 +160,7 @@ class SteamCloud : ClientMsgHandler() {
 
         val response = cloudService.clientFileDownload(request.build()).runBlock()
 
-        return FileDownloadInfo(response.body)
+        FileDownloadInfo(response.body)
     }
 
     /**
@@ -174,7 +183,8 @@ class SteamCloud : ClientMsgHandler() {
         filesToDelete: List<String> = emptyList(),
         clientId: Long,
         appBuildId: Long,
-    ): AppUploadBatchResponse {
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<AppUploadBatchResponse> = parentScope.future {
         val request = CCloud_BeginAppUploadBatch_Request.newBuilder().apply {
             this.appid = appId
             this.machineName = machineName
@@ -186,7 +196,7 @@ class SteamCloud : ClientMsgHandler() {
 
         val response = cloudService.beginAppUploadBatch(request.build()).runBlock()
 
-        return AppUploadBatchResponse(response.body)
+        AppUploadBatchResponse(response.body)
     }
 
     /**
@@ -214,7 +224,8 @@ class SteamCloud : ClientMsgHandler() {
         isSharedFile: Boolean = false,
         deprecatedRealm: Int? = null,
         uploadBatchId: Long,
-    ): FileUploadInfo {
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<FileUploadInfo> = parentScope.future {
         val request = CCloud_ClientBeginFileUpload_Request.newBuilder().apply {
             this.appid = appId
             this.fileSize = fileSize
@@ -232,7 +243,7 @@ class SteamCloud : ClientMsgHandler() {
 
         val response = cloudService.clientBeginFileUpload(request.build()).runBlock()
 
-        return FileUploadInfo(response.body)
+        FileUploadInfo(response.body)
     }
 
     /**
@@ -245,12 +256,14 @@ class SteamCloud : ClientMsgHandler() {
      * @return Whether the file has been committed
      */
     // JavaSteam Addition
+    @JvmOverloads
     fun commitFileUpload(
         transferSucceeded: Boolean,
         appId: Int,
         fileSha: ByteArray,
         filename: String,
-    ): Boolean {
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<Boolean> = parentScope.future {
         val request = CCloud_ClientCommitFileUpload_Request.newBuilder().apply {
             this.transferSucceeded = transferSucceeded
             this.appid = appId
@@ -259,8 +272,7 @@ class SteamCloud : ClientMsgHandler() {
         }
 
         val response = cloudService.clientCommitFileUpload(request.build()).runBlock()
-
-        return response.body.fileCommitted
+        response.body.fileCommitted
     }
 
     /**
@@ -273,11 +285,12 @@ class SteamCloud : ClientMsgHandler() {
      */
     // JavaSteam Addition
     @JvmOverloads
-    fun completeAppUploadBatchBlocking(
+    fun completeAppUploadBatch(
         appId: Int,
         batchId: Long,
         batchEResult: EResult = EResult.OK,
-    ) {
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<Unit> = parentScope.future {
         val request = CCloud_CompleteAppUploadBatch_Request.newBuilder().apply {
             this.appid = appId
             this.batchId = batchId
@@ -307,7 +320,8 @@ class SteamCloud : ClientMsgHandler() {
         osType: EOSType,
         // I doubt this is EBluetoothDeviceType, but it's the only enum I can find that has to do with device type
         deviceType: EBluetoothDeviceType = EBluetoothDeviceType.k_BluetoothDeviceType_Unknown,
-    ): List<PendingRemoteOperation> {
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    ): CompletableFuture<List<PendingRemoteOperation>> = parentScope.future {
         val request = CCloud_AppLaunchIntent_Request.newBuilder().apply {
             this.appid = appId
             this.clientId = clientId
@@ -319,7 +333,7 @@ class SteamCloud : ClientMsgHandler() {
 
         val response = cloudService.signalAppLaunchIntent(request.build()).runBlock()
 
-        return response.body.pendingRemoteOperationsList.map { PendingRemoteOperation(it) }
+        response.body.pendingRemoteOperationsList.map { PendingRemoteOperation(it) }
     }
 
     /**
