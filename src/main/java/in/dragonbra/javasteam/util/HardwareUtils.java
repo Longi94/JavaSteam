@@ -176,6 +176,7 @@ public class HardwareUtils {
             }
             while ((line = br.readLine()) != null) {
                 if (line.contains(marker)) {
+                    //noinspection RegExpRedundantEscape
                     sn = line.split(marker)[1].replaceAll("\\(string\\)|(\\')", "").trim();
                     break;
                 }
@@ -187,7 +188,6 @@ public class HardwareUtils {
         return sn;
     }
 
-    // this part is written by Claude 3.5 Sonnet with some minor modifications
     public static String getMachineName() {
         if (MACHINE_NAME != null) {
             return MACHINE_NAME;
@@ -216,6 +216,7 @@ public class HardwareUtils {
             return null;
         }
     }
+    
     private static String getAndroidDeviceName() {
         String manufacturer = getAndroidSystemProperty("ro.product.manufacturer");
         String model = getAndroidSystemProperty("ro.product.model");
