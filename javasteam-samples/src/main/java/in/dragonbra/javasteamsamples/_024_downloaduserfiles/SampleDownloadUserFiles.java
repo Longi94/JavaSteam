@@ -192,6 +192,10 @@ public class SampleDownloadUserFiles implements Runnable {
     private void downloadUserFiles() {
         try {
             AppFileChangeList appFileListChange = steamCloud.getAppFileListChange(THE_MESSENGER_APP_ID).get();
+            if(appFileListChange.getFiles().isEmpty()) {
+                System.out.println("No files found to download, try another game app id.");
+                return;
+            }
             List<String> pathPrefixes = appFileListChange.getPathPrefixes();
             for (AppFileInfo file : appFileListChange.getFiles()) {
                 Path prefixPath;

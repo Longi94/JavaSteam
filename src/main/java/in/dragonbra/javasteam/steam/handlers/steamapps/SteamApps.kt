@@ -7,7 +7,6 @@ import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.generated.MsgClientGetLegacyGameKey
-import `in`.dragonbra.javasteam.protobufs.steamclient.*
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGamesPlayed
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicket
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPassword
@@ -34,6 +33,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.VACStatusCallb
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobMultiple
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.util.NetHelpers
 
 /**
  * This handler is used for interacting with apps and packages on the Steam network.
@@ -306,9 +306,9 @@ class SteamApps : ClientMsgHandler() {
      * @param gamesPlayed The list of the different game processes
      * @param clientOsType The OS type of the client launching the games
      */
+    // JavaSteam Addition
     @Suppress("DuplicatedCode", "unused")
     @JvmOverloads
-    // JavaSteam Addition
     fun notifyGamesPlayed(
         gamesPlayed: List<GamePlayedInfo> = emptyList(),
         clientOsType: EOSType,
@@ -321,57 +321,56 @@ class SteamApps : ClientMsgHandler() {
         ).apply {
             sourceJobID = client.getNextJobID()
 
-            body.addAllGamesPlayed(gamesPlayed.map { gamePlayed ->
-                CMsgClientGamesPlayed.GamePlayed.newBuilder().apply {
-                    this.steamIdGs = gamePlayed.steamIdGs
-                    this.gameId = gamePlayed.gameId
-                    this.deprecatedGameIpAddress = gamePlayed.deprecatedGameIpAddress
-                    this.gamePort = gamePlayed.gamePort
-                    this.isSecure = gamePlayed.isSecure
-                    this.token = ByteString.copyFrom(gamePlayed.token)
-                    this.gameExtraInfo = gamePlayed.gameExtraInfo
-                    gamePlayed.gameDataBlob?.let { gameDataBlob ->
-                        this.gameDataBlob = ByteString.copyFrom(gameDataBlob)
-                    }
-                    this.processId = gamePlayed.processId
-                    this.streamingProviderId = gamePlayed.streamingProviderId
-                    this.gameFlags = gamePlayed.gameFlags
-                    this.ownerId = gamePlayed.ownerId
-                    this.vrHmdVendor = gamePlayed.vrHmdVendor
-                    this.vrHmdModel = gamePlayed.vrHmdModel
-                    this.launchOptionType = gamePlayed.launchOptionType
-                    this.primaryControllerType = gamePlayed.primaryControllerType
-                    this.primarySteamControllerSerial = gamePlayed.primarySteamControllerSerial
-                    this.totalSteamControllerCount = gamePlayed.totalSteamControllerCount
-                    this.totalNonSteamControllerCount = gamePlayed.totalNonSteamControllerCount
-                    this.controllerWorkshopFileId = gamePlayed.controllerWorkshopFileId
-                    this.launchSource = gamePlayed.launchSource
-                    this.vrHmdRuntime = gamePlayed.vrHmdRuntime
-                    gamePlayed.gameIpAddress?.let { ipAddress ->
-                        this.gameIpAddress = SteammessagesBase.CMsgIPAddress.newBuilder().apply {
-                            when (ipAddress) {
-                                is ProtoIPv4 -> this.v4 = ipAddress.getValue()
-                                is ProtoIPv6 -> this.v6 = ByteString.copyFrom(ipAddress.getValue())
+            body.addAllGamesPlayed(
+                gamesPlayed.map { gamePlayed ->
+                    CMsgClientGamesPlayed.GamePlayed.newBuilder().apply {
+                        this.steamIdGs = gamePlayed.steamIdGs
+                        this.gameId = gamePlayed.gameId
+                        this.deprecatedGameIpAddress = gamePlayed.deprecatedGameIpAddress
+                        this.gamePort = gamePlayed.gamePort
+                        this.isSecure = gamePlayed.isSecure
+                        this.token = ByteString.copyFrom(gamePlayed.token)
+                        this.gameExtraInfo = gamePlayed.gameExtraInfo
+                        gamePlayed.gameDataBlob?.let { gameDataBlob ->
+                            this.gameDataBlob = ByteString.copyFrom(gameDataBlob)
+                        }
+                        this.processId = gamePlayed.processId
+                        this.streamingProviderId = gamePlayed.streamingProviderId
+                        this.gameFlags = gamePlayed.gameFlags
+                        this.ownerId = gamePlayed.ownerId
+                        this.vrHmdVendor = gamePlayed.vrHmdVendor
+                        this.vrHmdModel = gamePlayed.vrHmdModel
+                        this.launchOptionType = gamePlayed.launchOptionType
+                        this.primaryControllerType = gamePlayed.primaryControllerType
+                        this.primarySteamControllerSerial = gamePlayed.primarySteamControllerSerial
+                        this.totalSteamControllerCount = gamePlayed.totalSteamControllerCount
+                        this.totalNonSteamControllerCount = gamePlayed.totalNonSteamControllerCount
+                        this.controllerWorkshopFileId = gamePlayed.controllerWorkshopFileId
+                        this.launchSource = gamePlayed.launchSource
+                        this.vrHmdRuntime = gamePlayed.vrHmdRuntime
+                        gamePlayed.gameIpAddress?.let { ipAddress ->
+                            this.gameIpAddress = NetHelpers.getMsgIPAddress(ipAddress)
+                        }
+                        this.controllerConnectionType = gamePlayed.controllerConnectionType
+                        this.gameOsPlatform = gamePlayed.gameOsPlatform
+                        this.gameBuildId = gamePlayed.gameBuildId
+                        this.compatToolId = gamePlayed.compatToolId
+                        this.compatToolCmd = gamePlayed.compatToolCmd
+                        this.compatToolBuildId = gamePlayed.compatToolBuildId
+                        this.betaName = gamePlayed.betaName
+                        this.dlcContext = gamePlayed.dlcContext
+                        this.addAllProcessIdList(
+                            gamePlayed.processIdList.map { processInfo ->
+                                CMsgClientGamesPlayed.ProcessInfo.newBuilder().apply {
+                                    this.processId = processInfo.processId
+                                    this.processIdParent = processInfo.processIdParent
+                                    this.parentIsSteam = processInfo.parentIsSteam
+                                }.build()
                             }
-                        }.build()
-                    }
-                    this.controllerConnectionType = gamePlayed.controllerConnectionType
-                    this.gameOsPlatform = gamePlayed.gameOsPlatform
-                    this.gameBuildId = gamePlayed.gameBuildId
-                    this.compatToolId = gamePlayed.compatToolId
-                    this.compatToolCmd = gamePlayed.compatToolCmd
-                    this.compatToolBuildId = gamePlayed.compatToolBuildId
-                    this.betaName = gamePlayed.betaName
-                    this.dlcContext = gamePlayed.dlcContext
-                    this.addAllProcessIdList(gamePlayed.processIdList.map {  processInfo ->
-                        CMsgClientGamesPlayed.ProcessInfo.newBuilder().apply {
-                            this.processId = processInfo.processId
-                            this.processIdParent = processInfo.processIdParent
-                            this.parentIsSteam = processInfo.parentIsSteam
-                        }.build()
-                    })
-                }.build()
-            })
+                        )
+                    }.build()
+                }
+            )
             body.clientOsType = clientOsType.code()
             body.cloudGamingPlatform = cloudGamingPlatform
             body.recentReauthentication = recentReAuthentication

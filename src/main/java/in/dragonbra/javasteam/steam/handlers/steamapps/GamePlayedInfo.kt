@@ -1,5 +1,7 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamapps
 
+import java.net.InetAddress
+
 @Suppress("ArrayInDataClass")
 data class GamePlayedInfo(
     val steamIdGs: Long = 0,
@@ -24,7 +26,7 @@ data class GamePlayedInfo(
     val controllerWorkshopFileId: Long = 0,
     val launchSource: Int = 0,
     val vrHmdRuntime: Int = 0,
-    val gameIpAddress: ProtoIPAddress<*>? = null,
+    val gameIpAddress: InetAddress? = null,
     val controllerConnectionType: Int = 0,
     val gameOsPlatform: Int = -1,
     val gameBuildId: Int,
