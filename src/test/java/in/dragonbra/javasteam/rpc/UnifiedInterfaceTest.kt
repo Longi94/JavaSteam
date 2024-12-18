@@ -72,6 +72,8 @@ class UnifiedInterfaceTest {
             "RemoteClientSteamClient.kt",
             "TwoFactor.kt",
             "UserAccount.kt",
+            "Cloud.kt",
+            "CloudClient.kt",
         )
     }
 }

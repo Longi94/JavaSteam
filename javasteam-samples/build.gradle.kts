@@ -14,6 +14,7 @@ java {
 dependencies {
     implementation(rootProject)
 
+    implementation(libs.okHttp)
     implementation(libs.bouncyCastle)
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
