@@ -120,5 +120,5 @@ class WebSocketConnection :
 
     override fun getCurrentEndPoint(): InetSocketAddress? = currentEndpoint
 
-    override fun getProtocolTypes(): ProtocolTypes? = ProtocolTypes.WEB_SOCKET
+    override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
 }
