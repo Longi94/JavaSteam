@@ -2,104 +2,123 @@ package `in`.dragonbra.javasteam.networking.steam3
 
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import okhttp3.Response
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.http.URLProtocol
+import io.ktor.http.path
+import io.ktor.websocket.Frame
+import io.ktor.websocket.close
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.net.URI
-import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.CoroutineContext
 
 class WebSocketConnection :
     Connection(),
-    WebSocketCMClient.WSListener {
+    CoroutineScope {
 
     companion object {
         private val logger: Logger = LogManager.getLogger(WebSocketConnection::class.java)
-
-        private fun constructUri(address: InetSocketAddress): URI =
-            URI.create("wss://${address.hostString}:${address.port}/cmsocket/")
     }
 
-    private val client = AtomicReference<WebSocketCMClient?>(null)
+    private var client: DefaultClientWebSocketSession? = null
 
-    private var socketEndPoint: InetSocketAddress? = null
+    private var currentTimeout: Long = 5000L
+
+    private var currentEndpoint: InetSocketAddress? = null
+
+    private val job = SupervisorJob()
+
+    private val ktorClient = HttpClient(CIO) {
+        install(WebSockets)
+    }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + job + CoroutineName("WebSocketConnection")
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
-        logger.debug("Connecting to $endPoint...")
+        currentEndpoint = endPoint
+        currentTimeout = timeout.toLong()
+        launch {
+            try {
+                val session = withTimeout(currentTimeout) {
+                    ktorClient.webSocketSession {
+                        url {
+                            protocol = URLProtocol.WSS
+                            host = endPoint.hostString
+                            port = endPoint.port
+                            path("cmsocket/")
+                        }
+                    }
+                }
 
-        val serverUri = constructUri(endPoint)
-        val newClient = WebSocketCMClient(timeout, serverUri, this)
-        val oldClient = client.getAndSet(newClient)
+                client = session
+                onConnected()
 
-        oldClient?.let { oldClient ->
-            logger.debug("Attempted to connect while already connected. Closing old connection...")
-            oldClient.close()
-            onDisconnected(false)
+                logger.debug("Connected to ${endPoint.hostString}:${endPoint.port}")
+
+                for (frame in session.incoming) {
+                    when (frame) {
+                        is Frame.Binary -> {
+                            val event = NetMsgEventArgs(frame.data, currentEndpoint)
+                            onNetMsgReceived(event)
+                        }
+
+                        is Frame.Close -> {
+                            disconnect(false)
+                            break
+                        }
+
+                        else -> Unit // Ignore other frames
+                    }
+                }
+            } catch (e: Exception) {
+                logger.debug("An error occurred in the WebSocket connection", e)
+                onDisconnected(false)
+            }
         }
-
-        socketEndPoint = endPoint
-
-        newClient.connect()
     }
 
     override fun disconnect(userInitiated: Boolean) {
-        disconnectCore(userInitiated)
-    }
-
-    override fun send(data: ByteArray) {
-        try {
-            client.get()?.send(data)
-        } catch (e: Exception) {
-            logger.debug("Exception while sending data", e)
-            disconnectCore(false)
+        logger.debug("Disconnecting from $currentEndpoint, userInitiated: $userInitiated")
+        launch {
+            try {
+                client?.close()
+            } finally {
+                client = null
+                currentEndpoint = null
+                onDisconnected(userInitiated)
+            }
         }
     }
 
-    override fun getLocalIP(): InetAddress? = InetAddress.getByAddress(byteArrayOf(0, 0, 0, 0))
+    override fun send(data: ByteArray?) {
+        launch {
+            if (client == null) {
+                logger.debug("Attempted to send data while not connected")
+                return@launch
+            }
 
-    override fun getCurrentEndPoint(): InetSocketAddress? = socketEndPoint
-
-    override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
-
-    private fun disconnectCore(userInitiated: Boolean) {
-        logger.debug("User initiated disconnection:  $userInitiated")
-
-        val oldClient = client.getAndSet(null)
-        oldClient?.close()
-
-        onDisconnected(userInitiated)
-
-        socketEndPoint = null
-    }
-
-    override fun onTextData(data: String) {
-        // Ignore string messages
-        logger.debug("Got string message: $data")
-    }
-
-    override fun onData(data: ByteArray) {
-        if (data.isNotEmpty()) {
-            onNetMsgReceived(NetMsgEventArgs(data, getCurrentEndPoint()))
+            if (data != null && data.isNotEmpty()) {
+                withTimeout(currentTimeout) {
+                    val frame = Frame.Binary(true, data)
+                    client?.send(frame)
+                }
+            }
         }
     }
 
-    override fun onClose(code: Int, reason: String) {
-        logger.debug("Connection closed")
-    }
+    override fun getLocalIP(): InetAddress? = InetAddress.getLocalHost()
 
-    override fun onClosing(code: Int, reason: String) {
-        logger.debug("Closing connection: $code, reason: ${reason.ifEmpty { "No reason given" }}")
-        // Steam can close a connection if there is nothing else it wants to send.
-        // For example: AccountLoginDeniedNeedTwoFactor, InvalidPassword, etc.
-        disconnectCore(code == 1000)
-    }
+    override fun getCurrentEndPoint(): InetSocketAddress? = currentEndpoint
 
-    override fun onError(t: Throwable) {
-        logger.error("Error in websocket", t)
-        disconnectCore(false)
-    }
-
-    override fun onOpen(response: Response) {
-        logger.debug("WebSocket connected to $socketEndPoint using TLS: ${response.handshake?.tlsVersion}")
-        onConnected()
-    }
+    override fun getProtocolTypes(): ProtocolTypes? = ProtocolTypes.WEB_SOCKET
 }

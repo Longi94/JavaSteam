@@ -44,6 +44,9 @@ protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "p
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version = "3.0.2" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version = "3.0.2" }
+ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version = "3.0.2" }
 
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
 test-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
@@ -70,4 +73,10 @@ testing = [
     "test-mock-webserver3",
     "test-mockito-core",
     "test-mockito-jupiter",
+]
+
+ktor = [
+    "ktor-client-core",
+    "ktor-client-cio",
+    "ktor-client-websocket",
 ]
