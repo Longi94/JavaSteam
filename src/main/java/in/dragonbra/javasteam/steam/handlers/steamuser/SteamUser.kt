@@ -9,6 +9,7 @@ import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EUIMode
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientKickPlayingSession
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
@@ -177,6 +178,23 @@ class SteamUser : ClientMsgHandler() {
 
         // TODO: 2018-02-28 it seems like the socket is not closed after getting logged of or I am doing something horribly wrong, let's disconnect here
         client.disconnect()
+    }
+
+    /**
+     * Kicks any Steam client currently in a playing session
+     *
+     * @param onlyStopGame Whether to only stop the game or quit the Steam client as well
+     */
+    fun kickPlayingSession(
+        onlyStopGame: Boolean = false,
+    ) {
+        val request = ClientMsgProtobuf<CMsgClientKickPlayingSession.Builder>(
+            CMsgClientKickPlayingSession::class.java,
+            EMsg.ClientKickPlayingSession
+        ).apply {
+            body.onlyStopGame = onlyStopGame
+        }
+        client.send(request)
     }
 
     companion object {

@@ -5,9 +5,11 @@ import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EOSType
+import `in`.dragonbra.javasteam.enums.EPlatformType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.ESteamRealm
 import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.EBluetoothDeviceType
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.CClientMetrics_CloudAppSyncStats_Notification
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile
@@ -20,6 +22,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamcli
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_CompleteAppUploadBatch_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ExternalStorageTransferReport_Notification
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetAppFileChangelist_Request
+import `in`.dragonbra.javasteam.rpc.service.ClientMetrics
 import `in`.dragonbra.javasteam.rpc.service.Cloud
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
@@ -47,6 +50,11 @@ class SteamCloud : ClientMsgHandler() {
         val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)
             ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
         unifiedMessages.createService<Cloud>()
+    }
+    private val clientMetrics: ClientMetrics by lazy {
+        val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)
+            ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
+        unifiedMessages.createService<ClientMetrics>()
     }
 
     /**
@@ -312,13 +320,101 @@ class SteamCloud : ClientMsgHandler() {
     }
 
     /**
+     * Notify Steam of the stats of the sync that just occurred. The values with Ac in them,
+     * I believe, are for [Steam Auto Cloud](https://partner.steamgames.com/doc/features/cloud#steam_auto-cloud).
+     *
+     * @param appId The ID of the app whose user files were synced
+     * @param filesUploaded The number of files that were uploaded in the sync
+     * @param filesDownloaded The number of files that were downloaded in the sync
+     * @param filesDeleted The number of files that were deleted in the sync
+     * @param bytesUploaded The total number of bytes that were uploaded in the sync
+     * @param bytesDownloaded The total number of bytes that were downloaded in the sync
+     * @param microsecTotal The total time the sync took in micro-seconds
+     * @param microsecDeleteFiles The time the sync took to delete all the required files in micro-seconds
+     * @param microsecDownloadFiles The time the sync took to download all the required files in micro-seconds
+     * @param microsecUploadFiles The time the sync took to upload all the required files in micro-seconds
+     */
+    @JvmOverloads
+    fun appCloudSyncStats(
+        appId: Int,
+        platformType: EPlatformType,
+        preload: Boolean = false,
+        blockingAppLaunch: Boolean,
+        filesUploaded: Int = 0,
+        filesDownloaded: Int = 0,
+        filesDeleted: Int = 0,
+        bytesUploaded: Long = 0,
+        bytesDownloaded: Long = 0,
+        microsecTotal: Long,
+        microsecInitCaches: Long,
+        microsecValidateState: Long,
+        microsecAcLaunch: Long = 0,
+        microsecAcPrepUserFiles: Long = 0,
+        microsecAcExit: Long = 0,
+        microsecBuildSyncList: Long,
+        microsecDeleteFiles: Long = 0,
+        microsecDownloadFiles: Long = 0,
+        microsecUploadFiles: Long = 0,
+        hardwareType: Int = 1,
+        filesManaged: Int,
+    ) {
+        val request = CClientMetrics_CloudAppSyncStats_Notification.newBuilder().apply {
+            this.appId = appId
+            this.platformType = platformType.code()
+            this.preload = preload
+            this.blockingAppLaunch = blockingAppLaunch
+            if (filesUploaded > 0) {
+                this.filesUploaded = filesUploaded
+            }
+            if (filesDownloaded > 0) {
+                this.filesDownloaded = filesDownloaded
+            }
+            if (filesDeleted > 0) {
+                this.filesDeleted = filesDeleted
+            }
+            if (bytesUploaded > 0) {
+                this.bytesUploaded = bytesUploaded
+            }
+            if (bytesDownloaded > 0) {
+                this.bytesDownloaded = bytesDownloaded
+            }
+            this.microsecTotal = microsecTotal
+            this.microsecInitCaches = microsecInitCaches
+            this.microsecValidateState = microsecValidateState
+            if (microsecAcLaunch > 0) {
+                this.microsecAcLaunch = microsecAcLaunch
+            }
+            if (microsecAcPrepUserFiles > 0) {
+                this.microsecAcPrepUserFiles = microsecAcPrepUserFiles
+            }
+            if (microsecAcExit > 0) {
+                this.microsecAcExit = microsecAcExit
+            }
+            this.microsecBuildSyncList = microsecBuildSyncList
+            if (microsecDeleteFiles > 0) {
+                this.microsecDeleteFiles = microsecDeleteFiles
+            }
+            if (microsecDownloadFiles > 0) {
+                this.microsecDownloadFiles = microsecDownloadFiles
+            }
+            if (microsecUploadFiles > 0) {
+                this.microsecUploadFiles = microsecUploadFiles
+            }
+            this.hardwareType = hardwareType
+            this.filesManaged = filesManaged
+        }
+        clientMetrics.clientCloudAppSyncStats(request.build())
+    }
+
+    /**
      * Lets Steam know we are about to launch an app and Steam responds with any current pending remote operations
      * that we may need to wait for
      *
-     * @param appId       The ID of the app about to be launched
-     * @param clientId    The ID given when authenticating the user [AuthSession.clientID]
-     * @param machineName The name of the machine that is launching the app
-     * @param osType      The OS type of the machine launching the app
+     * @param appId                   The ID of the app about to be launched
+     * @param clientId                The ID given when authenticating the user [AuthSession.clientID]
+     * @param machineName             The name of the machine that is launching the app
+     * @param ignorePendingOperations Should current remote operations be ignored and app be launched anyway
+     * @param osType                  The OS type of the machine launching the app
      * @return A list of the pending remote operations, empty if none
      */
     // JavaSteam Addition

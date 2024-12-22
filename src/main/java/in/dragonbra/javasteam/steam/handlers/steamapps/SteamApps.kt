@@ -4,8 +4,10 @@ import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.base.ClientMsg
 import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EAppUsageEvent
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EOSType
+import `in`.dragonbra.javasteam.generated.MsgClientAppUsageEvent
 import `in`.dragonbra.javasteam.generated.MsgClientGetLegacyGameKey
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGamesPlayed
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicket
@@ -33,6 +35,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.VACStatusCallb
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobMultiple
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.types.GameID
 import `in`.dragonbra.javasteam.util.NetHelpers
 
 /**
@@ -297,6 +300,25 @@ class SteamApps : ClientMsgHandler() {
         client.send(request)
 
         return AsyncJobSingle(client, request.sourceJobID)
+    }
+
+    /**
+     * An event sent to Steam after syncing user files during launch to notify Steam of the
+     * app that is launching.
+     *
+     * @param gameId Holds information pertaining to the app being launched
+     * @param usageEvent The type of launch occurring
+     */
+    fun sendClientAppUsageEvent(
+        gameId: GameID,
+        usageEvent: EAppUsageEvent,
+        offline: Short,
+    ) {
+        ClientMsg(MsgClientAppUsageEvent::class.java).apply {
+            body.appUsageEvent = usageEvent
+            body.gameID = gameId
+            body.offline = offline
+        }.also(client::send)
     }
 
     /**

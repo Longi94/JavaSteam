@@ -55,6 +55,9 @@ class UnifiedInterfaceTest {
             "ChatUsability.kt",
             "ChatUsabilityClient.kt",
             "ClanChatRooms.kt",
+            "ClientMetrics.kt",
+            "Cloud.kt",
+            "CloudClient.kt",
             "CloudGaming.kt",
             "ContentServerDirectory.kt",
             "EmbeddedClient.kt",
@@ -72,8 +75,6 @@ class UnifiedInterfaceTest {
             "RemoteClientSteamClient.kt",
             "TwoFactor.kt",
             "UserAccount.kt",
-            "Cloud.kt",
-            "CloudClient.kt",
         )
     }
 }
