@@ -8,8 +8,6 @@ option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 option optimize_for = SPEED;
 option java_generic_services = false;
 
-option cc_generic_services = true;
-
 message CCloud_ClientLogUploadCheck_Notification {
   optional uint64 client_id = 1;
 }
