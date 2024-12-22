@@ -309,6 +309,7 @@ class SteamApps : ClientMsgHandler() {
      * @param gameId Holds information pertaining to the app being launched
      * @param usageEvent The type of launch occurring
      */
+    // JavaSteam Addition
     fun sendClientAppUsageEvent(
         gameId: GameID,
         usageEvent: EAppUsageEvent,

@@ -334,6 +334,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param microsecDownloadFiles The time the sync took to download all the required files in micro-seconds
      * @param microsecUploadFiles The time the sync took to upload all the required files in micro-seconds
      */
+    // JavaSteam Addition
     @JvmOverloads
     fun appCloudSyncStats(
         appId: Int,

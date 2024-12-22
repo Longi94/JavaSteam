@@ -185,6 +185,7 @@ class SteamUser : ClientMsgHandler() {
      *
      * @param onlyStopGame Whether to only stop the game or quit the Steam client as well
      */
+    // JavaSteam Addition
     fun kickPlayingSession(
         onlyStopGame: Boolean = false,
     ) {
