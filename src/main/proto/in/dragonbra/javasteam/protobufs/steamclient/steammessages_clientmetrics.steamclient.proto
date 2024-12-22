@@ -6,6 +6,7 @@ import "in/dragonbra/javasteam/protobufs/steamclient/enums.proto";
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
+option java_generic_services = false;
 
 enum ESteamPipeWorkType {
   k_ESteamPipeClientWorkType_Invalid = 0;
