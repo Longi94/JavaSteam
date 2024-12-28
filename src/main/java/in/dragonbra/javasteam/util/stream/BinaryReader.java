@@ -129,9 +129,11 @@ public class BinaryReader extends FilterInputStream {
 
         byte[] bytes = buffer.toByteArray();
         position += bytes.length;
+
         return new String(bytes, charset);
     }
 
+    @SuppressWarnings("StringOperationCanBeSimplified")
     private String readNullTermUtf8String() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int b;
@@ -146,7 +148,8 @@ public class BinaryReader extends FilterInputStream {
 
         position++; // Increment for the null terminator
 
-        return baos.toString(StandardCharsets.UTF_8);
+        // Suppressed. Fixes NoSuchMethodError in Java 11 on the Google Pixel 3 XL (Android 12)
+        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
     }
 
     public int getPosition() {
