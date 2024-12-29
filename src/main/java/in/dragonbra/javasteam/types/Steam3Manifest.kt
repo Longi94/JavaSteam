@@ -3,6 +3,7 @@
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import java.time.Instant
 import java.util.Date
@@ -48,7 +49,7 @@ class Steam3Manifest(
         ) {
             companion object {
                 internal fun deserialize(ds: BinaryReader): Chunk = Chunk(
-                    chunkGID = ds.readNBytes(20),
+                    chunkGID = ds.readNBytesCompat(20),
                     checksum = ds.readInt(),
                     offset = ds.readLong(),
                     decompressedSize = ds.readInt(),
@@ -62,8 +63,8 @@ class Steam3Manifest(
                 val fileName = ds.readNullTermString(Charsets.UTF_8)
                 val totalSize = ds.readLong()
                 val flags = EDepotFileFlag.from(ds.readInt())
-                val hashContent = ds.readNBytes(20)
-                val hashFileName = ds.readNBytes(20)
+                val hashContent = ds.readNBytesCompat(20)
+                val hashFileName = ds.readNBytesCompat(20)
                 val numChunks = ds.readInt()
 
                 return FileMapping(

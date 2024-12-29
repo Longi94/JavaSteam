@@ -1,6 +1,7 @@
 package `in`.dragonbra.javasteam.steam.contentdownloader
 
 import `in`.dragonbra.javasteam.types.DepotManifest
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import java.io.ByteArrayOutputStream
@@ -70,7 +71,7 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
                     if (!entry.isDirectory) {
                         val entryBytes = ByteArray(entry.size.toInt())
 
-                        from.readNBytes(entryBytes, 0, entryBytes.size)
+                        from.readNBytesCompat(entryBytes, 0, entryBytes.size)
                         to.write(entryBytes)
                     }
 
@@ -126,7 +127,7 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
             ZipInputStream(fis).use { zip ->
                 seekToEntry(zip, getLatestEntryName(depotID))?.let { idEntry ->
                     if (idEntry.size > 0) {
-                        ByteBuffer.wrap(zip.readNBytes(idEntry.size.toInt())).getLong()
+                        ByteBuffer.wrap(zip.readNBytesCompat(idEntry.size.toInt())).getLong()
                     } else {
                         null
                     }
