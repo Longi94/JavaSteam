@@ -1,5 +1,7 @@
 package in.dragonbra.javasteam.util.stream;
 
+import in.dragonbra.javasteam.util.compat.ByteArrayOutputStreamCompat;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -133,7 +135,6 @@ public class BinaryReader extends FilterInputStream {
         return new String(bytes, charset);
     }
 
-    @SuppressWarnings("StringOperationCanBeSimplified")
     private String readNullTermUtf8String() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int b;
@@ -148,8 +149,7 @@ public class BinaryReader extends FilterInputStream {
 
         position++; // Increment for the null terminator
 
-        // Suppressed. Fixes NoSuchMethodError in Java 11 on the Google Pixel 3 XL (Android 12)
-        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+        return ByteArrayOutputStreamCompat.toString(baos, StandardCharsets.UTF_8);
     }
 
     public int getPosition() {
