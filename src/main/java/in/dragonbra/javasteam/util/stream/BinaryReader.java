@@ -149,7 +149,7 @@ public class BinaryReader extends FilterInputStream {
 
         position++; // Increment for the null terminator
 
-        return ByteArrayOutputStreamCompat.toString(baos, StandardCharsets.UTF_8);
+        return ByteArrayOutputStreamCompat.toString(baos);
     }
 
     public int getPosition() {

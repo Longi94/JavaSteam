@@ -1,7 +1,6 @@
 package `in`.dragonbra.javasteam.util.compat
 
 import java.io.ByteArrayOutputStream
-import java.nio.charset.Charset
 
 /**
  * Compatibility class to provide compatibility with Java ByteArrayOutputStream.
@@ -9,5 +8,6 @@ import java.nio.charset.Charset
 object ByteArrayOutputStreamCompat {
 
     @JvmStatic
-    fun toString(baos: ByteArrayOutputStream, charset: Charset): String = String(baos.toByteArray(), charset)
+    fun toString(byteArrayOutputStream: ByteArrayOutputStream): String =
+        String(byteArrayOutputStream.toByteArray(), 0, byteArrayOutputStream.size())
 }
