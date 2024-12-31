@@ -10,6 +10,9 @@ import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.future
 import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -17,6 +20,7 @@ import okhttp3.Request
 import java.io.ByteArrayOutputStream
 import java.io.Closeable
 import java.io.IOException
+import java.util.concurrent.*
 import java.util.zip.DataFormatException
 import java.util.zip.ZipInputStream
 
@@ -29,6 +33,8 @@ import java.util.zip.ZipInputStream
 class Client(steamClient: SteamClient) : Closeable {
 
     private val httpClient: OkHttpClient = steamClient.configuration.httpClient
+
+    private val defaultScope = CoroutineScope(Dispatchers.IO)
 
     companion object {
         /**
@@ -43,12 +49,15 @@ class Client(steamClient: SteamClient) : Closeable {
 
         private val logger: Logger = LogManager.getLogger(Client::class.java)
 
+        @JvmStatic
+        @JvmOverloads
         fun buildCommand(
             server: Server,
             command: String,
             query: String? = null,
             proxyServer: Server? = null,
         ): HttpUrl {
+            // TODO look into this to mimic SK's method. Should be able to remove if/else and only have the if.
             val httpUrl: HttpUrl
             if (proxyServer != null && proxyServer.useAsProxy && proxyServer.proxyRequestPathTemplate != null) {
                 httpUrl = HttpUrl.Builder()
@@ -178,6 +187,44 @@ class Client(steamClient: SteamClient) : Closeable {
     }
 
     /**
+     * Java Compat:
+     * Downloads the depot manifest specified by the given manifest ID, and optionally decrypts the manifest's filenames if the depot decryption key has been provided.
+     * @param depotId The id of the depot being accessed.
+     * @param manifestId The unique identifier of the manifest to be downloaded.
+     * @param manifestRequestCode The manifest request code for the manifest that is being downloaded.
+     * @param server The content server to connect to.
+     * @param depotKey The depot decryption key for the depot that will be downloaded.
+     * This is used for decrypting filenames (if needed) in depot manifests.
+     * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
+     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
+     * @return A [DepotManifest] instance that contains information about the files present within a depot.
+     * @exception IllegalArgumentException [server] was null.
+     * @exception IOException A network error occurred when performing the request.
+     * @exception SteamKitWebRequestException A network error occurred when performing the request.
+     * @exception DataFormatException When the data received is not as expected
+     */
+    @JvmOverloads
+    fun downloadManifestFuture(
+        depotId: Int,
+        manifestId: Long,
+        manifestRequestCode: Long,
+        server: Server,
+        depotKey: ByteArray? = null,
+        proxyServer: Server? = null,
+        cdnAuthToken: String? = null,
+    ): CompletableFuture<DepotManifest> = defaultScope.future {
+        downloadManifest(
+            depotId = depotId,
+            manifestId = manifestId,
+            manifestRequestCode = manifestRequestCode.toULong(),
+            server = server,
+            depotKey = depotKey,
+            proxyServer = proxyServer,
+            cdnAuthToken = cdnAuthToken,
+        )
+    }
+
+    /**
      * Downloads the specified depot chunk, and optionally processes the chunk and verifies the checksum if the depot decryption key has been provided.
      * This function will also validate the length of the downloaded chunk with the value of [ChunkData.compressedLength],
      * if it has been assigned a value.
@@ -220,9 +267,11 @@ class Client(steamClient: SteamClient) : Closeable {
         val chunkID = Strings.toHex(chunk.chunkID)
         val url = "depot/$depotId/chunk/$chunkID"
 
-        val request = Request.Builder()
-            .url(buildCommand(server, url, cdnAuthToken, proxyServer))
-            .build()
+        val request: Request = if (ClientLancache.useLanCacheServer) {
+            ClientLancache.buildLancacheRequest(server, url, cdnAuthToken)
+        } else {
+            Request.Builder().url(buildCommand(server, url, cdnAuthToken, proxyServer)).build()
+        }
 
         withTimeout(requestTimeout) {
             httpClient.newCall(request).execute()
@@ -290,5 +339,46 @@ class Client(steamClient: SteamClient) : Closeable {
                 throw ex
             }
         }
+    }
+
+    /**
+     * Java Compat:
+     * Downloads the specified depot chunk, and optionally processes the chunk and verifies the checksum if the depot decryption key has been provided.
+     * This function will also validate the length of the downloaded chunk with the value of [ChunkData.compressedLength],
+     * if it has been assigned a value.
+     * @param depotId The id of the depot being accessed.
+     * @param chunk A [ChunkData] instance that represents the chunk to download.
+     * This value should come from a manifest downloaded with [downloadManifest].
+     * @param server The content server to connect to.
+     * @param destination The buffer to receive the chunk data. If [depotKey] is provided, this will be the decompressed buffer.
+     * Allocate or rent a buffer that is equal or longer than [ChunkData.uncompressedLength]
+     * @param depotKey The depot decryption key for the depot that will be downloaded.
+     * This is used to process the chunk data.
+     * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
+     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
+     * @return The total number of bytes written to [destination].
+     * @exception IllegalArgumentException Thrown if the chunk's [ChunkData.chunkID] was null or if the [destination] buffer is too small.
+     * @exception IllegalStateException Thrown if the downloaded data does not match the expected length.
+     * @exception SteamKitWebRequestException A network error occurred when performing the request.
+     */
+    @JvmOverloads
+    fun downloadDepotChunkFuture(
+        depotId: Int,
+        chunk: ChunkData,
+        server: Server,
+        destination: ByteArray,
+        depotKey: ByteArray? = null,
+        proxyServer: Server? = null,
+        cdnAuthToken: String? = null,
+    ): CompletableFuture<Int> = defaultScope.future {
+        downloadDepotChunk(
+            depotId = depotId,
+            chunk = chunk,
+            server = server,
+            destination = destination,
+            depotKey = depotKey,
+            proxyServer = proxyServer,
+            cdnAuthToken = cdnAuthToken,
+        )
     }
 }
