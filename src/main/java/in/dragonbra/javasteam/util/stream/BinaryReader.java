@@ -1,5 +1,7 @@
 package in.dragonbra.javasteam.util.stream;
 
+import in.dragonbra.javasteam.util.compat.ByteArrayOutputStreamCompat;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -129,6 +131,7 @@ public class BinaryReader extends FilterInputStream {
 
         byte[] bytes = buffer.toByteArray();
         position += bytes.length;
+
         return new String(bytes, charset);
     }
 
@@ -146,7 +149,7 @@ public class BinaryReader extends FilterInputStream {
 
         position++; // Increment for the null terminator
 
-        return baos.toString(StandardCharsets.UTF_8);
+        return ByteArrayOutputStreamCompat.toString(baos);
     }
 
     public int getPosition() {

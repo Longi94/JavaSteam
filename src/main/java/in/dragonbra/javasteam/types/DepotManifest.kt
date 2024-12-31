@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentMan
 import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestPayload
 import `in`.dragonbra.javasteam.protobufs.steamclient.ContentManifest.ContentManifestSignature
 import `in`.dragonbra.javasteam.util.Utils
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
@@ -249,17 +250,17 @@ class DepotManifest {
 
                     PROTOBUF_PAYLOAD_MAGIC -> {
                         val payloadLength = br.readInt()
-                        payload = ContentManifestPayload.parseFrom(stream.readNBytes(payloadLength))
+                        payload = ContentManifestPayload.parseFrom(stream.readNBytesCompat(payloadLength))
                     }
 
                     PROTOBUF_METADATA_MAGIC -> {
                         val metadataLength = br.readInt()
-                        metadata = ContentManifestMetadata.parseFrom(stream.readNBytes(metadataLength))
+                        metadata = ContentManifestMetadata.parseFrom(stream.readNBytesCompat(metadataLength))
                     }
 
                     PROTOBUF_SIGNATURE_MAGIC -> {
                         val signatureLength = br.readInt()
-                        signature = ContentManifestSignature.parseFrom(stream.readNBytes(signatureLength))
+                        signature = ContentManifestSignature.parseFrom(stream.readNBytesCompat(signatureLength))
                     }
 
                     else -> throw NoSuchElementException("Unrecognized magic value ${magic.toHexString(HexFormat.Default)} in depot manifest.")

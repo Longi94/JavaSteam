@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
@@ -257,7 +258,7 @@ class Client(steamClient: SteamClient) : Closeable {
             if (depotKey == null) {
                 val bytesRead = withTimeout(responseBodyTimeout) {
                     response.body.byteStream().use { input ->
-                        input.readNBytes(destination, 0, contentLength)
+                        input.readNBytesCompat(destination, 0, contentLength)
                     }
                 }
 
@@ -274,7 +275,7 @@ class Client(steamClient: SteamClient) : Closeable {
             try {
                 val bytesRead = withTimeout(responseBodyTimeout) {
                     response.body.byteStream().use { input ->
-                        input.readNBytes(buffer, 0, contentLength)
+                        input.readNBytesCompat(buffer, 0, contentLength)
                     }
                 }
 

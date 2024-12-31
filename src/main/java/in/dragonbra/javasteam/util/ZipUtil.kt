@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.util
 
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.util.zip.ZipInputStream
 
@@ -16,7 +17,7 @@ object ZipUtil {
                 throw IllegalArgumentException("The destination buffer is smaller than the decompressed data size.")
             }
 
-            val bytesRead = zip.readNBytes(destination, 0, sizeDecompressed)
+            val bytesRead = zip.readNBytesCompat(destination, 0, sizeDecompressed)
 
             if (zip.nextEntry != null) {
                 throw IllegalArgumentException("Given stream should only contain one zip entry")

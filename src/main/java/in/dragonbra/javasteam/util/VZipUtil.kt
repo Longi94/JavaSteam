@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.util
 
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.BinaryWriter
@@ -69,7 +70,7 @@ object VZipUtil {
                 dictionarySize,
                 windowBuffer
             ).use { lzmaInput ->
-                lzmaInput.readNBytes(destination, 0, sizeDecompressed)
+                lzmaInput.readNBytesCompat(destination, 0, sizeDecompressed)
             }
 
             if (verifyChecksum && Utils.crc32(destination).toInt() != outputCrc) {

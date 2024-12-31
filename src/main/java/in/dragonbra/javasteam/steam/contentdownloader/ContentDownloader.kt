@@ -17,6 +17,7 @@ import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Utils
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CancellationException
@@ -419,7 +420,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                             fsOld.channel.position(match.oldChunk.offset)
 
                             val tmp = ByteArray(match.oldChunk.uncompressedLength)
-                            fsOld.readNBytes(tmp, 0, tmp.size)
+                            fsOld.readNBytesCompat(tmp, 0, tmp.size)
 
                             val adler = Utils.adlerHash(tmp)
                             if (adler != match.oldChunk.checksum) {
@@ -441,7 +442,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                                     fsOld.channel.position(match.oldChunk.offset)
 
                                     val tmp = ByteArray(match.oldChunk.uncompressedLength)
-                                    fsOld.readNBytes(tmp, 0, tmp.size)
+                                    fsOld.readNBytesCompat(tmp, 0, tmp.size)
 
                                     fs.channel.position(match.newChunk.offset)
                                     fs.write(tmp)
