@@ -30,12 +30,13 @@ class ChunkData {
      */
     val uncompressedLength: Int
 
+    @JvmOverloads
     constructor(
-        chunkID: ByteArray?,
-        checksum: Int,
-        offset: Long,
-        compressedLength: Int,
-        uncompressedLength: Int,
+        chunkID: ByteArray? = null,
+        checksum: Int = 0,
+        offset: Long = 0L,
+        compressedLength: Int = 0,
+        uncompressedLength: Int = 0,
     ) {
         this.chunkID = chunkID
         this.checksum = checksum

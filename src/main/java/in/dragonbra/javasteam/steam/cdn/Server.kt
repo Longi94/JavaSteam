@@ -3,7 +3,7 @@ package `in`.dragonbra.javasteam.steam.cdn
 /**
  * Represents a single Steam3 'Steampipe' content server.
  */
-class Server(
+class Server @JvmOverloads constructor(
     protocol: ConnectionProtocol = ConnectionProtocol.HTTP,
     host: String,
     vHost: String,
