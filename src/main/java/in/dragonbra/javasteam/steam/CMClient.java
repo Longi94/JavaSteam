@@ -355,6 +355,9 @@ public abstract class CMClient {
                     }
                 }
                 payload = baos.toByteArray();
+
+                gzin.close();
+                baos.close();
             } catch (IOException e) {
                 logger.debug("HandleMulti encountered an exception when decompressing.", e);
                 return;
