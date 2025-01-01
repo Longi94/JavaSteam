@@ -32,13 +32,22 @@ public class CryptoHelper {
     static {
         try {
             if (Utils.getOSType() == EOSType.AndroidUnknown) {
-                Class<? extends Provider> provider =
-                        (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
-                Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
-                SEC_PROV = "SC";
+                String androidSecProv;
+                try {
+                    // Try SpongyCastle (This will slowly be phased out. Noted 1/1/2025)
+                    var provider = (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
+                    Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
+                    androidSecProv = "SC";
+                } catch (Exception e) {
+                    // Try BouncyCastle as fallback
+                    var provider = (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
+                    Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
+                    androidSecProv = "BC";
+                }
+
+                SEC_PROV = androidSecProv;
             } else {
-                Class<? extends Provider> provider =
-                        (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
+                var provider = (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
                 Security.addProvider(provider.getDeclaredConstructor().newInstance());
                 SEC_PROV = "BC";
             }
