@@ -112,8 +112,11 @@ public abstract class TestPackets {
     }
 
     private static byte[] loadFile(String name) {
-        try {
-            return IOUtils.toByteArray(TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name));
+        try(var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
+            if(file == null) {
+                return null;
+            }
+            return IOUtils.toByteArray(file);
         } catch (IOException e) {
             return null;
         }
