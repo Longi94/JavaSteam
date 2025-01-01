@@ -102,8 +102,8 @@ public abstract class TestPackets {
                 return clientGetAppOwnershipTicketResponse();
             case ClientGetDepotDecryptionKeyResponse:
                 return clientGetDepotDecryptionKeyResponse();
-            case ClientGetCDNAuthTokenResponse:
-                return clientGetCDNAuthTokenResponse();
+            // case ClientGetCDNAuthTokenResponse:
+            //     return clientGetCDNAuthTokenResponse();
             case ClientCheckAppBetaPasswordResponse:
                 return clientCheckAppBetaPasswordResponse();
             default:
@@ -112,8 +112,11 @@ public abstract class TestPackets {
     }
 
     private static byte[] loadFile(String name) {
-        try {
-            return IOUtils.toByteArray(TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name));
+        try(var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
+            if(file == null) {
+                return null;
+            }
+            return IOUtils.toByteArray(file);
         } catch (IOException e) {
             return null;
         }
@@ -428,15 +431,15 @@ public abstract class TestPackets {
         return msg.serialize();
     }
 
-    private static byte[] clientGetCDNAuthTokenResponse() {
-        ClientMsgProtobuf<CMsgClientGetCDNAuthTokenResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGetCDNAuthTokenResponse.class, EMsg.ClientGetCDNAuthTokenResponse);
-
-        msg.getBody().setEresult(EResult.OK.code());
-        msg.getBody().setExpirationTime(946684800);
-        msg.getBody().setToken("testtoken");
-
-        return msg.serialize();
-    }
+//    private static byte[] clientGetCDNAuthTokenResponse() {
+//        ClientMsgProtobuf<CMsgClientGetCDNAuthTokenResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientGetCDNAuthTokenResponse.class, EMsg.ClientGetCDNAuthTokenResponse);
+//
+//        msg.getBody().setEresult(EResult.OK.code());
+//        msg.getBody().setExpirationTime(946684800);
+//        msg.getBody().setToken("testtoken");
+//
+//        return msg.serialize();
+//    }
 
     private static byte[] clientCheckAppBetaPasswordResponse() {
         ClientMsgProtobuf<CMsgClientCheckAppBetaPasswordResponse.Builder> msg = new ClientMsgProtobuf<>(CMsgClientCheckAppBetaPasswordResponse.class, EMsg.ClientCheckAppBetaPasswordResponse);

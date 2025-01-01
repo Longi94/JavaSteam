@@ -4,7 +4,6 @@ option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
 option java_generic_services = false;
-option (force_php_generation) = true;
 
 extend .google.protobuf.MessageOptions {
   optional int32 msgpool_soft_limit = 50000 [default = 32];
@@ -136,6 +135,19 @@ message CMsgProtoBufHeader {
     uint32 ip = 15;
     bytes ip_v6 = 29;
   }
+}
+
+message CMsgKubeRPCPacket {
+  message Hdr {
+    optional uint32 sysid_source = 1;
+    optional bool is_fbs_universe = 2 [default = false];
+    optional fixed64 jobid_source = 3 [default = 18446744073709551615];
+    optional int32 eresult = 4 [default = 2];
+    optional string error_message = 5;
+  }
+
+  optional .CMsgKubeRPCPacket.Hdr hdr = 1;
+  optional bytes payload = 2;
 }
 
 message CMsgMulti {
@@ -290,6 +302,7 @@ message CClanEventData {
   repeated uint32 referenced_appids = 28;
   optional uint32 build_id = 29;
   optional string build_branch = 30;
+  optional bool unlisted = 31;
 }
 
 message CBilling_Address {

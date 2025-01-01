@@ -58,34 +58,26 @@ tasks.jacocoTestReport {
 }
 
 /* Java-Kotlin Docs */
-tasks.dokkaJavadoc {
-    dokkaSourceSets {
-        configureEach {
-            suppressGeneratedFiles.set(false) // Allow generated files to be documented.
-            perPackageOption {
-                // Deny most of the generated files.
-                matchingRegex.set("in.dragonbra.javasteam.(protobufs|enums|generated).*")
-                suppress.set(true)
-            }
+dokka {
+    moduleName.set("JavaSteam")
+    dokkaSourceSets.main {
+        suppressGeneratedFiles.set(false) // Allow generated files to be documented.
+        perPackageOption {
+            // Deny most of the generated files.
+            matchingRegex.set("in.dragonbra.javasteam.(protobufs|enums|generated).*")
+            suppress.set(true)
         }
     }
 }
 
 // Make sure Maven Publishing gets javadoc
-// https://stackoverflow.com/a/71172854
-lateinit var javadocArtifact: PublishArtifact
-tasks {
-    val dokkaHtml by getting(org.jetbrains.dokka.gradle.DokkaTask::class)
-
-    val javadocJar by creating(Jar::class) {
-        dependsOn(dokkaHtml)
-        archiveClassifier.set("javadoc")
-        from(dokkaHtml.outputDirectory)
-    }
-
-    artifacts {
-        javadocArtifact = archives(javadocJar)
-    }
+val javadocJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.dokkaGenerate)
+    archiveClassifier.set("javadoc")
+    from(layout.buildDirectory.dir("dokka/html"))
+}
+artifacts {
+    archives(javadocJar)
 }
 
 /* Configuration */
@@ -110,7 +102,7 @@ sourceSets.main {
 tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
-// tasks["build"].finalizedBy(dokkaJavadocJar)
+// tasks["build"].finalizedBy("dokkaGenerate")
 
 /* Kotlinter */
 tasks.withType<LintTask> {
@@ -150,7 +142,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            artifact(javadocArtifact)
+            artifact(javadocJar)
             pom {
                 name = "JavaSteam"
                 packaging = "jar"
