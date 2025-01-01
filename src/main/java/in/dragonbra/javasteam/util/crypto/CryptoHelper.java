@@ -34,7 +34,7 @@ public class CryptoHelper {
             if (Utils.getOSType() == EOSType.AndroidUnknown) {
                 String androidSecProv;
                 try {
-                    // Try SpongyCastle (This will slowly be phased out. Noted 1/1/2025)
+                    // Try SpongyCastle (This will be phased out someday. Noted 1/1/2025)
                     var provider = (Class<? extends Provider>) Class.forName("org.spongycastle.jce.provider.BouncyCastleProvider");
                     Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
                     androidSecProv = "SC";
@@ -54,6 +54,8 @@ public class CryptoHelper {
         } catch (Exception e) {
             throw new SecurityException("Couldn't create security provider", e);
         }
+
+        logger.debug("Using security provider: " + SEC_PROV);
     }
 
     public static byte[] shaHash(byte[] input) throws NoSuchAlgorithmException {
