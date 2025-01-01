@@ -14,6 +14,9 @@ import kotlin.random.Random
 /**
  * [readNBytesCompat] methods are kotlin only extension functions for [InputStream].
  * This test is in Kotlin to ensure functionality for the extension functions
+ *
+ * @author Lossy
+ * @since 30/12/2024
  */
 class InputStreamCompatTest {
 

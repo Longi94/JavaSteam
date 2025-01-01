@@ -11,6 +11,10 @@ import java.net.Inet6Address
 import java.net.InetAddress
 import java.util.concurrent.*
 
+/**
+ * @author Lossy
+ * @since 31/12/2024
+ */
 @Suppress("unused")
 object ClientLancache {
 
