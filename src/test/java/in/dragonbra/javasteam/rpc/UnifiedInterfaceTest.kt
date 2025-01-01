@@ -46,7 +46,7 @@ class UnifiedInterfaceTest {
          * Any changes to then number of interfaces would need to reflect here. Otherwise, the test should fail.
          */
         val knownServiceTypes = arrayOf(
-            "AccountLinking.kt",
+            // "AccountLinking.kt",
             "Authentication.kt",
             "AuthenticationSupport.kt",
             "Chat.kt",
@@ -60,6 +60,7 @@ class UnifiedInterfaceTest {
             "CloudClient.kt",
             "CloudGaming.kt",
             "ContentServerDirectory.kt",
+            "DepotContentDetection.kt",
             "EmbeddedClient.kt",
             "FriendMessages.kt",
             "FriendMessagesClient.kt",
