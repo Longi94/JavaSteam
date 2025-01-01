@@ -14,7 +14,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.net.InetAddress;
 import java.util.concurrent.ExecutionException;
 
-
+/**
+ * @author Lossy
+ * @since 31/12/2024
+ */
 public class CDNClientTest {
 
     static class TeapotInterceptor implements Interceptor {

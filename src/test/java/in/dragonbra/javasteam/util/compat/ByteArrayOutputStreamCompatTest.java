@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * @author Lossy
+ * @since 30/12/2024
+ */
 public class ByteArrayOutputStreamCompatTest {
 
     @Test
