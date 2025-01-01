@@ -46,9 +46,9 @@ Maven
 
 **3. Add the appropriate cryptography dependency to your project. JavaSteam depends on this.**
 
-[Android | Spongy Castle](https://mvnrepository.com/artifact/com.madgag.spongycastle/prov)
+[Android (Deprecated) | Spongy Castle](https://mvnrepository.com/artifact/com.madgag.spongycastle/prov)
 
-[Non-Android | Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
+[Android and Non-Android | Bouncy Castle](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on)
 
 **4. (Optional) Working with protobufs.**
 
@@ -60,7 +60,7 @@ Note: To eliminate any errors or warnings, you should try and match the same ver
 
 ## Getting Started
 
-You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library. 
+You can head to the very short [Getting Started](https://github.com/Longi94/JavaSteam/wiki/Getting-started) page or take a look at the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples) to get you started with using this library.
 
 There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples) too you can check out.
 
