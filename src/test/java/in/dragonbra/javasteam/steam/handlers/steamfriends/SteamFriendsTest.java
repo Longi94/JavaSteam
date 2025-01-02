@@ -387,6 +387,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         ChatMemberInfoCallback callback = verifyCallback();
 
         assertEquals(new SteamID(123), callback.getChatRoomID());
+        assertEquals(EChatInfoType.StateChange, callback.getType());
     }
 
     @Test
