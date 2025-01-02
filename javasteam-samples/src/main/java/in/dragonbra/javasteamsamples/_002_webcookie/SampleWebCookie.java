@@ -2,7 +2,6 @@ package in.dragonbra.javasteamsamples._002_webcookie;
 
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.steam.authentication.*;
-import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -16,6 +15,7 @@ import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author lossy
@@ -106,11 +106,11 @@ public class SampleWebCookie implements Runnable {
         auth = new SteamAuthentication(steamClient);
 
         try {
-            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authSessionDetails);
+            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentialsFuture(authSessionDetails).get();
 
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResultFuture().get();
 
             LogOnDetails logOnDetails = new LogOnDetails();
             logOnDetails.setUsername(pollResponse.getAccountName());
@@ -166,7 +166,12 @@ public class SampleWebCookie implements Runnable {
         // Parse this token with a JWT library to get the expiration date and set up a timer to renew it.
         // To renew you will have to call this:
         // When allowRenewal is set to true, Steam may return new RefreshToken
-        AccessTokenGenerateResult newTokens = auth.generateAccessTokenForApp(callback.getClientSteamID(), refreshToken, false);
+        AccessTokenGenerateResult newTokens = null;
+        try {
+            newTokens = auth.generateAccessTokenForAppFuture(callback.getClientSteamID(), refreshToken, false).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
 
         accessToken = newTokens.getAccessToken();
 

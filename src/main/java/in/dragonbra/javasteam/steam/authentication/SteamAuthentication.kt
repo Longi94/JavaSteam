@@ -14,11 +14,16 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.future.future
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyFactory
 import java.security.spec.RSAPublicKeySpec
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import javax.crypto.Cipher
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -31,6 +36,8 @@ import kotlin.coroutines.cancellation.CancellationException
 class SteamAuthentication(private val steamClient: SteamClient) {
 
     internal val authenticationService: Authentication
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         val unifiedMessages = steamClient.getHandler(SteamUnifiedMessages::class.java)
@@ -46,18 +53,36 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @throws AuthenticationException if getting the public key failed.
      */
     @Throws(AuthenticationException::class)
-    private fun getPasswordRSAPublicKey(accountName: String): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
+    private suspend fun getPasswordRSAPublicKey(accountName: String): CAuthentication_GetPasswordRSAPublicKey_Response.Builder {
         val request = CAuthentication_GetPasswordRSAPublicKey_Request.newBuilder().apply {
             this.accountName = accountName
         }
 
-        val response = authenticationService.getPasswordRSAPublicKey(request.build()).runBlock()
+        val response = authenticationService.getPasswordRSAPublicKey(request.build()).await()
 
         if (response.result != EResult.OK) {
             throw AuthenticationException("Failed to get password public key", response.result)
         }
 
         return response.body
+    }
+
+    /**
+     * Java Compat:
+     * Given a refresh token for a client app audience (e.g. desktop client / mobile client), generate an access token.
+     * @param steamID the SteamID this token belongs to.
+     * @param refreshToken the refresh token.
+     * @param allowRenewal If true, allow renewing the token.
+     * @return A [AccessTokenGenerateResult] containing the new token
+     */
+    @Throws(IllegalArgumentException::class, IllegalArgumentException::class)
+    @JvmOverloads
+    fun generateAccessTokenForAppFuture(
+        steamID: SteamID,
+        refreshToken: String,
+        allowRenewal: Boolean = false,
+    ): CompletableFuture<AccessTokenGenerateResult> = scope.future {
+        generateAccessTokenForApp(steamID, refreshToken, allowRenewal)
     }
 
     /**
@@ -68,8 +93,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @return A [AccessTokenGenerateResult] containing the new token
      */
     @Throws(IllegalArgumentException::class, IllegalArgumentException::class)
-    @JvmOverloads
-    fun generateAccessTokenForApp(
+    suspend fun generateAccessTokenForApp(
         steamID: SteamID,
         refreshToken: String,
         allowRenewal: Boolean = false,
@@ -83,7 +107,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             }
         }
 
-        val response = authenticationService.generateAccessTokenForApp(request.build()).runBlock()
+        val response = authenticationService.generateAccessTokenForApp(request.build()).await()
 
         if (response.result != EResult.OK) {
             throw IllegalArgumentException("Failed to generate token ${response.result}")
@@ -93,13 +117,27 @@ class SteamAuthentication(private val steamClient: SteamClient) {
     }
 
     /**
+     * Java Compat:
      * Start the authentication process using QR codes.
      * @param authSessionDetails The details to use for logging on.
      * @return [QrAuthSession]
      * @throws AuthenticationException if the session failed to start.
      */
     @Throws(AuthenticationException::class, CancellationException::class)
-    fun beginAuthSessionViaQR(authSessionDetails: AuthSessionDetails): QrAuthSession {
+    fun beginAuthSessionViaQRFuture(
+        authSessionDetails: AuthSessionDetails,
+    ): CompletableFuture<QrAuthSession> = scope.future {
+        beginAuthSessionViaQR(authSessionDetails)
+    }
+
+    /**
+     * Start the authentication process using QR codes.
+     * @param authSessionDetails The details to use for logging on.
+     * @return [QrAuthSession]
+     * @throws AuthenticationException if the session failed to start.
+     */
+    @Throws(AuthenticationException::class, CancellationException::class)
+    suspend fun beginAuthSessionViaQR(authSessionDetails: AuthSessionDetails): QrAuthSession {
         if (!steamClient.isConnected) {
             throw IllegalArgumentException("The SteamClient instance must be connected.")
         }
@@ -115,7 +153,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             this.deviceDetails = deviceDetails.build()
         }
 
-        val response = authenticationService.beginAuthSessionViaQR(request.build()).runBlock()
+        val response = authenticationService.beginAuthSessionViaQR(request.build()).await()
 
         if (response.result != EResult.OK) {
             throw AuthenticationException("Failed to begin QR auth session", response.result)
@@ -125,12 +163,25 @@ class SteamAuthentication(private val steamClient: SteamClient) {
     }
 
     /**
+     * Java Compat:
      * Start the authentication process by providing username and password.
      * @param authSessionDetails The details to use for logging on.
      * @return [CredentialsAuthSession]
      */
     @Throws(AuthenticationException::class)
-    fun beginAuthSessionViaCredentials(authSessionDetails: AuthSessionDetails): CredentialsAuthSession {
+    fun beginAuthSessionViaCredentialsFuture(
+        authSessionDetails: AuthSessionDetails,
+    ): CompletableFuture<CredentialsAuthSession> = scope.future {
+        beginAuthSessionViaCredentials(authSessionDetails)
+    }
+
+    /**
+     * Start the authentication process by providing username and password.
+     * @param authSessionDetails The details to use for logging on.
+     * @return [CredentialsAuthSession]
+     */
+    @Throws(AuthenticationException::class)
+    suspend fun beginAuthSessionViaCredentials(authSessionDetails: AuthSessionDetails): CredentialsAuthSession {
         if (authSessionDetails.username.isNullOrEmpty() || authSessionDetails.password.isNullOrEmpty()) {
             throw IllegalArgumentException(
                 "BeginAuthSessionViaCredentials requires a username and password to be set in authSessionDetails."
@@ -184,7 +235,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
             request.guardData = authSessionDetails.guardData
         }
 
-        val response = authenticationService.beginAuthSessionViaCredentials(request.build()).runBlock()
+        val response = authenticationService.beginAuthSessionViaCredentials(request.build()).await()
 
         if (response.result != EResult.OK) {
             throw AuthenticationException("Authentication failed", response.result)

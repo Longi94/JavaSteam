@@ -123,11 +123,11 @@ public class SampleLogonAuthentication implements Runnable {
 
         try {
             // Begin authenticating via credentials.
-            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails);
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentialsFuture(authDetails).get();
 
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResultFuture().get();
 
             if (pollResponse.getNewGuardData() != null) {
                 // When using certain two factor methods (such as email 2fa), guard data may be provided by Steam

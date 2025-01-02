@@ -5,10 +5,12 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
 import `in`.dragonbra.javasteam.types.SteamID
+import kotlinx.coroutines.future.future
 
 /**
  * Credentials based authentication session.
  */
+@Suppress("unused")
 class CredentialsAuthSession(
     authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
@@ -26,13 +28,24 @@ class CredentialsAuthSession(
     private val steamID: SteamID = SteamID(response.steamid)
 
     /**
+     * Java Compat:
+     * Send Steam Guard code for this authentication session.
+     * @param code     The code.
+     * @param codeType Type of code.
+     * @throws AuthenticationException .
+     */
+    fun sendSteamGuardCodeFuture(code: String?, codeType: EAuthSessionGuardType?) = scope.future {
+        sendSteamGuardCode(code, codeType)
+    }
+
+    /**
      * Send Steam Guard code for this authentication session.
      * @param code     The code.
      * @param codeType Type of code.
      * @throws AuthenticationException .
      */
     @Throws(AuthenticationException::class)
-    fun sendSteamGuardCode(code: String?, codeType: EAuthSessionGuardType?) {
+    suspend fun sendSteamGuardCode(code: String?, codeType: EAuthSessionGuardType?) {
         val request = CAuthentication_UpdateAuthSessionWithSteamGuardCode_Request.newBuilder().apply {
             this.clientId = clientID
             this.steamid = steamID.convertToUInt64()
@@ -42,7 +55,7 @@ class CredentialsAuthSession(
 
         val response = authentication.authenticationService
             .updateAuthSessionWithSteamGuardCode(request.build())
-            .runBlock()
+            .await()
 
         // Observed results can be InvalidLoginAuthCode, TwoFactorCodeMismatch, Expired, DuplicateRequest.
         // DuplicateRequest happens when accepting the prompt in the mobile app, and then trying to send guard code here,

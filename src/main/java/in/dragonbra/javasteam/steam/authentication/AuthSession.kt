@@ -10,6 +10,7 @@ import `in`.dragonbra.javasteam.rpc.service.Authentication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import java.util.concurrent.CompletableFuture
@@ -24,7 +25,7 @@ import java.util.concurrent.CompletableFuture
  * @param allowedConfirmations Confirmation types that will be able to confirm the request.
  * @param pollingInterval Refresh interval with which requestor should call PollAuthSessionStatus.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 open class AuthSession(
     val authentication: SteamAuthentication,
     val authenticator: IAuthenticator?,
@@ -38,20 +39,20 @@ open class AuthSession(
         // private val logger = LogManager.getLogger(AuthSession::class.java)
     }
 
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     init {
         allowedConfirmations = sortConfirmations(allowedConfirmations)
     }
 
     /**
-     * Blocking, compat function for Java mostly:
+     * Java Compat:
      * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
      *
      * @return An [AuthPollResult] containing tokens which can be used to log in to Steam.
      */
     @Throws(AuthenticationException::class)
-    fun pollingWaitForResultCompat(): CompletableFuture<AuthPollResult> = scope.future { pollingWaitForResult() }
+    fun pollingWaitForResultFuture(): CompletableFuture<AuthPollResult> = scope.future { pollingWaitForResult() }
 
     /**
      * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
@@ -87,7 +88,7 @@ open class AuthSession(
 
         var pollLoop = false
         when (preferredConfirmation.confirmationType) {
-            EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit // // No steam guard
+            EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit // No steam guard
             EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
             EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
             -> {
@@ -167,11 +168,22 @@ open class AuthSession(
     }
 
     @Throws(AuthenticationException::class)
-    private fun pollDeviceConfirmation(): AuthPollResult {
+    private suspend fun pollDeviceConfirmation(): AuthPollResult {
         while (true) {
             pollAuthSessionStatus()?.let { return it }
-            Thread.sleep(pollingInterval.toLong())
+            delay(pollingInterval.toLong())
         }
+    }
+
+    /**
+     * Java Compat:
+     * Polls for authentication status once. Prefer using [pollingWaitForResult] instead.
+     * @return An object containing tokens which can be used to log in to Steam, or null if not yet authenticated.
+     * @throws AuthenticationException Thrown when polling fails.
+     */
+    @Throws(AuthenticationException::class)
+    fun pollAuthSessionStatusFuture(): CompletableFuture<AuthPollResult?> = scope.future {
+        pollAuthSessionStatus()
     }
 
     /**
@@ -180,13 +192,13 @@ open class AuthSession(
      * @throws AuthenticationException Thrown when polling fails.
      */
     @Throws(AuthenticationException::class)
-    fun pollAuthSessionStatus(): AuthPollResult? {
+    suspend fun pollAuthSessionStatus(): AuthPollResult? {
         val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder().apply {
             clientId = clientID
             requestId = ByteString.copyFrom(requestID)
         }
 
-        val result = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
+        val result = authentication.authenticationService.pollAuthSessionStatus(request.build()).await()
 
         // eResult can be Expired, FileNotFound, Fail
         if (result.result != EResult.OK) {
