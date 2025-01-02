@@ -32,7 +32,7 @@ public class PacketMsg implements IPacketMsg {
 
         MsgHdr msgHdr = new MsgHdr();
 
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(data)) {
+        try (var stream = new ByteArrayInputStream(data)) {
             msgHdr.deserialize(stream);
         }
 

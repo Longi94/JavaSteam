@@ -134,16 +134,17 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyTyp
 
     @Override
     public byte[] serialize() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-
-        try {
+        try (var baos = new ByteArrayOutputStream(0)) {
             getHeader().serialize(baos);
             baos.write(body.build().toByteArray());
             baos.write(payload.toByteArray());
+
+            return baos.toByteArray();
         } catch (IOException e) {
             logger.debug(e);
         }
-        return baos.toByteArray();
+
+        return new byte[0];
     }
 
     @SuppressWarnings("unchecked")
@@ -165,5 +166,11 @@ public class ClientMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyTyp
             logger.debug(e);
         }
 
+        // TODO can be MemoryStream?
+        try {
+            ms.close();
+        } catch (IOException e) {
+            logger.debug(e);
+        }
     }
 }

@@ -144,17 +144,17 @@ public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgB
 
     @Override
     public byte[] serialize() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(0);
-
-        try {
+        try (var baos = new ByteArrayOutputStream(0)) {
             getHeader().serialize(baos);
             body.serialize(baos);
             baos.write(payload.toByteArray());
+
+            return baos.toByteArray();
         } catch (IOException e) {
             logger.debug(e);
         }
 
-        return baos.toByteArray();
+        return new byte[0];
     }
 
     @Override
@@ -173,5 +173,7 @@ public class ClientGCMsg<BodyType extends IGCSerializableMessage> extends GCMsgB
 
         payload.write(data, (int) ms.getPosition(), ms.available());
         payload.seek(0, SeekOrigin.BEGIN);
+
+        ms.close();
     }
 }

@@ -36,7 +36,7 @@ public class PacketClientGCMsgProtobuf implements IPacketGCMsg {
         MsgGCHdrProtoBuf protobufHeader = new MsgGCHdrProtoBuf();
 
         // we need to pull out the job ids, so we deserialize the protobuf header
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
+        try (var bais = new ByteArrayInputStream(data)) {
             protobufHeader.deserialize(bais);
         } catch (IOException ignored) {
         }

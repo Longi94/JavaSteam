@@ -32,7 +32,7 @@ public class PacketClientMsg implements IPacketMsg {
 
         ExtendedClientMsgHdr extendedHdr = new ExtendedClientMsgHdr();
 
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(data)) {
+        try (var stream = new ByteArrayInputStream(data)) {
             extendedHdr.deserialize(stream);
         }
 
