@@ -106,11 +106,9 @@ public class SampleWebCookie implements Runnable {
         auth = new SteamAuthentication(steamClient);
 
         try {
-            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentialsFuture(authSessionDetails).get();
+            CredentialsAuthSession authSession = auth.beginAuthSessionViaCredentials(authSessionDetails).get();
 
-            // Note: This is blocking, it would be up to you to make it non-blocking for Java.
-            // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
-            AuthPollResult pollResponse = authSession.pollingWaitForResultFuture().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
 
             LogOnDetails logOnDetails = new LogOnDetails();
             logOnDetails.setUsername(pollResponse.getAccountName());
@@ -166,9 +164,9 @@ public class SampleWebCookie implements Runnable {
         // Parse this token with a JWT library to get the expiration date and set up a timer to renew it.
         // To renew you will have to call this:
         // When allowRenewal is set to true, Steam may return new RefreshToken
-        AccessTokenGenerateResult newTokens = null;
+        AccessTokenGenerateResult newTokens;
         try {
-            newTokens = auth.generateAccessTokenForAppFuture(callback.getClientSteamID(), refreshToken, false).get();
+            newTokens = auth.generateAccessTokenForApp(callback.getClientSteamID(), refreshToken, false).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

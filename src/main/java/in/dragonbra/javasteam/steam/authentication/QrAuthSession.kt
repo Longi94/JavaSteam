@@ -2,21 +2,26 @@ package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_BeginAuthSessionViaQR_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Response
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * QR code based authentication session.
  */
-class QrAuthSession(
+class QrAuthSession @JvmOverloads constructor(
     authentication: SteamAuthentication,
     authenticator: IAuthenticator?,
     response: CAuthentication_BeginAuthSessionViaQR_Response.Builder,
+    defaultScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) : AuthSession(
     authentication = authentication,
     authenticator = authenticator,
     clientID = response.clientId,
     requestID = response.requestId.toByteArray(),
     allowedConfirmations = response.allowedConfirmationsList,
-    pollingInterval = response.interval
+    pollingInterval = response.interval,
+    defaultScope = defaultScope,
 ) {
 
     /**

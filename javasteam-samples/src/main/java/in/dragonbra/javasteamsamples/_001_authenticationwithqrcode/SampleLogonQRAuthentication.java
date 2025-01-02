@@ -91,7 +91,9 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
             // get the authentication handler, which used for authenticating with Steam
             SteamAuthentication auth = new SteamAuthentication(steamClient);
 
-            QrAuthSession authSession = auth.beginAuthSessionViaQRFuture(new AuthSessionDetails()).get();
+            AuthSessionDetails authDetails = new AuthSessionDetails();
+
+            QrAuthSession authSession = auth.beginAuthSessionViaQR(authDetails).get();
 
             // Steam will periodically refresh the challenge url, this callback allows you to draw a new qr code.
             // Note: Callback is below.
@@ -104,7 +106,7 @@ public class SampleLogonQRAuthentication implements Runnable, IChallengeUrlChang
             // This response is later used to log on to Steam after connecting
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
-            AuthPollResult pollResponse = authSession.pollingWaitForResultFuture().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
 
             System.out.println("Connected to Steam! Logging in " + pollResponse.getAccountName() + "...");
 

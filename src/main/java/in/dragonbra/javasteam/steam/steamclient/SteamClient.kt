@@ -27,7 +27,9 @@ import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -44,9 +46,8 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("unused")
 class SteamClient @JvmOverloads constructor(
     configuration: SteamConfiguration? = SteamConfiguration.createDefault(),
+    internal val defaultScope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
 ) : CMClient(configuration) {
-
-    // private val clientScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private val handlers = HashMap<Class<out ClientMsgHandler>, ClientMsgHandler>(HANDLERS_COUNT)
 

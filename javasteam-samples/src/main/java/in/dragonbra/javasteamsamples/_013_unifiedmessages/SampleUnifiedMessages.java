@@ -156,9 +156,9 @@ public class SampleUnifiedMessages implements Runnable {
         authDetails.authenticator = new UserConsoleAuthenticator();
 
         try {
-            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentialsFuture(authDetails).get();
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails).get();
 
-            AuthPollResult pollResponse = authSession.pollingWaitForResultFuture().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());

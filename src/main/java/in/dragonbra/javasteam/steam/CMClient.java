@@ -391,7 +391,8 @@ public abstract class CMClient {
         ClientMsgProtobuf<CMsgClientLogonResponse.Builder> logonResp = new ClientMsgProtobuf<>(CMsgClientLogonResponse.class, packetMsg);
 
         EResult logonResponse = EResult.from(logonResp.getBody().getEresult());
-        logger.debug("handleLogOnResponse got response: " + logonResponse);
+        EResult extendedResponse = EResult.from(logonResp.getBody().getEresultExtended());
+        logger.debug("handleLogOnResponse got response: " + logonResponse + ", extended: " + extendedResponse);
 
         // Note: Sometimes if you sign in too many times, steam may confuse "InvalidPassword" with "RateLimitExceeded"
 
