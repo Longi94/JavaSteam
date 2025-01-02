@@ -429,191 +429,216 @@ class JavaGen(
         writer?.writeln("@Override")
         writer?.writeln("public void serialize(OutputStream stream) throws IOException {")
         writer?.indent()
-        writer?.writeln("BinaryWriter bw = new BinaryWriter(stream);")
+        writer?.writeln("try (var bw = new BinaryWriter(stream)) {")
 
-        if (node.childNodes.isNotEmpty()) {
-            writer?.writeln()
-        }
+        // 1/1/2025: Commented out, compacting the code looked better.
+        // if (node.childNodes.isNotEmpty()) {
+        //     writer?.writeln()
+        // }
 
-        for (child in node.childNodes) {
-            val prop = child as PropNode
-            val typeStr = getType(prop.type)
-            val propName = prop.name
-
-            if (skip.contains(propName)) {
-                continue
-            }
-
-            if (prop.flags == "protomask") {
-                writer?.writeln("bw.writeInt(MsgUtil.makeMsg($propName.code(), true));")
-
-                continue
-            }
-
-            if (prop.flags == "proto") {
-                writer?.writeln("byte[] ${propName}Buffer = $propName.build().toByteArray();")
-
-                if (prop.flagsOpt != null) {
-                    writer?.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
-                    writer?.writeln("bw.writeInt(${prop.flagsOpt});")
-                } else {
-                    writer?.writeln("bw.writeInt(${propName}Buffer.length);")
-                }
-
-                writer?.writeln("bw.write(${propName}Buffer);")
-
-                continue
-            }
-
-            if (prop.flags == "const") {
-                continue
-            }
-
-            if (prop.type is StrongSymbol) {
-                val strongSymbol = prop.type as StrongSymbol
-                if (strongSymbol.clazz is EnumNode) {
-                    val enumType = getType(strongSymbol.clazz.type)
-
-                    if (flagEnums.contains(typeStr)) {
-                        when (enumType) {
-                            "long" -> writer?.writeln("bw.writeLong($typeStr.code($propName));")
-                            "byte" -> writer?.writeln("bw.writeByte($typeStr.code($propName));")
-                            "short" -> writer?.writeln("bw.writeShort($typeStr.code($propName));")
-                            else -> writer?.writeln("bw.writeInt($typeStr.code($propName));")
-                        }
-                    } else {
-                        when (enumType) {
-                            "long" -> writer?.writeln("bw.writeLong($propName.code());")
-                            "byte" -> writer?.writeln("bw.writeByte($propName.code());")
-                            "short" -> writer?.writeln("bw.writeShort($propName.code());")
-                            else -> writer?.writeln("bw.writeInt($propName.code());")
-                        }
-                    }
-
-                    continue
-                }
-            }
-
-            if ("steamidmarshal" == prop.flags && "long" == typeStr) {
-                writer?.writeln("bw.writeLong($propName);")
-            } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
-                writer?.writeln("bw.writeBoolean($propName);")
-            } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
-                writer?.writeln("bw.writeLong($propName);")
-            } else {
-                var isArray = false
-
-                if (!prop.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
-                ) {
-                    isArray = true
-                }
-
-                if (isArray) {
-                    writer?.writeln("bw.writeInt($propName.length);")
-                    writer?.writeln("bw.write($propName);")
-                } else {
-                    when (typeStr) {
-                        "long" -> writer?.writeln("bw.writeLong($propName);")
-                        "byte" -> writer?.writeln("bw.writeByte($propName);")
-                        "short" -> writer?.writeln("bw.writeShort($propName);")
-                        else -> writer?.writeln("bw.writeInt($propName);")
-                    }
-                }
-            }
-        }
-
-        writer?.unindent()
-        writer?.writeln("}")
-        writer?.writeln()
-        writer?.writeln("@Override")
-        writer?.writeln("public void deserialize(InputStream stream) throws IOException {")
         writer?.indent()
-        writer?.writeln("BinaryReader br = new BinaryReader(stream);")
 
-        if (node.childNodes.isNotEmpty()) {
-            writer?.writeln()
-        }
-
-        for (child in node.childNodes) {
-            val prop = child as PropNode
-            val typeStr = getType(prop.type)
-            val propName = prop.name
-
-            if (skip.contains(propName)) {
-                continue
+        node.childNodes
+            .ifEmpty {
+                writer?.writeln("/* No-Op */")
+                emptyList()
             }
+            .forEach { child ->
+                val prop = child as PropNode
+                val typeStr = getType(prop.type)
+                val propName = prop.name
 
-            if (prop.flags != null) {
+                if (skip.contains(propName)) {
+                    return@forEach
+                }
+
                 if (prop.flags == "protomask") {
-                    writer?.writeln("$propName = MsgUtil.getMsg(br.readInt());")
+                    writer?.writeln("bw.writeInt(MsgUtil.makeMsg($propName.code(), true));")
 
-                    continue
+                    return@forEach
                 }
 
                 if (prop.flags == "proto") {
+                    writer?.writeln("byte[] ${propName}Buffer = $propName.build().toByteArray();")
+
                     if (prop.flagsOpt != null) {
-                        writer?.writeln("${prop.flagsOpt} = br.readInt();")
-                        writer?.writeln("byte[] ${propName}Buffer = br.readBytes(${prop.flagsOpt});")
+                        writer?.writeln("${prop.flagsOpt} = ${propName}Buffer.length;")
+                        writer?.writeln("bw.writeInt(${prop.flagsOpt});")
                     } else {
-                        writer?.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
+                        writer?.writeln("bw.writeInt(${propName}Buffer.length);")
                     }
 
-                    writer?.writeln("$propName = $typeStr.newBuilder().mergeFrom(${propName}Buffer);")
+                    writer?.writeln("bw.write(${propName}Buffer);")
 
-                    continue
+                    return@forEach
                 }
 
                 if (prop.flags == "const") {
-                    continue
+                    return@forEach
                 }
-            }
 
-            if (prop.type is StrongSymbol) {
-                val strongSymbol = prop.type as StrongSymbol
+                if (prop.type is StrongSymbol) {
+                    val strongSymbol = prop.type as StrongSymbol
+                    if (strongSymbol.clazz is EnumNode) {
+                        val enumType = getType(strongSymbol.clazz.type)
 
-                if (strongSymbol.clazz is EnumNode) {
-                    val enumType = getType((strongSymbol.clazz).type)
-                    val className = strongSymbol.clazz.name
+                        if (flagEnums.contains(typeStr)) {
+                            when (enumType) {
+                                "long" -> writer?.writeln("bw.writeLong($typeStr.code($propName));")
+                                "byte" -> writer?.writeln("bw.writeByte($typeStr.code($propName));")
+                                "short" -> writer?.writeln("bw.writeShort($typeStr.code($propName));")
+                                else -> writer?.writeln("bw.writeInt($typeStr.code($propName));")
+                            }
+                        } else {
+                            when (enumType) {
+                                "long" -> writer?.writeln("bw.writeLong($propName.code());")
+                                "byte" -> writer?.writeln("bw.writeByte($propName.code());")
+                                "short" -> writer?.writeln("bw.writeShort($propName.code());")
+                                else -> writer?.writeln("bw.writeInt($propName.code());")
+                            }
+                        }
 
-                    when (enumType) {
-                        "long" -> writer?.writeln("$propName = $className.from(br.readLong());")
-                        "byte" -> writer?.writeln("$propName = $className.from(br.readByte());")
-                        "short" -> writer?.writeln("$propName = $className.from(br.readShort());")
-                        else -> writer?.writeln("$propName = $className.from(br.readInt());")
+                        return@forEach
                     }
-
-                    continue
-                }
-            }
-
-            if ("steamidmarshal" == prop.flags && "long" == typeStr) {
-                writer?.writeln("$propName = br.readLong();")
-            } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
-                writer?.writeln("$propName = br.readBoolean();")
-            } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
-                writer?.writeln("$propName = br.readLong();")
-            } else {
-                var isArray = false
-
-                if (!prop.flagsOpt.isNullOrEmpty() &&
-                    NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
-                ) {
-                    isArray = true
                 }
 
-                if (isArray) {
-                    writer?.writeln("$propName = br.readBytes(br.readInt());")
+                if ("steamidmarshal" == prop.flags && "long" == typeStr) {
+                    writer?.writeln("bw.writeLong($propName);")
+                } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
+                    writer?.writeln("bw.writeBoolean($propName);")
+                } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
+                    writer?.writeln("bw.writeLong($propName);")
                 } else {
-                    when (typeStr) {
-                        "long" -> writer?.writeln("$propName = br.readLong();")
-                        "byte" -> writer?.writeln("$propName = br.readByte();")
-                        "short" -> writer?.writeln("$propName = br.readShort();")
-                        else -> writer?.writeln("$propName = br.readInt();")
+                    var isArray = false
+
+                    if (!prop.flagsOpt.isNullOrEmpty() &&
+                        NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
+                    ) {
+                        isArray = true
+                    }
+
+                    if (isArray) {
+                        writer?.writeln("bw.writeInt($propName.length);")
+                        writer?.writeln("bw.write($propName);")
+                    } else {
+                        when (typeStr) {
+                            "long" -> writer?.writeln("bw.writeLong($propName);")
+                            "byte" -> writer?.writeln("bw.writeByte($propName);")
+                            "short" -> writer?.writeln("bw.writeShort($propName);")
+                            else -> writer?.writeln("bw.writeInt($propName);")
+                        }
                     }
                 }
             }
-        }
+
+        writer?.unindent()
+        writer?.writeln("}")
+
+        writer?.unindent()
+        writer?.writeln("}")
+
+        writer?.writeln()
+
+        writer?.writeln("@Override")
+        writer?.writeln("public void deserialize(InputStream stream) throws IOException {")
+
+        writer?.indent()
+        writer?.writeln("try (var br = new BinaryReader(stream)) {")
+
+        // 1/1/2025: Commented out, compacting the code looked better.
+        // if (node.childNodes.isNotEmpty()) {
+        //     writer?.writeln()
+        // }
+
+        writer?.indent()
+
+        node.childNodes
+            .ifEmpty {
+                writer?.writeln("/* No-Op */")
+                emptyList()
+            }
+            .forEach { child ->
+                val prop = child as PropNode
+                val typeStr = getType(prop.type)
+                val propName = prop.name
+
+                if (skip.contains(propName)) {
+                    return@forEach
+                }
+
+                if (prop.flags != null) {
+                    if (prop.flags == "protomask") {
+                        writer?.writeln("$propName = MsgUtil.getMsg(br.readInt());")
+
+                        return@forEach
+                    }
+
+                    if (prop.flags == "proto") {
+                        if (prop.flagsOpt != null) {
+                            writer?.writeln("${prop.flagsOpt} = br.readInt();")
+                            writer?.writeln("byte[] ${propName}Buffer = br.readBytes(${prop.flagsOpt});")
+                        } else {
+                            writer?.writeln("byte[] ${propName}Buffer = br.readBytes(br.readInt());")
+                        }
+
+                        writer?.writeln("$propName = $typeStr.newBuilder().mergeFrom(${propName}Buffer);")
+
+                        return@forEach
+                    }
+
+                    if (prop.flags == "const") {
+                        return@forEach
+                    }
+                }
+
+                if (prop.type is StrongSymbol) {
+                    val strongSymbol = prop.type as StrongSymbol
+
+                    if (strongSymbol.clazz is EnumNode) {
+                        val enumType = getType((strongSymbol.clazz).type)
+                        val className = strongSymbol.clazz.name
+
+                        when (enumType) {
+                            "long" -> writer?.writeln("$propName = $className.from(br.readLong());")
+                            "byte" -> writer?.writeln("$propName = $className.from(br.readByte());")
+                            "short" -> writer?.writeln("$propName = $className.from(br.readShort());")
+                            else -> writer?.writeln("$propName = $className.from(br.readInt());")
+                        }
+
+                        return@forEach
+                    }
+                }
+
+                if ("steamidmarshal" == prop.flags && "long" == typeStr) {
+                    writer?.writeln("$propName = br.readLong();")
+                } else if ("boolmarshal" == prop.flags && "byte" == typeStr) {
+                    writer?.writeln("$propName = br.readBoolean();")
+                } else if ("gameidmarshal" == prop.flags && "long" == typeStr) {
+                    writer?.writeln("$propName = br.readLong();")
+                } else {
+                    var isArray = false
+
+                    if (!prop.flagsOpt.isNullOrEmpty() &&
+                        NUMBER_PATTERN.matcher(prop.flagsOpt!!).matches()
+                    ) {
+                        isArray = true
+                    }
+
+                    if (isArray) {
+                        writer?.writeln("$propName = br.readBytes(br.readInt());")
+                    } else {
+                        when (typeStr) {
+                            "long" -> writer?.writeln("$propName = br.readLong();")
+                            "byte" -> writer?.writeln("$propName = br.readByte();")
+                            "short" -> writer?.writeln("$propName = br.readShort();")
+                            else -> writer?.writeln("$propName = br.readInt();")
+                        }
+                    }
+                }
+            }
+
+        writer?.unindent()
+        writer?.writeln("}")
 
         writer?.unindent()
         writer?.writeln("}")
