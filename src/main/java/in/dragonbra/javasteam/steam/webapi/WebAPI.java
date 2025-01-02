@@ -266,7 +266,7 @@ public class WebAPI {
     private KeyValue parseResponse(Response response) {
         KeyValue kv = new KeyValue();
 
-        try (InputStream is = response.body().byteStream()) {
+        try (var is = response.body().byteStream()) {
             kv.readAsText(is);
         } catch (Exception e) {
             throw new IllegalStateException("An internal error occurred when attempting to parse the response from the WebAPI server. This can indicate a change in the VDF format.", e);

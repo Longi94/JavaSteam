@@ -368,7 +368,7 @@ public class KeyValue {
      * @throws IOException exception while reading from the file
      */
     public boolean readFileAsText(String filename) throws IOException {
-        try (FileInputStream fis = new FileInputStream(filename)) {
+        try (var fis = new FileInputStream(filename)) {
             return readAsText(fis);
         }
     }
@@ -443,27 +443,28 @@ public class KeyValue {
         }
 
         // TODO charsets?
-        try (FileInputStream fis = new FileInputStream(file)) {
+        try (var fis = new FileInputStream(file)) {
             // Massage the incoming file to be encoded as UTF-8.
             String fisString = IOUtils.toString(fis, Charset.defaultCharset());
             byte[] fisStringToBytes = fisString.getBytes(StandardCharsets.UTF_8);
-            MemoryStream ms = new MemoryStream(fisStringToBytes, 0, fisStringToBytes.length - 1);
 
-            KeyValue kv = new KeyValue();
+            try (var ms = new MemoryStream(fisStringToBytes, 0, fisStringToBytes.length - 1)) {
+                KeyValue kv = new KeyValue();
 
-            if (asBinary) {
-                if (!kv.tryReadAsBinary(ms)) {
-                    return null;
+                if (asBinary) {
+                    if (!kv.tryReadAsBinary(ms)) {
+                        return null;
+                    }
+                } else {
+                    if (!kv.readAsText(ms)) {
+                        return null;
+                    }
                 }
-            } else {
-                if (!kv.readAsText(ms)) {
-                    return null;
-                }
+
+                return kv;
             }
-
-            return kv;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e);
             return null;
         }
     }
@@ -481,7 +482,7 @@ public class KeyValue {
 
         byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
 
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
+        try (var bais = new ByteArrayInputStream(bytes)) {
             KeyValue kv = new KeyValue();
 
             if (!kv.readAsText(bais)) {
@@ -490,6 +491,7 @@ public class KeyValue {
 
             return kv;
         } catch (IOException e) {
+            logger.error(e);
             return null;
         }
     }
@@ -502,7 +504,7 @@ public class KeyValue {
      * @throws IOException exception while writing to the file
      */
     public void saveToFile(File path, boolean binary) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(path, false)) {
+        try (var fos = new FileOutputStream(path, false)) {
             saveToStream(fos, binary);
         }
     }
@@ -621,52 +623,52 @@ public class KeyValue {
     private static boolean tryReadAsBinaryCore(InputStream is, KeyValue current, KeyValue parent) throws IOException {
         current.children = new ArrayList<>();
 
-        BinaryReader br = new BinaryReader(is);
+        try (var br = new BinaryReader(is)) {
+            while (true) {
+                Type type = Type.from(br.readByte());
 
-        while (true) {
-            Type type = Type.from(br.readByte());
+                if (type == Type.END || type == Type.ALTERNATEEND) {
+                    break;
+                }
 
-            if (type == Type.END || type == Type.ALTERNATEEND) {
-                break;
-            }
-
-            current.setName(br.readNullTermString(StandardCharsets.UTF_8));
-            switch (type) {
-                case NONE:
-                    KeyValue child = new KeyValue();
-                    boolean didReadChild = tryReadAsBinaryCore(is, child, current);
-                    if (!didReadChild) {
+                current.setName(br.readNullTermString(StandardCharsets.UTF_8));
+                switch (type) {
+                    case NONE:
+                        KeyValue child = new KeyValue();
+                        boolean didReadChild = tryReadAsBinaryCore(is, child, current);
+                        if (!didReadChild) {
+                            return false;
+                        }
+                        break;
+                    case STRING:
+                        current.setValue(br.readNullTermString(StandardCharsets.UTF_8));
+                        break;
+                    case WIDESTRING:
+                        logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.");
                         return false;
-                    }
-                    break;
-                case STRING:
-                    current.setValue(br.readNullTermString(StandardCharsets.UTF_8));
-                    break;
-                case WIDESTRING:
-                    logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.");
-                    return false;
-                case INT32:
-                case COLOR:
-                case POINTER:
-                    current.setValue(String.valueOf(br.readInt()));
-                    break;
-                case UINT64:
-                    current.setValue(String.valueOf(br.readLong()));
-                    break;
-                case FLOAT32:
-                    current.setValue(String.valueOf(br.readFloat()));
-                    break;
-                case INT64:
-                    current.setValue(String.valueOf(br.readLong()));
-                    break;
-                default:
-                    return false;
-            }
+                    case INT32:
+                    case COLOR:
+                    case POINTER:
+                        current.setValue(String.valueOf(br.readInt()));
+                        break;
+                    case UINT64:
+                        current.setValue(String.valueOf(br.readLong()));
+                        break;
+                    case FLOAT32:
+                        current.setValue(String.valueOf(br.readFloat()));
+                        break;
+                    case INT64:
+                        current.setValue(String.valueOf(br.readLong()));
+                        break;
+                    default:
+                        return false;
+                }
 
-            if (parent != null) {
-                parent.getChildren().add(current);
+                if (parent != null) {
+                    parent.getChildren().add(current);
+                }
+                current = new KeyValue();
             }
-            current = new KeyValue();
         }
 
         return true;

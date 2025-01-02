@@ -305,10 +305,8 @@ public abstract class CMClient {
             return null;
         }
 
-        BinaryReader reader = new BinaryReader(new ByteArrayInputStream(data));
-
         int rawEMsg = 0;
-        try {
+        try (var reader = new BinaryReader(new ByteArrayInputStream(data))) {
             rawEMsg = reader.readInt();
         } catch (IOException e) {
             logger.debug("Exception while getting EMsg code", e);
@@ -350,10 +348,8 @@ public abstract class CMClient {
         byte[] payload = msgMulti.getBody().getMessageBody().toByteArray();
 
         if (msgMulti.getBody().getSizeUnzipped() > 0) {
-            try {
-                GZIPInputStream gzin = new GZIPInputStream(new ByteArrayInputStream(payload));
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
+            try (var gzin = new GZIPInputStream(new ByteArrayInputStream(payload));
+                 var baos = new ByteArrayOutputStream()) {
                 int res = 0;
                 byte[] buf = new byte[1024];
                 while (res >= 0) {
@@ -363,16 +359,14 @@ public abstract class CMClient {
                     }
                 }
                 payload = baos.toByteArray();
-
-                gzin.close();
-                baos.close();
             } catch (IOException e) {
                 logger.debug("HandleMulti encountered an exception when decompressing.", e);
                 return;
             }
         }
 
-        try (BinaryReader br = new BinaryReader(new ByteArrayInputStream(payload))) {
+        try (var bais = new ByteArrayInputStream(payload);
+             var br = new BinaryReader(bais)) {
             while (br.available() > 0) {
                 int subSize = br.readInt();
                 byte[] subData = br.readBytes(subSize);
