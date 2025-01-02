@@ -37,6 +37,9 @@ class Client(steamClient: SteamClient) : Closeable {
     private val defaultScope = CoroutineScope(Dispatchers.IO)
 
     companion object {
+
+        private val logger: Logger = LogManager.getLogger(Client::class.java)
+
         /**
          * Default timeout to use when making requests
          */
@@ -46,8 +49,6 @@ class Client(steamClient: SteamClient) : Closeable {
          * Default timeout to use when reading the response body
          */
         var responseBodyTimeout = 60000L
-
-        private val logger: Logger = LogManager.getLogger(Client::class.java)
 
         @JvmStatic
         @JvmOverloads

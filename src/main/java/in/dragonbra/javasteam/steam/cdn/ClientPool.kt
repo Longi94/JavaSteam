@@ -65,7 +65,6 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
         while (isActive) {
             populatePoolEvent.await(1, TimeUnit.SECONDS)
 
-            @Suppress("UsePropertyAccessSyntax")
             if (availableServerEndpoints.size < SERVER_ENDPOINT_MIN_SIZE && steamClient.isConnected) {
                 val servers = fetchBootstrapServerList().await()
 

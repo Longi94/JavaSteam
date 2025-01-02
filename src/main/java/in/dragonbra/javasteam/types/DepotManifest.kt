@@ -194,11 +194,17 @@ class DepotManifest {
                 }
 
                 // Trim the ending null byte, safe for UTF-8
-                val filenameLength =
-                    bufferDecrypted.size - if (bufferDecrypted.isNotEmpty() && bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()) 1 else 0
+                val filenameLength = bufferDecrypted.size - if (
+                    bufferDecrypted.isNotEmpty() &&
+                    bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()
+                ) {
+                    1
+                } else {
+                    0
+                }
 
-                file.fileName =
-                    String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8).replace('\\', File.separatorChar)
+                file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8)
+                    .replace('\\', File.separatorChar)
             }
         } catch (e: Exception) {
             logger.error("Failed to decrypt filenames: $e")
@@ -400,12 +406,13 @@ class DepotManifest {
             }
 
             for (chunk in file.chunks) {
-                val protoChunk = ContentManifestPayload.FileMapping.ChunkData.newBuilder()
-                protoChunk.setSha(ByteString.copyFrom(chunk.chunkID))
-                protoChunk.setCrc(chunk.checksum)
-                protoChunk.setOffset(chunk.offset)
-                protoChunk.setCbOriginal(chunk.uncompressedLength)
-                protoChunk.setCbCompressed(chunk.compressedLength)
+                val protoChunk = ContentManifestPayload.FileMapping.ChunkData.newBuilder().apply {
+                    sha = ByteString.copyFrom(chunk.chunkID)
+                    crc = chunk.checksum
+                    offset = chunk.offset
+                    cbOriginal = chunk.uncompressedLength
+                    cbCompressed = chunk.compressedLength
+                }
 
                 protoFile.addChunks(protoChunk)
                 uniqueChunks.add(chunk.chunkID!!)
@@ -414,14 +421,15 @@ class DepotManifest {
             payload.addMappings(protoFile)
         }
 
-        val metadata = ContentManifestMetadata.newBuilder()
-        metadata.setDepotId(depotID)
-        metadata.setGidManifest(manifestGID)
-        metadata.setCreationTime((creationTime.toInstant().epochSecond).toInt())
-        metadata.setFilenamesEncrypted(filenamesEncrypted)
-        metadata.setCbDiskOriginal(totalUncompressedSize)
-        metadata.setCbDiskCompressed(totalCompressedSize)
-        metadata.setUniqueChunks(uniqueChunks.size)
+        val metadata = ContentManifestMetadata.newBuilder().apply {
+            this.depotId = depotID
+            this.gidManifest = manifestGID
+            this.creationTime = this@DepotManifest.creationTime.toInstant().epochSecond.toInt()
+            this.filenamesEncrypted = filenamesEncrypted
+            this.cbDiskOriginal = totalUncompressedSize
+            this.cbDiskCompressed = totalCompressedSize
+            this.uniqueChunks = uniqueChunks.size
+        }
 
         // Calculate payload CRC
         val payloadData = payload.build().toByteArray()

@@ -29,7 +29,6 @@ abstract class AsyncJob(val client: SteamClient, val jobID: JobID) {
     abstract fun setFailed(dueToRemoteFailure: Boolean)
 
     fun heartbeat() {
-        println("heartbeat")
         timeout += 10000
     }
 }

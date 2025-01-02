@@ -133,6 +133,15 @@ class SteamClient @JvmOverloads constructor(
      */
     @Suppress("UNCHECKED_CAST")
     fun <T : ClientMsgHandler> getHandler(type: Class<T>): T? = handlers[type] as T?
+
+    /**
+     * Kotlin Helper:
+     * Returns a registered handler.
+     *
+     * @param T  The type of the handler to cast to. Must derive from ClientMsgHandler.
+     * @return A registered handler on success, or null if the handler could not be found.
+     */
+    inline fun <reified T : ClientMsgHandler> getHandler(): T? = getHandler(T::class.java)
     //endregion
 
     //region Callbacks

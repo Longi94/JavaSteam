@@ -14,11 +14,13 @@ import java.util.concurrent.ConcurrentMap
  */
 class AsyncJobManager {
 
+    companion object {
+        private val logger = LogManager.getLogger(AsyncJobManager::class.java)
+    }
+
     val asyncJobs: ConcurrentMap<JobID, AsyncJob> = ConcurrentHashMap()
 
     private val jobTimeoutFunc: ScheduledFunction = ScheduledFunction(this::cancelTimedOutJobs, 1000)
-
-    private val logger = LogManager.getLogger(AsyncJobManager::class.java)
 
     /**
      * Tracks a job with this manager.

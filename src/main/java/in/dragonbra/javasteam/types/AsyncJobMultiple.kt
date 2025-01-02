@@ -32,6 +32,8 @@ class AsyncJobMultiple<T : CallbackMsg>(
 
     fun toDeferred(): CompletableDeferred<ResultSet> = tcs
 
+    suspend fun await(): ResultSet = toDeferred().await()
+
     override fun addResult(callback: CallbackMsg): Boolean {
         @Suppress("UNCHECKED_CAST")
         val callbackMsg = callback as T

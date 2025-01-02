@@ -49,6 +49,7 @@ public class HardwareUtils {
 
         Runtime runtime = Runtime.getRuntime();
         Process process;
+
         try {
             process = runtime.exec(new String[]{"wmic", "bios", "get", "serialnumber"});
         } catch (IOException e) {
@@ -80,6 +81,7 @@ public class HardwareUtils {
 
         Runtime runtime = Runtime.getRuntime();
         Process process;
+
         try {
             process = runtime.exec(new String[]{"/usr/sbin/system_profiler", "SPHardwareDataType"});
         } catch (IOException e) {
@@ -216,7 +218,7 @@ public class HardwareUtils {
             return null;
         }
     }
-    
+
     private static String getAndroidDeviceName() {
         String manufacturer = getAndroidSystemProperty("ro.product.manufacturer");
         String model = getAndroidSystemProperty("ro.product.model");

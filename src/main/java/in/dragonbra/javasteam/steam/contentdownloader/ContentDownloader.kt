@@ -461,8 +461,10 @@ class ContentDownloader(val steamClient: SteamClient) {
                     }
 
                     logger.debug("Validating $fileFinalPath")
-                    neededChunks =
-                        Utils.validateSteam3FileChecksums(fs, file.chunks.sortedBy { it.offset }.toTypedArray())
+                    neededChunks = Utils.validateSteam3FileChecksums(
+                        fs,
+                        file.chunks.sortedBy { it.offset }.toTypedArray()
+                    )
                 }
             }
 
@@ -581,7 +583,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
             if (fileStreamData.fileStream == null) {
                 val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
-                val randomAccessFile = RandomAccessFile(fileFinalPath, "rw")
+                val randomAccessFile = RandomAccessFile(fileFinalPath, "rw") // TODO this resource leaks. (see below)
                 fileStreamData.fileStream = randomAccessFile.channel
             }
 
@@ -595,6 +597,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             fileStreamData.chunksToDownload--
         }
         if (remainingChunks == 0) {
+            // TODO this condition is never called?
             fileStreamData.fileStream?.close()
             fileStreamData.fileLock.release()
         }
@@ -612,11 +615,9 @@ class ContentDownloader(val steamClient: SteamClient) {
             downloadCounter.totalBytesUncompressed += chunk.uncompressedLength
         }
 
-        onDownloadProgress?.apply {
-            val totalPercent =
-                depotFilesData.depotCounter.sizeDownloaded.toFloat() / depotFilesData.depotCounter.completeDownloadSize
-            this(totalPercent)
-        }
+        onDownloadProgress?.invoke(
+            depotFilesData.depotCounter.sizeDownloaded.toFloat() / depotFilesData.depotCounter.completeDownloadSize
+        )
     }
 
     private fun downloadFilesManifestOf(
