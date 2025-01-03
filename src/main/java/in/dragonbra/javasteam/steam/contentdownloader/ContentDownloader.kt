@@ -64,7 +64,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         parentScope: CoroutineScope,
     ): Deferred<Pair<EResult, ByteArray?>> = parentScope.async {
         val steamApps = steamClient.getHandler(SteamApps::class.java)
-        val callback = steamApps?.getDepotDecryptionKey(depotId, appId)?.toDeferred()?.await()
+        val callback = steamApps?.getDepotDecryptionKey(depotId, appId)?.await()
 
         return@async Pair(callback?.result ?: EResult.Fail, callback?.depotKey)
     }
@@ -112,7 +112,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         parentScope: CoroutineScope,
     ): Deferred<PICSProductInfo?> = parentScope.async {
         val steamApps = steamClient.getHandler(SteamApps::class.java)
-        val callback = steamApps?.picsGetProductInfo(PICSRequest(appId))?.toDeferred()?.await()
+        val callback = steamApps?.picsGetProductInfo(PICSRequest(appId))?.await()
         val apps = callback?.results?.flatMap { (it as PICSProductInfoCallback).apps.values }
 
         if (apps.isNullOrEmpty()) {

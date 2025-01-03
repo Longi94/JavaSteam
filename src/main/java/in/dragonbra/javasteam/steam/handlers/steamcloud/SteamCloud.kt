@@ -147,7 +147,7 @@ class SteamCloud : ClientMsgHandler() {
             this.syncedChangeNumber = syncedChangeNumber
         }
 
-        val response = cloudService.getAppFileChangelist(request.build()).runBlock()
+        val response = cloudService.getAppFileChangelist(request.build()).await()
 
         AppFileChangeList(response.body)
     }
@@ -177,7 +177,7 @@ class SteamCloud : ClientMsgHandler() {
             this.forceProxy = forceProxy
         }
 
-        val response = cloudService.clientFileDownload(request.build()).runBlock()
+        val response = cloudService.clientFileDownload(request.build()).await()
 
         FileDownloadInfo(response.body)
     }
@@ -213,7 +213,7 @@ class SteamCloud : ClientMsgHandler() {
             this.appBuildId = appBuildId
         }
 
-        val response = cloudService.beginAppUploadBatch(request.build()).runBlock()
+        val response = cloudService.beginAppUploadBatch(request.build()).await()
 
         AppUploadBatchResponse(response.body)
     }
@@ -260,7 +260,7 @@ class SteamCloud : ClientMsgHandler() {
             this.uploadBatchId = uploadBatchId
         }
 
-        val response = cloudService.clientBeginFileUpload(request.build()).runBlock()
+        val response = cloudService.clientBeginFileUpload(request.build()).await()
 
         FileUploadInfo(response.body)
     }
@@ -290,7 +290,7 @@ class SteamCloud : ClientMsgHandler() {
             this.filename = filename
         }
 
-        val response = cloudService.clientCommitFileUpload(request.build()).runBlock()
+        val response = cloudService.clientCommitFileUpload(request.build()).await()
         response.body.fileCommitted
     }
 
@@ -316,7 +316,7 @@ class SteamCloud : ClientMsgHandler() {
             this.batchEresult = batchEResult.code()
         }
 
-        cloudService.completeAppUploadBatchBlocking(request.build()).runBlock()
+        cloudService.completeAppUploadBatchBlocking(request.build()).await()
     }
 
     /**
@@ -439,7 +439,7 @@ class SteamCloud : ClientMsgHandler() {
             this.deviceType = deviceType.number
         }
 
-        val response = cloudService.signalAppLaunchIntent(request.build()).runBlock()
+        val response = cloudService.signalAppLaunchIntent(request.build()).await()
 
         response.body.pendingRemoteOperationsList.map { PendingRemoteOperation(it) }
     }

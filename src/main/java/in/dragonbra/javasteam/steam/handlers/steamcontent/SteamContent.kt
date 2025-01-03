@@ -42,7 +42,7 @@ class SteamContent : ClientMsgHandler() {
             maxNumServers?.let { this.maxServers = it }
         }.build()
 
-        val message = contentService.getServersForSteamPipe(request).toDeferred().await()
+        val message = contentService.getServersForSteamPipe(request).await()
         val response = message.body.build()
 
         return@async ContentServerDirectoryService.convertServerList(response)
@@ -86,7 +86,7 @@ class SteamContent : ClientMsgHandler() {
             localBranchPasswordHash?.let { this.branchPasswordHash = it }
         }.build()
 
-        val message = contentService.getManifestRequestCode(request).toDeferred().await()
+        val message = contentService.getManifestRequestCode(request).await()
         val response = message.body.build()
 
         return@async response.manifestRequestCode.toULong()
@@ -113,7 +113,7 @@ class SteamContent : ClientMsgHandler() {
             this.hostName = hostName
         }.build()
 
-        val message = contentService.getCDNAuthToken(request).toDeferred().await()
+        val message = contentService.getCDNAuthToken(request).await()
 
         return@async AuthToken(message)
     }
