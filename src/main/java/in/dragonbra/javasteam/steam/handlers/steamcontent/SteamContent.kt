@@ -55,7 +55,7 @@ class SteamContent : ClientMsgHandler() {
      * @param appId The AppID parent of the DepotID.
      * @param manifestId The ManifestID that will be downloaded.
      * @param branch The branch name this manifest belongs to.
-     * @param branchPasswordHash The branch password. TODO: how is it hashed?
+     * @param branchPasswordHash The branch password. TODO: (SK) how is it hashed?
      * @return Returns the manifest request code, it may be zero if it was not granted.
      */
     fun getManifestRequestCode(

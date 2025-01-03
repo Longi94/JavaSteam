@@ -211,7 +211,7 @@ class DepotManifest {
         }
 
         // Sort file entries alphabetically because that's what Steam does
-        // TODO: Doesn't match Steam sorting if there are non-ASCII names present
+        // TODO: (SK) Doesn't match Steam sorting if there are non-ASCII names present
         files.sortWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.fileName })
 
         filenamesEncrypted = false
@@ -275,8 +275,8 @@ class DepotManifest {
         }
 
         if (payload != null && metadata != null && signature != null) {
-            parseProtobufManifestMetadata(metadata)
-            parseProtobufManifestPayload(payload)
+            parseProtobufManifestMetadata(metadata!!)
+            parseProtobufManifestPayload(payload!!)
         } else {
             throw NoSuchElementException("Missing ContentManifest sections required for parsing depot manifest")
         }
