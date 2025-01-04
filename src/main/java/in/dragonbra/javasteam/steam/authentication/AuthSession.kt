@@ -101,8 +101,8 @@ open class AuthSession(
             }
 
             if (!pollLoop) {
-                val result = pollAuthSessionStatus(this).await()
-                result ?: throw AuthenticationException("Authentication failed", EResult.Fail)
+                pollAuthSessionStatus(this).await()
+                    ?: throw AuthenticationException("Authentication failed while polling", EResult.Fail)
             } else {
                 pollDeviceConfirmation(this)
             }
@@ -185,9 +185,9 @@ open class AuthSession(
             val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder().apply {
                 clientId = clientID
                 requestId = ByteString.copyFrom(requestID)
-            }
+            }.build()
 
-            val result = authentication.authenticationService.pollAuthSessionStatus(request.build()).await()
+            val result = authentication.authenticationService.pollAuthSessionStatus(request).await()
 
             // eResult can be Expired, FileNotFound, Fail
             if (result.result != EResult.OK) {

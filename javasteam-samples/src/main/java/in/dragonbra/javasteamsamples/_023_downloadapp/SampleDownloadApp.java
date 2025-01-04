@@ -174,6 +174,7 @@ public class SampleDownloadApp implements Runnable {
         }
 
         // we have successfully received a free license for Rocky Mayhem so now we can start the download process
+        // note: it is okay to see some errors about ContentDownloader failing to download a chunk, it will retry and continue.
         new File("steamapps/staging/").mkdirs();
         var contentDownloader = new ContentDownloader(steamClient);
         contentDownloader.downloadApp(

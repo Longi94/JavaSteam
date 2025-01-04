@@ -204,7 +204,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
         val response = authenticationService.beginAuthSessionViaCredentials(request.build()).await()
 
         if (response.result != EResult.OK) {
-            throw AuthenticationException("Authentication failed", response.result)
+            throw AuthenticationException("Authentication failed via credentials", response.result)
         }
 
         return@future CredentialsAuthSession(
