@@ -4,6 +4,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.future.await
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -36,7 +37,7 @@ class AsyncJobMultiple<T : CallbackMsg>(
 
     fun toFuture(): CompletableFuture<ResultSet> = future
 
-    fun await(): ResultSet = toFuture().get()
+    suspend fun await(): ResultSet = future.await()
 
     @Suppress("unused")
     @Throws(CancellationException::class)
