@@ -123,8 +123,8 @@ public class AClientMsgProtobuf extends MsgBase<MsgHdrProtoBuf> {
 
     @Override
     public void deserialize(byte[] data) {
-        try {
-            getHeader().deserialize(new ByteArrayInputStream(data));
+        try(var bais = new ByteArrayInputStream(data)) {
+            getHeader().deserialize(bais);
         } catch (IOException e) {
             logger.debug(e);
         }

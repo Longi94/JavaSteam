@@ -7,9 +7,10 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.CAuthentication_PollAuthSessionStatus_Response
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthSessionGuardType
 import `in`.dragonbra.javasteam.rpc.service.Authentication
+import `in`.dragonbra.javasteam.util.log.LogManager
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import java.util.concurrent.CompletableFuture
@@ -23,8 +24,9 @@ import java.util.concurrent.CompletableFuture
  * @param requestID Unique request ID to be presented by requestor at poll time.
  * @param allowedConfirmations Confirmation types that will be able to confirm the request.
  * @param pollingInterval Refresh interval with which requestor should call PollAuthSessionStatus.
+ * @param defaultScope Default coroutine scope used for authentication operations and polling.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 open class AuthSession(
     val authentication: SteamAuthentication,
     val authenticator: IAuthenticator?,
@@ -32,89 +34,85 @@ open class AuthSession(
     val requestID: ByteArray,
     var allowedConfirmations: List<CAuthentication_AllowedConfirmation>,
     val pollingInterval: Float,
+    val defaultScope: CoroutineScope,
 ) {
 
     companion object {
-        // private val logger = LogManager.getLogger(AuthSession::class.java)
+        private val logger = LogManager.getLogger(AuthSession::class.java)
     }
-
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
         allowedConfirmations = sortConfirmations(allowedConfirmations)
     }
 
     /**
-     * Blocking, compat function for Java mostly:
-     * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
-     *
-     * @return An [AuthPollResult] containing tokens which can be used to log in to Steam.
-     */
-    @Throws(AuthenticationException::class)
-    fun pollingWaitForResultCompat(): CompletableFuture<AuthPollResult> = scope.future { pollingWaitForResult() }
-
-    /**
      * Handle any 2-factor authentication, and if necessary poll for updates until authentication succeeds.
      * @return An [AuthPollResult] containing tokens which can be used to log in to Steam.
      */
     @Throws(AuthenticationException::class)
-    suspend fun pollingWaitForResult(): AuthPollResult {
-        var preferredConfirmation = allowedConfirmations.firstOrNull()
-            ?: throw AuthenticationException("There are no allowed confirmations")
+    @JvmOverloads
+    fun pollingWaitForResult(parentScope: CoroutineScope = defaultScope): CompletableFuture<AuthPollResult> =
+        parentScope.future {
+            var preferredConfirmation = allowedConfirmations.firstOrNull()
+                ?: throw AuthenticationException("There are no allowed confirmations")
 
-        if (preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown) {
-            throw AuthenticationException("There are no allowed confirmations")
-        }
+            if (preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_Unknown) {
+                throw AuthenticationException("There are no allowed confirmations")
+            }
 
-        // If an authenticator is provided and the device confirmation is available, allow consumers to choose whether they want to
-        // simply poll until confirmation is accepted, or whether they want to fall back to the next preferred confirmation type.
-        authenticator?.let { auth ->
-            if (preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation) {
-                val prefersToPollForConfirmation = auth.acceptDeviceConfirmation().await()
+            // If an authenticator is provided and the device confirmation is available, allow consumers to choose whether they want to
+            // simply poll until confirmation is accepted, or whether they want to fall back to the next preferred confirmation type.
+            authenticator?.let { auth ->
+                if (preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation) {
+                    val prefersToPollForConfirmation = auth.acceptDeviceConfirmation().asDeferred().await()
 
-                if (!prefersToPollForConfirmation) {
-                    if (allowedConfirmations.size <= 1) {
-                        throw AuthenticationException(
-                            "AcceptDeviceConfirmation returned false which indicates a fallback to another " +
-                                "confirmation type, but there are no other confirmation types available."
-                        )
+                    if (!prefersToPollForConfirmation) {
+                        if (allowedConfirmations.size <= 1) {
+                            throw AuthenticationException(
+                                "AcceptDeviceConfirmation returned false which indicates a fallback to another " +
+                                    "confirmation type, but there are no other confirmation types available."
+                            )
+                        }
+
+                        preferredConfirmation = allowedConfirmations[1]
                     }
-
-                    preferredConfirmation = allowedConfirmations[1]
                 }
             }
-        }
 
-        var pollLoop = false
-        when (preferredConfirmation.confirmationType) {
-            EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit // // No steam guard
-            EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
-            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
-            -> {
-                // 2-factor code from the authenticator app or sent to an email
-                handleCodeAuth(preferredConfirmation)
+            var pollLoop = false
+            when (preferredConfirmation.confirmationType) {
+                EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit // No steam guard
+                EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
+                EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
+                -> {
+                    // 2-factor code from the authenticator app or sent to an email
+                    handleCodeAuth(preferredConfirmation, parentScope)
+                }
+
+                EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation -> {
+                    // This is a prompt that appears in the Steam mobile app
+                    pollLoop = true
+                }
+                // SessionGuardType.k_EAuthSessionGuardType_EmailConfirmation -> Unit // Unknown
+                // SessionGuardType.k_EAuthSessionGuardType_MachineToken -> Unit // Unknown
+                else -> throw AuthenticationException(
+                    "Unsupported confirmation type ${preferredConfirmation.confirmationType}."
+                )
             }
 
-            EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation -> {
-                // This is a prompt that appears in the Steam mobile app
-                pollLoop = true
+            if (!pollLoop) {
+                pollAuthSessionStatus(this).await()
+                    ?: throw AuthenticationException("Authentication failed while polling", EResult.Fail)
+            } else {
+                pollDeviceConfirmation(this)
             }
-            // SessionGuardType.k_EAuthSessionGuardType_EmailConfirmation -> Unit // Unknown
-            // SessionGuardType.k_EAuthSessionGuardType_MachineToken -> Unit // Unknown
-            else -> throw AuthenticationException(
-                "Unsupported confirmation type ${preferredConfirmation.confirmationType}."
-            )
         }
-
-        return if (!pollLoop) {
-            pollAuthSessionStatus() ?: throw AuthenticationException("Authentication failed", EResult.Fail)
-        } else {
-            pollDeviceConfirmation()
-        }
-    }
 
     @Throws(AuthenticationException::class)
-    private suspend fun handleCodeAuth(preferredConfirmation: CAuthentication_AllowedConfirmation) {
+    private suspend fun handleCodeAuth(
+        preferredConfirmation: CAuthentication_AllowedConfirmation,
+        parentScope: CoroutineScope,
+    ) {
         val credentialsAuthSession = this as? CredentialsAuthSession
             ?: throw AuthenticationException(
                 "Got ${preferredConfirmation.confirmationType} confirmation type in a session " +
@@ -141,11 +139,11 @@ open class AuthSession(
                 val task = when (preferredConfirmation.confirmationType) {
                     EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode -> {
                         val msg = preferredConfirmation.associatedMessage
-                        authenticator.getEmailCode(msg, previousCodeWasIncorrect).await()
+                        authenticator.getEmailCode(msg, previousCodeWasIncorrect).asDeferred().await()
                     }
 
                     EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> {
-                        authenticator.getDeviceCode(previousCodeWasIncorrect).await()
+                        authenticator.getDeviceCode(previousCodeWasIncorrect).asDeferred().await()
                     }
 
                     else -> throw AuthenticationException()
@@ -155,10 +153,11 @@ open class AuthSession(
                     throw AuthenticationException("No code was provided by the authenticator.")
                 }
 
-                credentialsAuthSession.sendSteamGuardCode(task, preferredConfirmation.confirmationType)
+                credentialsAuthSession.sendSteamGuardCode(task, preferredConfirmation.confirmationType, parentScope)
 
                 waitingForValidCode = false
             } catch (e: AuthenticationException) {
+                logger.error(e)
                 if (e.result == expectedInvalidCodeResult) {
                     previousCodeWasIncorrect = true
                 }
@@ -167,10 +166,10 @@ open class AuthSession(
     }
 
     @Throws(AuthenticationException::class)
-    private fun pollDeviceConfirmation(): AuthPollResult {
+    private suspend fun pollDeviceConfirmation(parentScope: CoroutineScope): AuthPollResult {
         while (true) {
-            pollAuthSessionStatus()?.let { return it }
-            Thread.sleep(pollingInterval.toLong())
+            pollAuthSessionStatus(parentScope).await()?.let { return it }
+            delay(pollingInterval.toLong())
         }
     }
 
@@ -180,27 +179,29 @@ open class AuthSession(
      * @throws AuthenticationException Thrown when polling fails.
      */
     @Throws(AuthenticationException::class)
-    fun pollAuthSessionStatus(): AuthPollResult? {
-        val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder().apply {
-            clientId = clientID
-            requestId = ByteString.copyFrom(requestID)
+    @JvmOverloads
+    fun pollAuthSessionStatus(parentScope: CoroutineScope = defaultScope): CompletableFuture<AuthPollResult?> =
+        parentScope.future {
+            val request = CAuthentication_PollAuthSessionStatus_Request.newBuilder().apply {
+                clientId = clientID
+                requestId = ByteString.copyFrom(requestID)
+            }.build()
+
+            val result = authentication.authenticationService.pollAuthSessionStatus(request).await()
+
+            // eResult can be Expired, FileNotFound, Fail
+            if (result.result != EResult.OK) {
+                throw AuthenticationException("Failed to poll status", result.result)
+            }
+
+            handlePollAuthSessionStatusResponse(result.body)
+
+            if (result.body.refreshToken.isNotEmpty()) {
+                return@future AuthPollResult(result.body)
+            }
+
+            return@future null
         }
-
-        val result = authentication.authenticationService.pollAuthSessionStatus(request.build()).runBlock()
-
-        // eResult can be Expired, FileNotFound, Fail
-        if (result.result != EResult.OK) {
-            throw AuthenticationException("Failed to poll status", result.result)
-        }
-
-        handlePollAuthSessionStatusResponse(result.body)
-
-        if (result.body.refreshToken.isNotEmpty()) {
-            return AuthPollResult(result.body)
-        }
-
-        return null
-    }
 
     internal open fun handlePollAuthSessionStatusResponse(response: CAuthentication_PollAuthSessionStatus_Response.Builder) {
         if (response.newClientId != 0L) {

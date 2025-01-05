@@ -41,7 +41,7 @@ public class RSACrypto {
             final BigInteger[] keys = keyParser.parseRSAPublicKey();
             init(keys[0], keys[1]);
         } catch (final BerDecodeException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -55,7 +55,7 @@ public class RSACrypto {
             cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", CryptoHelper.SEC_PROV);
             cipher.init(Cipher.ENCRYPT_MODE, rsaKey);
         } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidKeySpecException
-                | NoSuchProviderException e) {
+                       | NoSuchProviderException e) {
             logger.debug(e);
         }
     }
@@ -66,6 +66,7 @@ public class RSACrypto {
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             logger.debug(e);
         }
+
         return null;
     }
 }

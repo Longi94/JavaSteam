@@ -29,6 +29,8 @@ import in.dragonbra.javasteam.types.SteamID;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * @author Lossy
  * @since 2023-01-04
@@ -156,9 +158,9 @@ public class SampleUnifiedMessages implements Runnable {
         authDetails.authenticator = new UserConsoleAuthenticator();
 
         try {
-            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails);
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails).get();
 
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
 
             LogOnDetails details = new LogOnDetails();
             details.setUsername(pollResponse.getAccountName());
@@ -219,31 +221,40 @@ public class SampleUnifiedMessages implements Runnable {
                 .build();
 
         // now let's send the request and await for the response
-        var response = playerService.getGameBadgeLevels(req).runBlock();
-        System.out.println("Main Request:");
-        if (response.getResult() != EResult.OK) {
-            System.err.println("Unified service request failed with " + response.getResult());
-        }
-        System.out.println("Our player level is " + response.getBody().getPlayerLevel());
-        for (var badge : response.getBody().getBadgesList()) {
-            System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+        try {
+            var response = playerService.getGameBadgeLevels(req).toFuture().get();
+
+            System.out.println("Main Request:");
+            if (response.getResult() != EResult.OK) {
+                System.err.println("Unified service request failed with " + response.getResult());
+            }
+            System.out.println("Our player level is " + response.getBody().getPlayerLevel());
+            for (var badge : response.getBody().getBadgesList()) {
+                System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
 
         // alternatively, the request can be made using SteamUnifiedMessages directly, but then you must build the service request name manually
         // the name format is in the form of <Service>.<Method>#<Version>
-        var responseAlt = steamUnifiedMessages.sendMessage(
-                CPlayer_GetGameBadgeLevels_Response.Builder.class,
-                "Player.GetGameBadgeLevels#1",
-                req
-        ).runBlock();
+        try {
+            var responseAlt = steamUnifiedMessages.sendMessage(
+                    CPlayer_GetGameBadgeLevels_Response.Builder.class,
+                    "Player.GetGameBadgeLevels#1",
+                    req
+            ).toFuture().get();
 
-        System.out.println("Alt Request");
-        if (responseAlt.getResult() != EResult.OK) {
-            System.err.println("Unified service request failed with " + responseAlt.getResult());
-        }
-        System.out.println("Our player level is " + responseAlt.getBody().getPlayerLevel());
-        for (var badge : responseAlt.getBody().getBadgesList()) {
-            System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+            System.out.println("Alt Request");
+            if (responseAlt.getResult() != EResult.OK) {
+                System.err.println("Unified service request failed with " + responseAlt.getResult());
+            }
+            System.out.println("Our player level is " + responseAlt.getBody().getPlayerLevel());
+            for (var badge : responseAlt.getBody().getBadgesList()) {
+                System.out.println("Badge series " + badge.toString() + " is level " + badge.getLevel());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
 
         // now that we've completed our task, lets log off after a few seconds to receive possible notifications

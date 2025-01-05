@@ -17,7 +17,11 @@ import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 
 /**
@@ -38,6 +42,8 @@ public class SampleLogonAuthentication implements Runnable {
     private final String user;
 
     private final String pass;
+
+    private List<Closeable> subscriptions;
 
     private String previouslyStoredGuardData; // For the sake of this sample, we do not persist guard data
 
@@ -76,14 +82,18 @@ public class SampleLogonAuthentication implements Runnable {
         // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
 
+        // The callbacks are a closeable, and to properly fix
+        // "'Closeable' used without 'try'-with-resources statement", they should be closed once done.
+        // Usually putting them in a list and close each of them once the client is finished is recommended.
+        subscriptions = new ArrayList<>();
+
         // register a few callbacks we're interested in
         // these are registered upon creation to a callback manager, which will then route the callbacks
         // to the functions specified
-        manager.subscribe(ConnectedCallback.class, this::onConnected);
-        manager.subscribe(DisconnectedCallback.class, this::onDisconnected);
-
-        manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
-        manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
+        subscriptions.add(manager.subscribe(ConnectedCallback.class, this::onConnected));
+        subscriptions.add(manager.subscribe(DisconnectedCallback.class, this::onDisconnected));
+        subscriptions.add(manager.subscribe(LoggedOnCallback.class, this::onLoggedOn));
+        subscriptions.add(manager.subscribe(LoggedOffCallback.class, this::onLoggedOff));
 
         isRunning = true;
 
@@ -96,6 +106,16 @@ public class SampleLogonAuthentication implements Runnable {
         while (isRunning) {
             // in order for the callbacks to get routed, they need to be handled by the manager
             manager.runWaitCallbacks(1000L);
+        }
+
+        // Close the subscriptions when done.
+        System.out.println("Closing " + subscriptions.size() + " callbacks");
+        for (var subscription : subscriptions) {
+            try {
+                subscription.close();
+            } catch (IOException e) {
+                System.out.println("Couldn't close a callback.");
+            }
         }
     }
 
@@ -123,11 +143,11 @@ public class SampleLogonAuthentication implements Runnable {
 
         try {
             // Begin authenticating via credentials.
-            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails);
+            var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails).get();
 
             // Note: This is blocking, it would be up to you to make it non-blocking for Java.
             // Note: Kotlin uses should use ".pollingWaitForResult()" as its a suspending function.
-            AuthPollResult pollResponse = authSession.pollingWaitForResultCompat().get();
+            AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
 
             if (pollResponse.getNewGuardData() != null) {
                 // When using certain two factor methods (such as email 2fa), guard data may be provided by Steam

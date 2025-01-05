@@ -149,16 +149,15 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyT
 
     @Override
     public byte[] serialize() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        try {
+        try (var baos = new ByteArrayOutputStream()) {
             getHeader().serialize(baos);
             body.build().writeTo(baos);
             baos.write(payload.toByteArray());
+            return baos.toByteArray();
         } catch (IOException ignored) {
         }
 
-        return baos.toByteArray();
+        return new byte[0];
     }
 
     @SuppressWarnings("unchecked")
@@ -167,9 +166,8 @@ public class ClientGCMsgProtobuf<BodyType extends GeneratedMessage.Builder<BodyT
         if (data == null) {
             throw new IllegalArgumentException("data is null");
         }
-        BinaryReader ms = new BinaryReader(new ByteArrayInputStream(data));
 
-        try {
+        try (var ms = new BinaryReader(new ByteArrayInputStream(data))) {
             getHeader().deserialize(ms);
             final Method m = clazz.getMethod("newBuilder");
             body = (BodyType) m.invoke(null);

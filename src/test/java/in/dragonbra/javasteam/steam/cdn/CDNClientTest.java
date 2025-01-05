@@ -28,7 +28,7 @@ public class CDNClientTest {
                     .protocol(Protocol.HTTP_1_1)
                     .message("I'm a teapot")
                     .request(chain.request())
-                    .body(ResponseBody.create(null, new byte[0]))
+                    .body(ResponseBody.create(new byte[0], null))
                     .build();
         }
     }

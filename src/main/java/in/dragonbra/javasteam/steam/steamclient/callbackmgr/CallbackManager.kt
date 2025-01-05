@@ -46,6 +46,7 @@ class CallbackManager(private val steamClient: SteamClient) {
      * @param timeout The length of time to block.
      * @return true if a callback has been run, false otherwise.
      */
+    // TODO: Add Kotlin coroutines version.
     fun runWaitCallbacks(timeout: Long): Boolean {
         val call = steamClient.waitForCallback(timeout) ?: return false
 

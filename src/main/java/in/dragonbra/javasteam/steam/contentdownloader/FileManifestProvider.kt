@@ -46,6 +46,7 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
         private val logger: Logger = LogManager.getLogger(FileManifestProvider::class.java)
 
         private fun getLatestEntryName(depotID: Int): String = "$depotID${File.separator}latest"
+
         private fun getEntryName(depotID: Int, manifestID: Long): String = "$depotID${File.separator}$manifestID.bin"
 
         private fun seekToEntry(zipStream: ZipInputStream, entryName: String): ZipEntry? {
@@ -83,13 +84,14 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
         }
 
         private fun zipUncompressed(zip: ZipOutputStream, entryName: String, bytes: ByteArray) {
-            val entry = ZipEntry(entryName)
-            entry.method = ZipEntry.STORED
-            entry.size = bytes.size.toLong()
-            entry.compressedSize = bytes.size.toLong()
-            entry.crc = CRC32().run {
-                update(bytes)
-                value
+            val entry = ZipEntry(entryName).apply {
+                method = ZipEntry.STORED
+                size = bytes.size.toLong()
+                compressedSize = bytes.size.toLong()
+                crc = CRC32().run {
+                    update(bytes)
+                    value
+                }
             }
 
             zip.putNextEntry(entry)

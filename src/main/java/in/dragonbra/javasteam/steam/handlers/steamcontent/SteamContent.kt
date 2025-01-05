@@ -42,7 +42,7 @@ class SteamContent : ClientMsgHandler() {
             maxNumServers?.let { this.maxServers = it }
         }.build()
 
-        val message = contentService.getServersForSteamPipe(request).toDeferred().await()
+        val message = contentService.getServersForSteamPipe(request).await()
         val response = message.body.build()
 
         return@async ContentServerDirectoryService.convertServerList(response)
@@ -55,7 +55,7 @@ class SteamContent : ClientMsgHandler() {
      * @param appId The AppID parent of the DepotID.
      * @param manifestId The ManifestID that will be downloaded.
      * @param branch The branch name this manifest belongs to.
-     * @param branchPasswordHash The branch password. TODO: how is it hashed?
+     * @param branchPasswordHash The branch password. TODO: (SK) how is it hashed?
      * @return Returns the manifest request code, it may be zero if it was not granted.
      */
     fun getManifestRequestCode(
@@ -86,7 +86,7 @@ class SteamContent : ClientMsgHandler() {
             localBranchPasswordHash?.let { this.branchPasswordHash = it }
         }.build()
 
-        val message = contentService.getManifestRequestCode(request).toDeferred().await()
+        val message = contentService.getManifestRequestCode(request).await()
         val response = message.body.build()
 
         return@async response.manifestRequestCode.toULong()
@@ -113,7 +113,7 @@ class SteamContent : ClientMsgHandler() {
             this.hostName = hostName
         }.build()
 
-        val message = contentService.getCDNAuthToken(request).toDeferred().await()
+        val message = contentService.getCDNAuthToken(request).await()
 
         return@async AuthToken(message)
     }

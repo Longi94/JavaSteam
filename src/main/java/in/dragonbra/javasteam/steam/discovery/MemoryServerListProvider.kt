@@ -8,6 +8,7 @@ import java.time.Instant
 class MemoryServerListProvider : IServerListProvider {
 
     private var servers: List<ServerRecord> = listOf()
+
     private var lastUpdated: Instant = Instant.MIN
 
     /**

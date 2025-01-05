@@ -37,6 +37,9 @@ class Client(steamClient: SteamClient) : Closeable {
     private val defaultScope = CoroutineScope(Dispatchers.IO)
 
     companion object {
+
+        private val logger: Logger = LogManager.getLogger(Client::class.java)
+
         /**
          * Default timeout to use when making requests
          */
@@ -46,8 +49,6 @@ class Client(steamClient: SteamClient) : Closeable {
          * Default timeout to use when reading the response body
          */
         var responseBodyTimeout = 60000L
-
-        private val logger: Logger = LogManager.getLogger(Client::class.java)
 
         @JvmStatic
         @JvmOverloads
@@ -144,34 +145,34 @@ class Client(steamClient: SteamClient) : Closeable {
                     logger.debug("Manifest response does not have Content-Length, falling back to unbuffered read.")
                 }
 
-                val inputStream = response.body.byteStream()
+                response.body.byteStream().use { inputStream ->
+                    ByteArrayOutputStream().use { bs ->
+                        val bytesRead = inputStream.copyTo(bs, contentLength ?: DEFAULT_BUFFER_SIZE)
 
-                ByteArrayOutputStream().use { bs ->
-                    val bytesRead = inputStream.copyTo(bs, contentLength ?: DEFAULT_BUFFER_SIZE)
+                        if (bytesRead != contentLength?.toLong()) {
+                            throw DataFormatException("Length mismatch after downloading depot manifest! (was $bytesRead, but should be $contentLength)")
+                        }
 
-                    if (bytesRead != contentLength?.toLong()) {
-                        throw DataFormatException("Length mismatch after downloading depot manifest! (was $bytesRead, but should be $contentLength)")
-                    }
+                        val contentBytes = bs.toByteArray()
 
-                    val contentBytes = bs.toByteArray()
-
-                    MemoryStream(contentBytes).use { ms ->
-                        ZipInputStream(ms).use { zip ->
-                            var entryCount = 0
-                            while (zip.nextEntry != null) {
-                                entryCount++
-                            }
-                            if (entryCount > 1) {
-                                logger.debug("Expected the zip to contain only one file")
+                        MemoryStream(contentBytes).use { ms ->
+                            ZipInputStream(ms).use { zip ->
+                                var entryCount = 0
+                                while (zip.nextEntry != null) {
+                                    entryCount++
+                                }
+                                if (entryCount > 1) {
+                                    logger.debug("Expected the zip to contain only one file")
+                                }
                             }
                         }
-                    }
 
-                    // Decompress the zipped manifest data
-                    MemoryStream(contentBytes).use { ms ->
-                        ZipInputStream(ms).use { zip ->
-                            zip.nextEntry
-                            DepotManifest.deserialize(zip)
+                        // Decompress the zipped manifest data
+                        MemoryStream(contentBytes).use { ms ->
+                            ZipInputStream(ms).use { zip ->
+                                zip.nextEntry
+                                DepotManifest.deserialize(zip)
+                            }
                         }
                     }
                 }

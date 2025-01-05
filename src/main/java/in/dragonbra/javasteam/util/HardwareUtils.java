@@ -49,20 +49,21 @@ public class HardwareUtils {
 
         Runtime runtime = Runtime.getRuntime();
         Process process;
+
         try {
             process = runtime.exec(new String[]{"wmic", "bios", "get", "serialnumber"});
         } catch (IOException e) {
             return null;
         }
 
-        OutputStream os = process.getOutputStream();
+        var os = process.getOutputStream();
 
         try {
             os.close();
         } catch (IOException ignored) {
         }
 
-        try (Scanner sc = new Scanner(process.getInputStream())) {
+        try (var sc = new Scanner(process.getInputStream())) {
             while (sc.hasNext()) {
                 String next = sc.next();
                 if ("SerialNumber".equals(next)) {
@@ -80,13 +81,14 @@ public class HardwareUtils {
 
         Runtime runtime = Runtime.getRuntime();
         Process process;
+
         try {
             process = runtime.exec(new String[]{"/usr/sbin/system_profiler", "SPHardwareDataType"});
         } catch (IOException e) {
             return null;
         }
 
-        OutputStream os = process.getOutputStream();
+        var os = process.getOutputStream();
 
         try {
             os.close();
@@ -95,7 +97,7 @@ public class HardwareUtils {
 
         String line;
         String marker = "Serial Number";
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+        try (var br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             while ((line = br.readLine()) != null) {
                 if (line.contains(marker)) {
                     sn = line.split(":")[1].trim();
@@ -129,7 +131,7 @@ public class HardwareUtils {
             return null;
         }
 
-        OutputStream os = process.getOutputStream();
+        var os = process.getOutputStream();
 
         try {
             os.close();
@@ -146,7 +148,7 @@ public class HardwareUtils {
         String line;
         String marker = "Serial Number:";
 
-        try (BufferedReader br = read("dmidecode -t system")) {
+        try (var br = read("dmidecode -t system")) {
             if (br == null) {
                 return null;
             }
@@ -170,7 +172,7 @@ public class HardwareUtils {
         String line;
         String marker = "system.hardware.serial =";
 
-        try (BufferedReader br = read("lshal")) {
+        try (var br = read("lshal")) {
             if (br == null) {
                 return null;
             }
@@ -209,14 +211,16 @@ public class HardwareUtils {
     private static String getDeviceName() {
         try {
             Process process = Runtime.getRuntime().exec("hostname");
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+            try (var inputStreamReader = new InputStreamReader(process.getInputStream());
+                 var reader = new BufferedReader(inputStreamReader)) {
                 return reader.readLine().trim();
             }
         } catch (IOException e) {
             return null;
         }
     }
-    
+
     private static String getAndroidDeviceName() {
         String manufacturer = getAndroidSystemProperty("ro.product.manufacturer");
         String model = getAndroidSystemProperty("ro.product.model");

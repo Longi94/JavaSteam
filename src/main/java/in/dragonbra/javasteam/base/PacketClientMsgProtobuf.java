@@ -30,7 +30,7 @@ public class PacketClientMsgProtobuf implements IPacketMsg {
 
         header = new MsgHdrProtoBuf();
 
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(data)) {
+        try (var stream = new ByteArrayInputStream(data)) {
             header.deserialize(stream);
         }
     }
