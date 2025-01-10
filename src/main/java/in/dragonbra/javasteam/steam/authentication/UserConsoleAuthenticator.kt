@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture
  */
 class UserConsoleAuthenticator : IAuthenticator {
 
-    override fun getDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
+    override fun getDeviceCode(previousCodeWasIncorrect: Boolean): CompletableFuture<String> = CompletableFuture.supplyAsync {
         if (previousCodeWasIncorrect) {
             println("The previous 2-factor auth code you have provided is incorrect.")
         }
@@ -23,26 +23,24 @@ class UserConsoleAuthenticator : IAuthenticator {
             code = readln().trim()
         } while (Strings.isNullOrEmpty(code))
 
-        return CompletableFuture.completedFuture(code)
+        code
     }
 
-    override fun getEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String> {
+    override fun getEmailCode(email: String?, previousCodeWasIncorrect: Boolean): CompletableFuture<String> = CompletableFuture.supplyAsync {
         if (previousCodeWasIncorrect) {
             println("The previous 2-factor auth code you have provided is incorrect.")
         }
-
         var code: String
         do {
             print("STEAM GUARD! Please enter the auth code sent to the email at $email: ")
             code = readln().trim()
         } while (Strings.isNullOrEmpty(code))
 
-        return CompletableFuture.completedFuture(code)
+        code
     }
 
-    override fun acceptDeviceConfirmation(): CompletableFuture<Boolean> {
+    override fun acceptDeviceConfirmation(): CompletableFuture<Boolean> = CompletableFuture.supplyAsync {
         println("STEAM GUARD! Use the Steam Mobile App to confirm your sign in...")
-
-        return CompletableFuture.completedFuture(true)
+        true
     }
 }
