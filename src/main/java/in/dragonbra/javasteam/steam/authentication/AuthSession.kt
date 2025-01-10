@@ -9,10 +9,11 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclie
 import `in`.dragonbra.javasteam.rpc.service.Authentication
 import `in`.dragonbra.javasteam.util.log.LogManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.withContext
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -64,7 +65,7 @@ open class AuthSession(
             // simply poll until confirmation is accepted, or whether they want to fall back to the next preferred confirmation type.
             authenticator?.let { auth ->
                 if (preferredConfirmation.confirmationType == EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceConfirmation) {
-                    val prefersToPollForConfirmation = auth.acceptDeviceConfirmation().asDeferred().await()
+                    val prefersToPollForConfirmation = auth.acceptDeviceConfirmation().await()
 
                     if (!prefersToPollForConfirmation) {
                         if (allowedConfirmations.size <= 1) {
@@ -112,8 +113,8 @@ open class AuthSession(
     private suspend fun handleCodeAuth(
         preferredConfirmation: CAuthentication_AllowedConfirmation,
         parentScope: CoroutineScope,
-    ) {
-        val credentialsAuthSession = this as? CredentialsAuthSession
+    ) = withContext(Dispatchers.IO) {
+        val credentialsAuthSession = this@AuthSession as? CredentialsAuthSession
             ?: throw AuthenticationException(
                 "Got ${preferredConfirmation.confirmationType} confirmation type in a session " +
                     "that is not CredentialsAuthSession."
@@ -139,21 +140,21 @@ open class AuthSession(
                 val task = when (preferredConfirmation.confirmationType) {
                     EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode -> {
                         val msg = preferredConfirmation.associatedMessage
-                        authenticator.getEmailCode(msg, previousCodeWasIncorrect).asDeferred().await()
+                        authenticator.getEmailCode(msg, previousCodeWasIncorrect).await()
                     }
 
                     EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode -> {
-                        authenticator.getDeviceCode(previousCodeWasIncorrect).asDeferred().await()
+                        authenticator.getDeviceCode(previousCodeWasIncorrect).await()
                     }
 
-                    else -> throw AuthenticationException()
+                    else -> throw AuthenticationException("Unsupported confirmation type ${preferredConfirmation.confirmationType}")
                 }
 
                 if (task.isNullOrEmpty()) {
                     throw AuthenticationException("No code was provided by the authenticator.")
                 }
 
-                credentialsAuthSession.sendSteamGuardCode(task, preferredConfirmation.confirmationType, parentScope)
+                credentialsAuthSession.sendSteamGuardCode(task, preferredConfirmation.confirmationType, parentScope).await()
 
                 waitingForValidCode = false
             } catch (e: AuthenticationException) {

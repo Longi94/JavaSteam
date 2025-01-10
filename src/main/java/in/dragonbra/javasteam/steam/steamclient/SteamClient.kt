@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("unused")
 class SteamClient @JvmOverloads constructor(
     configuration: SteamConfiguration? = SteamConfiguration.createDefault(),
-    internal val defaultScope: CoroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+    internal val defaultScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
 ) : CMClient(configuration) {
 
     private val handlers = HashMap<Class<out ClientMsgHandler>, ClientMsgHandler>(HANDLERS_COUNT)
