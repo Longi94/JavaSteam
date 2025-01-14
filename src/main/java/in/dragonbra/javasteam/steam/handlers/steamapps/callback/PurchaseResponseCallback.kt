@@ -28,7 +28,7 @@ class PurchaseResponseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * Gets Purchase result of the operation
      */
-    val purchaseResultDetail: EPurchaseResultDetail
+    val purchaseResultDetail: EPurchaseResultDetail?
 
     /**
      * Gets Purchase receipt of the operation

@@ -32,7 +32,7 @@ class TicketAuthCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * @return the auth session response
      */
-    val authSessionResponse: EAuthSessionResponse
+    val authSessionResponse: EAuthSessionResponse?
 
     /**
      * @return the ticket CRC

@@ -20,7 +20,7 @@ class WalletInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * Gets the currency code for this wallet.
      */
-    val currency: ECurrencyCode
+    val currency: ECurrencyCode?
 
     /**
      * Gets the balance of the wallet as a 32-bit integer, in cents.
