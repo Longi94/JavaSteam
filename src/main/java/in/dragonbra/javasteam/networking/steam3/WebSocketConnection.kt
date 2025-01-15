@@ -36,15 +36,15 @@ class WebSocketConnection :
         private val logger = LogManager.getLogger(WebSocketConnection::class.java)
     }
 
-    private val job = SupervisorJob()
-
-    private var monitorJob: Job? = null
+    private val job: Job = SupervisorJob()
 
     private var client: HttpClient? = null
 
     private var session: WebSocketSession? = null
 
     private var endpoint: InetSocketAddress? = null
+
+    private var lastFrameTime = System.currentTimeMillis()
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO + job
 
@@ -77,8 +77,9 @@ class WebSocketConnection :
                         session?.incoming?.consumeEach { frame ->
                             when (frame) {
                                 is Frame.Binary -> {
-                                    val data = frame.readBytes()
-                                    onNetMsgReceived(NetMsgEventArgs(data, currentEndPoint))
+                                    logger.debug("on Binary ${frame.data.size}")
+                                    lastFrameTime = System.currentTimeMillis()
+                                    onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
                                 }
 
                                 is Frame.Close -> disconnect(false)
@@ -105,7 +106,6 @@ class WebSocketConnection :
     override fun disconnect(userInitiated: Boolean) {
         launch {
             try {
-                monitorJob?.cancel()
                 session?.close()
                 client?.close()
             } finally {
@@ -113,9 +113,7 @@ class WebSocketConnection :
                 client = null
                 endpoint = null
 
-                if (!userInitiated) {
-                    job.cancelChildren()
-                }
+                job.cancelChildren()
             }
         }
 
@@ -125,7 +123,8 @@ class WebSocketConnection :
     override fun send(data: ByteArray) {
         launch {
             try {
-                session?.send(Frame.Binary(true, data))
+                val frame = Frame.Binary(true, data)
+                session?.send(frame)
             } catch (e: Exception) {
                 logger.error("An error occurred while sending data", e)
                 disconnect(false)
@@ -143,17 +142,8 @@ class WebSocketConnection :
      * Rudimentary watchdog
      */
     private fun startConnectionMonitoring() {
-        monitorJob = launch {
-            var lastFrameTime = System.currentTimeMillis()
-
-            launch {
-                session?.incoming?.consumeEach { frame ->
-                    lastFrameTime = System.currentTimeMillis()
-                }
-            }
-
+        launch {
             while (isActive) {
-                delay(5000)
                 val timeSinceLastFrame = System.currentTimeMillis() - lastFrameTime
 
                 // logger.debug("Watchdog status: $timeSinceLastFrame")
@@ -166,6 +156,8 @@ class WebSocketConnection :
                     timeSinceLastFrame > 20000 -> logger.debug("Watchdog: No response for 20 seconds")
                     timeSinceLastFrame > 15000 -> logger.debug("Watchdog: No response for 15 seconds")
                 }
+
+                delay(5000)
             }
         }
     }
