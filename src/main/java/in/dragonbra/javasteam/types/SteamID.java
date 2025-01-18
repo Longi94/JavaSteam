@@ -270,6 +270,18 @@ public class SteamID {
         return true;
     }
 
+
+    /**
+     * Sets the various components of this SteamID from a 64bit string integer form.
+     *
+     * @param stringSteamId The 64bit string integer to assign this SteamID from.
+     */
+    // JavaSteam addition
+    public void setFromUInt64String(String stringSteamId) {
+        long longSteamId = Long.parseLong(stringSteamId);
+        setFromUInt64(longSteamId);
+    }
+
     /**
      * Sets the various components of this SteamID from a 64bit integer form.
      *
