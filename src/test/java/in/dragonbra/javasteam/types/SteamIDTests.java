@@ -42,6 +42,19 @@ public class SteamIDTests extends TestBase {
     }
 
     @Test
+    public void stringSetterGetterValid() {
+        SteamID sid = new SteamID();
+        sid.setFromUInt64String("157626004137848889");
+
+        assertEquals(12345L, sid.getAccountID());
+        assertEquals(SteamID.WEB_INSTANCE, sid.getAccountInstance());
+        assertEquals(EUniverse.Beta, sid.getAccountUniverse());
+        assertEquals(EAccountType.GameServer, sid.getAccountType());
+
+        assertEquals(157626004137848889L, sid.convertToUInt64());
+    }
+
+    @Test
     public void longConstructorAndSetterGetterValid() {
         SteamID sid = new SteamID(103582791432294076L);
 
