@@ -583,7 +583,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
             if (fileStreamData.fileStream == null) {
                 val fileFinalPath = Paths.get(depot.installDir, file.fileName).toString()
-                val randomAccessFile = RandomAccessFile(fileFinalPath, "rw") // TODO this resource leaks. (see below)
+                val randomAccessFile = RandomAccessFile(fileFinalPath, "rw")
                 fileStreamData.fileStream = randomAccessFile.channel
             }
 
@@ -594,12 +594,10 @@ class ContentDownloader(val steamClient: SteamClient) {
         }
 
         val remainingChunks = synchronized(fileStreamData) {
-            fileStreamData.chunksToDownload--
+            --fileStreamData.chunksToDownload
         }
-        if (remainingChunks == 0) {
-            // TODO this condition is never called?
+        if (remainingChunks <= 0) {
             fileStreamData.fileStream?.close()
-            fileStreamData.fileLock.release()
         }
 
         var sizeDownloaded: Long
