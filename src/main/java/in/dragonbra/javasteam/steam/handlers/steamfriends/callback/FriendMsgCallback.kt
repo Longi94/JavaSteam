@@ -22,7 +22,7 @@ class FriendMsgCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     /**
      * Gets the chat entry type.
      */
-    val entryType: EChatEntryType
+    val entryType: EChatEntryType?
 
     /**
      * Gets a value indicating whether this message is from a limited account.

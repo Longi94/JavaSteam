@@ -30,7 +30,7 @@ class PersonaStatesCallback(friend: CMsgClientPersonaState.Friend) : CallbackMsg
     /**
      * Gets the state.
      */
-    val state: EPersonaState = EPersonaState.from(friend.personaState)
+    val state: EPersonaState? = EPersonaState.from(friend.personaState)
 
     /**
      * Gets the state flags.

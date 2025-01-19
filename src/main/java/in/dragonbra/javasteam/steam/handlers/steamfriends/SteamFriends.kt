@@ -327,7 +327,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID The clan steamid.
      * @return The relationship of the clan to the local user.
      */
-    fun getClanRelationship(steamID: SteamID): EClanRelationship = cache.clans.getAccount(steamID).relationship
+    fun getClanRelationship(steamID: SteamID): EClanRelationship? = cache.clans.getAccount(steamID).relationship
 
     /**
      * Gets an SHA-1 hash representing the clan's avatar.
@@ -754,7 +754,7 @@ class SteamFriends : ClientMsgHandler() {
 
                 if (EClientPersonaStateFlag.Presence in flags) {
                     cacheFriend.avatarHash = friend.avatarHash.toByteArray()
-                    cacheFriend.personaState = EPersonaState.from(friend.personaState)
+                    cacheFriend.personaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
                     cacheFriend.personaStateFlags = EPersonaStateFlag.from(friend.personaStateFlags)
                 }
 
@@ -831,7 +831,7 @@ class SteamFriends : ClientMsgHandler() {
             } else if (friendID.isClanAccount) {
                 val clan = cache.clans.getAccount(friendID)
 
-                clan.relationship = EClanRelationship.from(friendObj.efriendrelationship)
+                clan.relationship = EClanRelationship.from(friendObj.efriendrelationship) ?: EClanRelationship.None
 
                 if (clanList.contains(friendID)) {
                     // mark clans we were removed/kicked from

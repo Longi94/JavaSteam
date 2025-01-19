@@ -33,12 +33,12 @@ class FindOrCreateLeaderboardCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
     /**
      * Gets the sort method to use for this leaderboard.
      */
-    val sortMethod: ELeaderboardSortMethod
+    val sortMethod: ELeaderboardSortMethod?
 
     /**
      * Gets the display type for this leaderboard.
      */
-    val displayType: ELeaderboardDisplayType
+    val displayType: ELeaderboardDisplayType?
 
     init {
         val msg = ClientMsgProtobuf<CMsgClientLBSFindOrCreateLBResponse.Builder>(

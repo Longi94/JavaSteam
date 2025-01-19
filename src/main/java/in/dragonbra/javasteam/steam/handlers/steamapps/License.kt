@@ -45,7 +45,7 @@ class License(license: CMsgClientLicenseList.License) {
     /**
      * Gets the payment method used when the license was created.
      */
-    val paymentMethod: EPaymentMethod = EPaymentMethod.from(license.paymentMethod)
+    val paymentMethod: EPaymentMethod? = EPaymentMethod.from(license.paymentMethod)
 
     /**
      * Gets the license flags.
@@ -60,7 +60,7 @@ class License(license: CMsgClientLicenseList.License) {
     /**
      * Gets the type of the license.
      */
-    val licenseType: ELicenseType = ELicenseType.from(license.licenseType)
+    val licenseType: ELicenseType? = ELicenseType.from(license.licenseType)
 
     /**
      * Gets the territory code of the license.

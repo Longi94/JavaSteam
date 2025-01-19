@@ -9,6 +9,6 @@ class PendingRemoteOperation(operation: CCloud_PendingRemoteOperation) {
     val machineName: String = operation.machineName
     val clientId: Long = operation.clientId
     val timeLastUpdated: Int = operation.timeLastUpdated
-    val osType: EOSType = EOSType.from(operation.osType)
+    val osType: EOSType = EOSType.from(operation.osType) ?: EOSType.Unknown
     val deviceType: Int = operation.deviceType
 }
