@@ -25,7 +25,7 @@ data class User(
 ) : Account()
 
 class Clan(
-    var relationship: EClanRelationship? = EClanRelationship.None,
+    var relationship: EClanRelationship = EClanRelationship.None,
 ) : Account()
 
 class AccountList<T : Account>(private val clazz: Class<T>) : ConcurrentHashMap<SteamID, T>() {

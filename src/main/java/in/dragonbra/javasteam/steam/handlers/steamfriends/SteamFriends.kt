@@ -831,7 +831,7 @@ class SteamFriends : ClientMsgHandler() {
             } else if (friendID.isClanAccount) {
                 val clan = cache.clans.getAccount(friendID)
 
-                clan.relationship = EClanRelationship.from(friendObj.efriendrelationship)
+                clan.relationship = EClanRelationship.from(friendObj.efriendrelationship) ?: EClanRelationship.None
 
                 if (clanList.contains(friendID)) {
                     // mark clans we were removed/kicked from
