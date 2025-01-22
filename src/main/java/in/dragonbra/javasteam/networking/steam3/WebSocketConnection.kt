@@ -50,6 +50,8 @@ class WebSocketConnection :
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
         launch {
+            logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+
             try {
                 endpoint = endPoint
 
@@ -111,7 +113,6 @@ class WebSocketConnection :
             } finally {
                 session = null
                 client = null
-                endpoint = null
 
                 job.cancelChildren()
             }
@@ -153,7 +154,9 @@ class WebSocketConnection :
                         disconnect(false)
                         break
                     }
+
                     timeSinceLastFrame > 20000 -> logger.debug("Watchdog: No response for 20 seconds")
+
                     timeSinceLastFrame > 15000 -> logger.debug("Watchdog: No response for 15 seconds")
                 }
 
