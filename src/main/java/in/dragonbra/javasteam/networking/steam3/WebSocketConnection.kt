@@ -79,7 +79,7 @@ class WebSocketConnection :
                         session?.incoming?.consumeEach { frame ->
                             when (frame) {
                                 is Frame.Binary -> {
-                                    logger.debug("on Binary ${frame.data.size}")
+                                    // logger.debug("on Binary ${frame.data.size}")
                                     lastFrameTime = System.currentTimeMillis()
                                     onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
                                 }
@@ -106,6 +106,7 @@ class WebSocketConnection :
     }
 
     override fun disconnect(userInitiated: Boolean) {
+        logger.debug("Disconnect called: $userInitiated")
         launch {
             try {
                 session?.close()
@@ -145,15 +146,22 @@ class WebSocketConnection :
     private fun startConnectionMonitoring() {
         launch {
             while (isActive) {
+                if (client?.isActive == false || session?.isActive == false) {
+                    logger.error("Client or Session is no longer active")
+                    disconnect(userInitiated = false)
+                }
+
                 val timeSinceLastFrame = System.currentTimeMillis() - lastFrameTime
 
                 // logger.debug("Watchdog status: $timeSinceLastFrame")
                 when {
                     timeSinceLastFrame > 30000 -> {
                         logger.error("Watchdog: No response for 30 seconds. Disconnecting from steam")
-                        disconnect(false)
+                        disconnect(userInitiated = false)
                         break
                     }
+
+                    timeSinceLastFrame > 25000 -> logger.debug("Watchdog: No response for 25 seconds")
 
                     timeSinceLastFrame > 20000 -> logger.debug("Watchdog: No response for 20 seconds")
 
