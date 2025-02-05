@@ -285,4 +285,11 @@ public class SmartCMServerListTest extends TestBase {
         var marked = serverList.tryMark(new InetSocketAddress(InetAddress.getLoopbackAddress(), 27016), record.getProtocolTypes(), ServerQuality.GOOD);
         Assertions.assertFalse(marked);
     }
+
+    @Test
+    public void testNullConnection_ShouldReturnFalse() {
+        var result = serverList.tryMark(null, ProtocolTypes.WEB_SOCKET, ServerQuality.BAD);
+
+        Assertions.assertFalse(result);
+    }
 }

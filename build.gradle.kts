@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = "in.dragonbra"
-    version = "1.6.0-SNAPSHOT"
+    version = "1.6.0"
 }
 
 repositories {
@@ -122,6 +122,7 @@ dependencies {
     implementation(libs.okHttp)
     implementation(libs.xz)
     implementation(libs.protobuf.java)
+    implementation(libs.bundles.ktor)
 
     testImplementation(libs.bundles.testing)
 }

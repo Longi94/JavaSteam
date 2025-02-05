@@ -193,10 +193,15 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
         }
     }
 
-    fun tryMark(endPoint: InetSocketAddress, protocolTypes: ProtocolTypes, quality: ServerQuality): Boolean =
+    fun tryMark(endPoint: InetSocketAddress?, protocolTypes: ProtocolTypes, quality: ServerQuality): Boolean =
         tryMark(endPoint, EnumSet.of(protocolTypes), quality)
 
-    fun tryMark(endPoint: InetSocketAddress, protocolTypes: EnumSet<ProtocolTypes>, quality: ServerQuality): Boolean {
+    fun tryMark(endPoint: InetSocketAddress?, protocolTypes: EnumSet<ProtocolTypes>, quality: ServerQuality): Boolean {
+        if (endPoint == null) {
+            logger.error("Couldn't mark an endpoint ${quality.name}, skipping it")
+            return false
+        }
+
         val serverInfos: List<ServerInfo>
 
         if (quality == ServerQuality.GOOD) {
