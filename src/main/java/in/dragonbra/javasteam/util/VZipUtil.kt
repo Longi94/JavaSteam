@@ -21,15 +21,16 @@ object VZipUtil {
     private const val HEADER_LENGTH = 7 // magic + version + timestamp/crc
     private const val FOOTER_LENGTH = 10 // crc + decompressed size + magic
 
-    private const val VERSION = 'a'
+    private const val VERSION: Byte = 'a'.code.toByte()
 
+    @JvmStatic
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         BinaryReader(ms).use { reader ->
             if (reader.readShort() != VZIP_HEADER) {
                 throw IllegalArgumentException("Expecting VZipHeader at start of stream")
             }
 
-            if (reader.readChar() != VERSION) {
+            if (reader.readByte() != VERSION) {
                 throw IllegalArgumentException("Expecting VZip version 'a'")
             }
 
@@ -84,12 +85,13 @@ object VZipUtil {
     /**
      * Ported from SteamKit2 and is untested, use at your own risk
      */
+    @JvmStatic
     fun compress(buffer: ByteArray): ByteArray {
         ByteArrayOutputStream().use { ms ->
             BinaryWriter(ms).use { writer ->
                 val crc = CryptoHelper.crcHash(buffer)
                 writer.writeShort(VZIP_HEADER)
-                writer.writeChar(VERSION)
+                writer.writeByte(VERSION)
                 writer.write(crc)
 
                 // Configure LZMA options to match SteamKit2's settings
