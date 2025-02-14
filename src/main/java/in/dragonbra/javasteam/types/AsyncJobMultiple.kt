@@ -18,13 +18,13 @@ class AsyncJobMultiple<T : CallbackMsg>(
     private val finishCondition: (T) -> Boolean?,
 ) : AsyncJob(client, jobId) {
 
-    class ResultSet(
+    class ResultSet<T : CallbackMsg>(
         var complete: Boolean = false,
         var failed: Boolean = false,
-        var results: List<CallbackMsg> = listOf(),
+        var results: List<T> = listOf(),
     )
 
-    private val future = CompletableFuture<ResultSet>()
+    private val future = CompletableFuture<ResultSet<T>>()
 
     private val results = mutableListOf<T>()
 
@@ -33,15 +33,15 @@ class AsyncJobMultiple<T : CallbackMsg>(
     }
 
     @Deprecated("Use toFuture() instead", ReplaceWith("toFuture()"))
-    fun toDeferred(): CompletableFuture<ResultSet> = toFuture()
+    fun toDeferred(): CompletableFuture<ResultSet<T>> = toFuture()
 
-    fun toFuture(): CompletableFuture<ResultSet> = future
+    fun toFuture(): CompletableFuture<ResultSet<T>> = future
 
-    suspend fun await(): ResultSet = future.await()
+    suspend fun await(): ResultSet<T> = future.await()
 
     @Suppress("unused")
     @Throws(CancellationException::class)
-    fun runBlock(): ResultSet = toFuture().get()
+    fun runBlock(): ResultSet<T> = toFuture().get()
 
     override fun addResult(callback: CallbackMsg): Boolean {
         @Suppress("UNCHECKED_CAST")

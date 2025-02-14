@@ -394,7 +394,7 @@ class AsyncJobTest {
             "AsyncJobMultiple should not be canceled on partial (timed out) result set"
         )
 
-        val result: AsyncJobMultiple.ResultSet = asyncTask.get()
+        val result = asyncTask.get()
 
         Assertions.assertFalse(result.complete, "ResultSet should be incomplete")
         Assertions.assertFalse(result.failed, "ResultSet should not be failed")
@@ -432,7 +432,7 @@ class AsyncJobTest {
             "AsyncJobMultiple should not be canceled on partial (failed) result set"
         )
 
-        val result: AsyncJobMultiple.ResultSet = asyncTask.get()
+        val result = asyncTask.get()
 
         Assertions.assertFalse(result.complete, "ResultSet should be incomplete")
         Assertions.assertTrue(result.failed, "ResultSet should be failed")
