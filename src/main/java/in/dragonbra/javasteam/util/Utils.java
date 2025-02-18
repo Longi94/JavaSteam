@@ -210,11 +210,12 @@ public class Utils {
 
     /**
      * Validate a file against Steam3 Chunk data
-     * @param fs FileInputStream to read from
+     *
+     * @param fs        FileInputStream to read from
      * @param chunkData Array of ChunkData to validate against
      * @return List of ChunkData that are needed
-     * @throws IOException If there's an error reading the file
-     * @throws ClosedChannelException If this channel is closed
+     * @throws IOException              If there's an error reading the file
+     * @throws ClosedChannelException   If this channel is closed
      * @throws IllegalArgumentException If the new position is negative
      */
     @SuppressWarnings("resource")

@@ -14,13 +14,16 @@ import java.util.*
 /**
  * This callback is fired in response to someone changing their friend details over the network.
  */
-@Suppress("unused")
-class PersonaStatesCallback(friend: CMsgClientPersonaState.Friend) : CallbackMsg() {
+@Suppress("unused", "CanBePrimaryConstructorProperty")
+class PersonaStateCallback(
+    friend: CMsgClientPersonaState.Friend,
+    statusFlags: EnumSet<EClientPersonaStateFlag>,
+) : CallbackMsg() {
 
     /**
      * Gets the status flags. This shows what has changed.
      */
-    val statusFlags: EnumSet<EClientPersonaStateFlag> = EClientPersonaStateFlag.from(friend.personaStateFlags)
+    val statusFlags: EnumSet<EClientPersonaStateFlag> = statusFlags
 
     /**
      * Gets the friend's [SteamID]

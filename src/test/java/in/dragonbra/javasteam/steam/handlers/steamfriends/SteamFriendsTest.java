@@ -327,7 +327,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
 
         handler.handleMsg(msg);
 
-        PersonaStatesCallback callback = verifyCallback();
+        PersonaStateCallback callback = verifyCallback();
 
         //assertEquals(1, callback.getPersonaStates().size());
         assertEquals(EPersonaState.Offline, callback.getState());

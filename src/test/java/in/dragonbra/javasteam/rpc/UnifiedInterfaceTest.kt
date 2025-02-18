@@ -62,6 +62,8 @@ class UnifiedInterfaceTest {
             "ContentServerDirectory.kt",
             "DepotContentDetection.kt",
             "EmbeddedClient.kt",
+            "FamilyGroups.kt",
+            "FamilyGroupsClient.kt",
             "FriendMessages.kt",
             "FriendMessagesClient.kt",
             "GameNotifications.kt",

@@ -130,6 +130,12 @@ class LoggedOnCallback : CallbackMsg {
      */
     var parentalSettings: ParentalSettings? = null
 
+    /**
+     * Gets the id of the family group a user is joined in.
+     */
+    var familyGroupId: Long = 0L
+        private set
+
     constructor(packetMsg: IPacketMsg) {
         if (!packetMsg.isProto) {
             handleNonProtoLogon(packetMsg)
@@ -177,6 +183,8 @@ class LoggedOnCallback : CallbackMsg {
                 logger.error("Failed to parse parental settings", e)
             }
         }
+
+        familyGroupId = resp.familyGroupId
     }
 
     constructor(result: EResult) {

@@ -5,6 +5,7 @@ import `in`.dragonbra.javasteam.enums.EUIMode
 import `in`.dragonbra.javasteam.steam.authentication.AuthSessionDetails
 import `in`.dragonbra.javasteam.steam.authentication.SteamAuthentication
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.Utils
 
 /**
@@ -48,16 +49,8 @@ data class LogOnDetails(
     var requestSteam2Ticket: Boolean = false,
     var clientOSType: EOSType = Utils.getOSType(),
     var clientLanguage: String = "english",
-    var machineName: String = "",
+    var machineName: String = HardwareUtils.getMachineName(true),
     var chatMode: ChatMode = ChatMode.DEFAULT,
     var uiMode: EUIMode = EUIMode.Unknown,
     var isSteamDeck: Boolean = false,
-) {
-    init {
-        var envName = System.getenv("COMPUTERNAME")
-        if (envName == null) {
-            envName = System.getenv("HOSTNAME")
-        }
-        machineName = "$envName (JavaSteam)"
-    }
-}
+)

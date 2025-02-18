@@ -6,30 +6,30 @@
 [versions]
 # Java / Kotlin versions
 java = "11"
-kotlin = "2.1.0" # https://kotlinlang.org/docs/releases.html#release-details
+kotlin = "2.1.10" # https://kotlinlang.org/docs/releases.html#release-details
 dokka = "2.0.0" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 kotlinter = "5.0.1" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 
 # Standard Library versions
-bouncyCastle = "1.79" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
+bouncyCastle = "1.80" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
 commons-io = "2.18.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.17.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 commons-validator = "1.9.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
-gson = "2.11.0" # https://mvnrepository.com/artifact/com.google.code.gson/gson
+gson = "2.12.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
 jacoco = "0.8.12" # https://www.eclemma.org/jacoco
 kotlin-coroutines = "1.10.1" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
 okHttp = "5.0.0-alpha.14" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-protobuf = "4.29.2" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+protobuf = "4.29.3" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.4" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 publishPlugin = "1.3.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
 qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
 xz = "1.10" # https://mvnrepository.com/artifact/org.tukaani/xz
 
 # Testing Lib versions
-commonsCodec = "1.17.1" # https://mvnrepository.com/artifact/commons-codec/commons-codec
+commonsCodec = "1.18.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
 junit5 = "5.11.4" # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockWebServer = "5.0.0-alpha.14" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
-mockitoVersion = "5.14.2" # https://mvnrepository.com/artifact/org.mockito/mockito-core
+mockitoVersion = "5.15.2" # https://mvnrepository.com/artifact/org.mockito/mockito-core
 
 [libraries]
 bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
