@@ -7,7 +7,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.Friend;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendAddedCallback;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.FriendsListCallback;
-import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStatesCallback;
+import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStateCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback;
@@ -88,7 +88,7 @@ public class SampleFriends implements Runnable {
 
         manager.subscribe(AccountInfoCallback.class, this::onAccountInfo);
         manager.subscribe(FriendsListCallback.class, this::onFriendList);
-        manager.subscribe(PersonaStatesCallback.class, this::onPersonaStates);
+        manager.subscribe(PersonaStateCallback.class, this::onPersonaState);
         manager.subscribe(FriendAddedCallback.class, this::onFriendAdded);
 
         isRunning = true;
@@ -111,6 +111,7 @@ public class SampleFriends implements Runnable {
         LogOnDetails details = new LogOnDetails();
         details.setUsername(user);
         details.setPassword(pass);
+        details.setTwoFactorCode("rnthg");
 
         // Set LoginID to a non-zero value if you have another client connected using the same account,
         // the same private ip, and same public ip.
@@ -203,10 +204,10 @@ public class SampleFriends implements Runnable {
         System.out.println(callback.getPersonaName() + " is now a friend");
     }
 
-    private void onPersonaStates(PersonaStatesCallback callback) {
+    private void onPersonaState(PersonaStateCallback callback) {
         // this callback is received when the persona state (friend information) of a friend changes
 
         // for this sample we'll simply display the names of the friends
-        System.out.println("State change: " + callback.getName() + " " + callback.getState());
+        System.out.println("State change: " + callback.getName() + " | " + callback.getState() + " | " + callback.getStatusFlags());
     }
 }

@@ -56,7 +56,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.IgnoreFrien
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.NicknameCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.NicknameListCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaChangeCallback
-import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStatesCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.PersonaStateCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.callback.ProfileInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.AccountInfoCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
@@ -530,7 +530,7 @@ class SteamFriends : ClientMsgHandler() {
 
     /**
      * Requests persona state for a list of specified SteamID.
-     * Results are returned in [PersonaStatesCallback].
+     * Results are returned in [PersonaStateCallback].
      *
      * @param steamIdList   A list of SteamIDs to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.defaultPersonaStateFlags].
@@ -554,7 +554,7 @@ class SteamFriends : ClientMsgHandler() {
 
     /**
      * Requests persona state for a specified SteamID.
-     * Results are returned in [PersonaStatesCallback].
+     * Results are returned in [PersonaStateCallback].
      *
      * @param steamID A SteamID to request the info of.
      * @param requestedInfo The requested info flags. If none specified, this uses [SteamConfiguration.defaultPersonaStateFlags].
@@ -781,7 +781,7 @@ class SteamFriends : ClientMsgHandler() {
         }
 
         perState.body.friendsList.forEach { friend ->
-            PersonaStatesCallback(friend).also(client::postCallback)
+            PersonaStateCallback(friend, flags).also(client::postCallback)
         }
     }
 
