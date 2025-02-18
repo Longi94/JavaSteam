@@ -5,6 +5,7 @@ package `in`.dragonbra.javasteam.types
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import java.lang.Exception
 import java.time.Instant
 import java.util.Date
 import java.util.EnumSet
@@ -87,6 +88,12 @@ class Steam3Manifest(
         internal fun deserialize(ds: BinaryReader): Steam3Manifest {
             // The magic is verified by DepotManifest.InternalDeserialize, not checked here to avoid seeking
             val version = ds.readInt()
+
+            if (version != CURRENT_VERSION) {
+                // Not Implemented Exception
+                throw Exception("Only version $CURRENT_VERSION is supported")
+            }
+
             val depotID = ds.readInt()
             val manifestGID = ds.readLong()
             val creationTime = Date.from(Instant.ofEpochSecond(ds.readInt().toLong()))

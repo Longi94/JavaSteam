@@ -1,8 +1,10 @@
 package in.dragonbra.javasteam.util.stream;
 
 import com.google.protobuf.ByteString;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -377,6 +379,11 @@ public class MemoryStream extends InputStream implements Closeable {
         byte[] ret = new byte[length];
         System.arraycopy(buffer, 0, ret, 0, length);
         return ret;
+    }
+
+    @Override
+    public byte[] readAllBytes()  {
+        return toByteArray();
     }
 
     /**

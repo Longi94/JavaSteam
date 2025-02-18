@@ -47,6 +47,7 @@ class DepotManifest {
          * @param stream Raw depot manifest stream to deserialize.
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
+        @JvmStatic
         fun deserialize(stream: InputStream): DepotManifest = deserialize(stream.readBytes())
 
         /**
@@ -55,6 +56,7 @@ class DepotManifest {
          * @param data Raw depot manifest data to deserialize.
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
+        @JvmStatic
         fun deserialize(data: ByteArray): DepotManifest = MemoryStream(data).use { ms ->
             val manifest = DepotManifest()
             manifest.internalDeserialize(ms)
@@ -69,6 +71,7 @@ class DepotManifest {
          * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
         @Suppress("unused")
+        @JvmStatic
         fun loadFromFile(filename: String): DepotManifest? {
             val file = File(filename)
             if (!file.exists()) {
@@ -169,7 +172,7 @@ class DepotManifest {
         var iv: ByteArray
 
         try {
-            for (file in files) {
+            files.forEach { file ->
                 val decoded = Base64.getUrlDecoder().decode(
                     file.fileName
                         .replace('+', '-')
@@ -252,6 +255,10 @@ class DepotManifest {
                         if (marker != magic) {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
                         }
+
+                        // This is an intentional return because v4 manifest does not have the separate sections,
+                        // and it will be parsed by ParseBinaryManifest. If we get here, the entire buffer has been already processed.
+                        return
                     }
 
                     PROTOBUF_PAYLOAD_MAGIC -> {
@@ -275,8 +282,8 @@ class DepotManifest {
         }
 
         if (payload != null && metadata != null && signature != null) {
-            parseProtobufManifestMetadata(metadata!!)
-            parseProtobufManifestPayload(payload!!)
+            parseProtobufManifestMetadata(metadata)
+            parseProtobufManifestPayload(payload)
         } else {
             throw NoSuchElementException("Missing ContentManifest sections required for parsing depot manifest")
         }
@@ -290,8 +297,9 @@ class DepotManifest {
         creationTime = manifest.creationTime
         totalUncompressedSize = manifest.totalUncompressedSize
         totalCompressedSize = manifest.totalCompressedSize
+        encryptedCRC = manifest.encryptedCRC
 
-        for (fileMapping in manifest.fileMapping) {
+        manifest.fileMapping.forEach { fileMapping ->
             val fileData = FileData(
                 fileName = fileMapping.fileName,
                 fileNameHash = fileMapping.hashFileName,
@@ -302,7 +310,7 @@ class DepotManifest {
                 encrypted = filenamesEncrypted
             )
 
-            for (chunk in fileMapping.chunks) {
+            fileMapping.chunks.forEach { chunk ->
                 fileData.chunks.add(
                     ChunkData(
                         chunkID = chunk.chunkGID,
@@ -321,7 +329,7 @@ class DepotManifest {
     internal fun parseProtobufManifestPayload(payload: ContentManifestPayload) {
         files.clear()
 
-        for (fileMapping in payload.mappingsList) {
+        payload.mappingsList.forEach { fileMapping ->
             val fileData = FileData(
                 fileName = fileMapping.filename,
                 fileNameHash = fileMapping.shaFilename.toByteArray(),
@@ -332,7 +340,7 @@ class DepotManifest {
                 encrypted = filenamesEncrypted
             )
 
-            for (chunk in fileMapping.chunksList) {
+            fileMapping.chunksList.forEach { chunk ->
                 fileData.chunks.add(
                     ChunkData(
                         chunkID = chunk.sha.toByteArray(),
@@ -376,36 +384,35 @@ class DepotManifest {
         val payload = ContentManifestPayload.newBuilder()
         val uniqueChunks = hashSetOf<ByteArray>()
 
-        for (file in files) {
-            val protoFile = ContentManifestPayload.FileMapping.newBuilder()
-            protoFile.setSize(file.totalSize)
-            protoFile.setFlags(EDepotFileFlag.code(file.flags))
+        files.forEach { file ->
+            val protoFile = ContentManifestPayload.FileMapping.newBuilder().apply {
+                size = file.totalSize
+                flags = EDepotFileFlag.code(file.flags)
+            }
 
             if (filenamesEncrypted) {
                 // Assume the name is unmodified
-                protoFile.setFilename(file.fileName)
-                protoFile.setShaFilename(ByteString.copyFrom(file.fileNameHash))
+                protoFile.filename = file.fileName
+                protoFile.shaFilename = ByteString.copyFrom(file.fileNameHash)
             } else {
-                protoFile.setFilename(file.fileName.replace('/', '\\'))
-                protoFile.setShaFilename(
-                    ByteString.copyFrom(
-                        CryptoHelper.shaHash(
-                            file.fileName
-                                .replace('/', '\\')
-                                .lowercase()
-                                .toByteArray(Charsets.UTF_8)
-                        )
+                protoFile.filename = file.fileName.replace('/', '\\')
+                protoFile.shaFilename = ByteString.copyFrom(
+                    CryptoHelper.shaHash(
+                        file.fileName
+                            .replace('/', '\\')
+                            .lowercase()
+                            .toByteArray(Charsets.UTF_8)
                     )
                 )
             }
 
-            protoFile.setShaContent(ByteString.copyFrom(file.fileHash))
+            protoFile.shaContent = ByteString.copyFrom(file.fileHash)
 
             if (file.linkTarget.isNotBlank()) {
                 protoFile.linktarget = file.linkTarget
             }
 
-            for (chunk in file.chunks) {
+            file.chunks.forEach { chunk ->
                 val protoChunk = ContentManifestPayload.FileMapping.ChunkData.newBuilder().apply {
                     sha = ByteString.copyFrom(chunk.chunkID)
                     crc = chunk.checksum
@@ -432,36 +439,46 @@ class DepotManifest {
         }
 
         // Calculate payload CRC
-        val payloadData = payload.build().toByteArray()
-        val len = payloadData.size
-        val data = ByteArray(Int.SIZE_BYTES + len)
+        MemoryStream().use { msPayload ->
+            payload.build().writeTo(msPayload.asOutputStream())
 
-        System.arraycopy(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(len).array(), 0, data, 0, 4)
-        System.arraycopy(payloadData, 0, data, 4, len)
+            val len = msPayload.length.toInt()
+            val data = ByteArray(4 + len)
+            System.arraycopy(ByteBuffer.allocate(4).putInt(len).array(), 0, data, 0, 4)
+            System.arraycopy(msPayload.toByteArray(), 0, data, 4, len)
+            val crc32 = Utils.crc32(data).toInt()
 
-        val crc32 = Utils.crc32(payloadData).toInt()
+            if (filenamesEncrypted) {
+                metadata.crcEncrypted = crc32
+                metadata.crcClear = 0
+            } else {
+                metadata.crcEncrypted = encryptedCRC
+                metadata.crcClear = crc32
+            }
 
-        if (filenamesEncrypted) {
-            metadata.setCrcEncrypted(crc32)
-            metadata.setCrcClear(0)
-        } else {
-            metadata.setCrcEncrypted(encryptedCRC)
-            metadata.setCrcClear(crc32)
+            msPayload.toByteArray()
         }
 
         // Write the manifest to the stream and return the checksum
         return ByteArrayOutputStream().use { bw ->
             BinaryWriter(bw).use { writer ->
                 // Write Protobuf payload
-                writer.writeInt(PROTOBUF_PAYLOAD_MAGIC)
-                writer.writeInt(payloadData.size)
-                writer.write(payloadData, 0, payloadData.size)
+                MemoryStream().use { msPayload ->
+                    payload.build().writeTo(msPayload.asOutputStream())
+
+                    writer.writeInt(PROTOBUF_PAYLOAD_MAGIC)
+                    writer.writeInt(msPayload.length.toInt())
+                    writer.write(msPayload.buffer, 0, msPayload.length.toInt())
+                }
 
                 // Write Protobuf metadata
-                val metadataData = metadata.build().toByteArray()
-                writer.writeInt(PROTOBUF_METADATA_MAGIC)
-                writer.writeInt(metadataData.size)
-                writer.write(metadataData, 0, metadataData.size)
+                MemoryStream().use { msMetaData ->
+                    metadata.build().writeTo(msMetaData.asOutputStream())
+
+                    writer.writeInt(PROTOBUF_METADATA_MAGIC)
+                    writer.writeInt(msMetaData.length.toInt())
+                    writer.write(msMetaData.buffer, 0, msMetaData.length.toInt())
+                }
 
                 // Write empty signature section
                 writer.writeInt(PROTOBUF_SIGNATURE_MAGIC)
