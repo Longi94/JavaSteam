@@ -111,7 +111,6 @@ public class SampleFriends implements Runnable {
         LogOnDetails details = new LogOnDetails();
         details.setUsername(user);
         details.setPassword(pass);
-        details.setTwoFactorCode("rnthg");
 
         // Set LoginID to a non-zero value if you have another client connected using the same account,
         // the same private ip, and same public ip.
