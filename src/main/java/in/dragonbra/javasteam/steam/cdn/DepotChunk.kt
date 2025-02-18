@@ -27,6 +27,7 @@ object DepotChunk {
      * @exception IOException Thrown if the processed data does not match the expected checksum given in its chunk information.
      * @exception IllegalArgumentException Thrown if the destination size is too small or the depot key is not 32 bytes long
      */
+    @JvmStatic
     fun process(
         info: ChunkData,
         data: ByteArray,
@@ -57,23 +58,67 @@ object DepotChunk {
         val writtenDecompressed: Int
 
         try {
-            val bytesWrittenToBuffer = cbcCipher.doFinal(data, iv.size, data.size - iv.size, buffer)
+            val written = cbcCipher.doFinal(data, iv.size, data.size - iv.size, buffer)
 
-            writtenDecompressed = if (buffer.size > 1 && buffer[0] == 'V'.code.toByte() && buffer[1] == 'Z'.code.toByte()) {
-                MemoryStream(buffer, 0, bytesWrittenToBuffer).use { ms ->
-                    VZipUtil.decompress(ms, destination, verifyChecksum = false)
+            // Per SK:
+            //  Steam client checks for like 20 bytes for pkzip, and 22 bytes for vzip,
+            //  I'm just being safe and checking for a smaller value.
+            if (buffer.size < 16) {
+                throw IOException("Not enough data in the decrypted depot chunk (was ${buffer.size} bytes).")
+            }
+
+            if (buffer[0] == 'V'.code.toByte() &&
+                buffer[1] == 'S'.code.toByte() &&
+                buffer[2] == 'Z'.code.toByte() &&
+                buffer[3] == 'a'.code.toByte()
+            ) {
+                // Zstd
+                throw RuntimeException("Zstd compressed chunks are not yet implemented in JavaSteam.")
+            } else if (buffer[0] == 'V'.code.toByte() &&
+                buffer[1] == 'Z'.code.toByte() &&
+                buffer[2] == 'a'.code.toByte()
+            ) {
+                // LZMA
+                MemoryStream(buffer, 0, written).use { decryptedStream ->
+                    writtenDecompressed = VZipUtil.decompress(
+                        ms = decryptedStream,
+                        destination = destination,
+                        verifyChecksum = false
+                    )
+                }
+            } else if (buffer[0] == 'P'.code.toByte() &&
+                buffer[1] == 'K'.code.toByte() &&
+                buffer[2].toInt() == 0x03 &&
+                buffer[3].toInt() == 0x04
+            ) {
+                // Per SK:
+                //  Steam client code performs the same check.
+
+                // PKzip
+                MemoryStream(buffer, 0, written).use { decryptedStream ->
+                    writtenDecompressed = ZipUtil.decompress(
+                        ms = decryptedStream,
+                        destination = destination,
+                        verifyChecksum = false
+                    )
                 }
             } else {
-                MemoryStream(buffer, 0, bytesWrittenToBuffer).use { ms ->
-                    ZipUtil.decompress(ms, destination, verifyChecksum = false)
-                }
+                throw IOException(
+                    "Unexpected depot chunk compression " +
+                        "(first four bytes are ${Strings.toHex(buffer.copyOfRange(0, 4))})."
+                )
             }
         } catch (e: Exception) {
             throw IOException("Failed to decompress chunk ${Strings.toHex(info.chunkID)}: $e\n${e.stackTraceToString()}")
+        } finally {
+            buffer.fill(0)
         }
 
         if (info.uncompressedLength != writtenDecompressed) {
-            throw IOException("Processed data checksum failed to decompress to the expected chunk uncompressed length. (was $writtenDecompressed, should be ${info.uncompressedLength})")
+            throw IOException(
+                "Processed data checksum failed to decompress to the expected chunk uncompressed length. " +
+                    "(was $writtenDecompressed, should be ${info.uncompressedLength})"
+            )
         }
 
         val dataCrc = Utils.adlerHash(destination.sliceArray(0 until writtenDecompressed))
