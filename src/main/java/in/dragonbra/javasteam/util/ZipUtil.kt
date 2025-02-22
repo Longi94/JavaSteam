@@ -6,6 +6,7 @@ import java.util.zip.ZipInputStream
 
 object ZipUtil {
 
+    @JvmStatic
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
         ZipInputStream(ms, Charsets.UTF_8).use { zip ->
             val entry = zip.nextEntry
