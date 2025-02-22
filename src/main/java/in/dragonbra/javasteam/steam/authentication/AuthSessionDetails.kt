@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.steam.authentication
 
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesAuthSteamclient.EAuthTokenPlatformType
+import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.Utils
 
 /**
@@ -23,7 +24,8 @@ class AuthSessionDetails {
     /**
      * Gets or Sets the device name (or user agent). By default, "<DeviceName>(JavaSteam)" will be used.
      */
-    var deviceFriendlyName: String?
+    @JvmField
+    var deviceFriendlyName: String? = HardwareUtils.getMachineName(true)
 
     /**
      * Gets or sets the platform type that the login will be performed for.
@@ -62,9 +64,4 @@ class AuthSessionDetails {
      */
     @JvmField
     var authenticator: IAuthenticator? = null
-
-    init {
-        val machineName = System.getenv("COMPUTERNAME") ?: System.getenv("HOSTNAME")
-        deviceFriendlyName = "$machineName (JavaSteam)"
-    }
 }

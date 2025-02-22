@@ -1,9 +1,12 @@
 package in.dragonbra.javasteam.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 /**
@@ -191,9 +194,14 @@ public class HardwareUtils {
     }
 
     public static String getMachineName() {
+        return getMachineName(false);
+    }
+
+    public static String getMachineName(boolean addTag) {
         if (MACHINE_NAME != null) {
             return MACHINE_NAME;
         }
+
 
         if (SystemUtils.IS_OS_ANDROID) {
             MACHINE_NAME = getAndroidDeviceName();
@@ -201,24 +209,29 @@ public class HardwareUtils {
             MACHINE_NAME = getDeviceName();
         }
 
-        if (MACHINE_NAME == null || MACHINE_NAME.isEmpty()) {
+        if (StringUtils.isBlank(MACHINE_NAME)) {
             MACHINE_NAME = "Unknown";
         }
 
-        return MACHINE_NAME;
+        if (addTag || MACHINE_NAME.contains("Unknown")) {
+            return MACHINE_NAME + " (JavaSteam)";
+        } else {
+            return MACHINE_NAME;
+        }
     }
 
     private static String getDeviceName() {
-        try {
-            Process process = Runtime.getRuntime().exec("hostname");
-
-            try (var inputStreamReader = new InputStreamReader(process.getInputStream());
-                 var reader = new BufferedReader(inputStreamReader)) {
-                return reader.readLine().trim();
+        var hostname = SystemUtils.getHostName();
+        if (StringUtils.isBlank(hostname)) {
+            try {
+                // Last fallback.
+                hostname = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                hostname = null;
             }
-        } catch (IOException e) {
-            return null;
         }
+
+        return hostname;
     }
 
     private static String getAndroidDeviceName() {
