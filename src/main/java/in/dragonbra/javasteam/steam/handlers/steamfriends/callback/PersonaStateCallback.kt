@@ -33,7 +33,7 @@ class PersonaStateCallback(
     /**
      * Gets the state.
      */
-    val state: EPersonaState? = EPersonaState.from(friend.personaState)
+    val state: EPersonaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
 
     /**
      * Gets the state flags.
