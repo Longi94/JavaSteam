@@ -4,6 +4,7 @@ import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -190,7 +191,11 @@ class FileManifestProvider(private val file: Path) : IManifestProvider {
                     }
                 }
                 // add manifest as uncompressed data
-                zipUncompressed(zip, getEntryName(manifest.depotID, manifest.manifestGID), manifest.toByteArray())
+                MemoryStream().use { ms ->
+                    manifest.serialize(ms.asOutputStream())
+
+                    zipUncompressed(zip, getEntryName(manifest.depotID, manifest.manifestGID), ms.toByteArray())
+                }
             }
             // save all data to the file
             try {

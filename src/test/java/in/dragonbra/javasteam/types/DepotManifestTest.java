@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -101,22 +100,6 @@ public class DepotManifestTest {
 
         int actualOffset = indexOf(actual, signature); // DepotManifest.PROTOBUF_SIGNATURE_MAGIC
         int expectedOffset = indexOf(manifestData, signature);
-
-        byte expectedByte = manifestData[1109];
-        byte actualByte = actual[1109];
-        System.out.println("At index 1109:");
-        System.out.println("Expected byte: " + expectedByte);
-        System.out.println("Actual byte: " + actualByte);
-
-// Maybe also look at surrounding bytes for context
-        System.out.println("Expected bytes around 1109:");
-        for (int i = 1105; i < 1115; i++) {
-            System.out.println("Index " + i + ": " + manifestData[i]);
-        }
-        System.out.println("Actual bytes around 1109:");
-        for (int i = 1105; i < 1115; i++) {
-            System.out.println("Index " + i + ": " + actual[i]);
-        }
 
         Assertions.assertTrue(actualOffset > 0);
         Assertions.assertTrue(expectedOffset > 0);

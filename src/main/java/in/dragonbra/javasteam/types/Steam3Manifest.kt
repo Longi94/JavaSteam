@@ -1,11 +1,8 @@
-@file:Suppress("unused")
-
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
-import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import java.lang.Exception
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.Date
 import java.util.EnumSet
@@ -13,125 +10,125 @@ import java.util.EnumSet
 /**
  * Represents the binary Steam3 manifest format.
  */
-class Steam3Manifest(
-//    val magic: Int,
-    val version: Int,
-    val depotID: Int,
-    val manifestGID: Long,
-    val creationTime: Date,
-    val areFileNamesEncrypted: Boolean,
-    val totalUncompressedSize: Long,
-    val totalCompressedSize: Long,
-    val chunkCount: Int,
-    val fileEntryCount: Int,
-    val fileMappingSize: Int,
-    val encryptedCRC: Int,
-    val decryptedCRC: Int,
-    val flags: Int,
-    val fileMapping: List<FileMapping>,
-) {
-
-    class FileMapping(
-        val fileName: String,
-        val totalSize: Long,
-        val flags: EnumSet<EDepotFileFlag>,
-        val hashFileName: ByteArray,
-        val hashContent: ByteArray,
-        val numChunks: Int,
-        val chunks: Array<Chunk>,
-    ) {
-
-        class Chunk(
-            val chunkGID: ByteArray, // sha1 hash for this chunk
-            val checksum: Int,
-            val offset: Long,
-            val decompressedSize: Int,
-            val compressedSize: Int,
-        ) {
-            companion object {
-                internal fun deserialize(ds: BinaryReader): Chunk = Chunk(
-                    chunkGID = ds.readNBytesCompat(20),
-                    checksum = ds.readInt(),
-                    offset = ds.readLong(),
-                    decompressedSize = ds.readInt(),
-                    compressedSize = ds.readInt()
-                )
-            }
-        }
-
-        companion object {
-            internal fun deserialize(ds: BinaryReader): FileMapping {
-                val fileName = ds.readNullTermString(Charsets.UTF_8)
-                val totalSize = ds.readLong()
-                val flags = EDepotFileFlag.from(ds.readInt())
-                val hashContent = ds.readNBytesCompat(20)
-                val hashFileName = ds.readNBytesCompat(20)
-                val numChunks = ds.readInt()
-
-                return FileMapping(
-                    fileName = fileName,
-                    totalSize = totalSize,
-                    flags = flags,
-                    hashContent = hashContent,
-                    hashFileName = hashFileName,
-                    numChunks = numChunks,
-                    chunks = Array(numChunks) { Chunk.deserialize(ds) }
-                )
-            }
-        }
-    }
+@Suppress("unused")
+class Steam3Manifest {
 
     companion object {
         const val MAGIC: Int = 0x16349781
         const val CURRENT_VERSION: Int = 4
+    }
 
-        internal fun deserialize(ds: BinaryReader): Steam3Manifest {
-            // The magic is verified by DepotManifest.InternalDeserialize, not checked here to avoid seeking
-            val version = ds.readInt()
+    class FileMapping {
 
-            if (version != CURRENT_VERSION) {
-                // Not Implemented Exception
-                throw Exception("Only version $CURRENT_VERSION is supported")
+        @Suppress("ArrayInDataClass")
+        data class Chunk(
+            var chunkGID: ByteArray? = null, // sha1 hash for this chunk
+            var checksum: Int = 0,
+            var offset: Long = 0L,
+            var decompressedSize: Int = 0,
+            var compressedSize: Int = 0,
+        ) {
+            internal fun deserialize(ds: BinaryReader) {
+                chunkGID = ds.readBytes(20)
+                checksum = ds.readInt()
+                offset = ds.readLong()
+                decompressedSize = ds.readInt()
+                compressedSize = ds.readInt()
             }
+        }
 
-            val depotID = ds.readInt()
-            val manifestGID = ds.readLong()
-            val creationTime = Date.from(Instant.ofEpochSecond(ds.readInt().toLong()))
-            val areFileNamesEncrypted = ds.readInt() != 0
-            val totalUncompressedSize = ds.readLong()
-            val totalCompressedSize = ds.readLong()
-            val chunkCount = ds.readInt()
-            val fileEntryCount = ds.readInt()
-            val fileMappingSize = ds.readInt()
-            val encryptedCRC = ds.readInt()
-            val decryptedCRC = ds.readInt()
-            val flags = ds.readInt()
+        var fileName: String? = null
 
-            val fileMapping = mutableListOf<FileMapping>()
-            var size = fileMappingSize
+        var totalSize: Long = 0L
+        var flags: EnumSet<EDepotFileFlag> = EnumSet.noneOf(EDepotFileFlag::class.java)
 
-            while (size > 0) {
-                val start = ds.position
-                fileMapping.add(FileMapping.deserialize(ds))
-                size -= ds.position - start
+        var hashFileName: ByteArray? = null
+        var hashContent: ByteArray? = null
+
+        var numChunks: Int = 0
+        var chunks: ArrayList<Chunk>? = null
+
+        internal fun deserialize(ds: BinaryReader) {
+            fileName = ds.readNullTermString(StandardCharsets.UTF_8)
+
+            totalSize = ds.readLong()
+
+            flags = EDepotFileFlag.from(ds.readInt())
+
+            hashContent = ds.readBytes(20)
+            hashFileName = ds.readBytes(20)
+
+            numChunks = ds.readInt()
+
+            chunks = ArrayList<Chunk>(numChunks)
+
+            for (i in 0 until chunks!!.size) {
+                chunks!![i] = Chunk().apply {
+                    deserialize(ds)
+                }
             }
+        }
+    }
 
-            return Steam3Manifest(
-                version = version,
-                depotID = depotID,
-                manifestGID = manifestGID,
-                creationTime = creationTime,
-                areFileNamesEncrypted = areFileNamesEncrypted,
-                totalUncompressedSize = totalUncompressedSize,
-                totalCompressedSize = totalCompressedSize,
-                chunkCount = chunkCount,
-                fileEntryCount = fileEntryCount,
-                fileMappingSize = fileMappingSize,
-                fileMapping = fileMapping,
-                encryptedCRC = encryptedCRC,
-                decryptedCRC = decryptedCRC,
-                flags = flags,
-            )
+    var magic: Int = 0
+    var version: Int = 0
+    var depotID: Int = 0
+    var manifestGID: Long = 0L
+    var creationTime: Date = Date()
+    var areFileNamesEncrypted: Boolean = false
+    var totalUncompressedSize: Long = 0L
+    var totalCompressedSize: Long = 0L
+    var chunkCount: Int = 0
+    var fileEntryCount: Int = 0
+    var fileMappingSize: Int = 0
+    var encryptedCRC: Int = 0
+    var decryptedCRC: Int = 0
+    var flags: Int = 0
+    var mapping: ArrayList<FileMapping>? = null
+
+    internal fun deserialize(ds: BinaryReader) {
+        // The magic is verified by DepotManifest.InternalDeserialize, not checked here to avoid seeking
+        // Magic = ds.readInt();
+        // if (Magic != MAGIC) {
+        //     throw new InvalidDataException("data is not a valid steam3 manifest: incorrect magic.");
+        // }
+
+        version = ds.readInt()
+
+        if (version != CURRENT_VERSION) {
+            throw IllegalArgumentException("Only version $CURRENT_VERSION is supported.")
+        }
+
+        depotID = ds.readInt()
+
+        manifestGID = ds.readLong()
+        creationTime = Date.from(Instant.ofEpochSecond(ds.readInt().toLong()))
+
+        areFileNamesEncrypted = ds.readInt() != 0
+
+        totalUncompressedSize = ds.readLong()
+        totalCompressedSize = ds.readLong()
+
+        chunkCount = ds.readInt()
+
+        fileEntryCount = ds.readInt()
+        fileMappingSize = ds.readInt()
+
+        mapping = ArrayList<FileMapping>(fileMappingSize)
+
+        encryptedCRC = ds.readInt()
+        decryptedCRC = ds.readInt()
+
+        flags = ds.readInt()
+
+        var i = fileMappingSize
+        while (i > 0) {
+            val start = ds.position
+
+            val fileMapping = FileMapping().apply { deserialize(ds) }
+            mapping!!.add(fileMapping)
+
+            i -= (ds.position - start)
         }
     }
 }
