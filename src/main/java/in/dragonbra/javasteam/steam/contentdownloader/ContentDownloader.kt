@@ -533,9 +533,7 @@ class ContentDownloader(val steamClient: SteamClient) {
 
         val chunkID = Strings.toHex(chunk.chunkID)
 
-        val chunkInfo = ChunkData(chunk)
-
-        var outputChunkData = ByteArray(chunkInfo.uncompressedLength)
+        var outputChunkData = ByteArray(chunk.uncompressedLength)
         var writtenBytes = 0
 
         do {
@@ -544,10 +542,10 @@ class ContentDownloader(val steamClient: SteamClient) {
             try {
                 connection = cdnPool.getConnection().await()
 
-                outputChunkData = ByteArray(chunkInfo.uncompressedLength)
+                outputChunkData = ByteArray(chunk.uncompressedLength)
                 writtenBytes = cdnPool.cdnClient.downloadDepotChunk(
                     depotId = depot.depotId,
-                    chunk = chunkInfo,
+                    chunk = chunk,
                     server = connection!!,
                     destination = outputChunkData,
                     depotKey = depot.depotKey,
@@ -587,7 +585,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                 fileStreamData.fileStream = randomAccessFile.channel
             }
 
-            fileStreamData.fileStream?.position(chunkInfo.offset)
+            fileStreamData.fileStream?.position(chunk.offset)
             fileStreamData.fileStream?.write(ByteBuffer.wrap(outputChunkData, 0, writtenBytes))
         } finally {
             fileStreamData.fileLock.release()
@@ -715,7 +713,7 @@ class ContentDownloader(val steamClient: SteamClient) {
             throw CancellationException("Unable to download manifest $manifestId for depot $depotId")
         }
 
-        val newProtoManifest = DepotManifest(depotManifest)
+        val newProtoManifest = depotManifest
         steamClient.configuration.depotManifestProvider.updateManifest(newProtoManifest)
 
         return@async newProtoManifest

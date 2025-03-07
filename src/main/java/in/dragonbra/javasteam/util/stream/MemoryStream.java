@@ -4,7 +4,6 @@ import com.google.protobuf.ByteString;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -382,7 +381,7 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public byte[] readAllBytes()  {
+    public byte @NotNull [] readAllBytes()  {
         return toByteArray();
     }
 

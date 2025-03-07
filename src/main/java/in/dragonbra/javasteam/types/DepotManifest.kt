@@ -123,22 +123,6 @@ class DepotManifest {
      */
     var encryptedCRC: Int = 0
 
-    constructor()
-
-    /**
-     * Internal constructor helper
-     */
-    constructor(manifest: DepotManifest) {
-        files = arrayListOf(*manifest.files.map { FileData(it) }.toTypedArray())
-        filenamesEncrypted = manifest.filenamesEncrypted
-        depotID = manifest.depotID
-        manifestGID = manifest.manifestGID
-        creationTime = manifest.creationTime
-        totalUncompressedSize = manifest.totalUncompressedSize
-        totalCompressedSize = manifest.totalCompressedSize
-        encryptedCRC = manifest.encryptedCRC
-    }
-
     /**
      * Attempts to decrypt file names with the given encryption key.
      * @param encryptionKey The encryption key.
@@ -168,7 +152,6 @@ class DepotManifest {
                 // Majority of filenames are short, even when they are encrypted and base64 encoded,
                 // so this resize will be hit *very* rarely
                 if (decodedLength > bufferDecoded.size) {
-                    // Simply create new arrays of the required size
                     bufferDecoded = ByteArray(decodedLength)
                     bufferDecrypted = ByteArray(decodedLength)
                 }
@@ -176,7 +159,6 @@ class DepotManifest {
                 val decoder = Base64.getUrlDecoder()
                 decodedLength = try {
                     val tempBytes = decoder.decode(
-                        // :^)
                         file.fileName
                             .replace('+', '-')
                             .replace('/', '_')
@@ -331,16 +313,16 @@ class DepotManifest {
                 hash = fileMapping.hashContent!!,
                 linkTarget = "",
                 encrypted = filenamesEncrypted,
-                numChunks = fileMapping.chunks!!.size
+                numChunks = fileMapping.chunks.size
             )
 
-            fileMapping.chunks!!.forEach { chunk ->
+            fileMapping.chunks.forEach { chunk ->
                 val chunkData = ChunkData(
-                    id = chunk.chunkGID!!,
+                    chunkID = chunk.chunkGID!!,
                     checksum = chunk.checksum,
                     offset = chunk.offset,
-                    compLength = chunk.compressedSize,
-                    uncompLength = chunk.decompressedSize,
+                    compressedLength = chunk.compressedSize,
+                    uncompressedLength = chunk.decompressedSize,
                 )
                 filedata.chunks.add(chunkData)
             }
@@ -366,11 +348,11 @@ class DepotManifest {
 
             fileMapping.chunksList.forEach { chunk ->
                 val chunkData = ChunkData(
-                    id = chunk.sha.toByteArray(),
+                    chunkID = chunk.sha.toByteArray(),
                     checksum = chunk.crc,
                     offset = chunk.offset,
-                    compLength = chunk.cbCompressed,
-                    uncompLength = chunk.cbOriginal
+                    compressedLength = chunk.cbCompressed,
+                    uncompressedLength = chunk.cbOriginal
                 )
                 filedata.chunks.add(chunkData)
             }
@@ -474,7 +456,7 @@ class DepotManifest {
         val len = msPayload.length.toInt()
         val data = ByteArray(4 + len)
 
-        // BitConverter.GetBytes(len)
+        // Alternative of BitConverter.GetBytes(len)
         val lenBytes = ByteArray(4)
         lenBytes[0] = (len and 0xFF).toByte()
         lenBytes[1] = ((len shr 8) and 0xFF).toByte()
@@ -484,6 +466,8 @@ class DepotManifest {
         System.arraycopy(lenBytes, 0, data, 0, 4)
         System.arraycopy(msPayload.toByteArray(), 0, data, 4, len)
         val crc32 = Utils.crc32(data).toInt()
+
+        msPayload.close()
 
         if (filenamesEncrypted) {
             metadata.crcEncrypted = crc32

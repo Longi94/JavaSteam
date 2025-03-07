@@ -9,19 +9,20 @@ import java.util.EnumSet
 /**
  * Represents the binary Steam3 manifest format.
  */
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class Steam3Manifest {
 
     companion object {
         const val MAGIC: Int = 0x16349781
-        private const val CURRENT_VERSION = 4
+        private const val CURRENT_VERSION: Int = 4
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     class FileMapping {
         class Chunk {
             var chunkGID: ByteArray? = null // sha1 hash for this chunk
             var checksum: Int = 0
-            var offset: Long = 0
+            var offset: Long = 0L
             var decompressedSize: Int = 0
             var compressedSize: Int = 0
 
@@ -40,7 +41,8 @@ class Steam3Manifest {
         var hashFileName: ByteArray? = null
         var hashContent: ByteArray? = null
         var numChunks: Int = 0
-        var chunks: Array<Chunk>? = null
+        var chunks: Array<Chunk> = arrayOf()
+            private set
 
         internal fun deserialize(ds: BinaryReader) {
             fileName = ds.readNullTermString(StandardCharsets.UTF_8)
@@ -49,11 +51,10 @@ class Steam3Manifest {
             hashContent = ds.readBytes(20)
             hashFileName = ds.readBytes(20)
             numChunks = ds.readInt()
+            chunks = Array(numChunks) { Chunk() }
 
-            chunks = Array(numChunks) {
-                val chunk = Chunk()
-                chunk.deserialize(ds)
-                chunk
+            for (x in chunks.indices) {
+                chunks[x].deserialize(ds)
             }
         }
     }
@@ -75,14 +76,11 @@ class Steam3Manifest {
     var mapping: MutableList<FileMapping> = mutableListOf()
 
     internal fun deserialize(ds: BinaryReader) {
-        /*
         // The magic is verified by DepotManifest.InternalDeserialize, not checked here to avoid seeking
-        magic = ds.readInt()
-
-        if (magic != MAGIC) {
-            throw IOException("data is not a valid steam3 manifest: incorrect magic.")
-        }
-         */
+        // magic = ds.readInt()
+        // if (magic != MAGIC) {
+        //     throw IOException("data is not a valid steam3 manifest: incorrect magic.")
+        // }
 
         version = ds.readInt()
 
