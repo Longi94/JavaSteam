@@ -13,70 +13,71 @@ import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.BinaryWriter
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.nio.ByteBuffer
 import java.time.Instant
-import java.util.Base64
-import java.util.Date
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import kotlin.NoSuchElementException
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 /**
  * Represents a Steam3 depot manifest.
  */
-@Suppress("MemberVisibilityCanBePrivate", "SpellCheckingInspection")
+@Suppress("unused")
 class DepotManifest {
 
     companion object {
-        const val PROTOBUF_PAYLOAD_MAGIC = 0x71F617D0
-        const val PROTOBUF_METADATA_MAGIC = 0x1F4812BE
-        const val PROTOBUF_SIGNATURE_MAGIC = 0x1B81B817
-        const val PROTOBUF_ENDOFMANIFEST_MAGIC = 0x32C415AB
-
         private val logger: Logger = LogManager.getLogger(DepotManifest::class.java)
+
+        private const val PROTOBUF_PAYLOAD_MAGIC: Int = 0x71F617D0
+        private const val PROTOBUF_METADATA_MAGIC: Int = 0x1F4812BE
+        private const val PROTOBUF_SIGNATURE_MAGIC: Int = 0x1B81B817
+        private const val PROTOBUF_ENDOFMANIFEST_MAGIC: Int = 0x32C415AB
 
         /**
          * Initializes a new instance of the [DepotManifest] class.
          * Depot manifests may come from the Steam CDN or from Steam/depotcache/ manifest files.
-         * @param stream Raw depot manifest stream to deserialize.
-         * @exception NoSuchElementException Thrown if the given data is not something recognizable.
+         * @param stream  Raw depot manifest stream to deserialize.
          */
-        fun deserialize(stream: InputStream): DepotManifest = deserialize(stream.readBytes())
+        @JvmStatic
+        fun deserialize(stream: InputStream): DepotManifest {
+            val manifest = DepotManifest()
+            manifest.internalDeserialize(stream)
+            return manifest
+        }
 
         /**
          * Initializes a new instance of the [DepotManifest] class.
          * Depot manifests may come from the Steam CDN or from Steam/depotcache/ manifest files.
          * @param data Raw depot manifest data to deserialize.
-         * @exception NoSuchElementException Thrown if the given data is not something recognizable.
          */
-        fun deserialize(data: ByteArray): DepotManifest = MemoryStream(data).use { ms ->
-            val manifest = DepotManifest()
-            manifest.internalDeserialize(ms)
-            manifest
+        @JvmStatic
+        fun deserialize(data: ByteArray): DepotManifest {
+            val ms = MemoryStream(data)
+            val manifest = deserialize(ms)
+            ms.close()
+            return manifest
         }
 
         /**
          * Loads binary manifest from a file and deserializes it.
          * @param filename Input file name.
-         * @return [Pair]<[DepotManifest], [ByteArray]> object where the first value is the depot manifest
-         * and the second is the checksum if the deserialization was successful or else the values will be null.
-         * @exception NoSuchElementException Thrown if the given data is not something recognizable.
+         * @return [DepotManifest] object if deserialization was successful; otherwise, **null**.
          */
-        @Suppress("unused")
+        @JvmStatic
         fun loadFromFile(filename: String): DepotManifest? {
             val file = File(filename)
             if (!file.exists()) {
                 return null
             }
 
-            return FileInputStream(file).use { fs ->
-                deserialize(fs)
+            return file.inputStream().use { fileStream ->
+                deserialize(fileStream)
             }
         }
     }
@@ -84,130 +85,135 @@ class DepotManifest {
     /**
      * Gets the list of files within this manifest.
      */
-    val files: MutableList<FileData>
+    var files: ArrayList<FileData> = arrayListOf()
 
     /**
      * Gets a value indicating whether filenames within this depot are encrypted.
+     * @return **true** if the filenames are encrypted; otherwise, <c>false</c>.
      */
     var filenamesEncrypted: Boolean = false
-        private set
 
     /**
      * Gets the depot id.
      */
     var depotID: Int = 0
-        private set
 
     /**
      * Gets the manifest id.
      */
-    var manifestGID: Long = 0
-        private set
+    var manifestGID: Long = 0L
 
     /**
      * Gets the depot creation time.
      */
     var creationTime: Date = Date()
-        private set
 
     /**
      * Gets the total uncompressed size of all files in this depot.
      */
-    var totalUncompressedSize: Long = 0
-        private set
+    var totalUncompressedSize: Long = 0L
 
     /**
      * Gets the total compressed size of all files in this depot.
      */
-    var totalCompressedSize: Long = 0
-        private set
+    var totalCompressedSize: Long = 0L
 
     /**
      * Gets CRC-32 checksum of encrypted manifest payload.
      */
     var encryptedCRC: Int = 0
-        private set
-
-    constructor() {
-        files = mutableListOf()
-        filenamesEncrypted = false
-        depotID = 0
-        manifestGID = 0
-        creationTime = Date()
-        totalUncompressedSize = 0
-        totalCompressedSize = 0
-        encryptedCRC = 0
-    }
-
-    constructor(manifest: DepotManifest) {
-        files = manifest.files.map { FileData(it) }.toMutableList()
-        filenamesEncrypted = manifest.filenamesEncrypted
-        depotID = manifest.depotID
-        manifestGID = manifest.manifestGID
-        creationTime = manifest.creationTime
-        totalUncompressedSize = manifest.totalUncompressedSize
-        totalCompressedSize = manifest.totalCompressedSize
-        encryptedCRC = manifest.encryptedCRC
-    }
 
     /**
      * Attempts to decrypt file names with the given encryption key.
      * @param encryptionKey The encryption key.
-     * @return `true` if the file names were successfully decrypted; otherwise `false`.
+     * @return **true** if the file names were successfully decrypted; otherwise, **false**.
      */
     fun decryptFilenames(encryptionKey: ByteArray): Boolean {
         if (!filenamesEncrypted) {
             return true
         }
 
-        assert(encryptionKey.size == 32) { "Decrypt filenames used with non 32 byte key!" }
+        require(encryptionKey.size == 32) { "Decrypt filnames used with non 32 byte key!" }
 
         // This was originally copy-pasted in the SteamKit2 source from CryptoHelper.SymmetricDecrypt to avoid allocating Aes instance for every filename
         val ecbCipher = Cipher.getInstance("AES/ECB/NoPadding", CryptoHelper.SEC_PROV)
         val aes = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
         val secretKey = SecretKeySpec(encryptionKey, "AES")
-        var iv: ByteArray
+
+        val iv = ByteArray(16)
+        var filenameLength: Int
+        var bufferDecoded = ByteArray(256)
+        var bufferDecrypted = ByteArray(256)
 
         try {
-            for (file in files) {
-                val decoded = Base64.getUrlDecoder().decode(
-                    file.fileName
-                        .replace('+', '-')
-                        .replace('/', '_')
-                        .replace("\n", "")
-                        .replace("\r", "")
-                        .replace(" ", "")
-                )
+            files.forEach { file ->
+                var decodedLength = file.fileName.length / 4 * 3 // This may be higher due to padding
 
-                val bufferDecrypted: ByteArray
-                try {
-                    // Extract IV from the first 16 bytes
-                    ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
-                    iv = ecbCipher.doFinal(decoded, 0, 16)
+                // Majority of filenames are short, even when they are encrypted and base64 encoded,
+                // so this resize will be hit *very* rarely
+                if (decodedLength > bufferDecoded.size) {
+                    bufferDecoded = ByteArray(decodedLength)
+                    bufferDecrypted = ByteArray(decodedLength)
+                }
 
-                    // Decrypt filename
-                    aes.init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(iv))
-                    bufferDecrypted = aes.doFinal(decoded, iv.size, decoded.size - iv.size)
+                val decoder = Base64.getUrlDecoder()
+                decodedLength = try {
+                    val tempBytes = decoder.decode(
+                        file.fileName
+                            .replace('+', '-')
+                            .replace('/', '_')
+                            .replace("\n", "")
+                            .replace("\r", "")
+                            .replace(" ", "")
+                    )
+                    if (tempBytes.size <= bufferDecoded.size) {
+                        tempBytes.copyInto(bufferDecoded)
+                        tempBytes.size
+                    } else {
+                        // Buffer too small
+                        throw IllegalArgumentException("Buffer too small")
+                    }
                 } catch (e: Exception) {
-                    logger.error("Failed to decrypt the filename: $e")
+                    logger.error("Failed to base64 decode the filename: ${e.message}", e)
+                    return false
+                }
+
+                try {
+                    // Get a slice of the decoded buffer up to decodedLength
+                    val encryptedFilename = bufferDecoded.copyOfRange(0, decodedLength)
+
+                    // Decrypt the IV portion (first 16 bytes) using ECB mode
+                    ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
+                    ecbCipher.doFinal(encryptedFilename, 0, iv.size, iv, 0)
+
+                    // Decrypt the rest using CBC mode with the IV we just decrypted
+                    val ivSpec = IvParameterSpec(iv)
+                    aes.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+
+                    // Decrypt the remaining data after the IV
+                    val remainingData = encryptedFilename.copyOfRange(iv.size, encryptedFilename.size)
+                    filenameLength = aes.doFinal(remainingData, 0, remainingData.size, bufferDecrypted, 0)
+                } catch (e: Exception) {
+                    logger.error("Failed to decrypt the filename.", e)
                     return false
                 }
 
                 // Trim the ending null byte, safe for UTF-8
-                val filenameLength = bufferDecrypted.size - if (
-                    bufferDecrypted.isNotEmpty() &&
-                    bufferDecrypted[bufferDecrypted.size - 1] == 0.toByte()
-                ) {
-                    1
-                } else {
-                    0
+                if (filenameLength > 0 && bufferDecrypted[filenameLength - 1] == 0.toByte()) {
+                    filenameLength--
+                }
+
+                for (i in 0 until filenameLength) {
+                    if (bufferDecrypted[i] == '\\'.code.toByte()) {
+                        bufferDecrypted[i] = File.separatorChar.code.toByte()
+                    }
                 }
 
                 file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8)
-                    .replace('\\', File.separatorChar)
             }
-        } catch (e: Exception) {
-            logger.error("Failed to decrypt filenames: $e")
+        } finally {
+            bufferDecoded.fill(0)
+            bufferDecrypted.fill(0)
         }
 
         // Sort file entries alphabetically because that's what Steam does
@@ -222,15 +228,14 @@ class DepotManifest {
      * Serializes depot manifest and saves the output to a file.
      * @param filename Output file name.
      */
-    @Suppress("unused")
     fun saveToFile(filename: String) {
-        FileOutputStream(File(filename)).use { fs ->
-            serialize(fs)
+        File(filename).outputStream().use { fileStream ->
+            serialize(fileStream)
         }
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    internal fun internalDeserialize(stream: MemoryStream) {
+    private fun internalDeserialize(stream: InputStream) {
         var payload: ContentManifestPayload? = null
         var metadata: ContentManifestMetadata? = null
         var signature: ContentManifestSignature? = null
@@ -245,13 +250,18 @@ class DepotManifest {
 
                 when (magic) {
                     Steam3Manifest.MAGIC -> {
-                        val binaryManifest = Steam3Manifest.deserialize(br)
+                        val binaryManifest = Steam3Manifest()
+                        binaryManifest.deserialize(br)
                         parseBinaryManifest(binaryManifest)
 
                         val marker = br.readInt()
                         if (marker != magic) {
                             throw NoSuchElementException("Unable to find end of message marker for depot manifest")
                         }
+
+                        // This is an intentional return because v4 manifest does not have the separate sections,
+                        // and it will be parsed by ParseBinaryManifest. If we get here, the entire buffer has been already processed.
+                        return
                     }
 
                     PROTOBUF_PAYLOAD_MAGIC -> {
@@ -269,7 +279,9 @@ class DepotManifest {
                         signature = ContentManifestSignature.parseFrom(stream.readNBytesCompat(signatureLength))
                     }
 
-                    else -> throw NoSuchElementException("Unrecognized magic value ${magic.toHexString(HexFormat.Default)} in depot manifest.")
+                    else -> {
+                        throw NoSuchElementException("Unrecognized magic value ${magic.toHexString()} in depot manifest.")
+                    }
                 }
             }
         }
@@ -282,73 +294,74 @@ class DepotManifest {
         }
     }
 
-    internal fun parseBinaryManifest(manifest: Steam3Manifest) {
-        files.clear()
+    private fun parseBinaryManifest(manifest: Steam3Manifest) {
+        files = ArrayList(manifest.mapping.size)
         filenamesEncrypted = manifest.areFileNamesEncrypted
         depotID = manifest.depotID
         manifestGID = manifest.manifestGID
         creationTime = manifest.creationTime
         totalUncompressedSize = manifest.totalUncompressedSize
         totalCompressedSize = manifest.totalCompressedSize
+        encryptedCRC = manifest.encryptedCRC
 
-        for (fileMapping in manifest.fileMapping) {
-            val fileData = FileData(
-                fileName = fileMapping.fileName,
-                fileNameHash = fileMapping.hashFileName,
-                flags = fileMapping.flags,
-                totalSize = fileMapping.totalSize,
-                fileHash = fileMapping.hashContent,
+        manifest.mapping.forEach { fileMapping ->
+            val filedata = FileData(
+                filename = fileMapping.fileName!!,
+                filenameHash = fileMapping.hashFileName!!,
+                flag = fileMapping.flags,
+                size = fileMapping.totalSize,
+                hash = fileMapping.hashContent!!,
                 linkTarget = "",
-                encrypted = filenamesEncrypted
+                encrypted = filenamesEncrypted,
+                numChunks = fileMapping.chunks.size
             )
 
-            for (chunk in fileMapping.chunks) {
-                fileData.chunks.add(
-                    ChunkData(
-                        chunkID = chunk.chunkGID,
-                        checksum = chunk.checksum,
-                        offset = chunk.offset,
-                        compressedLength = chunk.compressedSize,
-                        uncompressedLength = chunk.decompressedSize
-                    )
+            fileMapping.chunks.forEach { chunk ->
+                val chunkData = ChunkData(
+                    chunkID = chunk.chunkGID!!,
+                    checksum = chunk.checksum,
+                    offset = chunk.offset,
+                    compressedLength = chunk.compressedSize,
+                    uncompressedLength = chunk.decompressedSize,
                 )
+                filedata.chunks.add(chunkData)
             }
 
-            files.add(fileData)
+            files.add(filedata)
         }
     }
 
-    internal fun parseProtobufManifestPayload(payload: ContentManifestPayload) {
-        files.clear()
+    private fun parseProtobufManifestPayload(payload: ContentManifestPayload) {
+        files = ArrayList(payload.mappingsCount)
 
-        for (fileMapping in payload.mappingsList) {
-            val fileData = FileData(
-                fileName = fileMapping.filename,
-                fileNameHash = fileMapping.shaFilename.toByteArray(),
-                flags = EDepotFileFlag.from(fileMapping.flags),
-                totalSize = fileMapping.size,
-                fileHash = fileMapping.shaContent.toByteArray(),
+        payload.mappingsList.forEach { fileMapping ->
+            val filedata = FileData(
+                filename = fileMapping.filename,
+                filenameHash = fileMapping.shaFilename.toByteArray(),
+                flag = EDepotFileFlag.from(fileMapping.flags),
+                size = fileMapping.size,
+                hash = fileMapping.shaContent.toByteArray(),
                 linkTarget = fileMapping.linktarget,
-                encrypted = filenamesEncrypted
+                encrypted = filenamesEncrypted,
+                numChunks = fileMapping.chunksList.size,
             )
 
-            for (chunk in fileMapping.chunksList) {
-                fileData.chunks.add(
-                    ChunkData(
-                        chunkID = chunk.sha.toByteArray(),
-                        checksum = chunk.crc,
-                        offset = chunk.offset,
-                        compressedLength = chunk.cbCompressed,
-                        uncompressedLength = chunk.cbOriginal
-                    )
+            fileMapping.chunksList.forEach { chunk ->
+                val chunkData = ChunkData(
+                    chunkID = chunk.sha.toByteArray(),
+                    checksum = chunk.crc,
+                    offset = chunk.offset,
+                    compressedLength = chunk.cbCompressed,
+                    uncompressedLength = chunk.cbOriginal
                 )
+                filedata.chunks.add(chunkData)
             }
 
-            files.add(fileData)
+            files.add(filedata)
         }
     }
 
-    internal fun parseProtobufManifestMetadata(metadata: ContentManifestMetadata) {
+    private fun parseProtobufManifestMetadata(metadata: ContentManifestMetadata) {
         filenamesEncrypted = metadata.filenamesEncrypted
         depotID = metadata.depotId
         manifestGID = metadata.gidManifest
@@ -361,123 +374,130 @@ class DepotManifest {
     /**
      * Serializes the depot manifest into the provided output stream.
      * @param output The stream to which the serialized depot manifest will be written.
-     * @return A pair object containing the amount of bytes written and the checksum of the manifest
      */
-    fun serialize(output: OutputStream): Int {
-        val manifestBytes = toByteArray()
-        output.write(manifestBytes)
-        return manifestBytes.size
-    }
-
-    /**
-     * Serializes the depot manifest into a byte array.
-     */
-    fun toByteArray(): ByteArray {
+    fun serialize(output: OutputStream) {
         val payload = ContentManifestPayload.newBuilder()
-        val uniqueChunks = hashSetOf<ByteArray>()
+        val uniqueChunks = object : HashSet<ByteArray>() {
+            // This acts like "ChunkIdComparer"
+            private val items = mutableListOf<ByteArray>()
 
-        for (file in files) {
-            val protoFile = ContentManifestPayload.FileMapping.newBuilder()
-            protoFile.setSize(file.totalSize)
-            protoFile.setFlags(EDepotFileFlag.code(file.flags))
+            override fun add(element: ByteArray): Boolean {
+                if (contains(element)) return false
+                items.add(element)
+                return true
+            }
+
+            override fun contains(element: ByteArray): Boolean = items.any { it.contentEquals(element) }
+
+            override fun iterator(): MutableIterator<ByteArray> = items.iterator()
+
+            override val size: Int
+                get() = items.size
+        }
+
+        files.forEach { file ->
+            val protofile = ContentManifestPayload.FileMapping.newBuilder().apply {
+                this.size = file.totalSize
+                this.flags = EDepotFileFlag.code(file.flags)
+            }
 
             if (filenamesEncrypted) {
                 // Assume the name is unmodified
-                protoFile.setFilename(file.fileName)
-                protoFile.setShaFilename(ByteString.copyFrom(file.fileNameHash))
+                protofile.filename = file.fileName
+                protofile.shaFilename = ByteString.copyFrom(file.fileNameHash)
             } else {
-                protoFile.setFilename(file.fileName.replace('/', '\\'))
-                protoFile.setShaFilename(
-                    ByteString.copyFrom(
-                        CryptoHelper.shaHash(
-                            file.fileName
-                                .replace('/', '\\')
-                                .lowercase()
-                                .toByteArray(Charsets.UTF_8)
-                        )
+                protofile.filename = file.fileName.replace('/', '\\')
+                protofile.shaFilename = ByteString.copyFrom(
+                    CryptoHelper.shaHash(
+                        file.fileName
+                            .replace('/', '\\')
+                            .lowercase(Locale.getDefault())
+                            .toByteArray(Charsets.UTF_8)
                     )
                 )
             }
 
-            protoFile.setShaContent(ByteString.copyFrom(file.fileHash))
+            protofile.shaContent = ByteString.copyFrom(file.fileHash)
 
-            if (file.linkTarget.isNotBlank()) {
-                protoFile.linktarget = file.linkTarget
+            if (!file.linkTarget.isNullOrBlank()) {
+                protofile.linktarget = file.linkTarget
             }
 
-            for (chunk in file.chunks) {
-                val protoChunk = ContentManifestPayload.FileMapping.ChunkData.newBuilder().apply {
-                    sha = ByteString.copyFrom(chunk.chunkID)
-                    crc = chunk.checksum
-                    offset = chunk.offset
-                    cbOriginal = chunk.uncompressedLength
-                    cbCompressed = chunk.compressedLength
-                }
+            file.chunks.forEach { chunk ->
+                val protochunk = ContentManifestPayload.FileMapping.ChunkData.newBuilder().apply {
+                    this.sha = ByteString.copyFrom(chunk.chunkID)
+                    this.crc = chunk.checksum
+                    this.offset = chunk.offset
+                    this.cbOriginal = chunk.uncompressedLength
+                    this.cbCompressed = chunk.compressedLength
+                }.build()
 
-                protoFile.addChunks(protoChunk)
+                protofile.addChunks(protochunk)
                 uniqueChunks.add(chunk.chunkID!!)
             }
 
-            payload.addMappings(protoFile)
+            payload.addMappings(protofile.build())
         }
 
         val metadata = ContentManifestMetadata.newBuilder().apply {
             this.depotId = depotID
             this.gidManifest = manifestGID
-            this.creationTime = this@DepotManifest.creationTime.toInstant().epochSecond.toInt()
-            this.filenamesEncrypted = filenamesEncrypted
+            this.creationTime = (this@DepotManifest.creationTime.time / 1000).toInt()
+            this.filenamesEncrypted = this@DepotManifest.filenamesEncrypted
             this.cbDiskOriginal = totalUncompressedSize
             this.cbDiskCompressed = totalCompressedSize
             this.uniqueChunks = uniqueChunks.size
         }
 
         // Calculate payload CRC
-        val payloadData = payload.build().toByteArray()
-        val len = payloadData.size
-        val data = ByteArray(Int.SIZE_BYTES + len)
+        val msPayload = MemoryStream()
+        payload.build().writeTo(msPayload.asOutputStream())
 
-        System.arraycopy(ByteBuffer.allocate(Int.SIZE_BYTES).putInt(len).array(), 0, data, 0, 4)
-        System.arraycopy(payloadData, 0, data, 4, len)
+        val len = msPayload.length.toInt()
+        val data = ByteArray(4 + len)
 
-        val crc32 = Utils.crc32(payloadData).toInt()
+        // Alternative of BitConverter.GetBytes(len)
+        val lenBytes = ByteArray(4)
+        lenBytes[0] = (len and 0xFF).toByte()
+        lenBytes[1] = ((len shr 8) and 0xFF).toByte()
+        lenBytes[2] = ((len shr 16) and 0xFF).toByte()
+        lenBytes[3] = ((len shr 24) and 0xFF).toByte()
+
+        System.arraycopy(lenBytes, 0, data, 0, 4)
+        System.arraycopy(msPayload.toByteArray(), 0, data, 4, len)
+        val crc32 = Utils.crc32(data).toInt()
+
+        msPayload.close()
 
         if (filenamesEncrypted) {
-            metadata.setCrcEncrypted(crc32)
-            metadata.setCrcClear(0)
+            metadata.crcEncrypted = crc32
+            metadata.crcClear = 0
         } else {
-            metadata.setCrcEncrypted(encryptedCRC)
-            metadata.setCrcClear(crc32)
+            metadata.crcEncrypted = encryptedCRC
+            metadata.crcClear = crc32
         }
 
-        // Write the manifest to the stream and return the checksum
-        return ByteArrayOutputStream().use { bw ->
-            BinaryWriter(bw).use { writer ->
-                // Write Protobuf payload
-                writer.writeInt(PROTOBUF_PAYLOAD_MAGIC)
-                writer.writeInt(payloadData.size)
-                writer.write(payloadData, 0, payloadData.size)
+        val bw = BinaryWriter(output)
 
-                // Write Protobuf metadata
-                val metadataData = metadata.build().toByteArray()
-                writer.writeInt(PROTOBUF_METADATA_MAGIC)
-                writer.writeInt(metadataData.size)
-                writer.write(metadataData, 0, metadataData.size)
+        // Write Protobuf payload
+        val payloadBytes = payload.build().toByteArray()
+        bw.writeInt(PROTOBUF_PAYLOAD_MAGIC)
+        bw.writeInt(payloadBytes.size)
+        bw.write(payloadBytes)
 
-                // Write empty signature section
-                writer.writeInt(PROTOBUF_SIGNATURE_MAGIC)
-                writer.writeInt(0)
+        // Write Protobuf metadata
+        val metadataBytes = metadata.build().toByteArray()
+        bw.writeInt(PROTOBUF_METADATA_MAGIC)
+        bw.writeInt(metadataBytes.size)
+        bw.write(metadataBytes)
 
-                // Write EOF marker
-                writer.writeInt(PROTOBUF_ENDOFMANIFEST_MAGIC)
-            }
+        // Write empty signature section
+        bw.writeInt(PROTOBUF_SIGNATURE_MAGIC)
+        bw.writeInt(0)
 
-            bw.toByteArray()
-        }
+        // Write EOF marker
+        bw.writeInt(PROTOBUF_ENDOFMANIFEST_MAGIC)
+
+        bw.close()
     }
-
-    /**
-     * Calculates the checksum of the depot manifest.
-     */
-    @Suppress("unused")
-    fun calculateChecksum(): ByteArray = CryptoHelper.shaHash(toByteArray())
 }

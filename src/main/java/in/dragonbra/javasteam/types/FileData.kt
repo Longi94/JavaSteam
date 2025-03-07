@@ -6,75 +6,46 @@ import java.util.EnumSet
 
 /**
  * Represents a single file within a manifest.
+ *
+ * @constructor Initializes a new instance of the [FileData] class.
+ *
+ * @param fileName Gets the name of the file.
+ * @param fileNameHash Gets SHA-1 hash of this file's name.
+ * @param chunks Gets the chunks that this file is composed of.
+ * @param flags Gets the file flags
+ * @param totalSize Gets the total size of this file.
+ * @param fileHash Gets SHA-1 hash of this file.
+ * @param linkTarget Gets symlink target of this file.
  */
-class FileData {
-
+@Suppress("ArrayInDataClass")
+data class FileData(
+    var fileName: String = "",
+    var fileNameHash: ByteArray = byteArrayOf(),
+    var chunks: MutableList<ChunkData> = mutableListOf(),
+    var flags: EnumSet<EDepotFileFlag> = EnumSet.noneOf(EDepotFileFlag::class.java),
+    var totalSize: Long = 0,
+    var fileHash: ByteArray = byteArrayOf(),
+    var linkTarget: String? = null,
+) {
     /**
-     * Gets the name of the file.
+     * Initializes a new instance of the [FileData] class with specified values.
      */
-    var fileName: String
-        internal set
-
-    /**
-     * Gets SHA-1 hash of this file's name.
-     */
-    val fileNameHash: ByteArray
-
-    /**
-     * Gets the chunks that this file is composed of.
-     */
-    val chunks: MutableList<ChunkData>
-
-    /**
-     * Gets the file flags
-     */
-    val flags: EnumSet<EDepotFileFlag>
-
-    /**
-     * Gets the total size of this file.
-     */
-    val totalSize: Long
-
-    /**
-     * Gets SHA-1 hash of this file.
-     */
-    val fileHash: ByteArray
-
-    /**
-     * Gets symlink target of this file.
-     */
-    val linkTarget: String
-
     constructor(
-        fileName: String,
-        fileNameHash: ByteArray,
-        chunks: MutableList<ChunkData> = mutableListOf(),
-        flags: EnumSet<EDepotFileFlag>,
-        totalSize: Long,
-        fileHash: ByteArray,
+        filename: String,
+        filenameHash: ByteArray,
+        flag: EnumSet<EDepotFileFlag>,
+        size: Long,
+        hash: ByteArray,
         linkTarget: String,
         encrypted: Boolean,
-    ) {
-        if (encrypted) {
-            this.fileName = fileName
-        } else {
-            this.fileName = fileName.replace('\\', File.separatorChar)
-        }
-        this.fileNameHash = fileNameHash
-        this.chunks = chunks
-        this.flags = flags
-        this.totalSize = totalSize
-        this.fileHash = fileHash
-        this.linkTarget = linkTarget
-    }
-
-    constructor(fileData: FileData) {
-        fileName = fileData.fileName
-        fileNameHash = fileData.fileNameHash
-        chunks = fileData.chunks.map { ChunkData(it) }.toMutableList()
-        flags = fileData.flags
-        totalSize = fileData.totalSize
-        fileHash = fileData.fileHash
-        linkTarget = fileData.linkTarget
-    }
+        numChunks: Int,
+    ) : this(
+        fileName = if (encrypted) filename else filename.replace('\\', File.separatorChar),
+        fileNameHash = filenameHash,
+        chunks = ArrayList(numChunks),
+        flags = flag,
+        totalSize = size,
+        fileHash = hash,
+        linkTarget = linkTarget,
+    )
 }
