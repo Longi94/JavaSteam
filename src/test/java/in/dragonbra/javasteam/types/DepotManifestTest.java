@@ -1,23 +1,25 @@
 package in.dragonbra.javasteam.types;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.enums.EDepotFileFlag;
 import in.dragonbra.javasteam.util.Strings;
 import in.dragonbra.javasteam.util.crypto.CryptoHelper;
-import in.dragonbra.javasteam.util.stream.BinaryReader;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
-@SuppressWarnings({"resource", "DataFlowIssue"})
-public class DepotManifestTest {
+public class DepotManifestTest extends TestBase {
 
     private static final byte[] DEPOT_440_DECRYPTION_KEY = new byte[]{
             (byte) 0x44, (byte) 0xCE, (byte) 0x5C, (byte) 0x52, (byte) 0x97, (byte) 0xA4, (byte) 0x15, (byte) 0xA1,
@@ -28,126 +30,139 @@ public class DepotManifestTest {
 
 
     @Test
-    public void parsesAndDecryptsManifestVersion4() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_v4.manifest");
+    public void parsesAndDecryptsManifestVersion4() {
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_v4.manifest");
+             var ms = new MemoryStream()
+        ) {
+            Assertions.assertNotNull(stream);
 
-        var ms = new MemoryStream();
-        stream.transferTo(ms.asOutputStream());
+            stream.transferTo(ms.asOutputStream());
+            var manifestData = ms.toByteArray();
 
-        var manifestData = ms.toByteArray();
+            var depotManifest = DepotManifest.deserialize(manifestData);
 
-        var depotManifest = DepotManifest.deserialize(manifestData);
+            Assertions.assertTrue(depotManifest.getFilenamesEncrypted());
+            Assertions.assertEquals(1195249848L, depotManifest.getEncryptedCRC());
 
-        Assertions.assertTrue(depotManifest.getFilenamesEncrypted());
-        Assertions.assertEquals(1195249848L, depotManifest.getEncryptedCRC());
+            var result = depotManifest.decryptFilenames(DEPOT_440_DECRYPTION_KEY);
+            Assertions.assertTrue(result);
 
-        depotManifest.decryptFilenames(DEPOT_440_DECRYPTION_KEY);
-
-        testDecryptedManifest(depotManifest);
+            testDecryptedManifest(depotManifest);
+        } catch (Exception e) {
+            Assertions.fail(e);
+        }
     }
 
     @Test
     public void parsesAndDecryptsManifest() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934.manifest");
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934.manifest");
+             var ms = new MemoryStream()
+        ) {
+            Assertions.assertNotNull(stream);
 
-        var ms = new MemoryStream();
-        stream.transferTo(ms.asOutputStream());
+            stream.transferTo(ms.asOutputStream());
 
-        var manifestData = ms.toByteArray();
+            var manifestData = ms.toByteArray();
 
-        var depotManifest = DepotManifest.deserialize(manifestData);
+            var depotManifest = DepotManifest.deserialize(manifestData);
 
-        Assertions.assertTrue(depotManifest.getFilenamesEncrypted());
-        Assertions.assertEquals(1606273976L, depotManifest.getEncryptedCRC());
+            Assertions.assertTrue(depotManifest.getFilenamesEncrypted());
+            Assertions.assertEquals(1606273976L, depotManifest.getEncryptedCRC());
 
-        depotManifest.decryptFilenames(DEPOT_440_DECRYPTION_KEY);
+            var result = depotManifest.decryptFilenames(DEPOT_440_DECRYPTION_KEY);
+            Assertions.assertTrue(result);
 
-        testDecryptedManifest(depotManifest);
+            testDecryptedManifest(depotManifest);
+        }
     }
 
     @Test
     public void parsesDecryptedManifest() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_decrypted.manifest");
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_decrypted.manifest");
+             var ms = new MemoryStream()
+        ) {
+            Assertions.assertNotNull(stream);
 
-        var ms = new MemoryStream();
-        stream.transferTo(ms.asOutputStream());
+            stream.transferTo(ms.asOutputStream());
 
-        var manifestData = ms.toByteArray();
+            var manifestData = ms.toByteArray();
 
-        var depotManifest = DepotManifest.deserialize(manifestData);
+            var depotManifest = DepotManifest.deserialize(manifestData);
 
-        testDecryptedManifest(depotManifest);
+            testDecryptedManifest(depotManifest);
+        }
     }
 
     @Test
-    public void roundtripSerializesManifestEncryptedManifest() throws IOException {
-        var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934.manifest");
+    public void roundtripSerializesManifestEncryptedManifest() {
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934.manifest");
+             var ms = new MemoryStream()
+        ) {
+            Assertions.assertNotNull(stream);
 
-        var ms = new MemoryStream();
-        stream.transferTo(ms.asOutputStream());
+            IOUtils.copy(stream, ms.asOutputStream());
+            stream.close();
 
-        var manifestData = ms.toByteArray();
+            var manifestData = ms.toByteArray();
 
-        var depotManifest = DepotManifest.deserialize(manifestData);
+            DepotManifest depotManifest = DepotManifest.deserialize(manifestData);
 
-        var actualStream = new MemoryStream();
-        depotManifest.serialize(actualStream.asOutputStream());
+            var actualStream = new ByteArrayOutputStream();
+            depotManifest.serialize(actualStream);
 
-        var actual = actualStream.toByteArray();
+            var actual = actualStream.toByteArray();
 
-        // We are unable to write signatures, so validate everything except for the signature
-        var signature = new byte[]{(byte) 0x17, (byte) 0xB8, (byte) 0x81, (byte) 0x1B};
+            // We are unable to write signatures, so validate everything except for the signature
+            var signature = new byte[]{0x17, (byte) 0xB8, (byte) 0x81, 0x1B};
 
-        int actualOffset = indexOf(actual, signature); // DepotManifest.PROTOBUF_SIGNATURE_MAGIC
-        int expectedOffset = indexOf(manifestData, signature);
+            int actualOffset = indexOf(actual, signature); // DepotManifest.PROTOBUF_SIGNATURE_MAGIC
+            int expectedOffset = indexOf(manifestData, signature);
 
-        Assertions.assertTrue(actualOffset > 0);
-        Assertions.assertTrue(expectedOffset > 0);
-        Assertions.assertArrayEquals(
-                Arrays.copyOfRange(manifestData, 0, expectedOffset),
-                Arrays.copyOfRange(actual, 0, actualOffset)
-        );
+            Assertions.assertTrue(actualOffset > 0);
+            Assertions.assertTrue(expectedOffset > 0);
 
-        // We dont have `BitConverter.ToInt32`
-        int expectedSignatureLength;
-        try (var bais = new ByteArrayInputStream(manifestData);
-             var br = new BinaryReader(bais)) {
-            expectedSignatureLength = br.readBytes(expectedOffset + 4).length;
+            Assertions.assertArrayEquals(
+                    Arrays.copyOfRange(manifestData, 0, expectedOffset),
+                    Arrays.copyOfRange(actual, 0, actualOffset));
+
+            int expectedSignatureLength = ByteBuffer.wrap(manifestData, expectedOffset + 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+            int actualSignatureLength = ByteBuffer.wrap(actual, actualOffset + 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+
+            Assertions.assertEquals(131, expectedSignatureLength);
+            Assertions.assertEquals(0, actualSignatureLength);
+
+            Assertions.assertArrayEquals(
+                    Arrays.copyOfRange(manifestData, expectedOffset + expectedSignatureLength + 8, manifestData.length),
+                    Arrays.copyOfRange(actual, actualOffset + 8, actual.length)
+            );
+        } catch (IOException e) {
+            Assertions.fail(e);
         }
-        int actualSignatureLength;
-        try (var bais = new ByteArrayInputStream(manifestData);
-             var br = new BinaryReader(bais)) {
-            actualSignatureLength = br.readBytes(expectedOffset + 4).length;
-        }
-
-        //int expectedSignatureLength = readInt32(manifestData, expectedOffset + 4);
-        // int actualSignatureLength = readInt32(actual, actualOffset + 4);
-
-        Assertions.assertEquals(131, expectedSignatureLength);
-        Assertions.assertEquals(0, actualSignatureLength);
-        Assertions.assertArrayEquals(
-                Arrays.copyOfRange(manifestData, expectedOffset + expectedSignatureLength + 8, manifestData.length),
-                Arrays.copyOfRange(actual, actualOffset + 8, actual.length)
-        );
     }
 
+    // C# Test "RoundtripSerializesManifestByteIndentical"
     @Test
     public void roundtripSerializesManifestByteIdentical() throws IOException {
-        var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_decrypted.manifest");
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_decrypted.manifest");
+             var ms = new MemoryStream()
+        ) {
+            Assertions.assertNotNull(stream);
 
-        var ms = new MemoryStream();
-        stream.transferTo(ms.asOutputStream());
+            stream.transferTo(ms.asOutputStream());
 
-        var manifestData = ms.toByteArray();
+            var manifestData = ms.toByteArray();
+            ms.close();
 
-        var depotManifest = DepotManifest.deserialize(manifestData);
+            DepotManifest depotManifest = DepotManifest.deserialize(manifestData);
 
-        var actualStream = new MemoryStream();
-        depotManifest.serialize(actualStream.asOutputStream());
+            var actualStream = new MemoryStream();
+            depotManifest.serialize(actualStream.asOutputStream());
 
-        var actual = actualStream.toByteArray();
+            var actual = actualStream.toByteArray();
+            actualStream.close();
 
-        Assertions.assertArrayEquals(manifestData, actual);
+            Assertions.assertArrayEquals(manifestData, actual);
+        }
     }
 
     private void testDecryptedManifest(DepotManifest depotManifest) throws NoSuchAlgorithmException {
@@ -197,15 +212,13 @@ public class DepotManifestTest {
         );
     }
 
-    // Java or Apache doesn't have a indexOf(byte[], byte[])
-    // This is taken from guava since we don't have that lib as a dependency.
-    private static int indexOf(byte[] array, byte[] target) {
-        if (target.length == 0) {
-            return 0;
+    private int indexOf(byte[] array, byte[] target) {
+        if (array == null || target == null || array.length < target.length) {
+            return -1;
         }
 
         outer:
-        for (int i = 0; i < array.length - target.length + 1; i++) {
+        for (int i = 0; i <= array.length - target.length; i++) {
             for (int j = 0; j < target.length; j++) {
                 if (array[i + j] != target[j]) {
                     continue outer;
@@ -213,13 +226,7 @@ public class DepotManifestTest {
             }
             return i;
         }
-        return -1;
-    }
 
-    private static int readInt32(byte[] data, int offset) {
-        return (data[offset] & 0xFF) |
-                ((data[offset + 1] & 0xFF) << 8) |
-                ((data[offset + 2] & 0xFF) << 16) |
-                ((data[offset + 3] & 0xFF) << 24);
+        return -1;
     }
 }
