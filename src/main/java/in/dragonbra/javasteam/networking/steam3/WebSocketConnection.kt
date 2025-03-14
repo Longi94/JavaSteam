@@ -2,7 +2,9 @@ package `in`.dragonbra.javasteam.networking.steam3
 
 import `in`.dragonbra.javasteam.util.log.LogManager
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.ProxyBuilder
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.type
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.client.plugins.websocket.webSocketSession
@@ -24,11 +26,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.Proxy
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class WebSocketConnection :
+class WebSocketConnection(private val proxy: Proxy? = null) :
+
     Connection(),
     CoroutineScope {
 
@@ -46,18 +50,30 @@ class WebSocketConnection :
 
     private var lastFrameTime = System.currentTimeMillis()
 
+
     override val coroutineContext: CoroutineContext = Dispatchers.IO + job
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
         launch {
-            logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+            if (proxy != null) {
+                logger.debug("Trying use proxy ${proxy.type}:/${proxy.address()} connection to ${endPoint.hostName}:${endPoint.port}")
+            } else {
+                logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+            }
 
             try {
                 endpoint = endPoint
-
                 client = HttpClient(CIO) {
                     install(WebSockets) {
                         pingInterval = timeout.toDuration(DurationUnit.SECONDS)
+                    }
+
+                    // 如果配置了代理，可以在这里使用
+                    // 注意：实际应用中可能需要根据 Ktor HttpClient 的代理配置方式进行调整
+                    if (proxy != null) {
+                        engine {
+                            proxy = this@WebSocketConnection.proxy
+                        }
                     }
                 }
 

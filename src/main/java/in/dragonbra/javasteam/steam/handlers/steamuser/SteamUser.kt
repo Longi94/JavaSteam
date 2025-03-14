@@ -5,6 +5,7 @@ import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EAccountType
 import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EUIMode
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
@@ -28,6 +29,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.NetHelpers
+import org.apache.commons.lang3.StringUtils
 
 /**
  * This handler handles all user log on/log off related actions and callbacks.
@@ -56,7 +58,7 @@ class SteamUser : ClientMsgHandler() {
      * @param details The details to use for logging on.
      */
     fun logOn(details: LogOnDetails) {
-        if (details.username.isEmpty() || (details.password.isNullOrEmpty() && details.accessToken.isNullOrEmpty())) {
+        if (details.username.isEmpty() || (details.password.isNullOrEmpty() && details.accessToken.isNullOrEmpty()) && details.webLogonNonce.isNullOrEmpty()) {
             throw IllegalArgumentException("LogOn requires a username and password or access token to be set in 'details'.")
         }
 
@@ -68,6 +70,22 @@ class SteamUser : ClientMsgHandler() {
         val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
         val steamID = SteamID(details.accountID, details.accountInstance, client.universe, EAccountType.Individual)
+
+        // set the protocol version
+        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol);
+
+        if (details.webLogonNonce?.isNotBlank() == true) {
+            logon.protoHeader.setClientSessionid(0);
+            logon.protoHeader.setSteamid(steamID.convertToUInt64());
+
+            logon.body.setAccountName(details.username);
+            logon.body.setWebLogonNonce(details.webLogonNonce);
+            logon.body.setClientOsType(EOSType.Web.code());
+            logon.body.setUiMode(4);
+            client.send(logon);
+            return
+        }
+
 
         if (details.loginID != null) {
             // TODO: (SK) Support IPv6 login ids?

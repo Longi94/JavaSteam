@@ -53,4 +53,6 @@ data class LogOnDetails(
     var chatMode: ChatMode = ChatMode.DEFAULT,
     var uiMode: EUIMode = EUIMode.Unknown,
     var isSteamDeck: Boolean = false,
+
+    var webLogonNonce: String? = null, // you can use username + webLogonNonce to login . use https://steamcommunity.com/chat/clientjstoken to get the token
 )

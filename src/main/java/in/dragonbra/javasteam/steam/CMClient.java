@@ -34,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -293,9 +294,13 @@ public abstract class CMClient {
     }
 
     private Connection createConnection(EnumSet<ProtocolTypes> protocol) {
+        Proxy proxy = configuration.getProxy();
         if (protocol.contains(ProtocolTypes.WEB_SOCKET)) {
-            return new WebSocketConnection();
+            return new WebSocketConnection(proxy);
         } else if (protocol.contains(ProtocolTypes.TCP)) {
+            if (proxy != null && Proxy.Type.SOCKS ==  proxy.type()) {
+                return new EnvelopeEncryptedConnection(new Socks5Connection(proxy), getUniverse());
+            }
             return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
         } else if (protocol.contains(ProtocolTypes.UDP)) {
             return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());

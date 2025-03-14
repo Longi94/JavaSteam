@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import okhttp3.OkHttpClient
+import java.net.Proxy
 import java.util.EnumSet
 
 /**
@@ -24,4 +25,5 @@ data class SteamConfigurationState(
     var universe: EUniverse,
     var webAPIBaseAddress: String,
     var webAPIKey: String?,
+    var proxy: Proxy?
 )
