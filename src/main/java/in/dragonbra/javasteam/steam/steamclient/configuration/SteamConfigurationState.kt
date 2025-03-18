@@ -25,5 +25,5 @@ data class SteamConfigurationState(
     var universe: EUniverse,
     var webAPIBaseAddress: String,
     var webAPIKey: String?,
-    var proxy: Proxy?
+    var proxy: Proxy?,
 )

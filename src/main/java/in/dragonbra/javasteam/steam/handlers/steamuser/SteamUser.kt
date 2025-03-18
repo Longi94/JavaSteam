@@ -29,7 +29,6 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.NetHelpers
-import org.apache.commons.lang3.StringUtils
 
 /**
  * This handler handles all user log on/log off related actions and callbacks.
@@ -72,20 +71,18 @@ class SteamUser : ClientMsgHandler() {
         val steamID = SteamID(details.accountID, details.accountInstance, client.universe, EAccountType.Individual)
 
         // set the protocol version
-        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol);
+        logon.body.setProtocolVersion(MsgClientLogon.CurrentProtocol)
 
         if (details.webLogonNonce?.isNotBlank() == true) {
-            logon.protoHeader.setClientSessionid(0);
-            logon.protoHeader.setSteamid(steamID.convertToUInt64());
+            logon.protoHeader.setClientSessionid(0)
+            logon.protoHeader.setSteamid(steamID.convertToUInt64())
 
-            logon.body.setAccountName(details.username);
-            logon.body.setWebLogonNonce(details.webLogonNonce);
-            logon.body.setClientOsType(EOSType.Web.code());
-            logon.body.setUiMode(4);
-            client.send(logon);
+            logon.body.setAccountName(details.username)
+            logon.body.setWebLogonNonce(details.webLogonNonce)
+            logon.body.setClientOsType(EOSType.Web.code())
+            client.send(logon)
             return
         }
-
 
         if (details.loginID != null) {
             // TODO: (SK) Support IPv6 login ids?

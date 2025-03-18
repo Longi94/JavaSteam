@@ -82,8 +82,6 @@ public class SampleLoginWithProxy implements Runnable {
 
         client.setProxy(proxy);
         client.run();
-
-        Thread.sleep(1000000L);
     }
 
     @Override

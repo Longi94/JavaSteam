@@ -6,7 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import in.dragonbra.javasteam.enums.EResult;
 import in.dragonbra.javasteam.networking.steam3.ProtocolTypes;
-import in.dragonbra.javasteam.steam.authentication.*;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -19,14 +18,12 @@ import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import in.dragonbra.javasteam.util.NetHookNetworkListener;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteamsamples._000_authentication.SampleLogonAuthentication;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.concurrent.CancellationException;
 
 /**
  * @author jaymie
@@ -58,7 +55,6 @@ public class SampleWebLogonNonce implements Runnable {
     public static void main(String[] args) throws InterruptedException {
         // you can view https://steamcommunity.com/chat/clientjstoken to get webLogonNonce, the property name is "token"
         // webLoginNonce can only use one time, it's more safety for your customer
-
         if (args.length < 2) {
             System.out.println("Sample1: No username and password specified!");
             return;
@@ -66,8 +62,7 @@ public class SampleWebLogonNonce implements Runnable {
 
         LogManager.addListener(new DefaultLogListener());
 
-        new SampleLogonAuthentication(args[0], args[1]).run();
-        Thread.sleep(1000000L);
+        new SampleWebLogonNonce(args[0], args[1]).run();
     }
 
     @Override
