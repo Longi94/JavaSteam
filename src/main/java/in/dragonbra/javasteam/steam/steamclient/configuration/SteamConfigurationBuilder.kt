@@ -9,6 +9,7 @@ import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import `in`.dragonbra.javasteam.steam.discovery.MemoryServerListProvider
 import `in`.dragonbra.javasteam.steam.webapi.WebAPI
 import okhttp3.OkHttpClient
+import java.net.Proxy
 import java.util.*
 
 /**
@@ -86,6 +87,17 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
         return this
     }
 
+    /**
+     * Configures this [SteamConfiguration] with a proxy to use when connecting to Steam.
+     *
+     * @param proxy The proxy to use when connecting to Steam.
+     * @return A builder with modified configuration.
+     */
+    override fun withProxy(proxy: Proxy): ISteamConfigurationBuilder {
+        state.proxy = proxy
+        return this
+    }
+
     companion object {
         @JvmStatic
         fun createDefaultState(): SteamConfigurationState = SteamConfigurationState(
@@ -106,6 +118,7 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
             webAPIBaseAddress = WebAPI.DEFAULT_BASE_ADDRESS,
             cellID = 0,
             webAPIKey = null,
+            proxy = null,
         )
     }
 }

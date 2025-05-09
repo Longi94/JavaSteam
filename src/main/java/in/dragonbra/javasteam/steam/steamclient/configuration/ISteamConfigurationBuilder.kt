@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import okhttp3.OkHttpClient
+import java.net.Proxy
 import java.util.*
 
 /**
@@ -117,4 +118,12 @@ interface ISteamConfigurationBuilder {
      * @return A builder with modified configuration.
      */
     fun withWebAPIKey(webApiKey: String): ISteamConfigurationBuilder
+
+    /**
+     * Configures this [SteamConfiguration] with a proxy to use when connecting to Steam.
+     *
+     * @param proxy The proxy to use when connecting to Steam.
+     * @return A builder with modified configuration.
+     */
+    fun withProxy(proxy: Proxy): ISteamConfigurationBuilder
 }

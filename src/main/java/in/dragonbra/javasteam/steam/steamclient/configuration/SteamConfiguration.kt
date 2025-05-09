@@ -10,6 +10,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.webapi.WebAPI
 import `in`.dragonbra.javasteam.util.compat.Consumer
 import okhttp3.OkHttpClient
+import java.net.Proxy
 import java.util.*
 
 /**
@@ -89,6 +90,9 @@ class SteamConfiguration internal constructor(private val state: SteamConfigurat
      * The server list provider to use.
      */
     val serverList: SmartCMServerList = SmartCMServerList(this)
+
+    val proxy: Proxy?
+        get() = state.proxy
 
     /**
      * Retrieves a handler capable of interacting with the specified interface on the Web API.

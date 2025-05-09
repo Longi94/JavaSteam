@@ -3,6 +3,7 @@ package `in`.dragonbra.javasteam.networking.steam3
 import `in`.dragonbra.javasteam.util.log.LogManager
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.type
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.pingInterval
 import io.ktor.client.plugins.websocket.webSocketSession
@@ -24,11 +25,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.net.Proxy
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class WebSocketConnection :
+class WebSocketConnection(private val proxy: Proxy? = null) :
+
     Connection(),
     CoroutineScope {
 
@@ -50,14 +53,23 @@ class WebSocketConnection :
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
         launch {
-            logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+            if (proxy != null) {
+                logger.debug("Trying use proxy ${proxy.type}:/${proxy.address()} connection to ${endPoint.hostName}:${endPoint.port}")
+            } else {
+                logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+            }
 
             try {
                 endpoint = endPoint
-
                 client = HttpClient(CIO) {
                     install(WebSockets) {
                         pingInterval = timeout.toDuration(DurationUnit.SECONDS)
+                    }
+
+                    if (proxy != null) {
+                        engine {
+                            proxy = this@WebSocketConnection.proxy
+                        }
                     }
                 }
 
