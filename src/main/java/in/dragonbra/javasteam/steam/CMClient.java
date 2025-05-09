@@ -423,9 +423,11 @@ public abstract class CMClient {
             heartBeatFunc.setDelay(logonResp.getBody().getLegacyOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
         } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
-            var connection = this.connection;// probably not needed
+            var connection = this.connection;
             if (connection != null) {
                 getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            } else {
+                logger.error("Connection was null trying to mark endpoint bad.");
             }
         }
     }
@@ -445,9 +447,11 @@ public abstract class CMClient {
             logger.debug("handleLoggedOff got " + logoffResult);
 
             if (logoffResult == EResult.TryAnotherCM || logoffResult == EResult.ServiceUnavailable) {
-                var connection = this.connection;// probably not needed
+                var connection = this.connection;
                 if (connection != null) {
                     getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+                } else {
+                    logger.error("Connection was null trying to mark endpoint bad.");
                 }
             }
         } else {
