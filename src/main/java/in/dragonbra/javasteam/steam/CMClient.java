@@ -28,6 +28,7 @@ import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,10 +52,13 @@ public abstract class CMClient {
 
     private long sessionToken;
 
+    @Nullable
     private Integer cellID;
 
+    @Nullable
     private Integer sessionID;
 
+    @Nullable
     private SteamID steamID;
 
     private IDebugNetworkListener debugNetworkListener;
@@ -64,6 +68,7 @@ public abstract class CMClient {
     // connection lock around the setup and tear down of the connection task
     private final Object connectionLock = new Object();
 
+    @Nullable
     private Connection connection;
 
     private final ScheduledFunction heartBeatFunc;
@@ -164,6 +169,12 @@ public abstract class CMClient {
 
                 if (cmServer == null) {
                     cmServer = getServers().getNextServerCandidate(configuration.getProtocolTypes());
+                }
+
+                if (cmServer == null) {
+                    logger.debug("No CM servers available to connect to");
+                    onClientDisconnected(false);
+                    return;
                 }
 
                 connection = createConnection(cmServer.getProtocolTypes());
@@ -412,7 +423,10 @@ public abstract class CMClient {
             heartBeatFunc.setDelay(logonResp.getBody().getLegacyOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
         } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
-            getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            var connection = this.connection;// probably not needed
+            if (connection != null) {
+                getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            }
         }
     }
 
@@ -431,7 +445,10 @@ public abstract class CMClient {
             logger.debug("handleLoggedOff got " + logoffResult);
 
             if (logoffResult == EResult.TryAnotherCM || logoffResult == EResult.ServiceUnavailable) {
-                getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+                var connection = this.connection;// probably not needed
+                if (connection != null) {
+                    getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+                }
             }
         } else {
             logger.debug("handleLoggedOff got unexpected response: " + packetMsg.getMsgType());
@@ -468,18 +485,50 @@ public abstract class CMClient {
      * Returns the local IP of this client.
      *
      * @return The local IP.
+     * @throws NullPointerException if the client is not connected
      */
-    public InetAddress getLocalIP() {
+    public InetAddress getLocalIP() throws NullPointerException {
         return connection.getLocalIP();
+    }
+
+    /**
+     * Safe version of {@link  CMClient#getLocalIP()}.
+     *
+     * @return The current endpoint.
+     */
+    //JavaSteam addition
+    public Optional<InetAddress> getLocalIPOptional() {
+        var connection = this.connection;
+        if (connection == null) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(connection.getLocalIP());
+        }
     }
 
     /**
      * Returns the current endpoint this client is connected to.
      *
      * @return The current endpoint.
+     * @throws NullPointerException if the client is not connected
      */
-    public InetSocketAddress getCurrentEndpoint() {
+    public InetSocketAddress getCurrentEndpoint() throws NullPointerException {
         return connection.getCurrentEndPoint();
+    }
+
+    /**
+     * Safe version of {@link  CMClient#getCurrentEndpoint()}.
+     *
+     * @return The current endpoint.
+     */
+    //JavaSteam addition
+    public Optional<InetSocketAddress> getCurrentEndpointOptional() {
+        var connection = this.connection;
+        if (connection == null) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(connection.getCurrentEndPoint());
+        }
     }
 
     /**
@@ -522,7 +571,7 @@ public abstract class CMClient {
      * @return the Steam recommended Cell ID of this client. This value is assigned after a logon attempt has succeeded.
      * This value will be <b>null</b> if the client is logged off of Steam.
      */
-    public Integer getCellID() {
+    public @Nullable Integer getCellID() {
         return cellID;
     }
 
@@ -532,7 +581,7 @@ public abstract class CMClient {
      *
      * @return The session ID.
      */
-    public Integer getSessionID() {
+    public @Nullable Integer getSessionID() {
         return sessionID;
     }
 
@@ -542,7 +591,7 @@ public abstract class CMClient {
      *
      * @return The SteamID.
      */
-    public SteamID getSteamID() {
+    public @Nullable SteamID getSteamID() {
         return steamID;
     }
 
