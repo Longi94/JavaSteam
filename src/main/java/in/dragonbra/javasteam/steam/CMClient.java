@@ -172,7 +172,7 @@ public abstract class CMClient {
                 }
 
                 if (cmServer == null) {
-                    logger.debug("No CM servers available to connect to");
+                    logger.error("No CM servers available to connect to");
                     onClientDisconnected(false);
                     return;
                 }
