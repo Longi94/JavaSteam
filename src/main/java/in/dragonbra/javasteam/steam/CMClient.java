@@ -134,6 +134,14 @@ public abstract class CMClient {
     }
 
     /**
+     * Debugging only method:
+     * Do not use this directly.
+     */
+    public void setIsConnected(boolean value) {
+        isConnected = value;
+    }
+
+    /**
      * Connects this client to a Steam3 server. This begins the process of connecting and encrypting the data channel
      * between the client and the server. Results are returned asynchronously in a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback ConnectedCallback}. If the
      * server that SteamKit attempts to connect to is down, a {@link in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback DisconnectedCallback} will be posted instead.

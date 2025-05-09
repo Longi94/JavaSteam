@@ -204,6 +204,11 @@ class SteamClient @JvmOverloads constructor(
     }
 
     fun startJob(job: AsyncJob) {
+        if (!isConnected) {
+            job.setFailed(dueToRemoteFailure = true)
+            return
+        }
+
         jobManager.startJob(job)
     }
 //endregion
