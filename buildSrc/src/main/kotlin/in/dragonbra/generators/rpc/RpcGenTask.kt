@@ -2,10 +2,13 @@ package `in`.dragonbra.generators.rpc
 
 import `in`.dragonbra.generators.rpc.parser.ProtoParser
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.io.File
+import javax.inject.Inject
 
-open class RpcGenTask : DefaultTask() {
+abstract class RpcGenTask : DefaultTask {
 
     companion object {
         private const val KDOC_AUTHOR = "Lossy"
@@ -18,16 +21,32 @@ open class RpcGenTask : DefaultTask() {
             .trimMargin()
     }
 
-    private val outputDir = File(
-        project.layout.buildDirectory.get().asFile,
-        "generated/source/javasteam/main/java/"
-    )
 
-    private val protoDirectory = project.file("src/main/proto")
+    @InputDirectory
+    abstract fun getProtoDirectory(): DirectoryProperty
+
+    @OutputDirectory
+    abstract fun getOutputDir(): DirectoryProperty
+
+    @Inject
+    constructor() {
+        getOutputDir().convention(
+            project.layout.buildDirectory.dir(
+                "generated/source/javasteam/main/java/"
+            )
+        )
+        getProtoDirectory().convention(
+            project.layout.projectDirectory.dir(
+                "src/main/proto"
+            )
+        )
+    }
 
     @TaskAction
     fun generate() {
         println("Generating RPC service methods as interfaces")
+        val outputDir = getOutputDir().get().asFile
+        val protoDirectory = getProtoDirectory().get().asFile
 
         outputDir.mkdirs()
 

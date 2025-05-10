@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.kotlin.dsl.invoke
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
 
@@ -35,6 +36,7 @@ java {
 protobuf.protoc {
     artifact = libs.protobuf.protoc.get().toString()
 }
+
 
 /* Testing */
 tasks.test {
@@ -102,6 +104,9 @@ sourceSets.main {
 tasks["lintKotlinMain"].dependsOn("formatKotlin")
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
+tasks["compileKotlin"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
+tasks["generateRpcMethods"].dependsOn("extractProto", "extractIncludeProto")
+
 // tasks["build"].finalizedBy("dokkaGenerate")
 
 /* Kotlinter */

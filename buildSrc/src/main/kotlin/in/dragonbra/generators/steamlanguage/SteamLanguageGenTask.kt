@@ -8,27 +8,51 @@ import `in`.dragonbra.generators.steamlanguage.parser.token.TokenAnalyzer
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.FileInputStream
+import javax.inject.Inject
 
-open class SteamLanguageGenTask : DefaultTask() {
+abstract class SteamLanguageGenTask : DefaultTask {
 
-    private val outputDir = File(
-        project.layout.buildDirectory.get().asFile,
-        "generated/source/steamd/main/java/in/dragonbra/javasteam"
-    )
+    private companion object {
+        private const val PKG = "in.dragonbra.javasteam"
+    }
 
-    private val inputFile = project.file("src/main/steamd/in/dragonbra/javasteam/steammsg.steamd")
+    @Input
+    abstract fun getInputPkg(): Property<String>
 
-    private val pkg = "in.dragonbra.javasteam"
+    @InputFile
+    abstract fun getInputFile(): RegularFileProperty
 
-    @InputDirectory
-    fun getInputDirectory(): File = project.file("src/main/steamd/")
+    @OutputDirectory
+    abstract fun getOutputDir(): DirectoryProperty
+
+    @Inject
+    constructor() {
+        getInputPkg().convention(PKG)
+        getInputFile().convention {
+            project.file("src/main/steamd/in/dragonbra/javasteam/steammsg.steamd")
+        }
+        getOutputDir().convention(
+            project.layout.buildDirectory.dir(
+                "generated/source/steamd/main/java/in/dragonbra/javasteam"
+            )
+        )
+    }
 
     @TaskAction
     fun generate() {
+        val pkg = getInputPkg().get()
+        val inputFile = getInputFile().get().asFile
+        val outputDir = getOutputDir().get().asFile
+
         val buffer = IOUtils.toString(FileInputStream(inputFile), "utf-8")
         val tokens = LanguageParser.tokenizeString(buffer, inputFile.name)
 
