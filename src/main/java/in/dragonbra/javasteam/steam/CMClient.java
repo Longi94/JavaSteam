@@ -488,51 +488,27 @@ public abstract class CMClient {
     /**
      * Returns the local IP of this client.
      *
-     * @return The local IP.
-     * @throws NullPointerException if the client is not connected
+     * @return The local IP or null if no connection is available.
      */
-    public InetAddress getLocalIP() throws NullPointerException {
-        return connection.getLocalIP();
-    }
-
-    /**
-     * Safe version of {@link  CMClient#getLocalIP()}.
-     *
-     * @return The current endpoint.
-     */
-    //JavaSteam addition
-    public Optional<InetAddress> getLocalIPOptional() {
+    public @Nullable InetAddress getLocalIP() {
         var connection = this.connection;
         if (connection == null) {
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(connection.getLocalIP());
+            return null;
         }
+        return connection.getLocalIP();
     }
 
     /**
      * Returns the current endpoint this client is connected to.
      *
-     * @return The current endpoint.
-     * @throws NullPointerException if the client is not connected
+     * @return The current endpoint or null if no connection is available.
      */
-    public InetSocketAddress getCurrentEndpoint() throws NullPointerException {
-        return connection.getCurrentEndPoint();
-    }
-
-    /**
-     * Safe version of {@link  CMClient#getCurrentEndpoint()}.
-     *
-     * @return The current endpoint.
-     */
-    //JavaSteam addition
-    public Optional<InetSocketAddress> getCurrentEndpointOptional() {
+    public @Nullable InetSocketAddress getCurrentEndpoint() {
         var connection = this.connection;
         if (connection == null) {
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(connection.getCurrentEndPoint());
+            return null;
         }
+        return connection.getCurrentEndPoint();
     }
 
     /**
