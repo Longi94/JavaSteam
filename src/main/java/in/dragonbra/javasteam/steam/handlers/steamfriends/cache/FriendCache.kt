@@ -62,5 +62,5 @@ class AccountCache {
 
     fun getUser(steamId: SteamID): User = if (isLocalUser(steamId)) localUser else users.getAccount(steamId)
 
-    fun isLocalUser(steamId: SteamID): Boolean = localUser.steamID == steamId
+    fun isLocalUser(steamId: SteamID?): Boolean = localUser.steamID == steamId
 }

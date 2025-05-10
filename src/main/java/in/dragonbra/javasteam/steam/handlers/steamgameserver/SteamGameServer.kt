@@ -52,7 +52,7 @@ class SteamGameServer : ClientMsgHandler() {
         logon.protoHeader.clientSessionid = 0
         logon.protoHeader.steamid = gsId.convertToUInt64()
 
-        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
+        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP!!)
         logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp)
 
         logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
@@ -87,7 +87,7 @@ class SteamGameServer : ClientMsgHandler() {
         logon.protoHeader.clientSessionid = 0
         logon.protoHeader.steamid = gsId.convertToUInt64()
 
-        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP)
+        val localIp: CMsgIPAddress = NetHelpers.getMsgIPAddress(client.localIP!!)
         logon.body.obfuscatedPrivateIp = NetHelpers.obfuscatePrivateIP(localIp)
 
         logon.body.protocolVersion = MsgClientLogon.CurrentProtocol
