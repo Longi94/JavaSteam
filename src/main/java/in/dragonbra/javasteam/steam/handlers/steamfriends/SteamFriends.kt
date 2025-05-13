@@ -422,10 +422,13 @@ class SteamFriends : ClientMsgHandler() {
             body.steamIdChat = chatID
             body.type = EChatInfoType.StateChange
 
+            // SteamID can be null if not connected - will be ultimately ignored in Client.Send.
+            val localSteamID = client.steamID?.convertToUInt64() ?: SteamID().convertToUInt64()
+
             try {
-                writeLong(client.steamID.convertToUInt64()) // ChatterActedOn
+                writeLong(localSteamID) // ChatterActedOn
                 writeInt(EChatMemberStateChange.Left.code()) // StateChange
-                writeLong(client.steamID.convertToUInt64()) // ChatterActedBy
+                writeLong(localSteamID) // ChatterActedBy
             } catch (e: IOException) {
                 logger.debug(e)
             }
@@ -473,7 +476,7 @@ class SteamFriends : ClientMsgHandler() {
             body.steamIdInvited = steamIdUser.convertToUInt64()
             // steamclient also sends the steamid of the user that did the invitation
             // we'll mimic that behavior
-            body.steamIdPatron = client.steamID.convertToUInt64()
+            body.steamIdPatron = client.steamID?.convertToUInt64() ?: SteamID().convertToUInt64()
         }.also(client::send)
     }
 
