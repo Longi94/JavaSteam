@@ -16,6 +16,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicense
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSAccessTokenRequest
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSChangesSinceRequest
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSPrivateBetaRequest
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoRequest
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.AppOwnershipTicketCallback
@@ -29,6 +30,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.LicenseListCal
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSChangesCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSProductInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSTokensCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PrivateBetaCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PurchaseResponseCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.RedeemGuestPassResponseCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.VACStatusCallback
@@ -37,6 +39,7 @@ import `in`.dragonbra.javasteam.types.AsyncJobMultiple
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.GameID
 import `in`.dragonbra.javasteam.util.NetHelpers
+import io.ktor.client.request.request
 
 /**
  * This handler is used for interacting with apps and packages on the Steam network.
@@ -293,11 +296,42 @@ class SteamApps : ClientMsgHandler() {
      */
     fun getLegacyGameKey(appId: Int): AsyncJobSingle<LegacyGameKeyCallback> {
         val request = ClientMsg(MsgClientGetLegacyGameKey::class.java).apply {
-            sourceJobID = (client.getNextJobID())
+            sourceJobID = client.getNextJobID()
             body.appId = appId
         }
 
         client.send(request)
+
+        return AsyncJobSingle(client, request.sourceJobID)
+    }
+
+    /**
+     * Submit a beta password for a given app to retrieve any betas and their encryption keys.
+     * Results are returned in a [CheckAppBetaPasswordCallback] callback.
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
+     * @param app App id requested.
+     * @param accessToken Access token associated with the app.
+     * @param branch The branch name.
+     * @param branchPasswordHash The branch password from [CheckAppBetaPasswordCallback]
+     * @return The Job ID of the request. This can be used to find the appropriate [CheckAppBetaPasswordCallback].
+     */
+    fun picsGetPrivateBeta(
+        app: Int,
+        accessToken: Long,
+        branch: String,
+        branchPasswordHash: ByteArray,
+    ): AsyncJobSingle<PrivateBetaCallback> {
+        val request = ClientMsgProtobuf<CMsgClientPICSPrivateBetaRequest.Builder>(
+            CMsgClientPICSPrivateBetaRequest::class.java,
+            EMsg.ClientPICSPrivateBetaRequest
+        ).apply {
+            sourceJobID = client.getNextJobID()
+
+            body.appid = app
+            body.accessToken = accessToken
+            body.betaName = branch
+            body.passwordHash = ByteString.copyFrom(branchPasswordHash)
+        }
 
         return AsyncJobSingle(client, request.sourceJobID)
     }
