@@ -15,27 +15,27 @@ public abstract class Connection {
     /**
      * Occurs when a net message is received over the network.
      */
-    final Event<NetMsgEventArgs> netMsgReceived = new Event<>();
+    protected final Event<NetMsgEventArgs> netMsgReceived = new Event<>();
 
     /**
      * Occurs when the physical connection is established.
      */
-    final Event<EventArgs> connected = new Event<>();
+    protected final Event<EventArgs> connected = new Event<>();
 
     /**
      * Occurs when the physical connection is broken.
      */
-    final Event<DisconnectedEventArgs> disconnected = new Event<>();
+    protected final Event<DisconnectedEventArgs> disconnected = new Event<>();
 
-    void onNetMsgReceived(NetMsgEventArgs e) {
+    protected void onNetMsgReceived(NetMsgEventArgs e) {
         netMsgReceived.handleEvent(this, e);
     }
 
-    void onConnected() {
+    protected void onConnected() {
         connected.handleEvent(this, null);
     }
 
-    void onDisconnected(boolean e) {
+    protected void onDisconnected(boolean e) {
         disconnected.handleEvent(this, new DisconnectedEventArgs(e));
     }
 

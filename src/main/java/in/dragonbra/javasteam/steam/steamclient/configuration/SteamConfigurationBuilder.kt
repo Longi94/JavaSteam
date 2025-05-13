@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.steam.steamclient.configuration
 
 import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
 import `in`.dragonbra.javasteam.enums.EUniverse
+import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.contentdownloader.MemoryManifestProvider
@@ -20,6 +21,11 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
     private val state: SteamConfigurationState = createDefaultState()
 
     fun build(): SteamConfiguration = SteamConfiguration(state)
+
+    override fun withConnectionFactory(connectionFactory: IConnectionFactory): ISteamConfigurationBuilder {
+        state.connectionFactory = connectionFactory
+        return this
+    }
 
     override fun withCellID(cellID: Int): ISteamConfigurationBuilder {
         state.cellID = cellID
@@ -89,6 +95,7 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
     companion object {
         @JvmStatic
         fun createDefaultState(): SteamConfigurationState = SteamConfigurationState(
+            connectionFactory = IConnectionFactory.DEFAULT,
             isAllowDirectoryFetch = true,
             connectionTimeout = 5000L,
             defaultPersonaStateFlags = EnumSet.of(
