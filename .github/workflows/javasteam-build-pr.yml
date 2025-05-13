@@ -31,8 +31,8 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v3
+        uses: gradle/actions/wrapper-validation@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
       - name: Build with Gradle, skip signing
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          arguments: build -x signMavenJavaPublication
+        run: ./gradlew  build -x signMavenJavaPublication
