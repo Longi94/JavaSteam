@@ -66,12 +66,30 @@ public class SampleLogonAuthentication implements Runnable {
     @Override
     public void run() {
 
-        // // If any configuration needs to be set; such as connection protocol api key, etc., you can configure it like so.
-        // var configuration = SteamConfiguration.create(config -> {
+        // If any configuration needs to be set; such as connection protocol api key, etc., you can configure it like so.
+        // var config = SteamConfiguration.create(config -> {
         //    config.withProtocolTypes(ProtocolTypes.WEB_SOCKET);
         // });
-        // // create our steamclient instance with custom configuration.
-        // steamClient = new SteamClient(configuration);
+
+        // You can also create custom connection classes if you have specific networking requirements.
+        // var config = SteamConfiguration.create(builder -> {
+        //     builder.withProtocolTypes(EnumSet.of(ProtocolTypes.TCP, ProtocolTypes.UDP)); // Declare desired protocol types.
+        //     IConnectionFactory connectionFactory = (configuration, protocol) -> {
+        //         if (protocol.contains(ProtocolTypes.TCP)) {
+        //             return new CustomTCPConnection();
+        //         } else if (protocol.contains(ProtocolTypes.UDP)) {
+        //             // We ask for TCP and UDP above, so this condition should handle UDP.
+        //             return CustomUDPConnection();
+        //         } else {
+        //             // Fallback: 'thenResolve` will fallback to default connection types.
+        //             return null;
+        //         }
+        //     };
+        //     builder.withConnectionFactory(connectionFactory.thenResolve(IConnectionFactory.DEFAULT));
+        // });
+
+        // create our steamclient instance with custom configuration.
+        // steamClient = new SteamClient(config);
 
         // create our steamclient instance using default configuration
         steamClient = new SteamClient();

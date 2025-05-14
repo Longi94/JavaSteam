@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.steam.steamclient.configuration
 
 import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
 import `in`.dragonbra.javasteam.enums.EUniverse
+import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
@@ -14,6 +15,15 @@ import java.util.*
  */
 @Suppress("unused")
 interface ISteamConfigurationBuilder {
+
+    /**
+     * Configures this [SteamConfiguration] to use the provided [IConnectionFactory].
+     *
+     * @param connectionFactory The [IConnectionFactory] to use.
+     * @return A builder with modified configuration.
+     */
+    fun withConnectionFactory(connectionFactory: IConnectionFactory): ISteamConfigurationBuilder
+
     /**
      * Configures this [SteamConfiguration] for a particular Steam cell.
      *

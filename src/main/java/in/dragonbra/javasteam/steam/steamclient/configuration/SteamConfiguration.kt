@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.steam.steamclient.configuration
 
 import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
 import `in`.dragonbra.javasteam.enums.EUniverse
+import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
@@ -18,6 +19,23 @@ import java.util.*
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class SteamConfiguration internal constructor(private val state: SteamConfigurationState) {
+
+    /**
+     * Builds the underlying [in.dragonbra.javasteam.networking.steam3.Connection] used for connecting to stream.
+     *
+     * ```java
+     * steamClient = new SteamClient(SteamConfiguration.create(builder -> {
+     *  IConnectionFactory connectionFactory = (configuration, protocol) -> {
+     *      return null;//custom connection or null to resolve fallback
+     *  };
+     *  builder.withConnectionFactory(
+     *      connectionFactory.thenResolve(IConnectionFactory.DEFAULT));
+     * }));
+     * ```
+     *
+     */
+    val connectionFactory: IConnectionFactory
+        get() = state.connectionFactory
 
     /**
      * Whether to use the Steam Directory to discover available servers.
