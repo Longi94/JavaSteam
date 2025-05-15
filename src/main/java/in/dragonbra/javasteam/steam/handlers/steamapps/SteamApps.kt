@@ -333,6 +333,8 @@ class SteamApps : ClientMsgHandler() {
             body.passwordHash = ByteString.copyFrom(branchPasswordHash)
         }
 
+        client.send(request)
+
         return AsyncJobSingle(client, request.sourceJobID)
     }
 
@@ -464,6 +466,7 @@ class SteamApps : ClientMsgHandler() {
             EMsg.ClientPICSProductInfoResponse -> PICSProductInfoCallback(packetMsg)
             EMsg.ClientUpdateGuestPassesList -> GuestPassListCallback(packetMsg)
             EMsg.ClientCheckAppBetaPasswordResponse -> CheckAppBetaPasswordCallback(packetMsg)
+            EMsg.ClientPICSPrivateBetaResponse -> PrivateBetaCallback(packetMsg)
             else -> null
         }
     }
