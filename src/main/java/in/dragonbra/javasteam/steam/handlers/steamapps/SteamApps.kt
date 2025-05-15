@@ -333,6 +333,8 @@ class SteamApps : ClientMsgHandler() {
             body.passwordHash = ByteString.copyFrom(branchPasswordHash)
         }
 
+        client.send(request)
+
         return AsyncJobSingle(client, request.sourceJobID)
     }
 
