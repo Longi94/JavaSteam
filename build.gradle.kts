@@ -118,6 +118,7 @@ tasks.withType<FormatTask> {
 }
 
 dependencies {
+    implementation(libs.bundles.ktor)
     implementation(libs.commons.io)
     implementation(libs.commons.lang3)
     implementation(libs.commons.validator)
@@ -125,9 +126,9 @@ dependencies {
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.stdib)
     implementation(libs.okHttp)
-    implementation(libs.xz)
     implementation(libs.protobuf.java)
-    implementation(libs.bundles.ktor)
+    implementation(libs.xz)
+    implementation(libs.zstd)
 
     testImplementation(libs.bundles.testing)
 }
