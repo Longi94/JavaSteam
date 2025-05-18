@@ -29,6 +29,7 @@ object VZstdUtil {
         val sizeDecompressed = byteBuffer.getInt(buffer.size - 11)
 
         if (crc32 == crc32Footer) {
+            // They write CRC32 twice?
             logger.debug("CRC32 appears to be written twice in the data")
         }
 
@@ -63,6 +64,7 @@ object VZstdUtil {
 
             return sizeDecompressed
         } catch (e: Exception) {
+            // Catch all for the Zstd library.
             throw IOException("Failed to decompress Zstd data: ${e.message}", e)
         }
     }
