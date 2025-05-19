@@ -10,10 +10,13 @@ Java port of [SteamKit2](https://github.com/SteamRE/SteamKit). JavaSteam targets
 
 Latest version is available through [Maven](https://mvnrepository.com/artifact/in.dragonbra/javasteam)
 
+Snapshots may be available through [Maven central repository](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/in/dragonbra/)
+
 If you get a `java.security.InvalidKeyException: Illegal key size or default parameters` exception when trying to
 encrypt a message you need to download
 the [Unlimited Strength Jurisdiction Policy Files](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html)
 and place them under `${java.home}/jre/lib/security/`.
+
 See [this stackoverflow question](https://stackoverflow.com/questions/6481627/java-security-illegal-key-size-or-default-parameters).
 
 **1. Add the repository to your build.**
