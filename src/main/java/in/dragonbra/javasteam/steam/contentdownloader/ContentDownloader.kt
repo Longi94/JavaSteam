@@ -165,7 +165,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         maxDownloads: Int = 8,
         progressCallback: ProgressCallback? = null,
     ): CompletableFuture<Boolean> = defaultScope.future {
-        downloadAppInternal(
+        return@future downloadAppInternal(
             appId = appId,
             depotId = depotId,
             installPath = installPath,

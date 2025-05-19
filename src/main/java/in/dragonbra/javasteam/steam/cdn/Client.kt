@@ -214,7 +214,7 @@ class Client(steamClient: SteamClient) : Closeable {
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
     ): CompletableFuture<DepotManifest> = defaultScope.future {
-        downloadManifest(
+        return@future downloadManifest(
             depotId = depotId,
             manifestId = manifestId,
             manifestRequestCode = manifestRequestCode.toULong(),
@@ -372,7 +372,7 @@ class Client(steamClient: SteamClient) : Closeable {
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
     ): CompletableFuture<Int> = defaultScope.future {
-        downloadDepotChunk(
+        return@future downloadDepotChunk(
             depotId = depotId,
             chunk = chunk,
             server = server,
