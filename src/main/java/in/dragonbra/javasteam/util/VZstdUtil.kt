@@ -63,6 +63,10 @@ object VZstdUtil {
             }
 
             return sizeDecompressed
+        } catch (e: NoClassDefFoundError) {
+            // Zstd is a 'compileOnly' dependency. If it's missing, throw the correct type of error.
+            logger.error("Missing implementation of com.github.luben:zstd-jni")
+            throw e
         } catch (e: Exception) {
             // Catch all for the Zstd library.
             throw IOException("Failed to decompress Zstd data: ${e.message}", e)

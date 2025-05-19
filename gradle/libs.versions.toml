@@ -75,6 +75,7 @@ testing = [
     "test-mock-webserver3",
     "test-mockito-core",
     "test-mockito-jupiter",
+    "zstd"
 ]
 
 ktor = [

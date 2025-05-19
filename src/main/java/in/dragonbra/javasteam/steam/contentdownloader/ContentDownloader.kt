@@ -564,6 +564,9 @@ class ContentDownloader(val steamClient: SteamClient) {
 
                     else -> logger.error("Encountered error downloading chunk $chunkID: ${e.statusCode}")
                 }
+            } catch (e: NoClassDefFoundError) {
+                // Zstd is a 'compileOnly' dependency.
+                throw CancellationException(e.message)
             } catch (e: Exception) {
                 cdnPool.returnBrokenConnection(connection)
 

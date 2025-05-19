@@ -128,7 +128,7 @@ dependencies {
     implementation(libs.okHttp)
     implementation(libs.protobuf.java)
     implementation(libs.xz)
-    implementation(libs.zstd)
+    compileOnly(libs.zstd)
 
     testImplementation(libs.bundles.testing)
 }
