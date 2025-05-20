@@ -24,6 +24,7 @@ protobuf-gradle = "0.9.5" # https://mvnrepository.com/artifact/com.google.protob
 publishPlugin = "2.0.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
 qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
 xz = "1.10" # https://mvnrepository.com/artifact/org.tukaani/xz
+zstd = "1.5.7-3" # https://search.maven.org/artifact/com.github.luben/zstd-jni
 
 # Testing Lib versions
 commonsCodec = "1.18.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
@@ -39,14 +40,15 @@ commons-validator = { module = "commons-validator:commons-validator", version.re
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version = "3.0.3" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version = "3.0.3" }
+ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version = "3.0.3" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version = "3.0.3" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version = "3.0.3" }
-ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version = "3.0.3" }
+zstd = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
 
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
 test-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
@@ -73,6 +75,7 @@ testing = [
     "test-mock-webserver3",
     "test-mockito-core",
     "test-mockito-jupiter",
+    "zstd"
 ]
 
 ktor = [

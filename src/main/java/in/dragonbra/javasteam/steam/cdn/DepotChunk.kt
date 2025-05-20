@@ -4,6 +4,7 @@ import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.VZipUtil
+import `in`.dragonbra.javasteam.util.VZstdUtil
 import `in`.dragonbra.javasteam.util.ZipUtil
 import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
@@ -73,7 +74,11 @@ object DepotChunk {
                 buffer[3] == 'a'.code.toByte()
             ) {
                 // Zstd
-                throw RuntimeException("Zstd compressed chunks are not yet implemented in JavaSteam.")
+                writtenDecompressed = VZstdUtil.decompress(
+                    buffer = buffer.copyOfRange(0, written),
+                    destination = destination,
+                    verifyChecksum = false,
+                )
             } else if (buffer[0] == 'V'.code.toByte() &&
                 buffer[1] == 'Z'.code.toByte() &&
                 buffer[2] == 'a'.code.toByte()

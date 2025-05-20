@@ -165,7 +165,7 @@ class ContentDownloader(val steamClient: SteamClient) {
         maxDownloads: Int = 8,
         progressCallback: ProgressCallback? = null,
     ): CompletableFuture<Boolean> = defaultScope.future {
-        downloadAppInternal(
+        return@future downloadAppInternal(
             appId = appId,
             depotId = depotId,
             installPath = installPath,
@@ -564,6 +564,9 @@ class ContentDownloader(val steamClient: SteamClient) {
 
                     else -> logger.error("Encountered error downloading chunk $chunkID: ${e.statusCode}")
                 }
+            } catch (e: NoClassDefFoundError) {
+                // Zstd is a 'compileOnly' dependency.
+                throw CancellationException(e.message)
             } catch (e: Exception) {
                 cdnPool.returnBrokenConnection(connection)
 

@@ -90,4 +90,43 @@ public class DepotChunkTest {
 
         Assertions.assertEquals("7B8567D9B3C09295CDBF4978C32B348D8E76C750", hash);
     }
+
+    @Test
+    public void decryptsAndDecompressesDepotChunkZStd() throws IOException, NoSuchAlgorithmException {
+        var stream = getClass().getClassLoader()
+                .getResourceAsStream("depot/depot_3441461_chunk_9e72678e305540630a665b93e1463bc3983eb55a.bin");
+
+        var ms = new MemoryStream();
+        IOUtils.copy(stream, ms.asOutputStream());
+
+        var chunkData = ms.toByteArray();
+
+        var chunk = new ChunkData(
+                new byte[0], // id is not needed here
+                Integer.parseUnsignedInt("3753325726"),
+                0,
+                176,
+                156
+        );
+
+        var destination = new byte[chunk.getUncompressedLength()];
+        var writtenLength = DepotChunk.process(
+                chunk,
+                chunkData,
+                destination,
+                new byte[]{
+                        (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x08,
+                        (byte) 0x09, (byte) 0x0A, (byte) 0x0B, (byte) 0x0C, (byte) 0x0D, (byte) 0x0E, (byte) 0x0F, (byte) 0x10,
+                        (byte) 0x11, (byte) 0x12, (byte) 0x13, (byte) 0x14, (byte) 0x15, (byte) 0x16, (byte) 0x17, (byte) 0x18,
+                        (byte) 0x19, (byte) 0x1A, (byte) 0x1B, (byte) 0x1C, (byte) 0x1D, (byte) 0x1E, (byte) 0x1F, (byte) 0x20
+                }
+        );
+
+        Assertions.assertEquals(chunk.getCompressedLength(), chunkData.length);
+        Assertions.assertEquals(chunk.getUncompressedLength(), writtenLength);
+
+        var hash = Hex.encodeHexString(MessageDigest.getInstance("SHA-1").digest(destination), false);
+
+        Assertions.assertEquals("9E72678E305540630A665B93E1463BC3983EB55A", hash);
+    }
 }
