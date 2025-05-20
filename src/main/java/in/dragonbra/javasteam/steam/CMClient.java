@@ -9,8 +9,8 @@ import in.dragonbra.javasteam.generated.MsgClientServerUnavailable;
 import in.dragonbra.javasteam.networking.steam3.*;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgMulti;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientSessionToken;
-import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHello;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHeartBeat;
+import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientHello;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLoggedOff;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogonResponse;
 import in.dragonbra.javasteam.steam.discovery.ServerQuality;
@@ -35,7 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.EnumSet;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -189,6 +189,8 @@ public abstract class CMClient {
                 connection.getNetMsgReceived().addEventHandler(netMsgReceived);
                 connection.getConnected().addEventHandler(connected);
                 connection.getDisconnected().addEventHandler(disconnected);
+                logger.debug(String.format("Connecting to %s with protocol %s, and with connection impl %s",
+                        cmServer.getEndpoint(), cmServer.getProtocolTypes(), connection.getClass().getSimpleName()));
                 connection.connect(cmServer.getEndpoint());
             } catch (Exception e) {
                 logger.debug("Failed to connect to Steam network", e);
@@ -312,15 +314,13 @@ public abstract class CMClient {
     }
 
     private Connection createConnection(EnumSet<ProtocolTypes> protocol) {
-        if (protocol.contains(ProtocolTypes.WEB_SOCKET)) {
-            return new WebSocketConnection();
-        } else if (protocol.contains(ProtocolTypes.TCP)) {
-            return new EnvelopeEncryptedConnection(new TcpConnection(), getUniverse());
-        } else if (protocol.contains(ProtocolTypes.UDP)) {
-            return new EnvelopeEncryptedConnection(new UdpConnection(), getUniverse());
+        IConnectionFactory connectionFactory = configuration.getConnectionFactory();
+        Connection connection = connectionFactory.createConnection(configuration, protocol);
+        if (connection == null) {
+            logger.error(String.format("Connection factory returned null connection for protocols %s", protocol));
+            throw new IllegalArgumentException("Connection factory returned null connection.");
         }
-
-        throw new IllegalArgumentException("Protocol bitmask has no supported protocols set.");
+        return connection;
     }
 
     public static IPacketMsg getPacketMsg(byte[] data) {
