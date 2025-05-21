@@ -8,6 +8,7 @@ import in.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends;
 import in.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator;
 import in.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer;
 import in.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer;
+import in.dragonbra.javasteam.steam.handlers.steammatchmaking.SteamMatchmaking;
 import in.dragonbra.javasteam.steam.handlers.steamnetworking.SteamNetworking;
 import in.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications;
 import in.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots;
@@ -40,6 +41,7 @@ class SteamClientTest {
         Assertions.assertNotNull(client.getHandler(SteamWorkshop.class));
         Assertions.assertNotNull(client.getHandler(SteamUnifiedMessages.class));
         Assertions.assertNotNull(client.getHandler(SteamScreenshots.class));
+        Assertions.assertNotNull(client.getHandler(SteamMatchmaking.class));
         Assertions.assertNotNull(client.getHandler(SteamNetworking.class));
         Assertions.assertNotNull(client.getHandler(SteamNotifications.class));
         Assertions.assertNotNull(client.getHandler(SteamUserStats.class));
