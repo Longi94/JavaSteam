@@ -380,7 +380,7 @@ public abstract class CMClient {
             InputStream stream = payloadStream;
 
             if (msgMulti.getBody().getSizeUnzipped() > 0) {
-                stream = new GZIPInputStream(msgMulti.getBody().getMessageBody().newInput());
+                stream = new GZIPInputStream(payloadStream);
             }
 
             try (var br = new BinaryReader(stream)) {
