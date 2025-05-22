@@ -8,6 +8,9 @@ import java.io.Closeable
  * @param handler The [SteamAuthTicket] handler.
  * @param appID Application the ticket was generated for.
  * @param ticket Bytes of the valid Session Ticket.
+ *
+ * @author Lossy
+ * @since 2025-05-22
  */
 class TicketInfo internal constructor(
     private val handler: SteamAuthTicket,

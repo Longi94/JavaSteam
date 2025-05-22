@@ -31,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * This handler generates auth session ticket and handles it's verification by steam.
  *
  * @constructor Initializes all necessary callbacks.
+ *
+ * @author Lossy
+ * @since 2025-05-22
  */
 @Suppress("unused")
 class SteamAuthTicket : ClientMsgHandler() {

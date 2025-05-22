@@ -6,6 +6,9 @@ import `in`.dragonbra.javasteam.types.JobID
 
 /**
  * This callback is fired when Steam accepts our auth ticket as valid.
+ *
+ * @author Lossy
+ * @since 2025-05-22
  */
 @Suppress("unused")
 class TicketAcceptedCallback(

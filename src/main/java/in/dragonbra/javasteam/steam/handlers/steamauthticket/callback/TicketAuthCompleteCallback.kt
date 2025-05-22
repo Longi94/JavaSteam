@@ -9,6 +9,9 @@ import `in`.dragonbra.javasteam.types.SteamID
 
 /**
  * This callback is fired when generated ticket was successfully used to authenticate user.
+ *
+ * @author Lossy
+ * @since 2025-05-22
  */
 @Suppress("unused")
 class TicketAuthCompleteCallback(
