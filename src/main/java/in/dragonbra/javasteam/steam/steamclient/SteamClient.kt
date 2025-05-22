@@ -6,6 +6,7 @@ import `in`.dragonbra.javasteam.steam.CMClient
 import `in`.dragonbra.javasteam.steam.authentication.SteamAuthentication
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
+import `in`.dragonbra.javasteam.steam.handlers.steamauthticket.SteamAuthTicket
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud
 import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
@@ -71,9 +72,9 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(SteamFriends())
         addHandlerCore(SteamUser())
         addHandlerCore(SteamApps())
-        addHandlerCore(SteamContent())
         addHandlerCore(SteamGameCoordinator())
         addHandlerCore(SteamGameServer())
+        addHandlerCore(SteamUserStats())
         addHandlerCore(SteamMasterServer())
         addHandlerCore(SteamCloud())
         addHandlerCore(SteamWorkshop())
@@ -81,8 +82,9 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(SteamScreenshots())
         addHandlerCore(SteamMatchmaking())
         addHandlerCore(SteamNetworking())
-        addHandlerCore(SteamNotifications())
-        addHandlerCore(SteamUserStats())
+        addHandlerCore(SteamContent())
+        addHandlerCore(SteamAuthTicket())
+        addHandlerCore(SteamNotifications()) // JavaSteam Addition
 
         if (handlers.size != HANDLERS_COUNT) {
             logger.error("Handlers size didnt match handlers count (${handlers.size}) when initializing")
@@ -288,6 +290,6 @@ class SteamClient @JvmOverloads constructor(
     companion object {
         private val logger: Logger = LogManager.getLogger(SteamClient::class.java)
 
-        private const val HANDLERS_COUNT = 15
+        private const val HANDLERS_COUNT = 16
     }
 }
