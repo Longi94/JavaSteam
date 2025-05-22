@@ -12,6 +12,9 @@ import `in`.dragonbra.javasteam.types.SteamID
  * @param appID ID of the app the targeted lobby belongs to.
  * @param result The result of the request.
  * @param lobbySteamID The SteamID of the targeted Lobby.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class LeaveLobbyCallback(
     jobID: JobID,

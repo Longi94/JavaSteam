@@ -7,6 +7,9 @@ import `in`.dragonbra.javasteam.types.SteamID
  * @param steamID SteamID of the lobby member.
  * @param personaName Steam persona of the lobby member.
  * @param metadata Metadata attached to the lobby member.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 data class Member(
     val steamID: SteamID,

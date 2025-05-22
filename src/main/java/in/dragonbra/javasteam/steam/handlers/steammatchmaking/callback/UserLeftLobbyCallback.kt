@@ -10,6 +10,9 @@ import `in`.dragonbra.javasteam.types.SteamID
  * @param appID ID of the app the lobby belongs to.
  * @param lobbySteamID The SteamID of the lobby that a member left.
  * @param user The lobby member that left.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class UserLeftLobbyCallback(
     val appID: Int,

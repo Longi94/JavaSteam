@@ -12,6 +12,9 @@ import `in`.dragonbra.javasteam.types.JobID
  * @param appID ID of the app the targeted lobby belongs to.
  * @param chatRoomEnterResponse  The result of the request.
  * @param lobby The joined [Lobby], when [chatRoomEnterResponse] equals [EChatRoomEnterResponse.Success], otherwise <c>null</c>
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class JoinLobbyCallback(
     jobID: JobID,

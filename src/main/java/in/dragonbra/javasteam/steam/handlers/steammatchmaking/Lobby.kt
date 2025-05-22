@@ -21,6 +21,9 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
  * @param members A list of lobby members. This will only be populated for the user's current lobby.
  * @param distance The distance of the lobby.
  * @param weight The weight of the lobby.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class Lobby(
     val steamID: SteamID,

@@ -45,6 +45,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * This handler is used for creating, joining and obtaining lobby information.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 @Suppress("unused")
 class SteamMatchmaking : ClientMsgHandler() {

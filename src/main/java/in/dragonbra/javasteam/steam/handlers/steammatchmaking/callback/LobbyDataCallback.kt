@@ -11,6 +11,9 @@ import `in`.dragonbra.javasteam.types.JobID
  *
  * @param appID ID of the app the updated lobby belongs to.
  * @param lobby The lobby that was updated.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class LobbyDataCallback(
     jobID: JobID,

@@ -12,6 +12,9 @@ import `in`.dragonbra.javasteam.types.SteamID
  * @param appID ID of the app the created lobby belongs to.
  * @param result The result of the request.
  * @param lobbySteamID The SteamID of the created lobby.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class CreateLobbyCallback(
     jobID: JobID,

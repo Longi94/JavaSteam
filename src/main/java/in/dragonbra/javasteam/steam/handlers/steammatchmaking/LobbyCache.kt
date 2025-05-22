@@ -5,6 +5,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Cache for managing Steam lobbies.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 @Suppress("unused")
 class LobbyCache {

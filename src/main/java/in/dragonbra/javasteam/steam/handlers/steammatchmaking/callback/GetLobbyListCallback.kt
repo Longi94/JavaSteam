@@ -12,6 +12,9 @@ import `in`.dragonbra.javasteam.types.JobID
  * @param appID ID of the app the lobbies belongs to.
  * @param result The result of the request.
  * @param lobbies The list of lobbies matching the criteria specified with [SteamMatchmaking.getLobbyList].
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class GetLobbyListCallback(
     jobID: JobID,

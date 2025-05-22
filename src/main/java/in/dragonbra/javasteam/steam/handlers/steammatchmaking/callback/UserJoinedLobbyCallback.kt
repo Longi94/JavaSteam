@@ -10,6 +10,9 @@ import `in`.dragonbra.javasteam.types.SteamID
  * @param appID ID of the app the lobby belongs to.
  * @param lobbySteamID The SteamID of the lobby that a member joined.
  * @param user The lobby member that joined.
+ *
+ * @author Lossy
+ * @since 2025-05-21
  */
 class UserJoinedLobbyCallback(
     val appID: Int,
