@@ -28,8 +28,8 @@ import in.dragonbra.javasteam.util.stream.BinaryReader;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
@@ -39,6 +39,7 @@ import java.util.zip.GZIPInputStream;
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
  * the {@link in.dragonbra.javasteam.steam.steamclient.SteamClient SteamClient} class.
  */
+@SuppressWarnings("unused")
 public abstract class CMClient {
 
     private static final Logger logger = LogManager.getLogger(CMClient.class);
@@ -365,45 +366,34 @@ public abstract class CMClient {
         }
     }
 
+    // region ClientMsg Handlers
+
     private void handleMulti(IPacketMsg packetMsg) {
         if (!packetMsg.isProto()) {
             logger.debug("HandleMulti got non-proto MsgMulti!!");
             return;
         }
 
-        ClientMsgProtobuf<CMsgMulti.Builder> msgMulti = new ClientMsgProtobuf<>(CMsgMulti.class, packetMsg);
+        var msgMulti = new ClientMsgProtobuf<CMsgMulti.Builder>(CMsgMulti.class, packetMsg);
 
-        byte[] payload = msgMulti.getBody().getMessageBody().toByteArray();
+        try (var payloadStream = msgMulti.getBody().getMessageBody().newInput()) {
+            InputStream stream = payloadStream;
 
-        if (msgMulti.getBody().getSizeUnzipped() > 0) {
-            try (var gzin = new GZIPInputStream(new ByteArrayInputStream(payload));
-                 var baos = new ByteArrayOutputStream()) {
-                int res = 0;
-                byte[] buf = new byte[1024];
-                while (res >= 0) {
-                    res = gzin.read(buf, 0, buf.length);
-                    if (res > 0) {
-                        baos.write(buf, 0, res);
+            if (msgMulti.getBody().getSizeUnzipped() > 0) {
+                stream = new GZIPInputStream(msgMulti.getBody().getMessageBody().newInput());
+            }
+
+            try (var br = new BinaryReader(stream)) {
+                while (br.available() > 0) {
+                    int subSize = br.readInt();
+                    var subData = br.readBytes(subSize);
+
+                    if (!onClientMsgReceived(getPacketMsg(subData))) {
+                        break;
                     }
                 }
-                payload = baos.toByteArray();
-            } catch (IOException e) {
-                logger.debug("HandleMulti encountered an exception when decompressing.", e);
-                return;
             }
-        }
-
-        try (var bais = new ByteArrayInputStream(payload);
-             var br = new BinaryReader(bais)) {
-            while (br.available() > 0) {
-                int subSize = br.readInt();
-                byte[] subData = br.readBytes(subSize);
-
-                if (!onClientMsgReceived(getPacketMsg(subData))) {
-                    break;
-                }
-            }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("error in handleMulti()", e);
         }
     }
@@ -489,6 +479,8 @@ public abstract class CMClient {
 
         sessionToken = sessToken.getBody().getToken();
     }
+
+    // endregion
 
     public SteamConfiguration getConfiguration() {
         return configuration;
