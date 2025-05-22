@@ -1,12 +1,13 @@
 package `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback
 
 import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.SteamMatchmaking
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.types.SteamID
 
 /**
- * This callback is fired in response to [SetLobbyData].
+ * This callback is fired in response to [SteamMatchmaking.setLobbyData].
  *
  * @param appID ID of the app the targeted lobby belongs to.
  * @param result The result of the request.

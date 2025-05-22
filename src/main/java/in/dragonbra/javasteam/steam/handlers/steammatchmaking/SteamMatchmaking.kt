@@ -66,15 +66,15 @@ class SteamMatchmaking : ClientMsgHandler() {
 
     private val lobbyCache: LobbyCache = LobbyCache()
 
-    // / <summary>
-    // / Sends a request to create a lobby.
-    // / </summary>
-    // / <param name="appId">ID of the app the lobby will belong to.</param>
-    // / <param name="lobbyType">The lobby type.</param>
-    // / <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
-    // / <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
-    // / <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
-    // / <returns><c>null</c>, if the request could not be submitted i.e., not yet logged in. Otherwise, an <see cref="AsyncJob{CreateLobbyCallback}"/>.</returns>
+    /**
+     * Sends a request to create a lobby.
+     * @param appId ID of the app the lobby will belong to.
+     * @param lobbyType The lobby type.
+     * @param maxMembers The maximum number of members that may occupy the lobby.
+     * @param lobbyFlags The lobby flags. Defaults to 0.
+     * @param metadata The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).
+     * @return <c>null</c>, if the request could not be submitted i.e., not yet logged in. Otherwise, an [CreateLobbyCallback].
+     */
     @JvmOverloads
     fun createLobby(
         appId: Int,
@@ -113,16 +113,16 @@ class SteamMatchmaking : ClientMsgHandler() {
         )
     }
 
-    // / <summary>
-    // / Sends a request to update a lobby.
-    // / </summary>
-    // / <param name="appId">ID of app the lobby belongs to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
-    // / <param name="lobbyType">The lobby type.</param>
-    // / <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
-    // / <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
-    // / <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
-    // / <returns>An <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
+    /**
+     * Sends a request to update a lobby.
+     * @param appId ID of app the lobby belongs to.
+     * @param lobbySteamId The SteamID of the lobby that should be updated.
+     * @param lobbyType The lobby type.
+     * @param maxMembers The maximum number of members that may occupy the lobby.
+     * @param lobbyFlags The lobby flags. Defaults to 0.
+     * @param metadata The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).
+     * @return An [SetLobbyDataCallback].
+     */
     @JvmOverloads
     fun setLobbyData(
         appId: Int,
@@ -155,13 +155,13 @@ class SteamMatchmaking : ClientMsgHandler() {
         )
     }
 
-    // / <summary>
-    // / Sends a request to update the current user's lobby metadata.
-    // / </summary>
-    // / <param name="appId">ID of app the lobby belongs to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
-    // / <param name="metadata">The metadata for the lobby.</param>
-    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
+    /**
+     * Sends a request to update the current user's lobby metadata.
+     * @param appId ID of app the lobby belongs to.
+     * @param lobbySteamId The SteamID of the lobby that should be updated.
+     * @param metadata The metadata for the lobby.
+     * @return <c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an [SetLobbyDataCallback].
+     */
     fun setLobbyMemberData(
         appId: Int,
         lobbySteamId: SteamID,
@@ -191,13 +191,13 @@ class SteamMatchmaking : ClientMsgHandler() {
         )
     }
 
-    // / <summary>
-    // / Sends a request to update the owner of a lobby.
-    // / </summary>
-    // / <param name="appId">ID of app the lobby belongs to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should have its owner updated.</param>
-    // / <param name="newOwner">The SteamID of the owner.</param>
-    // / <returns>An <see cref="AsyncJob{SetLobbyOwnerCallback}"/>.</returns>
+    /**
+     * Sends a request to update the owner of a lobby.
+     * @param appId ID of app the lobby belongs to.
+     * @param lobbySteamId The SteamID of the lobby that should have its owner updated.
+     * @param newOwner The SteamID of the owner.
+     * @return An [SetLobbyOwnerCallback].
+     */
     fun setLobbyOwner(
         appId: Int,
         lobbySteamId: SteamID,
@@ -222,13 +222,13 @@ class SteamMatchmaking : ClientMsgHandler() {
         )
     }
 
-    // / <summary>
-    // / Sends a request to obtain a list of lobbies matching the specified criteria.
-    // / </summary>
-    // / <param name="appId">The ID of app for which we're requesting a list of lobbies.</param>
-    // / <param name="filters">An optional list of filters.</param>
-    // / <param name="maxLobbies">An optional maximum number of lobbies that will be returned.</param>
-    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{GetLobbyListCallback}"/>.</returns>
+    /**
+     * Sends a request to obtain a list of lobbies matching the specified criteria.
+     * @param appId The ID of app for which we're requesting a list of lobbies.
+     * @param filters An optional list of filters.
+     * @param maxLobbies An optional maximum number of lobbies that will be returned.
+     * @return <c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an [GetLobbyListCallback].
+     */
     @JvmOverloads
     fun getLobbyList(
         appId: Int,
@@ -260,12 +260,12 @@ class SteamMatchmaking : ClientMsgHandler() {
         return AsyncJobSingle(client, getLobbies.sourceJobID)
     }
 
-    // / <summary>
-    // / Sends a request to join a lobby.
-    // / </summary>
-    // / <param name="appId">ID of app the lobby belongs to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should be joined.</param>
-    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{JoinLobbyCallback}"/>.</returns>
+    /**
+     * Sends a request to join a lobby.
+     * @param appId ID of app the lobby belongs to.
+     * @param lobbySteamId The SteamID of the lobby that should be joined.
+     * @return <c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an [JoinLobbyCallback].
+     */
     fun joinLobby(
         appId: Int,
         lobbySteamId: SteamID,
@@ -292,12 +292,12 @@ class SteamMatchmaking : ClientMsgHandler() {
         return AsyncJobSingle(client, joinLobby.sourceJobID)
     }
 
-    // / <summary>
-    // / Sends a request to leave a lobby.
-    // / </summary>
-    // / <param name="appId">ID of app the lobby belongs to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should be left.</param>
-    // / <returns>An <see cref="AsyncJob{LeaveLobbyCallback}"/>.</returns>
+    /**
+     * Sends a request to leave a lobby.
+     * @param appId ID of app the lobby belongs to.
+     * @param lobbySteamId The SteamID of the lobby that should be left.
+     * @return An [LeaveLobbyCallback].
+     */
     fun leaveLobby(appId: Int, lobbySteamId: SteamID): AsyncJobSingle<LeaveLobbyCallback> {
         val leaveLobby = ClientMsgProtobuf<CMsgClientMMSLeaveLobby.Builder>(
             CMsgClientMMSLeaveLobby::class.java,
@@ -314,12 +314,12 @@ class SteamMatchmaking : ClientMsgHandler() {
         return AsyncJobSingle(client, leaveLobby.sourceJobID)
     }
 
-    // / <summary>
-    // / Sends a request to obtain a lobby's data.
-    // / </summary>
-    // / <param name="appId">The ID of app which we're attempting to obtain lobby data for.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby whose data is being requested.</param>
-    // / <returns>An <see cref="AsyncJob{LobbyDataCallback}"/>.</returns>
+    /**
+     * Sends a request to obtain a lobby's data.
+     * @param appId The ID of app which we're attempting to obtain lobby data for.
+     * @param lobbySteamId The SteamID of the lobby whose data is being requested.
+     * @return An [LobbyDataCallback].
+     */
     fun getLobbyData(appId: Int, lobbySteamId: SteamID): AsyncJobSingle<LobbyDataCallback> {
         val getLobbyData = ClientMsgProtobuf<CMsgClientMMSGetLobbyData.Builder>(
             CMsgClientMMSGetLobbyData::class.java,
@@ -336,13 +336,13 @@ class SteamMatchmaking : ClientMsgHandler() {
         return AsyncJobSingle(client, getLobbyData.sourceJobID)
     }
 
-    // / <summary>
-    // / Sends a lobby invite request.
-    // / NOTE: Steam provides no functionality to determine if the user was successfully invited.
-    // / </summary>
-    // / <param name="appId">The ID of app which owns the lobby we're inviting a user to.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby we're inviting a user to.</param>
-    // / <param name="userSteamId">The SteamID of the user we're inviting.</param>
+    /**
+     * Sends a lobby invite request.
+     * NOTE: Steam provides no functionality to determine if the user was successfully invited.
+     * @param appId The ID of app which owns the lobby we're inviting a user to.
+     * @param lobbySteamId The SteamID of the lobby we're inviting a user to.
+     * @param userSteamId The SteamID of the user we're inviting.
+     */
     fun inviteToLobby(appId: Int, lobbySteamId: SteamID, userSteamId: SteamID) {
         val getLobbyData = ClientMsgProtobuf<CMsgClientMMSInviteToLobby.Builder>(
             CMsgClientMMSInviteToLobby::class.java,
@@ -356,20 +356,20 @@ class SteamMatchmaking : ClientMsgHandler() {
         send(msg = getLobbyData, appId = appId)
     }
 
-    // / <summary>
-    // / Obtains a <see cref="Lobby"/>, by its SteamID, if the data is cached locally.
-    // / This method does not send a network request.
-    // / </summary>
-    // / <param name="appId">The ID of app which we're attempting to obtain a lobby for.</param>
-    // / <param name="lobbySteamId">The SteamID of the lobby that should be returned.</param>
-    // / <returns>The <see cref="Lobby"/> corresponding with the specified app and lobby ID, if cached. Otherwise, <c>null</c>.</returns>
+    /**
+     *  Obtains a [Lobby] by its [SteamID], if the data is cached locally.
+     *  This method does not send a network request.
+     *  @param appId The ID of app which we're attempting to obtain a lobby for.
+     *  @param lobbySteamId The SteamID of the lobby that should be returned.
+     *  @return The [Lobby] corresponding with the specified app and lobby ID, if cached. Otherwise, <c>null</c>.
+     */
     fun getLobby(appId: Int, lobbySteamId: SteamID): Lobby? = lobbyCache.getLobby(appId, lobbySteamId)
 
-    // / <summary>
-    // / Sends a matchmaking message for a specific app.
-    // / </summary>
-    // / <param name="msg">The matchmaking message to send.</param>
-    // / <param name="appId">The ID of the app this message pertains to.</param>
+    /**
+     * Sends a matchmaking message for a specific app.
+     * @param msg The matchmaking message to send.
+     * @param appId The ID of the app this message pertains to.
+     */
     fun <T : GeneratedMessage.Builder<T>> send(msg: ClientMsgProtobuf<T>, appId: Int) {
         msg.protoHeader.routingAppid = appId
         client.send(msg)

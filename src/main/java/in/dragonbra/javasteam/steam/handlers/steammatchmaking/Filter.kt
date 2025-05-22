@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package `in`.dragonbra.javasteam.steam.handlers.steammatchmaking
 
 import `in`.dragonbra.javasteam.enums.ELobbyComparison
@@ -8,7 +10,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverM
 /**
  * The lobby filter base class.
  *
- * @constructor Base constructor for all filter sub-classes.
+ * @constructor Base constructor for all filter subclasses.
  * @param filterType The type of filter.
  * @param key The metadata key this filter pertains to.
  * @param comparison The comparison method used by this filter.
