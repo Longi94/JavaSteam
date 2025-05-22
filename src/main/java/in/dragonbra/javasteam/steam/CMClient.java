@@ -18,10 +18,7 @@ import in.dragonbra.javasteam.steam.discovery.ServerRecord;
 import in.dragonbra.javasteam.steam.discovery.SmartCMServerList;
 import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.types.SteamID;
-import in.dragonbra.javasteam.util.IDebugNetworkListener;
-import in.dragonbra.javasteam.util.MsgUtil;
-import in.dragonbra.javasteam.util.NetHookNetworkListener;
-import in.dragonbra.javasteam.util.Strings;
+import in.dragonbra.javasteam.util.*;
 import in.dragonbra.javasteam.util.event.EventArgs;
 import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
@@ -47,6 +44,12 @@ public abstract class CMClient {
     private static final Logger logger = LogManager.getLogger(CMClient.class);
 
     private final SteamConfiguration configuration;
+
+    @Nullable
+    private InetAddress publicIP;
+
+    @Nullable
+    private String ipCountryCode;
 
     private boolean isConnected;
 
@@ -425,6 +428,8 @@ public abstract class CMClient {
             steamID = new SteamID(logonResp.getProtoHeader().getSteamid());
 
             cellID = logonResp.getBody().getCellId();
+            publicIP = NetHelpers.getIPAddress(logonResp.getBody().getPublicIp());
+            ipCountryCode = logonResp.getBody().getIpCountryCode();
 
             // restart heartbeat
             heartBeatFunc.stop();
@@ -445,6 +450,8 @@ public abstract class CMClient {
         steamID = null;
 
         cellID = null;
+        publicIP = null;
+        ipCountryCode = null;
 
         heartBeatFunc.stop();
 
@@ -517,6 +524,26 @@ public abstract class CMClient {
             return null;
         }
         return connection.getCurrentEndPoint();
+    }
+
+    /**
+     * Gets the public IP address of this client. This value is assigned after a logon attempt has succeeded.
+     * This value will be <c>null</c> if the client is logged off of Steam.
+     *
+     * @return The {@link InetSocketAddress} public ip
+     */
+    public @Nullable InetAddress getPublicIP() {
+        return publicIP;
+    }
+
+    /**
+     * Gets the country code of our public IP address according to Steam. This value is assigned after a logon attempt has succeeded.
+     * This value will be <c>null</c> if the client is logged off of Steam.
+     *
+     * @return the ip country code.
+     */
+    public @Nullable String getIpCountryCode() {
+        return ipCountryCode;
     }
 
     /**

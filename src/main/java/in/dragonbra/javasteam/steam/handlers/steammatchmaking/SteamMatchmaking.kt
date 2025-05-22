@@ -1,24 +1,42 @@
 package `in`.dragonbra.javasteam.steam.handlers.steammatchmaking
 
-import com.google.protobuf.ByteString
 import com.google.protobuf.GeneratedMessage
-import `in`.dragonbra.javasteam.base.AClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EChatRoomEnterResponse
 import `in`.dragonbra.javasteam.enums.ELobbyType
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSGetLobbyData
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSLeaveLobby
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSInviteToLobby
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSCreateLobby
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSCreateLobbyResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSGetLobbyData
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSGetLobbyList
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSGetLobbyListResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSInviteToLobby
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSJoinLobby
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSJoinLobbyResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSLeaveLobby
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSLeaveLobbyResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSLobbyData
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSSetLobbyData
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSSetLobbyDataResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSSetLobbyOwner
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSSetLobbyOwnerResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSUserJoinedLobby
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSUserLeftLobby
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.Lobby.Companion.toByteString
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.CreateLobbyCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.GetLobbyListCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.JoinLobbyCallback
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.LeaveLobbyCallback
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.LobbyDataCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.SetLobbyDataCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.SetLobbyOwnerCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.UserJoinedLobbyCallback
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.UserLeftLobbyCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.types.SteamID
@@ -28,47 +46,42 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * This handler is used for creating, joining and obtaining lobby information.
  */
+@Suppress("unused")
 class SteamMatchmaking : ClientMsgHandler() {
 
-    companion object {
-        private fun getHandler(packetMsg: IPacketMsg): IPacketMsg? {
-            return when (packetMsg.msgType) {
-                EMsg.ClientMMSCreateLobbyResponse -> handleCreateLobbyResponse()
-                EMsg.ClientMMSSetLobbyDataResponse -> ::handleSetLobbyDataResponse
-                EMsg.ClientMMSSetLobbyOwnerResponse -> ::handleSetLobbyOwnerResponse
-                EMsg.ClientMMSLobbyData -> ::handleLobbyData
-                EMsg.ClientMMSGetLobbyListResponse -> ::handleGetLobbyListResponse
-                EMsg.ClientMMSJoinLobbyResponse -> ::handleJoinLobbyResponse
-                EMsg.ClientMMSLeaveLobbyResponse -> ::handleLeaveLobbyResponse
-                EMsg.ClientMMSUserJoinedLobby -> ::handleUserJoinedLobby
-                EMsg.ClientMMSUserLeftLobby -> ::handleUserLeftLobby
-                else -> null
-            }
-        }
+    private fun getHandler(packetMsg: IPacketMsg): ((IPacketMsg) -> Unit)? = when (packetMsg.msgType) {
+        EMsg.ClientMMSCreateLobbyResponse -> ::handleCreateLobbyResponse
+        EMsg.ClientMMSSetLobbyDataResponse -> ::handleSetLobbyDataResponse
+        EMsg.ClientMMSSetLobbyOwnerResponse -> ::handleSetLobbyOwnerResponse
+        EMsg.ClientMMSLobbyData -> ::handleLobbyData
+        EMsg.ClientMMSGetLobbyListResponse -> ::handleGetLobbyListResponse
+        EMsg.ClientMMSJoinLobbyResponse -> ::handleJoinLobbyResponse
+        EMsg.ClientMMSLeaveLobbyResponse -> ::handleLeaveLobbyResponse
+        EMsg.ClientMMSUserJoinedLobby -> ::handleUserJoinedLobby
+        EMsg.ClientMMSUserLeftLobby -> ::handleUserLeftLobby
+        else -> null
     }
 
-    private val lobbyManipulationRequests: ConcurrentHashMap<JobID, GeneratedMessage> =
-        ConcurrentHashMap() // TODO Value
+    private val lobbyManipulationRequests: ConcurrentHashMap<JobID, GeneratedMessage> = ConcurrentHashMap()
 
     private val lobbyCache: LobbyCache = LobbyCache()
 
-
-    /// <summary>
-    /// Sends a request to create a lobby.
-    /// </summary>
-    /// <param name="appId">ID of the app the lobby will belong to.</param>
-    /// <param name="lobbyType">The lobby type.</param>
-    /// <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
-    /// <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
-    /// <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
-    /// <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{CreateLobbyCallback}"/>.</returns>
+    // / <summary>
+    // / Sends a request to create a lobby.
+    // / </summary>
+    // / <param name="appId">ID of the app the lobby will belong to.</param>
+    // / <param name="lobbyType">The lobby type.</param>
+    // / <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
+    // / <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
+    // / <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
+    // / <returns><c>null</c>, if the request could not be submitted i.e., not yet logged in. Otherwise, an <see cref="AsyncJob{CreateLobbyCallback}"/>.</returns>
     @JvmOverloads
     fun createLobby(
         appId: Int,
         lobbyType: ELobbyType,
         maxMembers: Int,
         lobbyFlags: Int = 0,
-        metadata: Map<String, String>? = null
+        metadata: Map<String, String>? = null,
     ): AsyncJobSingle<CreateLobbyCallback>? {
         if (client.cellID == null) {
             return null
@@ -84,223 +97,229 @@ class SteamMatchmaking : ClientMsgHandler() {
             body.lobbyType = lobbyType.code()
             body.maxMembers = maxMembers
             body.lobbyFlags = lobbyFlags
-            body.metadata = ByteString.copyFrom(Lobby.encodeMetadata(metadata))
+            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
             body.cellId = client.cellID!!
-            body.publicIp = NetHelpers.getMsgIPAddress(client.publicIP)
+            body.publicIp = NetHelpers.getMsgIPAddress(client.publicIP!!)
             body.personaNameOwner = personaName
 
             sourceJobID = client.getNextJobID()
         }
 
-        send(createLobby, appId)
+        send(msg = createLobby, appId = appId)
 
         lobbyManipulationRequests[createLobby.sourceJobID] = createLobby.body.build()
         return attachIncompleteManipulationHandler(
-            job = AsyncJobSingle<CreateLobbyCallback>(client, createLobby.sourceJobID)
+            job = AsyncJobSingle(client, createLobby.sourceJobID)
         )
     }
 
-    /// <summary>
-    /// Sends a request to update a lobby.
-    /// </summary>
-    /// <param name="appId">ID of app the lobby belongs to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
-    /// <param name="lobbyType">The lobby type.</param>
-    /// <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
-    /// <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
-    /// <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
-    /// <returns>An <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
-    public AsyncJob<SetLobbyDataCallback> SetLobbyData( appId: Int,  lobbySteamId: SteamID, ELobbyType lobbyType, int maxMembers, int lobbyFlags = 0,
-    IReadOnlyDictionary<string, string>? metadata = null )
-    {
-        val setLobbyData = ClientMsgProtobuf<CMsgClientMMSSetLobbyData>(EMsg.ClientMMSSetLobbyData)
-        {
-            Body =
-                {
-                    app_id = appId,
-                    steam_id_lobby = lobbySteamId,
-                    steam_id_member = 0,
-                    lobby_type = (int) lobbyType,
-                    max_members = maxMembers,
-                    lobby_flags = lobbyFlags,
-                    metadata = Lobby.EncodeMetadata(metadata),
-                },
-            SourceJobID = client.getNextJobID()
+    // / <summary>
+    // / Sends a request to update a lobby.
+    // / </summary>
+    // / <param name="appId">ID of app the lobby belongs to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
+    // / <param name="lobbyType">The lobby type.</param>
+    // / <param name="maxMembers">The maximum number of members that may occupy the lobby.</param>
+    // / <param name="lobbyFlags">The lobby flags. Defaults to 0.</param>
+    // / <param name="metadata">The metadata for the lobby. Defaults to <c>null</c> (treated as an empty dictionary).</param>
+    // / <returns>An <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
+    @JvmOverloads
+    fun setLobbyData(
+        appId: Int,
+        lobbySteamId: SteamID,
+        lobbyType: ELobbyType,
+        maxMembers: Int,
+        lobbyFlags: Int = 0,
+        metadata: Map<String, String>? = null,
+    ): AsyncJobSingle<SetLobbyDataCallback> {
+        val setLobbyData = ClientMsgProtobuf<CMsgClientMMSSetLobbyData.Builder>(
+            CMsgClientMMSSetLobbyData::class.java,
+            EMsg.ClientMMSSetLobbyData
+        ).apply {
+            body.appId = appId
+            body.steamIdLobby = lobbySteamId.convertToUInt64()
+            body.steamIdMember = 0
+            body.lobbyType = lobbyType.code()
+            body.maxMembers = maxMembers
+            body.lobbyFlags = lobbyFlags
+            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
+
+            sourceJobID = client.getNextJobID()
         }
 
-        Send(setLobbyData, appId)
+        send(msg = setLobbyData, appId = appId)
 
-        lobbyManipulationRequests[setLobbyData.sourceJobID] = setLobbyData.Body
-        return AttachIncompleteManipulationHandler(
-            AsyncJobSingle<SetLobbyDataCallback>(
-                client,
-                setLobbyData.sourceJobID
-            )
+        lobbyManipulationRequests[setLobbyData.sourceJobID] = setLobbyData.body.build()
+        return attachIncompleteManipulationHandler(
+            job = AsyncJobSingle(client, setLobbyData.sourceJobID)
         )
     }
 
-    /// <summary>
-    /// Sends a request to update the current user's lobby metadata.
-    /// </summary>
-    /// <param name="appId">ID of app the lobby belongs to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
-    /// <param name="metadata">The metadata for the lobby.</param>
-    /// <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
-    public AsyncJob<SetLobbyDataCallback>? SetLobbyMemberData( appId: Int,  lobbySteamId: SteamID, IReadOnlyDictionary<string, string> metadata )
-    {
-        if (client.SteamID == null) {
+    // / <summary>
+    // / Sends a request to update the current user's lobby metadata.
+    // / </summary>
+    // / <param name="appId">ID of app the lobby belongs to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should be updated.</param>
+    // / <param name="metadata">The metadata for the lobby.</param>
+    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{SetLobbyDataCallback}"/>.</returns>
+    fun setLobbyMemberData(
+        appId: Int,
+        lobbySteamId: SteamID,
+        metadata: Map<String, String>,
+    ): AsyncJobSingle<SetLobbyDataCallback>? {
+        if (client.steamID == null) {
             return null
         }
 
-        val setLobbyData = ClientMsgProtobuf<CMsgClientMMSSetLobbyData>(EMsg.ClientMMSSetLobbyData)
-        {
-            Body =
-                {
-                    app_id = appId,
-                    steam_id_lobby = lobbySteamId,
-                    steam_id_member = client.SteamID,
-                    metadata = Lobby.EncodeMetadata(metadata)
-                },
-            SourceJobID = client.getNextJobID()
+        val setLobbyData = ClientMsgProtobuf<CMsgClientMMSSetLobbyData.Builder>(
+            CMsgClientMMSSetLobbyData::class.java,
+            EMsg.ClientMMSSetLobbyData
+        ).apply {
+            body.appId = appId
+            body.steamIdLobby = lobbySteamId.convertToUInt64()
+            body.steamIdMember = client.steamID!!.convertToUInt64()
+            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
+
+            sourceJobID = client.getNextJobID()
         }
 
-        Send(setLobbyData, appId)
+        send(msg = setLobbyData, appId = appId)
 
-        lobbyManipulationRequests[setLobbyData.sourceJobID] = setLobbyData.Body
-        return AttachIncompleteManipulationHandler(
-            AsyncJobSingle<SetLobbyDataCallback>(
-                client,
-                setLobbyData.sourceJobID
-            )
+        lobbyManipulationRequests[setLobbyData.sourceJobID] = setLobbyData.body.build()
+        return attachIncompleteManipulationHandler(
+            job = AsyncJobSingle(client, setLobbyData.sourceJobID)
         )
     }
 
-    /// <summary>
-    /// Sends a request to update the owner of a lobby.
-    /// </summary>
-    /// <param name="appId">ID of app the lobby belongs to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should have its owner updated.</param>
-    /// <param name="newOwner">The SteamID of the owner.</param>
-    /// <returns>An <see cref="AsyncJob{SetLobbyOwnerCallback}"/>.</returns>
-    public AsyncJob<SetLobbyOwnerCallback> SetLobbyOwner( appId: Int,  lobbySteamId: SteamID, SteamID newOwner )
-    {
-        val setLobbyOwner = ClientMsgProtobuf<CMsgClientMMSSetLobbyOwner>(EMsg.ClientMMSSetLobbyOwner)
-        {
-            Body =
-                {
-                    app_id = appId,
-                    steam_id_lobby = lobbySteamId,
-                    steam_id_new_owner = newOwner
-                },
-            SourceJobID = client.getNextJobID()
+    // / <summary>
+    // / Sends a request to update the owner of a lobby.
+    // / </summary>
+    // / <param name="appId">ID of app the lobby belongs to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should have its owner updated.</param>
+    // / <param name="newOwner">The SteamID of the owner.</param>
+    // / <returns>An <see cref="AsyncJob{SetLobbyOwnerCallback}"/>.</returns>
+    fun setLobbyOwner(
+        appId: Int,
+        lobbySteamId: SteamID,
+        newOwner: SteamID,
+    ): AsyncJobSingle<SetLobbyOwnerCallback> {
+        val setLobbyOwner = ClientMsgProtobuf<CMsgClientMMSSetLobbyOwner.Builder>(
+            CMsgClientMMSSetLobbyOwner::class.java,
+            EMsg.ClientMMSSetLobbyOwner
+        ).apply {
+            body.appId = appId
+            body.steamIdLobby = lobbySteamId.convertToUInt64()
+            body.steamIdNewOwner = newOwner.convertToUInt64()
+
+            sourceJobID = client.getNextJobID()
         }
 
-        Send(setLobbyOwner, appId)
+        send(msg = setLobbyOwner, appId = appId)
 
-        lobbyManipulationRequests[setLobbyOwner.sourceJobID] = setLobbyOwner.Body
-        return AttachIncompleteManipulationHandler(
-            AsyncJobSingle<SetLobbyOwnerCallback>(
-                client,
-                setLobbyOwner.sourceJobID
-            )
+        lobbyManipulationRequests[setLobbyOwner.sourceJobID] = setLobbyOwner.body.build()
+        return attachIncompleteManipulationHandler(
+            job = AsyncJobSingle(client, setLobbyOwner.sourceJobID)
         )
     }
 
-    /// <summary>
-    /// Sends a request to obtains a list of lobbies matching the specified criteria.
-    /// </summary>
-    /// <param name="appId">The ID of app for which we're requesting a list of lobbies.</param>
-    /// <param name="filters">An optional list of filters.</param>
-    /// <param name="maxLobbies">An optional maximum number of lobbies that will be returned.</param>
-    /// <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{GetLobbyListCallback}"/>.</returns>
-    public AsyncJob<GetLobbyListCallback>? GetLobbyList( appId: Int, List<Lobby.Filter>? filters = null, int maxLobbies = -1 )
-    {
-        if (client.CellID == null) {
+    // / <summary>
+    // / Sends a request to obtain a list of lobbies matching the specified criteria.
+    // / </summary>
+    // / <param name="appId">The ID of app for which we're requesting a list of lobbies.</param>
+    // / <param name="filters">An optional list of filters.</param>
+    // / <param name="maxLobbies">An optional maximum number of lobbies that will be returned.</param>
+    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{GetLobbyListCallback}"/>.</returns>
+    @JvmOverloads
+    fun getLobbyList(
+        appId: Int,
+        filters: List<Filter>? = null,
+        maxLobbies: Int = -1,
+    ): AsyncJobSingle<GetLobbyListCallback>? {
+        if (client.cellID == null) {
             return null
         }
 
-        val getLobbies = ClientMsgProtobuf<CMsgClientMMSGetLobbyList>(EMsg.ClientMMSGetLobbyList)
-        {
-            Body =
-                {
-                    app_id = appId,
-                    cell_id = client.CellID.Value,
-                    public_ip = NetHelpers.GetMsgIPAddress(client.PublicIP!),
-                    num_lobbies_requested = maxLobbies
-                },
-            SourceJobID = client.getNextJobID()
+        val getLobbies = ClientMsgProtobuf<CMsgClientMMSGetLobbyList.Builder>(
+            CMsgClientMMSGetLobbyList::class.java,
+            EMsg.ClientMMSGetLobbyList
+        ).apply {
+            body.appId = appId
+            body.cellId = client.cellID!!
+            body.publicIp = NetHelpers.getMsgIPAddress(client.publicIP!!)
+            body.numLobbiesRequested = maxLobbies
+
+            sourceJobID = client.getNextJobID()
         }
 
-        if (filters != null) {
-            foreach(val filter in filters )
-            {
-                getLobbies.Body.filters.Add(filter.Serialize())
-            }
+        filters?.forEach { filter ->
+            getLobbies.body.addFilters(filter.serialize())
         }
 
-        Send(getLobbies, appId)
+        send(msg = getLobbies, appId = appId)
 
-        return AsyncJobSingle<GetLobbyListCallback>(client, getLobbies.sourceJobID)
+        return AsyncJobSingle(client, getLobbies.sourceJobID)
     }
 
-    /// <summary>
-    /// Sends a request to join a lobby.
-    /// </summary>
-    /// <param name="appId">ID of app the lobby belongs to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should be joined.</param>
-    /// <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{JoinLobbyCallback}"/>.</returns>
-    public AsyncJob<JoinLobbyCallback>? JoinLobby( appId: Int,  lobbySteamId: SteamID )
-    {
-        val personaName = client.GetHandler<SteamFriends>()?.GetPersonaName()
+    // / <summary>
+    // / Sends a request to join a lobby.
+    // / </summary>
+    // / <param name="appId">ID of app the lobby belongs to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should be joined.</param>
+    // / <returns><c>null</c>, if the request could not be submitted i.e. not yet logged in. Otherwise, an <see cref="AsyncJob{JoinLobbyCallback}"/>.</returns>
+    fun joinLobby(
+        appId: Int,
+        lobbySteamId: SteamID,
+    ): AsyncJobSingle<JoinLobbyCallback>? {
+        val personaName = client.getHandler<SteamFriends>()?.getPersonaName()
 
         if (personaName == null) {
             return null
         }
 
-        val joinLobby = ClientMsgProtobuf<CMsgClientMMSJoinLobby>(EMsg.ClientMMSJoinLobby)
-        {
-            Body =
-                {
-                    app_id = appId,
-                    persona_name = personaName,
-                    steam_id_lobby = lobbySteamId
-                },
-            SourceJobID = client.getNextJobID()
-        }
-
-        Send(joinLobby, appId)
-
-        return AsyncJobSingle<JoinLobbyCallback>(client, joinLobby.sourceJobID)
-    }
-
-    /// <summary>
-    /// Sends a request to leave a lobby.
-    /// </summary>
-    /// <param name="appId">ID of app the lobby belongs to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should be left.</param>
-    /// <returns>An <see cref="AsyncJob{LeaveLobbyCallback}"/>.</returns>
-    fun leaveLobby(appId: Int, lobbySteamId: SteamID): AsyncJobSingle<LeaveLobbyCallback> {
-        val leaveLobby = ClientMsgProtobuf<CMsgClientMMSLeaveLobby.Builder>(
-            CMsgClientMMSLeaveLobby::class.java,
-                EMsg . ClientMMSLeaveLobby
+        val joinLobby = ClientMsgProtobuf<CMsgClientMMSJoinLobby.Builder>(
+            CMsgClientMMSJoinLobby::class.java,
+            EMsg.ClientMMSJoinLobby
         ).apply {
-           body. appId = appId
-           body. steamIdLobby = lobbySteamId.convertToUInt64()
+            body.appId = appId
+            body.personaName = personaName
+            body.steamIdLobby = lobbySteamId.convertToUInt64()
 
             sourceJobID = client.getNextJobID()
         }
 
-        send(leaveLobby, appId)
+        send(msg = joinLobby, appId = appId)
+
+        return AsyncJobSingle(client, joinLobby.sourceJobID)
+    }
+
+    // / <summary>
+    // / Sends a request to leave a lobby.
+    // / </summary>
+    // / <param name="appId">ID of app the lobby belongs to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should be left.</param>
+    // / <returns>An <see cref="AsyncJob{LeaveLobbyCallback}"/>.</returns>
+    fun leaveLobby(appId: Int, lobbySteamId: SteamID): AsyncJobSingle<LeaveLobbyCallback> {
+        val leaveLobby = ClientMsgProtobuf<CMsgClientMMSLeaveLobby.Builder>(
+            CMsgClientMMSLeaveLobby::class.java,
+            EMsg.ClientMMSLeaveLobby
+        ).apply {
+            body.appId = appId
+            body.steamIdLobby = lobbySteamId.convertToUInt64()
+
+            sourceJobID = client.getNextJobID()
+        }
+
+        send(msg = leaveLobby, appId = appId)
 
         return AsyncJobSingle(client, leaveLobby.sourceJobID)
     }
 
-    /// <summary>
-    /// Sends a request to obtain a lobby's data.
-    /// </summary>
-    /// <param name="appId">The ID of app which we're attempting to obtain lobby data for.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby whose data is being requested.</param>
-    /// <returns>An <see cref="AsyncJob{LobbyDataCallback}"/>.</returns>
+    // / <summary>
+    // / Sends a request to obtain a lobby's data.
+    // / </summary>
+    // / <param name="appId">The ID of app which we're attempting to obtain lobby data for.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby whose data is being requested.</param>
+    // / <returns>An <see cref="AsyncJob{LobbyDataCallback}"/>.</returns>
     fun getLobbyData(appId: Int, lobbySteamId: SteamID): AsyncJobSingle<LobbyDataCallback> {
         val getLobbyData = ClientMsgProtobuf<CMsgClientMMSGetLobbyData.Builder>(
             CMsgClientMMSGetLobbyData::class.java,
@@ -312,18 +331,18 @@ class SteamMatchmaking : ClientMsgHandler() {
             sourceJobID = client.getNextJobID()
         }
 
-        send(getLobbyData, appId)
+        send(msg = getLobbyData, appId = appId)
 
         return AsyncJobSingle(client, getLobbyData.sourceJobID)
     }
 
-    /// <summary>
-    /// Sends a lobby invite request.
-    /// NOTE: Steam provides no functionality to determine if the user was successfully invited.
-    /// </summary>
-    /// <param name="appId">The ID of app which owns the lobby we're inviting a user to.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby we're inviting a user to.</param>
-    /// <param name="userSteamId">The SteamID of the user we're inviting.</param>
+    // / <summary>
+    // / Sends a lobby invite request.
+    // / NOTE: Steam provides no functionality to determine if the user was successfully invited.
+    // / </summary>
+    // / <param name="appId">The ID of app which owns the lobby we're inviting a user to.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby we're inviting a user to.</param>
+    // / <param name="userSteamId">The SteamID of the user we're inviting.</param>
     fun inviteToLobby(appId: Int, lobbySteamId: SteamID, userSteamId: SteamID) {
         val getLobbyData = ClientMsgProtobuf<CMsgClientMMSInviteToLobby.Builder>(
             CMsgClientMMSInviteToLobby::class.java,
@@ -334,24 +353,24 @@ class SteamMatchmaking : ClientMsgHandler() {
             body.steamIdUserInvited = userSteamId.convertToUInt64()
         }
 
-        send(getLobbyData, appId)
+        send(msg = getLobbyData, appId = appId)
     }
 
-    /// <summary>
-    /// Obtains a <see cref="Lobby"/>, by its SteamID, if the data is cached locally.
-    /// This method does not send a network request.
-    /// </summary>
-    /// <param name="appId">The ID of app which we're attempting to obtain a lobby for.</param>
-    /// <param name="lobbySteamId">The SteamID of the lobby that should be returned.</param>
-    /// <returns>The <see cref="Lobby"/> corresponding with the specified app and lobby ID, if cached. Otherwise, <c>null</c>.</returns>
+    // / <summary>
+    // / Obtains a <see cref="Lobby"/>, by its SteamID, if the data is cached locally.
+    // / This method does not send a network request.
+    // / </summary>
+    // / <param name="appId">The ID of app which we're attempting to obtain a lobby for.</param>
+    // / <param name="lobbySteamId">The SteamID of the lobby that should be returned.</param>
+    // / <returns>The <see cref="Lobby"/> corresponding with the specified app and lobby ID, if cached. Otherwise, <c>null</c>.</returns>
     fun getLobby(appId: Int, lobbySteamId: SteamID): Lobby? = lobbyCache.getLobby(appId, lobbySteamId)
 
-    /// <summary>
-    /// Sends a matchmaking message for a specific app.
-    /// </summary>
-    /// <param name="msg">The matchmaking message to send.</param>
-    /// <param name="appId">The ID of the app this message pertains to.</param>
-    fun send(msg: AClientMsgProtobuf, appId: Int) {
+    // / <summary>
+    // / Sends a matchmaking message for a specific app.
+    // / </summary>
+    // / <param name="msg">The matchmaking message to send.</param>
+    // / <param name="appId">The ID of the app this message pertains to.</param>
+    fun <T : GeneratedMessage.Builder<T>> send(msg: ClientMsgProtobuf<T>, appId: Int) {
         msg.protoHeader.routingAppid = appId
         client.send(msg)
     }
@@ -360,11 +379,8 @@ class SteamMatchmaking : ClientMsgHandler() {
      * Handles a client message. This should not be called directly.
      * @param packetMsg The packet message that contains the data.
      */
-    // TODO this is using the old CB style
     override fun handleMsg(packetMsg: IPacketMsg) {
-        val handler = getHandler(packetMsg) ?: return
-
-        // handler?.Invoke(packetMsg)
+        getHandler(packetMsg)?.invoke(packetMsg)
     }
 
     internal fun clearLobbyCache() {
@@ -385,7 +401,325 @@ class SteamMatchmaking : ClientMsgHandler() {
 
     // region ClientMsg Handlers
 
-    // TODO
+    private fun handleCreateLobbyResponse(packetMsg: IPacketMsg) {
+        val createLobbyResponse = ClientMsgProtobuf<CMsgClientMMSCreateLobbyResponse.Builder>(
+            CMsgClientMMSCreateLobbyResponse::class.java,
+            packetMsg
+        )
+        val body = createLobbyResponse.body
+
+        lobbyManipulationRequests.remove(createLobbyResponse.targetJobID)?.let { request ->
+            if (body.eresult == EResult.OK.code()) {
+                val createLobby = request as CMsgClientMMSCreateLobby
+                val members = List(1) {
+                    Member(client.steamID!!, createLobby.personaNameOwner)
+                }
+
+                lobbyCache.cacheLobby(
+                    createLobby.appId,
+                    Lobby(
+                        steamID = SteamID(body.steamIdLobby),
+                        lobbyType = ELobbyType.from(createLobby.lobbyType),
+                        lobbyFlags = createLobby.lobbyFlags,
+                        ownerSteamID = client.steamID,
+                        metadata = Lobby.decodeMetadata(createLobby.metadata),
+                        maxMembers = createLobby.maxMembers,
+                        numMembers = 1,
+                        members = members,
+                        distance = null,
+                        weight = null
+                    )
+                )
+            }
+        }
+
+        CreateLobbyCallback(
+            jobID = createLobbyResponse.targetJobID,
+            appID = body.appId,
+            result = EResult.from(body.eresult),
+            lobbySteamID = SteamID(body.steamIdLobby)
+        ).also(client::postCallback)
+    }
+
+    fun handleSetLobbyDataResponse(packetMsg: IPacketMsg) {
+        val setLobbyDataResponse = ClientMsgProtobuf<CMsgClientMMSSetLobbyDataResponse.Builder>(
+            CMsgClientMMSSetLobbyDataResponse::class.java,
+            packetMsg
+        )
+        val body = setLobbyDataResponse.body
+
+        lobbyManipulationRequests.remove(setLobbyDataResponse.targetJobID)?.let { request ->
+            if (body.eresult == EResult.OK.code()) {
+                val setLobbyData = request as CMsgClientMMSSetLobbyData
+                val lobby = lobbyCache.getLobby(appId = setLobbyData.appId, lobbySteamId = setLobbyData.steamIdLobby)
+
+                if (lobby != null) {
+                    val metadata = Lobby.decodeMetadata(setLobbyData.metadata)
+
+                    if (setLobbyData.steamIdMember == 0L) {
+                        lobbyCache.cacheLobby(
+                            appId = setLobbyData.appId,
+                            lobby = Lobby(
+                                steamID = lobby.steamID,
+                                lobbyType = ELobbyType.from(setLobbyData.lobbyType),
+                                lobbyFlags = setLobbyData.lobbyFlags,
+                                ownerSteamID = lobby.ownerSteamID,
+                                metadata = metadata,
+                                maxMembers = setLobbyData.maxMembers,
+                                numMembers = lobby.numMembers,
+                                members = lobby.members,
+                                distance = lobby.distance,
+                                weight = lobby.weight
+                            )
+                        )
+                    } else {
+                        val members = lobby.members.map { m ->
+                            if (m.steamID.convertToUInt64() == setLobbyData.steamIdMember) {
+                                Member(steamID = m.steamID, personaName = m.personaName, metadata = metadata)
+                            } else {
+                                m
+                            }
+                        }
+
+                        lobbyCache.updateLobbyMembers(appId = setLobbyData.appId, lobby = lobby, members = members)
+                    }
+                }
+            }
+        }
+
+        SetLobbyDataCallback(
+            jobID = setLobbyDataResponse.targetJobID,
+            appID = body.appId,
+            result = EResult.from(body.eresult),
+            lobbySteamID = SteamID(body.steamIdLobby)
+        ).also(client::postCallback)
+    }
+
+    fun handleSetLobbyOwnerResponse(packetMsg: IPacketMsg) {
+        val setLobbyOwnerResponse = ClientMsgProtobuf<CMsgClientMMSSetLobbyOwnerResponse.Builder>(
+            CMsgClientMMSSetLobbyOwnerResponse::class.java,
+            packetMsg
+        )
+        val body = setLobbyOwnerResponse.body
+
+        lobbyManipulationRequests.remove(setLobbyOwnerResponse.targetJobID)?.let { request ->
+            if (body.eresult == EResult.OK.code()) {
+                val setLobbyOwner = request as CMsgClientMMSSetLobbyOwner
+                lobbyCache.updateLobbyOwner(
+                    appId = body.appId,
+                    lobbySteamId = body.steamIdLobby,
+                    ownerSteamId = setLobbyOwner.steamIdNewOwner
+                )
+            }
+        }
+
+        SetLobbyOwnerCallback(
+            jobID = setLobbyOwnerResponse.targetJobID,
+            appID = body.appId,
+            result = EResult.from(body.eresult),
+            lobbySteamID = SteamID(body.steamIdLobby)
+        ).also(client::postCallback)
+    }
+
+    fun handleGetLobbyListResponse(packetMsg: IPacketMsg) {
+        val lobbyListResponse = ClientMsgProtobuf<CMsgClientMMSGetLobbyListResponse.Builder>(
+            CMsgClientMMSGetLobbyListResponse::class.java,
+            packetMsg
+        )
+        val body = lobbyListResponse.body
+
+        val lobbyList = body.lobbiesList.map { lobby ->
+            val existingLobby = lobbyCache.getLobby(appId = body.appId, lobbySteamId = lobby.steamId)
+            val members = existingLobby?.members
+            Lobby(
+                steamID = SteamID(lobby.steamId),
+                lobbyType = ELobbyType.from(lobby.lobbyType),
+                lobbyFlags = lobby.lobbyFlags,
+                ownerSteamID = existingLobby?.ownerSteamID,
+                metadata = Lobby.decodeMetadata(lobby.metadata),
+                maxMembers = lobby.maxMembers,
+                numMembers = lobby.numMembers,
+                members = members ?: listOf(),
+                distance = lobby.distance,
+                weight = lobby.weight
+            )
+        }
+
+        lobbyList.forEach { lobby ->
+            lobbyCache.cacheLobby(appId = body.appId, lobby = lobby)
+        }
+
+        GetLobbyListCallback(
+            jobID = lobbyListResponse.targetJobID,
+            appID = body.appId,
+            result = EResult.from(body.eresult),
+            lobbies = lobbyList
+        ).also(client::postCallback)
+    }
+
+    fun handleJoinLobbyResponse(packetMsg: IPacketMsg) {
+        val joinLobbyResponse = ClientMsgProtobuf<CMsgClientMMSJoinLobbyResponse.Builder>(
+            CMsgClientMMSJoinLobbyResponse::class.java,
+            packetMsg
+        )
+        val body = joinLobbyResponse.body
+
+        var joinedLobby: Lobby? = null
+
+        if (body.hasSteamIdLobby()) {
+            val members = body.membersList.map { member ->
+                Member(
+                    steamID = SteamID(member.steamId),
+                    personaName = member.personaName,
+                    metadata = Lobby.decodeMetadata(member.metadata),
+                )
+            }
+
+            val cachedLobby = lobbyCache.getLobby(appId = body.appId, lobbySteamId = body.steamIdLobby)
+
+            joinedLobby = Lobby(
+                steamID = SteamID(body.steamIdLobby),
+                lobbyType = ELobbyType.from(body.lobbyType),
+                lobbyFlags = body.lobbyFlags,
+                ownerSteamID = SteamID(body.steamIdOwner),
+                metadata = Lobby.decodeMetadata(body.metadata),
+                maxMembers = body.maxMembers,
+                numMembers = members.size,
+                members = members,
+                distance = cachedLobby?.distance,
+                weight = cachedLobby?.weight
+            )
+
+            lobbyCache.cacheLobby(appId = body.appId, lobby = joinedLobby)
+        }
+
+        JoinLobbyCallback(
+            jobID = joinLobbyResponse.targetJobID,
+            appID = body.appId,
+            chatRoomEnterResponse = EChatRoomEnterResponse.from(body.chatRoomEnterResponse),
+            lobby = joinedLobby
+        ).also(client::postCallback)
+    }
+
+    fun handleLeaveLobbyResponse(packetMsg: IPacketMsg) {
+        val leaveLobbyResponse = ClientMsgProtobuf<CMsgClientMMSLeaveLobbyResponse.Builder>(
+            CMsgClientMMSLeaveLobbyResponse::class.java,
+            packetMsg
+        )
+        val body = leaveLobbyResponse.body
+
+        if (body.eresult == EResult.OK.code()) {
+            lobbyCache.clearLobbyMembers(appId = body.appId, lobbySteamId = body.steamIdLobby)
+        }
+
+        LeaveLobbyCallback(
+            jobID = leaveLobbyResponse.targetJobID,
+            appID = body.appId,
+            result = EResult.from(body.eresult),
+            lobbySteamID = SteamID(body.steamIdLobby)
+        ).also(client::postCallback)
+    }
+
+    fun handleLobbyData(packetMsg: IPacketMsg) {
+        val lobbyDataResponse = ClientMsgProtobuf<CMsgClientMMSLobbyData.Builder>(
+            CMsgClientMMSLobbyData::class.java,
+            packetMsg
+        )
+        val body = lobbyDataResponse.body
+
+        val cachedLobby = lobbyCache.getLobby(appId = body.appId, lobbySteamId = body.steamIdLobby)
+        val members = if (body.membersList.isEmpty()) {
+            cachedLobby?.members
+        } else {
+            body.membersList.map { member ->
+                Member(
+                    steamID = SteamID(member.steamId),
+                    personaName = member.personaName,
+                    metadata = Lobby.decodeMetadata(member.metadata)
+                )
+            }
+        }
+
+        val updatedLobby = Lobby(
+            steamID = SteamID(body.steamIdLobby),
+            lobbyType = ELobbyType.from(body.lobbyType),
+            lobbyFlags = body.lobbyFlags,
+            ownerSteamID = SteamID(body.steamIdOwner),
+            metadata = Lobby.decodeMetadata(body.metadata),
+            maxMembers = body.maxMembers,
+            numMembers = body.numMembers,
+            members = members ?: listOf(),
+            distance = cachedLobby?.distance,
+            weight = cachedLobby?.weight
+        )
+
+        lobbyCache.cacheLobby(appId = body.appId, lobby = updatedLobby)
+
+        LobbyDataCallback(
+            jobID = lobbyDataResponse.targetJobID,
+            appID = body.appId,
+            lobby = updatedLobby
+        ).also(client::postCallback)
+    }
+
+    fun handleUserJoinedLobby(packetMsg: IPacketMsg) {
+        val userJoinedLobby = ClientMsgProtobuf<CMsgClientMMSUserJoinedLobby.Builder>(
+            CMsgClientMMSUserJoinedLobby::class.java,
+            packetMsg
+        )
+        val body = userJoinedLobby.body
+
+        val lobby = lobbyCache.getLobby(appId = body.appId, lobbySteamId = body.steamIdLobby)
+
+        if (lobby != null && lobby.members.isNotEmpty()) {
+            val joiningMember = lobbyCache.addLobbyMember(
+                appId = body.appId,
+                lobby = lobby,
+                memberId = body.steamIdUser,
+                personaName = body.personaName
+            )
+
+            if (joiningMember != null) {
+                UserJoinedLobbyCallback(
+                    appID = body.appId,
+                    lobbySteamID = SteamID(body.steamIdLobby),
+                    user = joiningMember
+                ).also(client::postCallback)
+            }
+        }
+    }
+
+    fun handleUserLeftLobby(packetMsg: IPacketMsg) {
+        val userLeftLobby = ClientMsgProtobuf<CMsgClientMMSUserLeftLobby.Builder>(
+            CMsgClientMMSUserLeftLobby::class.java,
+            packetMsg
+        )
+        val body = userLeftLobby.body
+
+        val lobby = lobbyCache.getLobby(appId = body.appId, lobbySteamId = body.steamIdLobby)
+
+        if (lobby != null && lobby.members.isNotEmpty()) {
+            val leavingMember = lobbyCache.removeLobbyMember(
+                appId = body.appId,
+                lobby = lobby,
+                memberId = body.steamIdUser
+            )
+
+            if (leavingMember == null) {
+                return
+            }
+
+            if (leavingMember.steamID == client.steamID) {
+                lobbyCache.clearLobbyMembers(appId = body.appId, lobbySteamId = body.steamIdLobby)
+            }
+
+            UserLeftLobbyCallback(
+                appID = body.appId,
+                lobbySteamID = SteamID(body.steamIdLobby),
+                user = leavingMember
+            ).also(client::postCallback)
+        }
+    }
 
     // endregion
 }

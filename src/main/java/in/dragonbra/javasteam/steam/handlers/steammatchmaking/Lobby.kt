@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.steam.handlers.steammatchmaking
 
+import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.ELobbyType
 import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.types.SteamID
@@ -34,8 +35,11 @@ class Lobby(
     val weight: Long?,
 ) {
     companion object {
+
+        internal fun ByteArray.toByteString(): ByteString = ByteString.copyFrom(this)
+
         @JvmStatic
-        fun encodeMetadata(metadata: Map<String, String>?): ByteArray {
+        internal fun encodeMetadata(metadata: Map<String, String>?): ByteArray {
             val keyValue = KeyValue("")
 
             metadata?.forEach { entry ->
@@ -49,7 +53,10 @@ class Lobby(
         }
 
         @JvmStatic
-        fun decodeMetadata(buffer: ByteArray?): Map<String, String> {
+        internal fun decodeMetadata(buffer: ByteString?): Map<String, String> = decodeMetadata(buffer?.toByteArray())
+
+        @JvmStatic
+        internal fun decodeMetadata(buffer: ByteArray?): Map<String, String> {
             if (buffer == null || buffer.isEmpty()) {
                 return emptyMap()
             }

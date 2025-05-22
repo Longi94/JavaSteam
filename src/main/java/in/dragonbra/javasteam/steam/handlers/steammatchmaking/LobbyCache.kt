@@ -6,15 +6,20 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Cache for managing Steam lobbies.
  */
+@Suppress("unused")
 class LobbyCache {
 
     private val lobbies: ConcurrentHashMap<Int, ConcurrentHashMap<SteamID, Lobby>> = ConcurrentHashMap()
+
+    fun getLobby(appId: Int, lobbySteamId: Long): Lobby? = getLobby(appId, SteamID(lobbySteamId))
 
     fun getLobby(appId: Int, lobbySteamId: SteamID): Lobby? = getAppLobbies(appId)[lobbySteamId]
 
     fun cacheLobby(appId: Int, lobby: Lobby) {
         getAppLobbies(appId)[lobby.steamID] = lobby
     }
+
+    fun addLobbyMember(appId: Int, lobby: Lobby, memberId: Long, personaName: String): Member? = addLobbyMember(appId, lobby, SteamID(memberId), personaName)
 
     fun addLobbyMember(appId: Int, lobby: Lobby, memberId: SteamID, personaName: String): Member? {
         val existingMember = lobby.members.firstOrNull { it.steamID == memberId }
@@ -35,6 +40,8 @@ class LobbyCache {
         return addedMember
     }
 
+    fun removeLobbyMember(appId: Int, lobby: Lobby, memberId: Long): Member? = removeLobbyMember(appId, lobby, SteamID(memberId))
+
     fun removeLobbyMember(appId: Int, lobby: Lobby, memberId: SteamID): Member? {
         val removedMember = lobby.members.firstOrNull { it.steamID == memberId }
 
@@ -54,12 +61,20 @@ class LobbyCache {
         return removedMember
     }
 
+    fun clearLobbyMembers(appId: Int, lobbySteamId: Long) {
+        clearLobbyMembers(appId, SteamID(lobbySteamId))
+    }
+
     fun clearLobbyMembers(appId: Int, lobbySteamId: SteamID) {
         val lobby = getLobby(appId = appId, lobbySteamId = lobbySteamId)
 
         if (lobby != null) {
             updateLobbyMembers(appId = appId, lobby = lobby, owner = null, members = null)
         }
+    }
+
+    fun updateLobbyOwner(appId: Int, lobbySteamId: Long, ownerSteamId: Long) {
+        updateLobbyOwner(appId = appId, lobbySteamId = SteamID(lobbySteamId), ownerSteamId = SteamID(ownerSteamId))
     }
 
     fun updateLobbyOwner(appId: Int, lobbySteamId: SteamID, ownerSteamId: SteamID) {
