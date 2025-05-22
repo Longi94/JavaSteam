@@ -33,9 +33,9 @@ abstract class Filter(
      */
     open fun serialize(): SteammessagesClientserverMms.CMsgClientMMSGetLobbyList.Filter.Builder =
         SteammessagesClientserverMms.CMsgClientMMSGetLobbyList.Filter.newBuilder().apply {
-            this.filterType = filterType
-            this.key = key
-            this.comparision = comparison.code()
+            this.filterType = this@Filter.filterType.code()
+            this.key = this@Filter.key
+            this.comparision = this@Filter.comparison.code()
         }
 }
 
@@ -80,7 +80,7 @@ class DistanceFilter(
  * @author Lossy
  * @since 2025-05-21
  */
-sealed class NearValueFilter(
+class NearValueFilter(
     key: String,
     val value: Int,
 ) : Filter(
@@ -111,10 +111,10 @@ sealed class NearValueFilter(
  * @author Lossy
  * @since 2025-05-21
  */
-sealed class NumericalFilter(
+class NumericalFilter(
     key: String,
-    comparison: ELobbyComparison,
     val value: Int,
+    comparison: ELobbyComparison,
 ) : Filter(
     filterType = ELobbyFilterType.Numerical,
     key = key,
@@ -141,7 +141,7 @@ sealed class NumericalFilter(
  * @author Lossy
  * @since 2025-05-21
  */
-sealed class SlotsAvailableFilter(
+class SlotsAvailableFilter(
     val slotsAvailable: Int,
 ) : Filter(
     filterType = ELobbyFilterType.SlotsAvailable,
@@ -171,10 +171,10 @@ sealed class SlotsAvailableFilter(
  * @author Lossy
  * @since 2025-05-21
  */
-sealed class StringFilter(
+class StringFilter(
     key: String,
-    comparison: ELobbyComparison,
     val value: String,
+    comparison: ELobbyComparison,
 ) : Filter(
     filterType = ELobbyFilterType.String,
     key = key,

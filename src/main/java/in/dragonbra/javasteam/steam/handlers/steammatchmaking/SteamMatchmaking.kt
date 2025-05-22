@@ -255,7 +255,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         }
 
         filters?.forEach { filter ->
-            getLobbies.body.addFilters(filter.serialize())
+            getLobbies.body.addFilters(filter.serialize().build())
         }
 
         send(msg = getLobbies, appId = appId)
