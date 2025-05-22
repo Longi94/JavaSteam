@@ -36,7 +36,26 @@ import java.util.concurrent.atomic.AtomicInteger
 class SteamAuthTicket : ClientMsgHandler() {
 
     companion object {
-        private val sequence = AtomicInteger(0)
+        private val sequence: AtomicInteger = AtomicInteger(0)
+
+        // According to https://partner.steamgames.com/doc/api/ISteamUser#GetTicketForWebApiResponse_t
+        //  the m_rgubTicket size is 2560 bytes
+        private const val WEB_API_TICKET_SIZE: Int = 2560
+    }
+
+    /**
+     * Represents the information about the generated authentication session ticket.
+     */
+    enum class TicketType(val value: Int) {
+        /**
+         * Default auth session ticket type.
+         */
+        AuthSession(2),
+
+        /**
+         * Web API auth session ticket type.
+         */
+        WebApiTicket(5),
     }
 
     private val dispatchMap = mapOf(
@@ -53,12 +72,36 @@ class SteamAuthTicket : ClientMsgHandler() {
     private val ticketChangeLock = Any()
 
     /**
-     * Performs [session ticket](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthSessionTicket) generation and validation for specified [appid].
+     * Performs [session ticket](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthSessionTicket)
+     *  generation and validation for specified [appid].
      * @param appid Game to generate ticket for.
-     * @return A task representing the asynchronous operation. The task result contains a [TicketInfo]
+     * @return A task representing the asynchronous operation. The task result contains a <see cref="TicketInfo"/>
      *  object that provides details about the generated valid authentication session ticket.
      */
     fun getAuthSessionTicket(appid: Int): CompletableFuture<TicketInfo> = client.defaultScope.future {
+        return@future getAuthSessionTicketInternal(appid, TicketType.AuthSession, "")
+    }
+
+    /**
+     * Performs [WebApi session ticket](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthTicketForWebApi)
+     *  generation and validation for specified [appid] and [identity].
+     * @param appid Game to generate ticket for.
+     * @param identity The identity of the remote service that will authenticate the ticket. The service should provide a string identifier.
+     * @return A task representing the asynchronous operation. The task result contains a [TicketInfo]
+     *  object that provides details about the generated valid authentication WebApi session ticket.
+     */
+    fun getAuthTicketForWebApi(
+        appid: Int,
+        identity: String,
+    ): CompletableFuture<TicketInfo> = client.defaultScope.future {
+        return@future getAuthSessionTicketInternal(appid, TicketType.WebApiTicket, identity)
+    }
+
+    internal suspend fun getAuthSessionTicketInternal(
+        appid: Int,
+        ticketType: TicketType,
+        identity: String?,
+    ): TicketInfo {
         requireNotNull(client.cellID) { "User not logged in." }
 
         val apps = client.getHandler<SteamApps>()
@@ -76,14 +119,26 @@ class SteamAuthTicket : ClientMsgHandler() {
 
         val token = gameConnectTokens.poll() ?: throw Exception("There's no available game connect tokens left.")
 
-        val authTicket = buildAuthTicket(token)
-        val (asyncJob, crc) = verifyTicket(appid, authTicket)
+        val authTicket = buildAuthTicket(token, ticketType)
+
+        // Steam add the 'str:' prefix to the identity string itself and appends a null terminator
+        val serverSecret = if (identity.isNullOrEmpty()) {
+            null
+        } else {
+            "str:$identity\u0000".toByteArray(Charsets.UTF_8)
+        }
+
+        val (asyncJob, crc) = verifyTicket(appid, authTicket, serverSecret)
         val ticket = asyncJob.await()
 
         // // Verify just in case
         if (ticket.activeTicketsCRC.any { it == crc.toInt() }) {
-            val tok = combineTickets(authTicket, appTicket.ticket)
-            return@future TicketInfo(this@SteamAuthTicket, appid, tok)
+            val tok = combineTickets(
+                authTicket = authTicket,
+                appTicket = appTicket.ticket,
+                padToWebApiSize = ticketType == TicketType.WebApiTicket
+            )
+            return TicketInfo(this@SteamAuthTicket, appid, tok)
         } else {
             throw Exception("Ticket verification failed.")
         }
@@ -96,13 +151,24 @@ class SteamAuthTicket : ClientMsgHandler() {
         sendTickets()
     }
 
-    private fun combineTickets(authTicket: ByteArray, appTicket: ByteArray): ByteArray {
+    private fun combineTickets(authTicket: ByteArray, appTicket: ByteArray, padToWebApiSize: Boolean): ByteArray {
         val len = appTicket.size
-        val token = ByteArray(authTicket.size + 4 + len)
+
+        val rawSize = authTicket.size + 4 + appTicket.size
+        val target = if (padToWebApiSize) maxOf(rawSize, WEB_API_TICKET_SIZE) else rawSize
+
+        val token = ByteArray(target)
 
         System.arraycopy(authTicket, 0, token, 0, authTicket.size)
         ByteBuffer.wrap(token, authTicket.size, 4).order(ByteOrder.LITTLE_ENDIAN).putInt(len)
         System.arraycopy(appTicket, 0, token, authTicket.size + 4, appTicket.size)
+
+        // The WebApiTicket is always 2560 bytes long, but everything after the tickets is just a trash after memory allocation
+        if (padToWebApiSize && rawSize < target) {
+            val random = SecureRandom()
+            random.nextBytes(token.sliceArray(rawSize until target))
+            System.arraycopy(token.sliceArray(rawSize until target), 0, token, rawSize, target - rawSize)
+        }
 
         return token
     }
@@ -110,10 +176,10 @@ class SteamAuthTicket : ClientMsgHandler() {
     /**
      * Handles generation of auth ticket.
      */
-    private fun buildAuthTicket(gameConnectToken: ByteArray): ByteArray {
+    private fun buildAuthTicket(gameConnectToken: ByteArray, ticketType: TicketType): ByteArray {
         val sessionSize =
             4 + // unknown, always 1
-                4 + // unknown, always 2
+                4 + // TicketType, 2 or 5
                 4 + // public IP v4, optional
                 4 + // private IP v4, optional
                 4 + // timestamp & uint.MaxValue
@@ -126,7 +192,7 @@ class SteamAuthTicket : ClientMsgHandler() {
 
                 writer.writeInt(sessionSize)
                 writer.writeInt(1)
-                writer.writeInt(2)
+                writer.writeInt(ticketType.value)
 
                 val randomBytes = ByteArray(8)
                 SecureRandom().nextBytes(randomBytes)
@@ -146,17 +212,22 @@ class SteamAuthTicket : ClientMsgHandler() {
     private fun verifyTicket(
         appid: Int,
         authToken: ByteArray,
+        serverSecret: ByteArray?,
     ): Pair<AsyncJobSingle<TicketAcceptedCallback>, Long> {
         val crc = Utils.crc32(authToken)
 
         synchronized(ticketChangeLock) {
             val items = ticketsByGame.computeIfAbsent(appid) { ArrayList() }
-            SteammessagesBase.CMsgAuthTicket.newBuilder()
-                .setGameid(appid.toLong())
-                .setTicket(ByteString.copyFrom(authToken))
-                .setTicketCrc(crc.toInt())
-                .build()
-                .also(items::add)
+            items.add(
+                SteammessagesBase.CMsgAuthTicket.newBuilder().apply {
+                    this.gameid = appid.toLong()
+                    this.ticket = ByteString.copyFrom(authToken)
+                    this.ticketCrc = crc.toInt()
+                    serverSecret?.let {
+                        this.serverSecret = ByteString.copyFrom(it)
+                    }
+                }.build()
+            )
         }
 
         return sendTickets() to crc
