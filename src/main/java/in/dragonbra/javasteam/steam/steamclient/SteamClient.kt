@@ -12,6 +12,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
 import `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator.SteamGameCoordinator
 import `in`.dragonbra.javasteam.steam.handlers.steamgameserver.SteamGameServer
 import `in`.dragonbra.javasteam.steam.handlers.steammasterserver.SteamMasterServer
+import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.SteamMatchmaking
 import `in`.dragonbra.javasteam.steam.handlers.steamnetworking.SteamNetworking
 import `in`.dragonbra.javasteam.steam.handlers.steamnotifications.SteamNotifications
 import `in`.dragonbra.javasteam.steam.handlers.steamscreenshots.SteamScreenshots
@@ -78,6 +79,7 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(SteamWorkshop())
         addHandlerCore(SteamUnifiedMessages())
         addHandlerCore(SteamScreenshots())
+        addHandlerCore(SteamMatchmaking())
         addHandlerCore(SteamNetworking())
         addHandlerCore(SteamNotifications())
         addHandlerCore(SteamUserStats())
@@ -266,12 +268,14 @@ class SteamClient @JvmOverloads constructor(
 
         jobManager.setTimeoutsEnabled(false)
 
-        // clearHandlerCaches()
+        clearHandlerCaches()
 
         postCallback(DisconnectedCallback(userInitiated))
     }
 
-    // fun clearHandlerCaches()
+    fun clearHandlerCaches() {
+        getHandler<SteamMatchmaking>()?.clearLobbyCache()
+    }
 
     private fun handleJobHeartbeat(packetMsg: IPacketMsg) {
         JobID(packetMsg.getTargetJobID()).let(jobManager::heartbeatJob)
@@ -284,6 +288,6 @@ class SteamClient @JvmOverloads constructor(
     companion object {
         private val logger: Logger = LogManager.getLogger(SteamClient::class.java)
 
-        private const val HANDLERS_COUNT = 14
+        private const val HANDLERS_COUNT = 15
     }
 }

@@ -35,7 +35,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     val type: EChatInfoType
 
     /**
-     * Gets the state change info for <see cref="EChatInfoType.StateChange"/> member info updates.
+     * Gets the state change info for [EChatInfoType.StateChange] member info updates.
      */
     var stateChangeInfo: StateChangeDetails? = null
 
