@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+
 class SteamClientTest {
 
     private SteamClient client;
@@ -27,6 +29,28 @@ class SteamClientTest {
     @BeforeEach
     public void setUp() {
         client = new SteamClient();
+    }
+
+    /**
+     * Check to make sure the allocated handlers size matches the initial handlers account.
+     */
+    @Test
+    public void handlersCountCheck() {
+        try {
+            // get the private 'handlers' variable
+            var handlersField = SteamClient.class.getDeclaredField("handlers");
+            handlersField.setAccessible(true);
+            var handlers = (HashMap<?, ?>) handlersField.get(client);
+
+            // get the private static 'HANDLERS_COUNT' variable
+            var handlersCountField = SteamClient.class.getDeclaredField("HANDLERS_COUNT");
+            handlersCountField.setAccessible(true);
+            var handlersCount = (Integer) handlersCountField.get(null);
+
+            Assertions.assertEquals(handlersCount, handlers.size(), "Handlers size should match HANDLERS_COUNT");
+        } catch (Exception e) {
+            Assertions.fail(e);
+        }
     }
 
     @Test
