@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.kotlin.dsl.invoke
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jmailen.gradle.kotlinter.tasks.FormatTask
 import org.jmailen.gradle.kotlinter.tasks.LintTask
 
@@ -30,6 +31,12 @@ java {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     withSourcesJar()
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.fromTarget(libs.versions.java.get()))
+    }
 }
 
 /* Protobufs */
