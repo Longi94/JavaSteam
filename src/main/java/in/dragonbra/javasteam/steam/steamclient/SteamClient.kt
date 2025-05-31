@@ -265,14 +265,14 @@ class SteamClient @JvmOverloads constructor(
     override fun onClientDisconnected(userInitiated: Boolean) {
         super.onClientDisconnected(userInitiated)
 
+        postCallback(DisconnectedCallback(userInitiated))
+
         // if we are disconnected, cancel all pending jobs
         jobManager.cancelPendingJobs()
 
         jobManager.setTimeoutsEnabled(false)
 
         clearHandlerCaches()
-
-        postCallback(DisconnectedCallback(userInitiated))
     }
 
     fun clearHandlerCaches() {
