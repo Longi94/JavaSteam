@@ -96,7 +96,8 @@ public abstract class CMClient {
     private final EventHandler<DisconnectedEventArgs> disconnected = new EventHandler<>() {
         @Override
         public void handleEvent(Object sender, DisconnectedEventArgs e) {
-            logger.debug("EventHandler `disconnected` called");
+            logger.debug("EventHandler `disconnected` called. User Initiated: " + e.isUserInitiated() +
+                    ", Expected Disconnection: " + expectDisconnection);
 
             isConnected = false;
 
