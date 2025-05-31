@@ -117,9 +117,9 @@ class WebSocketConnection :
 
                 job.cancelChildren()
             }
-        }
 
-        onDisconnected(userInitiated)
+            onDisconnected(userInitiated)
+        }
     }
 
     override fun send(data: ByteArray) {
