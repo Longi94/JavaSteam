@@ -42,7 +42,7 @@ fun InputStream.readNBytesCompat(len: Int): ByteArray {
     var n: Int
 
     do {
-        var buf = ByteArray(min(remaining, 8192))
+        val buf = ByteArray(min(remaining, 8192))
         var nread = 0
 
         // read to EOF which may read more or less than buffer size
@@ -82,7 +82,7 @@ fun InputStream.readNBytesCompat(len: Int): ByteArray {
     remaining = total
 
     bufs.forEach { b ->
-        var count = min(b.size, remaining)
+        val count = min(b.size, remaining)
         System.arraycopy(b, 0, result, offset, count)
         offset += count
         remaining -= count

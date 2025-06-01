@@ -1,158 +1,181 @@
-package in.dragonbra.javasteam.util.stream;
+package `in`.dragonbra.javasteam.util.stream
 
-import in.dragonbra.javasteam.util.compat.ByteArrayOutputStreamCompat;
-
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import `in`.dragonbra.javasteam.util.compat.ByteArrayOutputStreamCompat
+import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
+import java.io.ByteArrayOutputStream
+import java.io.EOFException
+import java.io.FilterInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 /**
  * Basically DataInputStream, but the bytes are parsed in reverse order
  */
-public class BinaryReader extends FilterInputStream {
+class BinaryReader(inputStream: InputStream) : FilterInputStream(inputStream) {
 
-    private final byte[] readBuffer = new byte[8];
+    private val readBuffer = ByteArray(16)
 
-    private int position = 0;
+    var position: Int = 0
+        private set
 
-    public BinaryReader(InputStream in) {
-        super(in);
-    }
+    @Throws(IOException::class)
+    fun readInt(): Int {
+        val bytesRead = `in`.read(readBuffer, 0, 4)
 
-    public int readInt() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        int ch3 = in.read();
-        int ch4 = in.read();
-        position += 4;
-        if ((ch1 | ch2 | ch3 | ch4) < 0) {
-            throw new EOFException();
+        if (bytesRead != 4) {
+            throw EOFException()
         }
-        return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + ch1);
+
+        position += 4
+
+        return ((readBuffer[3].toInt() and 0xFF) shl 24) or
+            ((readBuffer[2].toInt() and 0xFF) shl 16) or
+            ((readBuffer[1].toInt() and 0xFF) shl 8) or
+            (readBuffer[0].toInt() and 0xFF)
     }
 
-    public byte[] readBytes(int len) throws IOException {
+    @Throws(IOException::class)
+    fun readBytes(len: Int): ByteArray {
         if (len < 0) {
-            throw new IOException("negative length");
+            throw IOException("negative length")
         }
 
-        byte[] bytes = new byte[len];
+        val bytes = `in`.readNBytesCompat(len)
 
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = readByte();
+        if (bytes.size != len) {
+            throw EOFException("Unexpected end of stream")
         }
 
-        return bytes;
+        position += len
+
+        return bytes
     }
 
-    public byte readByte() throws IOException {
-        int ch = in.read();
+    @Throws(IOException::class)
+    fun readByte(): Byte {
+        val ch = `in`.read()
+
         if (ch < 0) {
-            throw new EOFException();
+            throw EOFException()
         }
-        position += 1;
-        return (byte) ch;
+
+        position += 1
+
+        return ch.toByte()
     }
 
-    public short readShort() throws IOException {
-        int ch1 = in.read();
-        int ch2 = in.read();
-        if ((ch1 | ch2) < 0) {
-            throw new EOFException();
+    @Throws(IOException::class)
+    fun readShort(): Short {
+        val bytesRead = `in`.read(readBuffer, 0, 2)
+        if (bytesRead != 2) {
+            throw EOFException()
         }
-        position += 2;
-        return (short) ((ch2 << 8) + ch1);
+
+        position += 2
+
+        return (((readBuffer[1].toInt() and 0xFF) shl 8) or (readBuffer[0].toInt() and 0xFF)).toShort()
     }
 
-    public long readLong() throws IOException {
-        in.read(readBuffer, 0, 8);
-        position += 8;
-        return (((long) readBuffer[7] << 56) +
-                ((long) (readBuffer[6] & 255) << 48) +
-                ((long) (readBuffer[5] & 255) << 40) +
-                ((long) (readBuffer[4] & 255) << 32) +
-                ((long) (readBuffer[3] & 255) << 24) +
-                ((readBuffer[2] & 255) << 16) +
-                ((readBuffer[1] & 255) << 8) +
-                (readBuffer[0] & 255));
+    @Throws(IOException::class)
+    fun readLong(): Long {
+        val bytesRead = `in`.read(readBuffer, 0, 8)
+
+        if (bytesRead != 8) {
+            throw EOFException()
+        }
+
+        position += 8
+
+        return (
+            (readBuffer[7].toLong() shl 56) +
+                ((readBuffer[6].toInt() and 255).toLong() shl 48) +
+                ((readBuffer[5].toInt() and 255).toLong() shl 40) +
+                ((readBuffer[4].toInt() and 255).toLong() shl 32) +
+                ((readBuffer[3].toInt() and 255).toLong() shl 24) +
+                ((readBuffer[2].toInt() and 255) shl 16) +
+                ((readBuffer[1].toInt() and 255) shl 8) +
+                (readBuffer[0].toInt() and 255)
+            )
     }
 
-    public char readChar() throws IOException {
-        int ch1 = in.read();
+    @Throws(IOException::class)
+    fun readChar(): Char {
+        val ch1 = `in`.read()
+
         if (ch1 < 0) {
-            throw new EOFException();
+            throw EOFException()
         }
-        position += 1;
-        return (char) ch1;
+
+        position += 1
+
+        return ch1.toChar()
     }
 
-    public float readFloat() throws IOException {
-        return Float.intBitsToFloat(readInt());
-    }
+    @Throws(IOException::class)
+    fun readFloat(): Float = Float.fromBits(readInt())
 
-    public double readDouble() throws IOException {
-        return Double.longBitsToDouble(readLong());
-    }
+    @Throws(IOException::class)
+    fun readDouble(): Double = Double.fromBits(readLong())
 
-    public boolean readBoolean() throws IOException {
-        int ch = in.read();
+    @Throws(IOException::class)
+    fun readBoolean(): Boolean {
+        val ch = `in`.read()
+
         if (ch < 0) {
-            throw new EOFException();
+            throw EOFException()
         }
-        position += 1;
-        return ch != 0;
+
+        position += 1
+
+        return ch != 0
     }
 
-    public String readNullTermString() throws IOException {
-        return readNullTermString(StandardCharsets.UTF_8);
-    }
-
-    public String readNullTermString(Charset charset) throws IOException {
-        if (charset == null) {
-            throw new IOException("charset is null");
+    @JvmOverloads
+    @Throws(IOException::class)
+    fun readNullTermString(charset: Charset = StandardCharsets.UTF_8): String {
+        if (charset == StandardCharsets.UTF_8) {
+            return readNullTermUtf8String()
         }
 
-        if (charset.equals(StandardCharsets.UTF_8)) {
-            return readNullTermUtf8String();
-        }
-
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(0);
-        BinaryWriter bw = new BinaryWriter(buffer);
+        val buffer = ByteArrayOutputStream(0)
+        val bw = BinaryWriter(buffer)
 
         while (true) {
-            char ch = readChar();
+            val ch = readChar()
 
-            if (ch == 0) {
-                break;
+            if (ch.code == 0) {
+                break
             }
 
-            bw.writeChar(ch);
+            bw.writeChar(ch)
         }
 
-        byte[] bytes = buffer.toByteArray();
-        position += bytes.length;
+        val bytes = buffer.toByteArray()
 
-        return new String(bytes, charset);
+        position += bytes.size
+
+        return String(bytes, charset)
     }
 
-    private String readNullTermUtf8String() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int b;
+    @Throws(IOException::class)
+    private fun readNullTermUtf8String(): String {
+        val baos = ByteArrayOutputStream()
+        var b: Int
 
-        while ((b = in.read()) != 0) {
+        while ((`in`.read().also { b = it }) != 0) {
             if (b <= 0) {
-                break;
+                break
             }
-            baos.write(b);
-            position++;
+
+            baos.write(b)
+
+            position++
         }
 
-        position++; // Increment for the null terminator
+        position++ // Increment for the null terminator
 
-        return ByteArrayOutputStreamCompat.toString(baos);
-    }
-
-    public int getPosition() {
-        return position;
+        return ByteArrayOutputStreamCompat.toString(baos)
     }
 }

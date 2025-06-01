@@ -1,61 +1,64 @@
-package in.dragonbra.javasteam.util.stream;
+package `in`.dragonbra.javasteam.util.stream
 
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
+import java.io.FilterOutputStream
+import java.io.IOException
+import java.io.OutputStream
 /**
  * Basically DataOutputStream, but the bytes are parsed in reverse order
  */
-public class BinaryWriter extends FilterOutputStream {
+class BinaryWriter(out: OutputStream) : FilterOutputStream(out) {
 
-    private final byte[] writeBuffer = new byte[8];
+    private val writeBuffer = ByteArray(8)
 
-    public BinaryWriter(OutputStream out) {
-        super(out);
+    @Throws(IOException::class)
+    fun writeInt(v: Int) {
+        out.write(v and 0xFF)
+        out.write((v ushr 8) and 0xFF)
+        out.write((v ushr 16) and 0xFF)
+        out.write((v ushr 24) and 0xFF)
     }
 
-    public void writeInt(int v) throws IOException {
-        out.write(v & 0xFF);
-        out.write((v >>> 8) & 0xFF);
-        out.write((v >>> 16) & 0xFF);
-        out.write((v >>> 24) & 0xFF);
+    @Throws(IOException::class)
+    fun writeShort(v: Short) {
+        out.write(v.toInt() and 0xFF)
+        out.write((v.toInt() ushr 8) and 0xFF)
     }
 
-    public void writeShort(short v) throws IOException {
-        out.write(v & 0xFF);
-        out.write((v >>> 8) & 0xFF);
+    @Throws(IOException::class)
+    fun writeLong(v: Long) {
+        writeBuffer[7] = (v ushr 56).toByte()
+        writeBuffer[6] = (v ushr 48).toByte()
+        writeBuffer[5] = (v ushr 40).toByte()
+        writeBuffer[4] = (v ushr 32).toByte()
+        writeBuffer[3] = (v ushr 24).toByte()
+        writeBuffer[2] = (v ushr 16).toByte()
+        writeBuffer[1] = (v ushr 8).toByte()
+        writeBuffer[0] = v.toByte()
+        out.write(writeBuffer, 0, 8)
     }
 
-    public void writeLong(long v) throws IOException {
-        writeBuffer[7] = (byte) (v >>> 56);
-        writeBuffer[6] = (byte) (v >>> 48);
-        writeBuffer[5] = (byte) (v >>> 40);
-        writeBuffer[4] = (byte) (v >>> 32);
-        writeBuffer[3] = (byte) (v >>> 24);
-        writeBuffer[2] = (byte) (v >>> 16);
-        writeBuffer[1] = (byte) (v >>> 8);
-        writeBuffer[0] = (byte) v;
-        out.write(writeBuffer, 0, 8);
+    @Throws(IOException::class)
+    fun writeFloat(v: Float) {
+        writeInt(v.toBits())
     }
 
-    public void writeFloat(float v) throws IOException {
-        writeInt(Float.floatToIntBits(v));
+    @Throws(IOException::class)
+    fun writeDouble(v: Double) {
+        writeLong(v.toBits())
     }
 
-    public void writeDouble(double v) throws IOException {
-        writeLong(Double.doubleToLongBits(v));
+    @Throws(IOException::class)
+    fun writeBoolean(v: Boolean) {
+        out.write(if (v) 1 else 0)
     }
 
-    public void writeBoolean(boolean v) throws IOException {
-        out.write(v ? 1 : 0);
+    @Throws(IOException::class)
+    fun writeByte(v: Byte) {
+        out.write(v.toInt())
     }
 
-    public void writeByte(byte v) throws IOException {
-        out.write(v);
-    }
-
-    public void writeChar(char v) throws IOException {
-        out.write(v);
+    @Throws(IOException::class)
+    fun writeChar(v: Char) {
+        out.write(v.code)
     }
 }
