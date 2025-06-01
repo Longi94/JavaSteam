@@ -162,15 +162,15 @@ class BinaryReader(inputStream: InputStream) : FilterInputStream(inputStream) {
     @Throws(IOException::class)
     private fun readNullTermUtf8String(): String {
         val baos = ByteArrayOutputStream()
-        var b: Int
 
-        while ((`in`.read().also { b = it }) != 0) {
+        while (true) {
+            val b = `in`.read()
+
             if (b <= 0) {
                 break
             }
 
             baos.write(b)
-
             position++
         }
 

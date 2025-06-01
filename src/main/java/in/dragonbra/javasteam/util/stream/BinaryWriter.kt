@@ -13,26 +13,26 @@ class BinaryWriter(out: OutputStream) : FilterOutputStream(out) {
     @Throws(IOException::class)
     fun writeInt(v: Int) {
         out.write(v and 0xFF)
-        out.write((v ushr 8) and 0xFF)
-        out.write((v ushr 16) and 0xFF)
-        out.write((v ushr 24) and 0xFF)
+        out.write((v shr 8) and 0xFF)
+        out.write((v shr 16) and 0xFF)
+        out.write((v shr 24) and 0xFF)
     }
 
     @Throws(IOException::class)
     fun writeShort(v: Short) {
         out.write(v.toInt() and 0xFF)
-        out.write((v.toInt() ushr 8) and 0xFF)
+        out.write((v.toInt() shr 8) and 0xFF)
     }
 
     @Throws(IOException::class)
     fun writeLong(v: Long) {
-        writeBuffer[7] = (v ushr 56).toByte()
-        writeBuffer[6] = (v ushr 48).toByte()
-        writeBuffer[5] = (v ushr 40).toByte()
-        writeBuffer[4] = (v ushr 32).toByte()
-        writeBuffer[3] = (v ushr 24).toByte()
-        writeBuffer[2] = (v ushr 16).toByte()
-        writeBuffer[1] = (v ushr 8).toByte()
+        writeBuffer[7] = (v shr 56).toByte()
+        writeBuffer[6] = (v shr 48).toByte()
+        writeBuffer[5] = (v shr 40).toByte()
+        writeBuffer[4] = (v shr 32).toByte()
+        writeBuffer[3] = (v shr 24).toByte()
+        writeBuffer[2] = (v shr 16).toByte()
+        writeBuffer[1] = (v shr 8).toByte()
         writeBuffer[0] = v.toByte()
         out.write(writeBuffer, 0, 8)
     }
