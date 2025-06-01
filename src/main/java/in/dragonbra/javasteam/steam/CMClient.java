@@ -25,6 +25,7 @@ import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import in.dragonbra.javasteam.util.stream.MemoryStream;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
@@ -376,11 +377,11 @@ public abstract class CMClient {
 
         var msgMulti = new ClientMsgProtobuf<CMsgMulti.Builder>(CMsgMulti.class, packetMsg);
 
-        try (var payloadStream = msgMulti.getBody().getMessageBody().newInput()) {
+        try (var payloadStream = new MemoryStream(msgMulti.getBody().getMessageBody())) {
             InputStream stream = payloadStream;
 
             if (msgMulti.getBody().getSizeUnzipped() > 0) {
-                stream = new GZIPInputStream(payloadStream);
+                stream = new GZIPInputStream(payloadStream, 8192);
             }
 
             try (var br = new BinaryReader(stream)) {
