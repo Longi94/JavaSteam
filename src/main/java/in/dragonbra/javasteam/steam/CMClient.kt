@@ -306,7 +306,7 @@ constructor(
      */
     fun send(msg: IClientMsg) {
         if (!isConnected) {
-            logger.error("Send() was called while not connected to Steam.")
+            logger.error("Send(${msg.msgType}) was called while not connected to Steam.")
         }
 
         sessionID?.let { msg.setSessionID(it) }
