@@ -9,7 +9,7 @@ import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
  */
 public class DummyClient extends CMClient {
     public DummyClient() {
-        super(SteamConfiguration.createDefault());
+        super(SteamConfiguration.createDefault(), "DummyClient");
     }
 
     public void dummyDisconnect() {
