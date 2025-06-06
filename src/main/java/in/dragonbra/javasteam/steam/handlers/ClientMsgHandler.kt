@@ -26,9 +26,9 @@ abstract class ClientMsgHandler {
      * [DisconnectedCallback.isUserInitiated] property will be set to **true**.
      */
     protected var isExpectDisconnection: Boolean
-        get() = client.isExpectDisconnection
+        get() = client.expectDisconnection
         set(expectDisconnection) {
-            client.isExpectDisconnection = expectDisconnection
+            client.expectDisconnection = expectDisconnection
         }
 
     /**

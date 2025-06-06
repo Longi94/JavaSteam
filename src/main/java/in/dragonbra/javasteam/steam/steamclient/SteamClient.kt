@@ -44,12 +44,15 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * @constructor Initializes a new instance of the [SteamClient] class with a specific configuration.
  * @param configuration The configuration to use for this client.
+ * @param identifier A specific identifier to be used to uniquely identify this instance.
+ * @param defaultScope todo
  */
 @Suppress("unused")
 class SteamClient @JvmOverloads constructor(
-    configuration: SteamConfiguration? = SteamConfiguration.createDefault(),
+    configuration: SteamConfiguration = SteamConfiguration.createDefault(),
+    identifier: String = UUID.randomUUID().toString().replace("-", ""),
     internal val defaultScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-) : CMClient(configuration) {
+) : CMClient(configuration, identifier) {
 
     private val handlers = HashMap<Class<out ClientMsgHandler>, ClientMsgHandler>(HANDLERS_COUNT)
 
@@ -221,11 +224,13 @@ class SteamClient @JvmOverloads constructor(
      * Called when a client message is received from the network.
      * @param packetMsg The packet message.
      */
-    override fun onClientMsgReceived(packetMsg: IPacketMsg): Boolean {
+    override fun onClientMsgReceived(packetMsg: IPacketMsg?): Boolean {
         // let the underlying CMClient handle this message first
         if (!super.onClientMsgReceived(packetMsg)) {
             return false
         }
+
+        requireNotNull(packetMsg)
 
         // we want to handle some of the clientMsg's before we pass them along to registered handlers
         when (packetMsg.getMsgType()) {
