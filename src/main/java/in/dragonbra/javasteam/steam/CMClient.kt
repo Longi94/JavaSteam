@@ -77,7 +77,7 @@ constructor(
             if (data.size < 4) {
                 logger.debug(
                     "PacketMsg too small to contain a message, was only ${data.size} bytes. " +
-                        "Message: " + Strings.toHex(data)
+                        "Message: ${Strings.toHex(data)}"
                 )
                 return null
             }
@@ -95,7 +95,7 @@ constructor(
                 -> try {
                     return PacketMsg(eMsg, data)
                 } catch (e: IOException) {
-                    logger.debug("Exception deserializing emsg " + eMsg + " (" + MsgUtil.isProtoBuf(rawEMsg) + ").", e)
+                    logger.debug("Exception deserializing emsg $eMsg (${MsgUtil.isProtoBuf(rawEMsg)}).", e)
                 }
 
                 else -> Unit
@@ -439,7 +439,7 @@ constructor(
             e: DisconnectedEventArgs,
         ) {
             logger.debug(
-                "EventHandler `disconnected` called. User Initiated: ${e.isUserInitiated}," +
+                "EventHandler `disconnected` called. User Initiated: ${e.isUserInitiated}, " +
                     "Expected Disconnection: $expectDisconnection"
             )
             isConnected = false
@@ -575,7 +575,7 @@ constructor(
                 )
             }
         } else {
-            logger.debug("handleLoggedOff got unexpected response: " + packetMsg.getMsgType())
+            logger.debug("handleLoggedOff got unexpected response: ${packetMsg.getMsgType()}")
         }
     }
 
@@ -583,8 +583,8 @@ constructor(
         val msgServerUnavailable = ClientMsg(MsgClientServerUnavailable::class.java, packetMsg)
 
         logger.debug(
-            "A server of type " + msgServerUnavailable.body.eServerTypeUnavailable +
-                "was not available for request: " + EMsg.from(msgServerUnavailable.body.eMsgSent)
+            "A server of type ${msgServerUnavailable.body.eServerTypeUnavailable} " +
+                "was not available for request: ${EMsg.from(msgServerUnavailable.body.eMsgSent)}"
         )
 
         disconnect(userInitiated = false)
