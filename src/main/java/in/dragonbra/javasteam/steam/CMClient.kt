@@ -27,6 +27,8 @@ import `in`.dragonbra.javasteam.steam.discovery.ServerQuality
 import `in`.dragonbra.javasteam.steam.discovery.ServerRecord
 import `in`.dragonbra.javasteam.steam.discovery.SmartCMServerList
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
+import `in`.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback
+import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.IDebugNetworkListener
@@ -238,8 +240,8 @@ constructor(
 
     /**
      * Connects this client to a Steam3 server. This begins the process of connecting and encrypting the data channel
-     * between the client and the server. Results are returned asynchronously in a [ConnectedCallback][in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback]. If the
-     * server that SteamKit attempts to connect to is down, a [DisconnectedCallback][in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback] will be posted instead.
+     * between the client and the server. Results are returned asynchronously in a [ConnectedCallback]. If the
+     * server that SteamKit attempts to connect to is down, a [DisconnectedCallback] will be posted instead.
      * SteamKit will not attempt to reconnect to Steam, you must handle this callback and call Connect again preferably
      * after a short delay.
      *
@@ -271,12 +273,8 @@ constructor(
                 connection!!.getConnected().addEventHandler(connected)
                 connection!!.getDisconnected().addEventHandler(disconnected)
                 logger.debug(
-                    String.format(
-                        "Connecting to %s with protocol %s, and with connection impl %s",
-                        cmServer.endpoint,
-                        cmServer.protocolTypes,
-                        connection!!.javaClass.getSimpleName()
-                    )
+                    "Connecting to ${cmServer.endpoint} with protocol ${cmServer.protocolTypes}, " +
+                        "and with connection impl ${connection!!.javaClass.getSimpleName()}",
                 )
                 connection!!.connect(cmServer.endpoint)
             } catch (e: Exception) {
@@ -293,9 +291,7 @@ constructor(
     fun disconnect(userInitiated: Boolean = true) {
         synchronized(connectionLock) {
             heartBeatFunc.stop()
-            if (connection != null) {
-                connection!!.disconnect(userInitiated)
-            }
+            connection?.disconnect(userInitiated)
         }
     }
 
@@ -382,7 +378,7 @@ constructor(
         val connectionFactory: IConnectionFactory = configuration.connectionFactory
         val connection = connectionFactory.createConnection(configuration, protocol)
         if (connection == null) {
-            logger.error(String.format("Connection factory returned null connection for protocols %s", protocol))
+            logger.error("Connection factory returned null connection for protocols $protocol")
             throw IllegalArgumentException("Connection factory returned null connection.")
         }
         return connection
@@ -418,8 +414,8 @@ constructor(
         }
 
         servers.tryMark(
-            endPoint = connection!!.getCurrentEndPoint(),
-            protocolTypes = connection!!.getProtocolTypes(),
+            endPoint = connection?.getCurrentEndPoint(),
+            protocolTypes = connection?.getProtocolTypes(),
             quality = ServerQuality.GOOD
         )
 
