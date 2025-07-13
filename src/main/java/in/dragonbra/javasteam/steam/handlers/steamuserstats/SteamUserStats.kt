@@ -9,12 +9,15 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgDPGetNumberOfCurrentPlayers
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSFindOrCreateLB
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLbs.CMsgClientLBSGetLBEntries
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUserstats.CMsgClientGetUserStats
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.FindOrCreateLeaderboardCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.LeaderboardEntriesCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.NumberOfPlayersCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.UserStatsCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
+import `in`.dragonbra.javasteam.types.SteamID
 
 /**
  * This handler handles Steam user statistic related actions.
@@ -147,6 +150,25 @@ class SteamUserStats : ClientMsgHandler() {
         return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
+    // JavaSteam addition.
+    /**
+     * TODO
+     */
+    @JvmOverloads
+    fun getUserStats(appId: Int, steamID: SteamID = client.steamID!!) {
+        val msg = ClientMsgProtobuf<CMsgClientGetUserStats.Builder>(
+            CMsgClientGetUserStats::class.java,
+            EMsg.ClientGetUserStats
+        ).apply {
+            sourceJobID = client.getNextJobID()
+
+            body.gameId = appId.toLong()
+            body.steamIdForUser = steamID.convertToUInt64()
+        }
+
+        client.send(msg)
+    }
+
     /**
      * Handles a client message. This should not be called directly.
      * @param packetMsg The packet message that contains the data.
@@ -163,6 +185,7 @@ class SteamUserStats : ClientMsgHandler() {
             EMsg.ClientGetNumberOfCurrentPlayersDPResponse -> NumberOfPlayersCallback(packetMsg)
             EMsg.ClientLBSFindOrCreateLBResponse -> FindOrCreateLeaderboardCallback(packetMsg)
             EMsg.ClientLBSGetLBEntriesResponse -> LeaderboardEntriesCallback(packetMsg)
+            EMsg.ClientGetUserStatsResponse -> UserStatsCallback(packetMsg)
             else -> null
         }
     }
