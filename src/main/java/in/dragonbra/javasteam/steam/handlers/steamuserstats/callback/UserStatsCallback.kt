@@ -19,37 +19,37 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
 class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
 
     /**
-     * TODO
+     * Gets the result.
      */
     val result: EResult
 
     /**
-     * TODO
+     * The game id of the stats.
      */
     val gameId: Long
 
     /**
-     * TODO
+     * The crc of the stats.
      */
     val crcStats: Int
 
     /**
-     * TODO
+     * The raw schema in [ByteString].
      */
     val schema: ByteString
 
     /**
-     * TODO
+     * A [List] of [Stats].
      */
     val stats: List<Stats>
 
     /**
-     * TODO
+     * A [List] of [AchievementBlocks].
      */
     val achievementBlocks: List<AchievementBlocks>
 
     /**
-     * TODO
+     * The schema converted to [KeyValue].
      */
     val schemaKeyValues: KeyValue = KeyValue()
 

@@ -152,10 +152,12 @@ class SteamUserStats : ClientMsgHandler() {
 
     // JavaSteam addition.
     /**
-     * TODO
+     * Gets the Stats-Schema for the specified app. This schema includes Global Achievements and Stats,
+     * @param appId The appID of the game.
+     * @param steamID The [SteamID] that owns the game. Note the SteamID user has to have a public profile.
+     * @return The Job ID of the request. This can be used to find the appropriate [UserStatsCallback].
      */
-    @JvmOverloads
-    fun getUserStats(appId: Int, steamID: SteamID = client.steamID!!) {
+    fun getUserStats(appId: Int, steamID: SteamID): AsyncJobSingle<UserStatsCallback> {
         val msg = ClientMsgProtobuf<CMsgClientGetUserStats.Builder>(
             CMsgClientGetUserStats::class.java,
             EMsg.ClientGetUserStats
@@ -167,6 +169,8 @@ class SteamUserStats : ClientMsgHandler() {
         }
 
         client.send(msg)
+
+        return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
     /**
