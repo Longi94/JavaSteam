@@ -18,6 +18,7 @@ commons-validator = "1.9.0" # https://mvnrepository.com/artifact/commons-validat
 gson = "2.13.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
 jacoco = "0.8.13" # https://www.eclemma.org/jacoco
 kotlin-coroutines = "1.10.2" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+ktor = "3.2.1" # https://mvnrepository.com/artifact/io.ktor/ktor-client-cio
 okHttp = "5.0.0-alpha.14" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 protobuf = "4.30.2" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.5" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
@@ -40,9 +41,9 @@ commons-validator = { module = "commons-validator:commons-validator", version.re
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version = "3.0.3" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version = "3.0.3" }
-ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version = "3.0.3" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
