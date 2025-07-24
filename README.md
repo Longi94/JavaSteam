@@ -87,7 +87,7 @@ a look at
 the [samples](https://github.com/Longi94/JavaSteam/tree/master/javasteam-samples/src/main/java/in/dragonbra/javasteamsamples)
 to get you started with using this library.
 
-There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples) too you can check out.
+There some [open-source projects](https://github.com/Longi94/JavaSteam/wiki/Samples-and-Projects) too you can check out.
 
 The [wiki](https://github.com/Longi94/JavaSteam/wiki) may also be useful to check out for other info.
 
