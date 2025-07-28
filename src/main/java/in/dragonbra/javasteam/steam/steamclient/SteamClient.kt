@@ -96,6 +96,7 @@ class SteamClient @JvmOverloads constructor(
     }
 
     //region Handlers
+
     /**
      * Adds a new handler to the internal list of message handlers.
      * @param handler The handler to add.
@@ -150,6 +151,7 @@ class SteamClient @JvmOverloads constructor(
     //endregion
 
     //region Callbacks
+
     /**
      * Gets the next callback object in the queue, and removes it.
      * @return The next callback in the queue, or null if no callback is waiting.
@@ -196,6 +198,7 @@ class SteamClient @JvmOverloads constructor(
 //endregion
 
 //region Jobs
+
     /**
      * Returns the next available JobID for job based messages.
      * @return The next available JobID.

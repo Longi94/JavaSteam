@@ -41,7 +41,7 @@ public class WebAPITest extends TestBase {
         lock = new CountDownLatch(1);
         server = new MockWebServer();
 
-        MockResponse resp = new MockResponse().newBuilder().body("" +
+        MockResponse resp = new MockResponse.Builder().body("" +
                         "\"root\"" +
                         "{" +
                         "    \"name\" \"stringvalue\"" +
@@ -58,8 +58,8 @@ public class WebAPITest extends TestBase {
     }
 
     @AfterEach
-    public void tearDown() throws IOException {
-        server.shutdown();
+    public void tearDown() {
+        server.close();
     }
 
     @Test
@@ -96,7 +96,9 @@ public class WebAPITest extends TestBase {
         assertEquals("stringvalue", result.get("name").getValue());
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v1?format=vdf", request.getPath());
+        // "/TestInterface/TestFunction/v1?format=vdf"
+        assertEquals("/TestInterface/TestFunction/v1", request.getUrl().encodedPath());
+        assertEquals("format=vdf", request.getUrl().encodedQuery());
         assertEquals("GET", request.getMethod());
     }
 
@@ -111,7 +113,9 @@ public class WebAPITest extends TestBase {
         }, null);
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v1?format=vdf", request.getPath());
+        // "/TestInterface/TestFunction/v1?format=vdf"
+        assertEquals("/TestInterface/TestFunction/v1", request.getUrl().encodedPath());
+        assertEquals("format=vdf", request.getUrl().encodedQuery());
         assertEquals("GET", request.getMethod());
 
         //noinspection ResultOfMethodCallIgnored
@@ -128,9 +132,9 @@ public class WebAPITest extends TestBase {
         assertEquals("stringvalue", result.get("name").getValue());
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v1", request.getPath());
+        assertEquals("/TestInterface/TestFunction/v1", request.getUrl().encodedPath());
         assertEquals("POST", request.getMethod());
-        assertEquals("format=vdf", request.getBody().readString(StandardCharsets.UTF_8));
+        assertEquals("format=vdf", request.getBody().utf8());
     }
 
     @Test
@@ -143,7 +147,9 @@ public class WebAPITest extends TestBase {
         assertEquals("stringvalue", result.get("name").getValue());
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v69?format=vdf", request.getPath());
+        // "/TestInterface/TestFunction/v69?format=vdf"
+        assertEquals("/TestInterface/TestFunction/v69", request.getUrl().encodedPath());
+        assertEquals("format=vdf", request.getUrl().encodedQuery());
         assertEquals("GET", request.getMethod());
     }
 
@@ -161,7 +167,9 @@ public class WebAPITest extends TestBase {
         assertEquals("stringvalue", result.get("name").getValue());
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v1?key1=value1&key2=value2&format=vdf", request.getPath());
+        // "/TestInterface/TestFunction/v1?key1=value1&key2=value2&format=vdf"
+        assertEquals("/TestInterface/TestFunction/v1", request.getUrl().encodedPath());
+        assertEquals("key1=value1&key2=value2&format=vdf", request.getUrl().encodedQuery());
         assertEquals("GET", request.getMethod());
     }
 
@@ -179,9 +187,9 @@ public class WebAPITest extends TestBase {
         assertEquals("stringvalue", result.get("name").getValue());
 
         RecordedRequest request = server.takeRequest();
-        assertEquals("/TestInterface/TestFunction/v1", request.getPath());
+        assertEquals("/TestInterface/TestFunction/v1", request.getUrl().encodedPath());
         assertEquals("POST", request.getMethod());
-        assertEquals("key1=value1&key2=value2&format=vdf", request.getBody().readString(StandardCharsets.UTF_8));
+        assertEquals("key1=value1&key2=value2&format=vdf", request.getBody().utf8());
     }
 
     @Test

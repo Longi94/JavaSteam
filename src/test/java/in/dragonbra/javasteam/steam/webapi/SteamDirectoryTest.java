@@ -35,7 +35,7 @@ public class SteamDirectoryTest extends TestBase {
 
             String resource = IOUtils.toString(vdf, StandardCharsets.UTF_8);
 
-            MockResponse resp = new MockResponse().newBuilder().body(resource).build();
+            MockResponse resp = new MockResponse.Builder().body(resource).build();
             server.enqueue(resp);
 
             server.start();
@@ -49,10 +49,11 @@ public class SteamDirectoryTest extends TestBase {
             assertEquals(80, servers.size());
 
             RecordedRequest request = server.takeRequest();
-            assertEquals("/ISteamDirectory/GetCMListForConnect/v1?format=vdf&cellid=0", request.getPath());
-            assertEquals("GET", request.getMethod());
 
-            server.shutdown();
+            // "/ISteamDirectory/GetCMListForConnect/v1?format=vdf&cellid=0"
+            assertEquals("/ISteamDirectory/GetCMListForConnect/v1", request.getUrl().encodedPath());
+            assertEquals("format=vdf&cellid=0", request.getUrl().encodedQuery());
+            assertEquals("GET", request.getMethod());
         } catch (Exception e) {
             fail(e);
         }
