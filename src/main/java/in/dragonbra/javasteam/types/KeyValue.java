@@ -6,14 +6,12 @@ import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -442,10 +440,10 @@ public class KeyValue {
             return null;
         }
 
-        // TODO charsets?
         try (var fis = new FileInputStream(file)) {
             // Massage the incoming file to be encoded as UTF-8.
-            String fisString = IOUtils.toString(fis, Charset.defaultCharset());
+            String fisString = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
+
             byte[] fisStringToBytes = fisString.getBytes(StandardCharsets.UTF_8);
 
             try (var ms = new MemoryStream(fisStringToBytes, 0, fisStringToBytes.length - 1)) {

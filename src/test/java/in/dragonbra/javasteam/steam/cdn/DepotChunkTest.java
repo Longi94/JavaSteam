@@ -1,5 +1,6 @@
 package in.dragonbra.javasteam.steam.cdn;
 
+import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.types.ChunkData;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import org.apache.commons.io.IOUtils;
@@ -11,7 +12,7 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class DepotChunkTest {
+public class DepotChunkTest extends TestBase {
 
     @Test
     public void decryptsAndDecompressesDepotChunkPKZip() throws IOException, NoSuchAlgorithmException {

@@ -133,15 +133,12 @@ tasks.withType<FormatTask> {
 
 dependencies {
     implementation(libs.bundles.ktor)
-    implementation(libs.commons.io)
     implementation(libs.commons.lang3)
-    implementation(libs.commons.validator)
-    implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.stdib)
     implementation(libs.okHttp)
     implementation(libs.protobuf.java)
-    implementation(libs.xz)
+    compileOnly(libs.xz)
     compileOnly(libs.zstd)
 
     testImplementation(platform(libs.tests.junit.bom))

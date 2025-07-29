@@ -4,41 +4,37 @@
 # ****
 
 [versions]
-# Java / Kotlin versions
 java = "11"
 kotlin = "2.2.0" # https://kotlinlang.org/docs/releases.html#release-details
 dokka = "2.0.0" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 kotlinter = "5.1.1" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
+jacoco = "0.8.13" # https://www.eclemma.org/jacoco
 
 # Standard Library versions
-bouncyCastle = "1.81" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
-commons-io = "2.20.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = "3.18.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-validator = "1.10.0" # https://mvnrepository.com/artifact/commons-validator/commons-validator
-gson = "2.13.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
-jacoco = "0.8.13" # https://www.eclemma.org/jacoco
 kotlin-coroutines = "1.10.2" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
 ktor = "3.2.2" # https://mvnrepository.com/artifact/io.ktor/ktor-client-cio
 okHttp = "5.1.0" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 protobuf = "4.31.1" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.9.5" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
 publishPlugin = "2.0.0" # https://mvnrepository.com/artifact/io.github.gradle-nexus/publish-plugin
-qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
 xz = "1.10" # https://mvnrepository.com/artifact/org.tukaani/xz
 zstd = "1.5.7-4" # https://search.maven.org/artifact/com.github.luben/zstd-jni
 
 # Testing Lib versions
+commons-io = "2.20.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commonsCodec = "1.19.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
 junit5 = "5.13.4" # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockWebServer = "5.1.0" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
 mockitoVersion = "5.18.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
 
+# Samples
+bouncyCastle = "1.81" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
+gson = "2.13.1" # https://mvnrepository.com/artifact/com.google.code.gson/gson
+qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-qrcode
+
 [libraries]
-bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
-commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
-commons-validator = { module = "commons-validator:commons-validator", version.ref = "commons-validator" }
-gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
@@ -47,17 +43,23 @@ ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version.ref
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
-qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 zstd = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
 
+# Tests
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
+test-commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 test-mock-core = { module = "org.mockito:mockito-core", version.ref = "mockitoVersion" }
 test-mock-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockitoVersion" }
 test-mock-webserver3 = { module = "com.squareup.okhttp3:mockwebserver3-junit5", version.ref = "mockWebServer" }
 tests-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
 tests-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 tests-junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
+
+# Samples
+bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 
 [plugins]
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
@@ -69,12 +71,14 @@ protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" 
 [bundles]
 testing = [
     "bouncyCastle",
+    "zstd",
+    "xz",
     "test-commons-codec",
+    "test-commons-io",
     "test-mock-core",
     "test-mock-jupiter",
     "test-mock-webserver3",
     "tests-junit-jupiter",
-    "zstd"
 ]
 
 ktor = [
