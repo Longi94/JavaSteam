@@ -72,10 +72,8 @@ Maven
     * Note: To eliminate any errors or warnings, you should try and match the same version JavaSteam uses.
       <br><br>
 * Content Downloading:
-    * If you plan on working with Content Downloading, Depot files may be compressed with Zstd *(Zstandard)*.
-    * You will need to implement the correct type
-      of [ztd implementation](https://mvnrepository.com/artifact/com.github.luben/zstd-jni) if using JVM or Android.
-    * Android uses `aar` for the library type.
+    * Add the following dependencies to your project: [XZ For Java](https://mvnrepository.com/artifact/org.tukaani/xz) and [ZSTD JNI](https://mvnrepository.com/artifact/com.github.luben/zstd-jni).
+    * ZSTD for android uses `aar` for the libray type.
 
 You can find the latest version of these dependencies JavaSteam
 supports [here](https://github.com/Longi94/JavaSteam/blob/master/gradle/libs.versions.toml).
