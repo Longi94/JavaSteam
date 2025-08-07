@@ -35,7 +35,7 @@ public class KeyValue {
 
     private String value;
 
-    private List<KeyValue> children = new ArrayList<>();
+    private List<KeyValue> children;
 
     /**
      * Initializes a new instance of the {@link KeyValue} class.
@@ -62,6 +62,8 @@ public class KeyValue {
     public KeyValue(String name, String value) {
         this.name = name;
         this.value = value;
+
+        this.children = new ArrayList<>();
     }
 
     /**
@@ -95,9 +97,12 @@ public class KeyValue {
             throw new IllegalArgumentException("key is null");
         }
 
+        // if the key already exists, remove the old one
         children.removeIf(keyValue -> key.equalsIgnoreCase(keyValue.name));
 
+        // ensure the given KV actually has the correct key assigned
         value.setName(key);
+
         children.add(value);
     }
 
@@ -440,28 +445,19 @@ public class KeyValue {
             return null;
         }
 
-        try (var fis = new FileInputStream(file)) {
-            // Massage the incoming file to be encoded as UTF-8.
-            String fisString = new String(fis.readAllBytes(), StandardCharsets.UTF_8);
-
-            byte[] fisStringToBytes = fisString.getBytes(StandardCharsets.UTF_8);
-
-            try (var ms = new MemoryStream(fisStringToBytes, 0, fisStringToBytes.length - 1)) {
-                KeyValue kv = new KeyValue();
-
-                if (asBinary) {
-                    if (!kv.tryReadAsBinary(ms)) {
-                        return null;
-                    }
-                } else {
-                    if (!kv.readAsText(ms)) {
-                        return null;
-                    }
+        try (var input = new FileInputStream(file)) {
+            KeyValue kv = new KeyValue();
+            if (asBinary) {
+                if (!kv.tryReadAsBinary(input)) {
+                    return null;
                 }
-
-                return kv;
+            } else {
+                if (!kv.readAsText(input)) {
+                    return null;
+                }
             }
-        } catch (Exception e) {
+            return kv;
+        } catch (IOException e) {
             logger.error(e);
             return null;
         }
@@ -614,59 +610,60 @@ public class KeyValue {
             throw new IllegalArgumentException("input stream is null");
         }
 
-        return tryReadAsBinaryCore(is, this, null);
+        try (var br = new BinaryReader(is)) {
+            return tryReadAsBinaryCore(br, this, null);
+        }
     }
 
     @SuppressWarnings("DuplicateBranchesInSwitch")
-    private static boolean tryReadAsBinaryCore(InputStream is, KeyValue current, KeyValue parent) throws IOException {
+    private static boolean tryReadAsBinaryCore(BinaryReader input, KeyValue current, KeyValue parent) throws IOException {
         current.children = new ArrayList<>();
 
-        try (var br = new BinaryReader(is)) {
-            while (true) {
-                Type type = Type.from(br.readByte());
+        while (true) {
+            Type type = Type.from(input.readByte());
 
-                if (type == Type.END || type == Type.ALTERNATEEND) {
-                    break;
-                }
-
-                current.setName(br.readNullTermString(StandardCharsets.UTF_8));
-                switch (type) {
-                    case NONE:
-                        KeyValue child = new KeyValue();
-                        boolean didReadChild = tryReadAsBinaryCore(is, child, current);
-                        if (!didReadChild) {
-                            return false;
-                        }
-                        break;
-                    case STRING:
-                        current.setValue(br.readNullTermString(StandardCharsets.UTF_8));
-                        break;
-                    case WIDESTRING:
-                        logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.");
-                        return false;
-                    case INT32:
-                    case COLOR:
-                    case POINTER:
-                        current.setValue(String.valueOf(br.readInt()));
-                        break;
-                    case UINT64:
-                        current.setValue(String.valueOf(br.readLong()));
-                        break;
-                    case FLOAT32:
-                        current.setValue(String.valueOf(br.readFloat()));
-                        break;
-                    case INT64:
-                        current.setValue(String.valueOf(br.readLong()));
-                        break;
-                    default:
-                        return false;
-                }
-
-                if (parent != null) {
-                    parent.getChildren().add(current);
-                }
-                current = new KeyValue();
+            if (type == Type.END || type == Type.ALTERNATEEND) {
+                break;
             }
+
+            current.setName(input.readNullTermString(StandardCharsets.UTF_8));
+
+            switch (type) {
+                case NONE:
+                    KeyValue child = new KeyValue();
+                    boolean didReadChild = tryReadAsBinaryCore(input, child, current);
+                    if (!didReadChild) {
+                        return false;
+                    }
+                    break;
+                case STRING:
+                    current.setValue(input.readNullTermString(StandardCharsets.UTF_8));
+                    break;
+                case WIDESTRING:
+                    logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.");
+                    return false;
+                case INT32:
+                case COLOR:
+                case POINTER:
+                    current.setValue(String.valueOf(input.readInt()));
+                    break;
+                case UINT64:
+                    current.setValue(String.valueOf(input.readLong()));
+                    break;
+                case FLOAT32:
+                    current.setValue(String.valueOf(input.readFloat()));
+                    break;
+                case INT64:
+                    current.setValue(String.valueOf(input.readLong()));
+                    break;
+                default:
+                    return false;
+            }
+
+            if (parent != null) {
+                parent.getChildren().add(current);
+            }
+            current = new KeyValue();
         }
 
         return true;
