@@ -149,6 +149,25 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
+    public void keyValuesHandlesBoolAdditional() {
+        var kvFalse = new KeyValue("key", "false");
+        Assertions.assertFalse(kvFalse.asBoolean());
+
+        var kvTrue = new KeyValue("key", "true");
+        Assertions.assertTrue(kvTrue.asBoolean());
+
+        var kv0 = new KeyValue("key", "0");
+        Assertions.assertFalse(kv0.asBoolean());
+
+        var kv1 = new KeyValue("key", "1");
+        Assertions.assertTrue(kv1.asBoolean());
+
+        var kvDefault = new KeyValue("key", "invalid value");
+        Assertions.assertFalse(kvDefault.asBoolean());
+        Assertions.assertTrue(kvDefault.asBoolean(true));
+    }
+
+    @Test
     public void keyValuesHandlesFloat() {
         KeyValue kv = KeyValue.loadFromString("" +
                 "\"root\"" +
@@ -440,6 +459,23 @@ public class KeyValueTest extends TestBase {
 
     // @Test
     // public void canReadAndIgnoreConditionals() {
+    //     String text = ("\"Repro\"\n" +
+    //             "{" + "\n" +
+    //             "\"Conditional\"    \"You're not running Windows.\"  [$!WIN32]          // DEPRECATED" + "\n" +
+    //             "\"EmptyThing\"\t\"\"" + "\n" +
+    //             "}").trim();
+    //
+    //     var kv = new KeyValue();
+    //     try (var ms = new MemoryStream(text.getBytes(StandardCharsets.UTF_8))) {
+    //         kv.readAsText(ms);
+    //     }
+    //
+    //     Assertions.assertEquals( "Repro", kv.getName() );
+    //     Assertions.assertEquals( 2, kv.getChildren().size() );
+    //     Assertions.assertEquals( "Conditional", kv.getChildren().get(0).getName() );
+    //     Assertions.assertEquals( "You're not running Windows.", kv.getChildren().get(0).getValue() );
+    //     Assertions.assertEquals( "EmptyThing", kv.getChildren().get(1).getName() );
+    //     Assertions.assertEquals( "", kv.getChildren().get(1).getValue() );
     // }
 
     @Test

@@ -1,709 +1,583 @@
-package in.dragonbra.javasteam.types;
+package `in`.dragonbra.javasteam.types
 
-import in.dragonbra.javasteam.util.Passable;
-import in.dragonbra.javasteam.util.Strings;
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
-import in.dragonbra.javasteam.util.stream.BinaryReader;
-import in.dragonbra.javasteam.util.stream.MemoryStream;
-
-import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import `in`.dragonbra.javasteam.util.Passable
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import java.io.ByteArrayInputStream
+import java.io.EOFException
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Modifier
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * Represents a recursive string key to arbitrary value container.
+ * @constructor Initializes a new instance of the <see cref="KeyValue"/> class.
+ * @param name The optional name of the root key.
+ * @param value The optional value assigned to the root key.
+ * @property name Gets or sets the name of this instance.
+ * @property value Gets or sets the value of this instance.
  */
-@SuppressWarnings("unchecked")
-public class KeyValue {
-
-    private static final Logger logger = LogManager.getLogger(KeyValue.class);
+@Suppress("unused")
+class KeyValue @JvmOverloads constructor(
+    var name: String? = null,
+    var value: String? = null,
+) {
 
     /**
-     * Represents an invalid {@link KeyValue} given when a searched for child does not exist.
+     * Gets the children of this instance.
      */
-    public static final KeyValue INVALID = new KeyValue();
-
-    private String name;
-
-    private String value;
-
-    private List<KeyValue> children;
+    var children: MutableList<KeyValue> = mutableListOf()
 
     /**
-     * Initializes a new instance of the {@link KeyValue} class.
-     */
-    public KeyValue() {
-        this(null);
-    }
-
-    /**
-     * Initializes a new instance of the {@link KeyValue} class.
-     *
-     * @param name The optional name of the root key.
-     */
-    public KeyValue(String name) {
-        this(name, null);
-    }
-
-    /**
-     * Initializes a new instance of the {@link KeyValue} class.
-     *
-     * @param name  The optional name of the root key.
-     * @param value The optional value assigned to the root key.
-     */
-    public KeyValue(String name, String value) {
-        this.name = name;
-        this.value = value;
-
-        this.children = new ArrayList<>();
-    }
-
-    /**
-     * Gets the child {@link KeyValue} with the specified key.
-     * If no child with the given key exists, {@link KeyValue#INVALID} is returned.
-     *
+     * Gets the child [KeyValue] with the specified key.
+     * If no child with the given key exists, [KeyValue.INVALID] is returned.
      * @param key key
-     * @return the child {@link KeyValue}
+     * @return the child [KeyValue]
      */
-    public KeyValue get(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
+    operator fun get(key: String): KeyValue = children.firstOrNull {
+        it.name?.equals(key, ignoreCase = true) == true
+    } ?: INVALID
 
-        for (KeyValue c : children) {
-            if (key.equalsIgnoreCase(c.name)) {
-                return c;
-            }
-        }
-        return INVALID;
-    }
+    operator fun set(key: String, value: KeyValue) {
+        // Remove existing key if it exists
+        children.removeAll { it.name?.equals(key, ignoreCase = true) == true }
 
-    /**
-     * Sets the child {@link KeyValue} with the specified key.
-     *
-     * @param key   key
-     * @param value the child {@link KeyValue}
-     */
-    public void set(String key, KeyValue value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
+        // Ensure the given KV has the correct key assigned
+        value.name = key
 
-        // if the key already exists, remove the old one
-        children.removeIf(keyValue -> key.equalsIgnoreCase(keyValue.name));
-
-        // ensure the given KV actually has the correct key assigned
-        value.setName(key);
-
-        children.add(value);
+        children.add(value)
     }
 
     /**
      * Returns the value of this instance as a string.
-     *
-     * @return The value of this instance as a string.
      */
-    public String asString() {
-        return value;
-    }
+    fun asString(): String? = this.value
 
     /**
      * Attempts to convert and return the value of this instance as a byte.
      * If the conversion is invalid, the default value is returned.
-     *
+     * @param defaultValue The default value to return if the conversion is invalid.
+     * @return The value of this instance as a byte.
+     */
+    @JvmOverloads
+    fun asByte(defaultValue: Byte = 0): Byte = value?.toByteOrNull() ?: defaultValue
+
+    /**
+     * Attempts to convert and return the value of this instance as an unsigned byte.
+     * If the conversion is invalid, the default value is returned.
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
-    public byte asByte(byte defaultValue) {
-        try {
-            return Byte.parseByte(value);
-        } catch (NullPointerException | NumberFormatException nfe) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Attempts to convert and return the value of this instance as a byte.
-     * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
-     */
-    public byte asByte() {
-        return asByte((byte) 0);
-    }
+    @JvmOverloads
+    fun asUnsignedByte(defaultValue: UByte = 0u): UByte = value?.toUByteOrNull() ?: defaultValue
 
     /**
      * Attempts to convert and return the value of this instance as a short.
      * If the conversion is invalid, the default value is returned.
-     *
      * @param defaultValue The default value to return if the conversion is invalid.
-     * @return The value of this instance as an unsigned byte.
+     * @return The value of this instance as a short.
      */
-    public short asShort(short defaultValue) {
-        try {
-            return Short.parseShort(value);
-        } catch (NullPointerException | NumberFormatException nfe) {
-            return defaultValue;
-        }
-    }
+    @JvmOverloads
+    fun asShort(defaultValue: Short = 0): Short = value?.toShortOrNull() ?: defaultValue
 
     /**
-     * Attempts to convert and return the value of this instance as a short.
+     * Attempts to convert and return the value of this instance as an unsigned short.
      * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
+     * @param defaultValue The default value to return if the conversion is invalid.
+     * @return The value of this instance as an unsigned short.
      */
-    public short asShort() {
-        return asShort((short) 0);
-    }
+    @JvmOverloads
+    fun asUnsignedShort(defaultValue: UShort = 0u): UShort = value?.toUShortOrNull() ?: defaultValue
 
     /**
      * Attempts to convert and return the value of this instance as an integer.
      * If the conversion is invalid, the default value is returned.
-     *
      * @param defaultValue The default value to return if the conversion is invalid.
-     * @return The value of this instance as an unsigned byte.
+     * @return The value of this instance as an integer.
      */
-    public int asInteger(int defaultValue) {
-        try {
-            return Integer.parseInt(value);
-        } catch (NullPointerException | NumberFormatException nfe) {
-            return defaultValue;
-        }
-    }
+    @JvmOverloads
+    fun asInteger(defaultValue: Int = 0): Int = value?.toIntOrNull() ?: defaultValue
 
     /**
-     * Attempts to convert and return the value of this instance as an integer.
+     * Attempts to convert and return the value of this instance as an unsigned integer.
      * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
+     * @param defaultValue The default value to return if the conversion is invalid.
+     * @return The value of this instance as an unsigned integer.
      */
-    public int asInteger() {
-        return asInteger(0);
-    }
+    @JvmOverloads
+    fun asUnsignedInteger(defaultValue: UInt = 0u): UInt = value?.toUIntOrNull() ?: defaultValue
 
     /**
      * Attempts to convert and return the value of this instance as a long.
      * If the conversion is invalid, the default value is returned.
-     *
      * @param defaultValue The default value to return if the conversion is invalid.
-     * @return The value of this instance as an unsigned byte.
+     * @return The value of this instance as a long.
      */
-    public long asLong(long defaultValue) {
-        try {
-            return Long.parseLong(value);
-        } catch (NullPointerException | NumberFormatException nfe) {
-            return defaultValue;
-        }
-    }
+    @JvmOverloads
+    fun asLong(defaultValue: Long = 0L): Long = value?.toLongOrNull() ?: defaultValue
 
     /**
-     * Attempts to convert and return the value of this instance as a long.
+     * Attempts to convert and return the value of this instance as an unsigned long.
      * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
+     * @param defaultValue The default value to return if the conversion is invalid.
+     * @return The value of this instance as an unsigned long.
      */
-    public long asLong() {
-        return asLong(0L);
-    }
+    @JvmOverloads
+    fun asUnsignedLong(defaultValue: ULong = 0uL): ULong = value?.toULongOrNull() ?: defaultValue
 
     /**
      * Attempts to convert and return the value of this instance as a float.
      * If the conversion is invalid, the default value is returned.
-     *
      * @param defaultValue The default value to return if the conversion is invalid.
-     * @return The value of this instance as an unsigned byte.
+     * @return The value of this instance as a float.
      */
-    public float asFloat(float defaultValue) {
-        try {
-            return Float.parseFloat(value);
-        } catch (NullPointerException | NumberFormatException nfe) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Attempts to convert and return the value of this instance as a float.
-     * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
-     */
-    public float asFloat() {
-        return asFloat(0.0f);
-    }
+    @JvmOverloads
+    fun asFloat(defaultValue: Float = 0f): Float = value?.toFloatOrNull() ?: defaultValue
 
     /**
      * Attempts to convert and return the value of this instance as a boolean.
      * If the conversion is invalid, the default value is returned.
-     *
      * @param defaultValue The default value to return if the conversion is invalid.
-     * @return The value of this instance as an unsigned byte.
+     * @return The value of this instance as a boolean.
      */
-    public boolean asBoolean(boolean defaultValue) {
-        try {
-            return Integer.parseInt(value) != 0;
-        } catch (NullPointerException | NumberFormatException e) {
-            try {
-                return Boolean.parseBoolean(value);
-            } catch (NullPointerException | NumberFormatException e1) {
-                return defaultValue;
-            }
+    @JvmOverloads
+    fun asBoolean(defaultValue: Boolean = false): Boolean = try {
+        value!!.toInt() != 0
+    } catch (e: Exception) {
+        when (value?.lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> defaultValue
         }
-    }
-
-    /**
-     * Attempts to convert and return the value of this instance as a boolean.
-     * If the conversion is invalid, the default value is returned.
-     *
-     * @return The value of this instance as an unsigned byte.
-     */
-    public boolean asBoolean() {
-        return asBoolean(false);
     }
 
     /**
      * Attempts to convert and return the value of this instance as an enum.
      * If the conversion is invalid, the default value is returned.
-     *
-     * @param <T>          the type of the enum to convert to
-     * @param enumClass    the type of the enum to convert to
+     * @param T The type of the enum to convert to
+     * @param enumClass The type of the enum to convert to
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
-    public <T extends Enum<T>> EnumSet<T> asEnum(Class<T> enumClass, T defaultValue) {
-        return asEnum(enumClass, EnumSet.of(defaultValue));
-    }
+    fun <T : Enum<T>> asEnum(enumClass: Class<T>, defaultValue: T): EnumSet<T> =
+        asEnum(enumClass, EnumSet.of(defaultValue))
 
     /**
      * Attempts to convert and return the value of this instance as an enum.
      * If the conversion is invalid, the default value is returned.
-     *
-     * @param <T>          the type of the enum to convert to
-     * @param enumClass    the type of the enum to convert to
+     * @param T The type of the enum to convert to
+     * @param enumClass The type of the enum to convert to
      * @param defaultValue The default value to return if the conversion is invalid.
      * @return The value of this instance as an unsigned byte.
      */
-    public <T extends Enum<T>> EnumSet<T> asEnum(Class<T> enumClass, EnumSet<T> defaultValue) {
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Enum<T>> asEnum(enumClass: Class<T>, defaultValue: EnumSet<T>): EnumSet<T> {
         // this is ugly af, but it comes with handling bit flags as enumsets
         try {
             // see if it's a number first
-            int code = Integer.parseInt(value);
+            val code = value?.toInt() ?: return defaultValue
 
-            Field codeField = enumClass.getDeclaredField("code");
-            Method from = enumClass.getMethod("from", codeField.getType());
-            Object res = from.invoke(null, code);
+            val codeField = enumClass.getDeclaredField("code")
+            val fromMethod = enumClass.getMethod("from", codeField.type)
 
-            if (res instanceof EnumSet) {
-                return (EnumSet<T>) res;
-            } else {
-                return EnumSet.of(enumClass.cast(res));
+            @Suppress("MoveVariableDeclarationIntoWhen")
+            val result = fromMethod.invoke(null, code)
+
+            return when (result) {
+                is EnumSet<*> -> result as EnumSet<T>
+                else -> EnumSet.of(enumClass.cast(result))
             }
-        } catch (NullPointerException | NumberFormatException ignored) {
-        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            return null;
+        } catch (e: NumberFormatException) {
+            // ignore and try next approach
+        } catch (e: NoSuchFieldException) {
+            return defaultValue
+        } catch (e: NoSuchMethodException) {
+            return defaultValue
+        } catch (e: IllegalAccessException) {
+            return defaultValue
+        } catch (e: InvocationTargetException) {
+            return defaultValue
         }
 
         try {
             // see if it exists as an enum
-            return EnumSet.of(T.valueOf(enumClass, value));
-        } catch (NullPointerException | IllegalArgumentException ignored) {
+            val enumValue = java.lang.Enum.valueOf(enumClass, value ?: return defaultValue)
+            return EnumSet.of(enumValue)
+        } catch (e: IllegalArgumentException) {
+            // ignore and try next approach
         }
 
         // check for static enumset fields
         try {
-            for (Field field : enumClass.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers()) && field.getName().equals(value) && field.getType().isAssignableFrom(EnumSet.class)) {
-                    return (EnumSet<T>) field.get(null);
+            for (field in enumClass.declaredFields) {
+                if (Modifier.isStatic(field.modifiers) &&
+                    field.name == value &&
+                    EnumSet::class.java.isAssignableFrom(field.type)
+                ) {
+                    @Suppress("UNCHECKED_CAST")
+                    return field.get(null) as EnumSet<T>
                 }
             }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        } catch (e: IllegalAccessException) {
+            e.printStackTrace()
         }
 
-        return defaultValue;
+        return defaultValue
     }
 
-    public String getName() {
-        return name;
-    }
+    /**
+     * Returns a [String] that represents this instance.
+     */
+    override fun toString(): String = "$name = $value"
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    /**
+     * Populate this instance from the given [InputStream] as a text [KeyValue].
+     * @param input The input [InputStream] to read from.
+     * @return <c>true</c> if the read was successful otherwise, <c>false</c>.
+     */
+    fun readAsText(input: InputStream): Boolean {
+        children.clear()
 
-    public String getValue() {
-        return value;
-    }
+        KVTextReader(this, input).use { _ -> }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public List<KeyValue> getChildren() {
-        return children;
-    }
-
-    public boolean readAsText(InputStream is) throws IOException {
-        if (is == null) {
-            throw new IllegalArgumentException("input stream is null");
-        }
-
-        children = new ArrayList<>();
-
-        new KVTextReader(this, is);
-
-        return true;
+        return true
     }
 
     /**
      * Opens and reads the given filename as text.
-     *
+     * @see [readAsText]
      * @param filename The file to open and read.
-     * @return <b>true</b> if the read was successful; otherwise, <b>false</b>.
-     * @throws IOException exception while reading from the file
+     * @return <c>true</c> if the read was successful otherwise, <c>false</c>.
      */
-    public boolean readFileAsText(String filename) throws IOException {
-        try (var fis = new FileInputStream(filename)) {
-            return readAsText(fis);
-        }
-    }
+    fun readFileAsText(filename: String): Boolean = FileInputStream(filename).use(::readAsText)
 
-    void recursiveLoadFromBuffer(KVTextReader kvr) throws IOException {
-        Passable<Boolean> wasQuoted = new Passable<>(false);
-        Passable<Boolean> wasConditional = new Passable<>(false);
+    internal fun recursiveLoadFromBuffer(kvr: KVTextReader) {
+        val wasQuoted = Passable(false)
+        val wasConditional = Passable(false)
 
         while (true) {
+            // val bAccepted = true
+
             // get the key name
-            String name = kvr.readToken(wasQuoted, wasConditional);
+            val name = kvr.readToken(wasQuoted = wasQuoted, wasConditional = wasConditional)
 
-            if (Strings.isNullOrEmpty(name)) {
-                throw new IllegalStateException("RecursiveLoadFromBuffer: got EOF or empty keyname");
+            if (name.isNullOrEmpty()) {
+                throw IllegalStateException("RecursiveLoadFromBuffer: got EOF or empty keyname")
             }
 
-            if (name.startsWith("}") && !wasQuoted.getValue()) {
-                break;
+            if (name.startsWith('}') && wasQuoted.value == false) {
+                // top level closed, stop reading
+                break
             }
 
-            KeyValue dat = new KeyValue(name);
-            dat.children = new ArrayList<>();
-            children.add(dat);
+            val dat = KeyValue(name)
+            dat.children.clear()
+            this.children.add(dat)
 
-            String value = kvr.readToken(wasQuoted, wasConditional);
+            // get the value
+            var value = kvr.readToken(wasQuoted, wasConditional)
+
+            if (wasConditional.value == true && value != null) {
+                // bAccepted = ( value == "[$WIN32]" )
+                value = kvr.readToken(wasQuoted, wasConditional)
+            }
 
             if (value == null) {
-                throw new IllegalStateException("RecursiveLoadFromBuffer:  got NULL key");
+                throw IllegalStateException("RecursiveLoadFromBuffer: got NULL key")
             }
 
-            if (value.startsWith("}") && !wasQuoted.getValue()) {
-                throw new IllegalStateException("RecursiveLoadFromBuffer:  got } in key");
+            if (value.startsWith('}') && wasQuoted.value == false) {
+                throw IllegalStateException("RecursiveLoadFromBuffer: got } in key")
             }
 
-            if (value.startsWith("{") && !wasQuoted.getValue()) {
-                dat.recursiveLoadFromBuffer(kvr);
+            if (value.startsWith('{') && wasQuoted.value == false) {
+                dat.recursiveLoadFromBuffer(kvr)
             } else {
-                if (wasConditional.getValue()) {
-                    throw new IllegalStateException("RecursiveLoadFromBuffer:  got conditional between key and value");
+                if (wasConditional.value == true) {
+                    throw IllegalStateException("RecursiveLoadFromBuffer: got conditional between key and value")
                 }
 
-                dat.setValue(value);
+                dat.value = value
+                // blahconditionalsdontcare
             }
-        }
-    }
-
-    /**
-     * Attempts to load the given filename as a text {@link KeyValue}.
-     *
-     * @param path The path to the file to load.
-     * @return a {@link KeyValue} instance if the load was successful, or <b>null</b> on failure.
-     */
-    public static KeyValue loadAsText(String path) {
-        return loadFromFile(path, false);
-    }
-
-    /**
-     * Attempts to load the given filename as a binary {@link KeyValue}.
-     *
-     * @param path The path to the file to load.
-     * @return a {@link KeyValue} instance if the load was successful, or <b>null</b> on failure.
-     */
-    public static KeyValue tryLoadAsBinary(String path) {
-        return loadFromFile(path, true);
-    }
-
-    private static KeyValue loadFromFile(String path, boolean asBinary) {
-        File file = new File(path);
-
-        if (!file.exists() || file.isDirectory()) {
-            return null;
-        }
-
-        try (var input = new FileInputStream(file)) {
-            KeyValue kv = new KeyValue();
-            if (asBinary) {
-                if (!kv.tryReadAsBinary(input)) {
-                    return null;
-                }
-            } else {
-                if (!kv.readAsText(input)) {
-                    return null;
-                }
-            }
-            return kv;
-        } catch (IOException e) {
-            logger.error(e);
-            return null;
-        }
-    }
-
-    /**
-     * Attempts to create an instance of {@link KeyValue} from the given input text.
-     *
-     * @param input The input text to load.
-     * @return a {@link KeyValue} instance if the load was successful, or <b>null</b> on failure.
-     */
-    public static KeyValue loadFromString(String input) {
-        if (input == null) {
-            throw new IllegalArgumentException("input is null");
-        }
-
-        byte[] bytes = input.getBytes(StandardCharsets.UTF_8);
-
-        try (var bais = new ByteArrayInputStream(bytes)) {
-            KeyValue kv = new KeyValue();
-
-            if (!kv.readAsText(bais)) {
-                return null;
-            }
-
-            return kv;
-        } catch (IOException e) {
-            logger.error(e);
-            return null;
         }
     }
 
     /**
      * Saves this instance to file.
-     *
-     * @param path   The file path to save to.
-     * @param binary If set to <b>true</b>, saves this instance as binary.
-     * @throws IOException exception while writing to the file
+     * @param file The file to save to.
+     * @param asBinary If set to <c>true</c>, saves this instance as binary.
      */
-    public void saveToFile(File path, boolean binary) throws IOException {
-        try (var fos = new FileOutputStream(path, false)) {
-            saveToStream(fos, binary);
-        }
+    fun saveToFile(file: File, asBinary: Boolean) {
+        FileOutputStream(file, false).use { f -> saveToStream(f, asBinary) }
     }
 
-    public void saveToStream(OutputStream os, boolean binary) throws IOException {
-        if (os == null) {
-            throw new IllegalArgumentException("output stream is null");
-        }
+    /**
+     * Saves this instance to file.
+     * @param path The file path to save to.
+     * @param asBinary If set to <c>true</c>, saves this instance as binary.
+     */
+    fun saveToFile(path: String, asBinary: Boolean) {
+        FileOutputStream(path, false).use { f -> saveToStream(f, asBinary) }
+    }
 
-        if (binary) {
-            recursiveSaveBinaryToStream(os);
+    /**
+     * Saves this instance to a given [OutputStream]
+     * @param stream The [OutputStream] to save to.
+     * @param asBinary If set to <c>true</c>, saves this instance as binary.
+     */
+    @Throws(IOException::class)
+    fun saveToStream(stream: OutputStream, asBinary: Boolean) {
+        if (asBinary) {
+            recursiveSaveBinaryToStream(stream)
         } else {
-            recursiveSaveTextToFile(os);
+            recursiveSaveTextToFile(stream)
         }
     }
 
-    private void recursiveSaveBinaryToStream(OutputStream os) throws IOException {
-        recursiveSaveBinaryToStreamCore(os);
-        os.write(Type.END.code());
+    @Throws(IOException::class)
+    private fun recursiveSaveBinaryToStream(f: OutputStream) {
+        recursiveSaveBinaryToStreamCore(f)
+        f.write(Type.END.code.toInt())
     }
 
-    private void recursiveSaveBinaryToStreamCore(OutputStream os) throws IOException {
+    @Throws(IOException::class)
+    private fun recursiveSaveBinaryToStreamCore(f: OutputStream) {
         // Only supported types ATM:
         // 1. KeyValue with children (no value itself)
         // 2. String KeyValue
         if (value == null) {
-            os.write(Type.NONE.code());
-            os.write(name.getBytes(StandardCharsets.UTF_8));
-            os.write(0);
-            for (KeyValue child : children) {
-                child.recursiveSaveBinaryToStreamCore(os);
+            f.write(Type.NONE.code.toInt())
+            f.write(getNameForSerialization().toByteArray(StandardCharsets.UTF_8))
+            f.write(0)
+            children.forEach { child ->
+                child.recursiveSaveBinaryToStreamCore(f)
             }
-            os.write(Type.END.code());
+            f.write(Type.END.code.toInt())
         } else {
-            os.write(Type.STRING.code());
-            os.write(name.getBytes(StandardCharsets.UTF_8));
-            os.write(0);
-            os.write(value.getBytes(StandardCharsets.UTF_8));
-            os.write(0);
+            f.write(Type.STRING.code.toInt())
+            f.write(getNameForSerialization().toByteArray(StandardCharsets.UTF_8))
+            f.write(0)
+            f.write(value?.toByteArray(StandardCharsets.UTF_8))
+            f.write(0)
         }
     }
 
-    private void recursiveSaveTextToFile(OutputStream os) throws IOException {
-        recursiveSaveTextToFile(os, 0);
-    }
-
-    private void recursiveSaveTextToFile(OutputStream os, int indentLevel) throws IOException {
+    private fun recursiveSaveTextToFile(os: OutputStream, indentLevel: Int = 0) {
         // write header
-        writeIndents(os, indentLevel);
-        writeString(os, name, true);
-        writeString(os, "\n");
-        writeIndents(os, indentLevel);
-        writeString(os, "{\n");
+        writeIndents(os, indentLevel)
+        writeString(os, getNameForSerialization(), true)
+        writeString(os, "\n")
+        writeIndents(os, indentLevel)
+        writeString(os, "{\n")
 
         // loop through all our keys writing them to disk
-        for (KeyValue child : children) {
-            if (child.getValue() == null) {
-                child.recursiveSaveTextToFile(os, indentLevel + 1);
+        children.forEach { child ->
+            if (child.value == null) {
+                child.recursiveSaveTextToFile(os, indentLevel + 1)
             } else {
-                writeIndents(os, indentLevel + 1);
-                writeString(os, child.getName(), true);
-                writeString(os, "\t\t");
-                writeString(os, escapeText(child.asString()), true);
-                writeString(os, "\n");
+                writeIndents(os, indentLevel + 1)
+                writeString(os, child.getNameForSerialization(), true)
+                writeString(os, "\t\t")
+                writeString(os, escapeText(child.asString()!!), true)
+                writeString(os, "\n")
             }
         }
 
-        writeIndents(os, indentLevel);
-        writeString(os, "}\n");
-    }
-
-    private static String escapeText(String value) {
-        for (Map.Entry<Character, Character> entry : KVTextReader.ESCAPED_MAPPING.entrySet()) {
-            String textToReplace = String.valueOf(entry.getValue());
-            String escapedReplacement = "\\" + entry.getKey();
-            value = value.replace(textToReplace, escapedReplacement);
-        }
-
-        return value;
-    }
-
-    private void writeIndents(OutputStream os, int indentLevel) throws IOException {
-        writeString(os, new String(new char[indentLevel]).replace('\0', '\t'));
-    }
-
-    private static void writeString(OutputStream os, String str) throws IOException {
-        writeString(os, str, false);
-    }
-
-    private static void writeString(OutputStream os, String str, boolean quote) throws IOException {
-        str = str.replaceAll("\"", "\\\"");
-        if (quote) {
-            str = "\"" + str + "\"";
-        }
-        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
-        os.write(bytes);
+        writeIndents(os, indentLevel)
+        writeString(os, "}\n")
     }
 
     /**
-     * Populate this instance from the given {@link InputStream} as a binary {@link KeyValue}.
-     *
-     * @param is The input {@link InputStream} to read from.
-     * @return <b>true</b> if the read was successful; otherwise, <b>false</b>.
-     * @throws IOException              exception while reading from the stream
-     * @throws IllegalArgumentException exception while reading from the stream
+     * Populate this instance from the given [InputStream] as a binary [KeyValue].
+     * @param input The input [InputStream] to read from.
+     * @return <c>true</c> if the read was successful otherwise, <c>false</c>.
      */
-    public boolean tryReadAsBinary(InputStream is) throws IllegalArgumentException, IOException {
-        if (is == null) {
-            throw new IllegalArgumentException("input stream is null");
-        }
-
-        try (var br = new BinaryReader(is)) {
-            return tryReadAsBinaryCore(br, this, null);
-        }
+    @Throws(IOException::class, EOFException::class)
+    fun tryReadAsBinary(input: InputStream): Boolean = BinaryReader(input).use { br ->
+        tryReadAsBinaryCore(br, this, null)
     }
 
-    @SuppressWarnings("DuplicateBranchesInSwitch")
-    private static boolean tryReadAsBinaryCore(BinaryReader input, KeyValue current, KeyValue parent) throws IOException {
-        current.children = new ArrayList<>();
+    private fun getNameForSerialization(): String = requireNotNull(name) {
+        "Cannot serialise a KeyValue object with a null name!"
+    }
 
-        while (true) {
-            Type type = Type.from(input.readByte());
+    companion object {
+        enum class Type(val code: Byte) {
+            NONE(0),
+            STRING(1),
+            INT32(2),
+            FLOAT32(3),
+            POINTER(4),
+            WIDESTRING(5),
+            COLOR(6),
+            UINT64(7),
+            END(8),
+            INT64(10),
+            ALTERNATEEND(11),
+            ;
 
-            if (type == Type.END || type == Type.ALTERNATEEND) {
-                break;
+            companion object {
+                private val codeMap = entries.associateBy { it.code }
+
+                fun from(code: Byte): Type? = codeMap[code]
+            }
+        }
+
+        private val logger: Logger = LogManager.getLogger(KeyValue::class.java)
+
+        /**
+         * Represents an invalid [KeyValue] given when a searched for child does not exist.
+         */
+        @JvmField
+        val INVALID = KeyValue()
+
+        /**
+         * Attempts to load the given filename as a text [KeyValue].
+         * This method will swallow any exceptions that occur when reading, use [readAsText] if you wish to handle exceptions.
+         * @param path The path to the file to load.
+         * @return a [KeyValue] instance if the load was successful, or <c>null</c> on failure.
+         */
+        @JvmStatic
+        fun loadAsText(path: String): KeyValue? = loadFromFile(path, false)
+
+        /**
+         * Attempts to load the given filename as a binary <see cref="KeyValue"/>.
+         * @param path The path to the file to load.
+         * @return The resulting [KeyValue] object if the load was successful, or <c>null</c> if unsuccessful.
+         */
+        @JvmStatic
+        fun tryLoadAsBinary(path: String): KeyValue? = loadFromFile(path, true)
+
+        private fun loadFromFile(path: String, asBinary: Boolean): KeyValue? {
+            val file = File(path)
+
+            if (!file.exists() || file.isDirectory()) {
+                return null
             }
 
-            current.setName(input.readNullTermString(StandardCharsets.UTF_8));
+            try {
+                FileInputStream(file).use { input ->
+                    val kv = KeyValue()
 
-            switch (type) {
-                case NONE:
-                    KeyValue child = new KeyValue();
-                    boolean didReadChild = tryReadAsBinaryCore(input, child, current);
-                    if (!didReadChild) {
-                        return false;
+                    if (asBinary) {
+                        if (!kv.tryReadAsBinary(input)) {
+                            return null
+                        }
+                    } else {
+                        if (!kv.readAsText(input)) {
+                            return null
+                        }
                     }
-                    break;
-                case STRING:
-                    current.setValue(input.readNullTermString(StandardCharsets.UTF_8));
-                    break;
-                case WIDESTRING:
-                    logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.");
-                    return false;
-                case INT32:
-                case COLOR:
-                case POINTER:
-                    current.setValue(String.valueOf(input.readInt()));
-                    break;
-                case UINT64:
-                    current.setValue(String.valueOf(input.readLong()));
-                    break;
-                case FLOAT32:
-                    current.setValue(String.valueOf(input.readFloat()));
-                    break;
-                case INT64:
-                    current.setValue(String.valueOf(input.readLong()));
-                    break;
-                default:
-                    return false;
-            }
 
-            if (parent != null) {
-                parent.getChildren().add(current);
-            }
-            current = new KeyValue();
-        }
-
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s = %s", name, value);
-    }
-
-    public enum Type {
-        NONE((byte) 0),
-        STRING((byte) 1),
-        INT32((byte) 2),
-        FLOAT32((byte) 3),
-        POINTER((byte) 4),
-        WIDESTRING((byte) 5),
-        COLOR((byte) 6),
-        UINT64((byte) 7),
-        END((byte) 8),
-        INT64((byte) 10),
-        ALTERNATEEND((byte) 11);
-
-        private final byte code;
-
-        Type(byte code) {
-            this.code = code;
-        }
-
-        public byte code() {
-            return this.code;
-        }
-
-        public static Type from(byte code) {
-            for (Type e : Type.values()) {
-                if (e.code == code) {
-                    return e;
+                    return kv
                 }
+            } catch (e: Exception) {
+                logger.error(e.message, e)
+                return null
             }
-            return null;
+        }
+
+        /**
+         * Attempts to create an instance of [KeyValue] from the given input text.
+         * This method will swallow any exceptions that occur when reading, use [readAsText] if you wish to handle exceptions.
+         * @param input The input text to load.
+         * @return a [KeyValue] instance if the load was successful, or <c>null</c> on failure.
+         */
+        @JvmStatic
+        fun loadFromString(input: String): KeyValue? {
+            val bytes = input.toByteArray(StandardCharsets.UTF_8)
+
+            try {
+                ByteArrayInputStream(bytes).use { stream ->
+                    val kv = KeyValue()
+
+                    if (!kv.readAsText(stream)) {
+                        return null
+                    }
+                    return kv
+                }
+            } catch (e: Exception) {
+                logger.error(e.message, e)
+                return null
+            }
+        }
+
+        private fun escapeText(value: String): String {
+            var localValue = value
+            KVTextReader.ESCAPED_MAPPING.forEach { kvp ->
+                val textToReplace = kvp.value.toString()
+                val escapedReplacement = "\\" + kvp.key
+                localValue = localValue.replace(textToReplace, escapedReplacement)
+            }
+            return localValue
+        }
+
+        private fun writeIndents(stream: OutputStream, indentLevel: Int) {
+            writeString(stream, "\t".repeat(indentLevel))
+        }
+
+        private fun writeString(stream: OutputStream, str: String, quote: Boolean = false) {
+            val processedStr = str.replace("\"", "\\\"")
+            val finalStr = if (quote) "\"$processedStr\"" else processedStr
+            val bytes = finalStr.toByteArray(Charsets.UTF_8)
+            stream.write(bytes)
+        }
+
+        private fun tryReadAsBinaryCore(input: BinaryReader, current: KeyValue, parent: KeyValue?): Boolean {
+            var localCurrent = current
+
+            localCurrent.children.clear()
+
+            while (true) {
+                val type = Type.from(input.readByte())
+
+                if (type == Type.END || type == Type.ALTERNATEEND) {
+                    break
+                }
+
+                localCurrent.name = input.readNullTermString(StandardCharsets.UTF_8)
+
+                when (type) {
+                    Type.NONE -> {
+                        val child = KeyValue()
+                        val didReadChild = tryReadAsBinaryCore(input, child, localCurrent)
+                        if (!didReadChild) {
+                            return false
+                        }
+                    }
+
+                    Type.STRING -> localCurrent.value = input.readNullTermString(StandardCharsets.UTF_8)
+                    Type.WIDESTRING -> {
+                        logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.")
+                        return false
+                    }
+
+                    Type.INT32,
+                    Type.COLOR,
+                    Type.POINTER,
+                    -> localCurrent.value = input.readInt().toString()
+
+                    Type.UINT64 -> localCurrent.value = input.readLong().toString()
+                    Type.FLOAT32 -> localCurrent.value = input.readFloat().toString()
+                    Type.INT64 -> localCurrent.value = input.readLong().toString()
+                    else -> return false
+                }
+
+                parent?.children?.add(localCurrent)
+
+                localCurrent = KeyValue()
+            }
+
+            return true
         }
     }
 }

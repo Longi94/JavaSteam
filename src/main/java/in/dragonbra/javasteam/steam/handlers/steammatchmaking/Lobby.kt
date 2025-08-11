@@ -79,7 +79,7 @@ class Lobby(
                     return metadata
                 }
 
-                metadata[value.name] = value.value
+                metadata[value.name!!] = value.value!!
             }
 
             return metadata.toMap()
