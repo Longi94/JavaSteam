@@ -7,7 +7,6 @@ import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSRequest
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
-import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.PICSProductInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.ChunkData
@@ -104,7 +103,7 @@ class ContentDownloader(val steamClient: SteamClient) {
     private fun getAppDirName(app: PICSProductInfo): String {
         val installDirKeyValue = app.keyValues["config"]["installdir"]
 
-        return if (installDirKeyValue != KeyValue.INVALID) installDirKeyValue.value else app.id.toString()
+        return if (installDirKeyValue != KeyValue.INVALID) installDirKeyValue.value!! else app.id.toString()
     }
 
     private fun getAppInfo(
@@ -113,7 +112,7 @@ class ContentDownloader(val steamClient: SteamClient) {
     ): Deferred<PICSProductInfo?> = parentScope.async {
         val steamApps = steamClient.getHandler(SteamApps::class.java)
         val callback = steamApps?.picsGetProductInfo(PICSRequest(appId))?.await()
-        val apps = callback?.results?.flatMap { (it as PICSProductInfoCallback).apps.values }
+        val apps = callback?.results?.flatMap { it.apps.values }
 
         if (apps.isNullOrEmpty()) {
             logger.error("Received empty apps list in PICSProductInfo response for $appId")

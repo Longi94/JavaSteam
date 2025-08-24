@@ -13,9 +13,9 @@ dependencies {
     implementation(gradleApi())
 
     // https://mvnrepository.com/artifact/commons-io/commons-io
-    implementation("commons-io:commons-io:2.18.0")
+    implementation("commons-io:commons-io:2.20.0")
     // https://mvnrepository.com/artifact/com.squareup/kotlinpoet
-    implementation("com.squareup:kotlinpoet:2.0.0")
+    implementation("com.squareup:kotlinpoet:2.2.0")
 }
 
 gradlePlugin {

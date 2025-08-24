@@ -151,6 +151,7 @@ class SteamUserStats : ClientMsgHandler() {
     }
 
     // JavaSteam addition.
+
     /**
      * Gets the Stats-Schema for the specified app. This schema includes Global Achievements and Stats,
      * @param appId The appID of the game.

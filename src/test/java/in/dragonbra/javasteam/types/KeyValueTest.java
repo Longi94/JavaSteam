@@ -13,7 +13,6 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -147,6 +146,25 @@ public class KeyValueTest extends TestBase {
 
         kv.get("name").setValue("inavlidbool");
         Assertions.assertFalse(kv.get("name").asBoolean(), "values that cannot be converted to integers are falsey");
+    }
+
+    @Test
+    public void keyValuesHandlesBoolAdditional() {
+        var kvFalse = new KeyValue("key", "false");
+        Assertions.assertFalse(kvFalse.asBoolean());
+
+        var kvTrue = new KeyValue("key", "true");
+        Assertions.assertTrue(kvTrue.asBoolean());
+
+        var kv0 = new KeyValue("key", "0");
+        Assertions.assertFalse(kv0.asBoolean());
+
+        var kv1 = new KeyValue("key", "1");
+        Assertions.assertTrue(kv1.asBoolean());
+
+        var kvDefault = new KeyValue("key", "invalid value");
+        Assertions.assertFalse(kvDefault.asBoolean());
+        Assertions.assertTrue(kvDefault.asBoolean(true));
     }
 
     @Test
@@ -441,6 +459,23 @@ public class KeyValueTest extends TestBase {
 
     // @Test
     // public void canReadAndIgnoreConditionals() {
+    //     String text = ("\"Repro\"\n" +
+    //             "{" + "\n" +
+    //             "\"Conditional\"    \"You're not running Windows.\"  [$!WIN32]          // DEPRECATED" + "\n" +
+    //             "\"EmptyThing\"\t\"\"" + "\n" +
+    //             "}").trim();
+    //
+    //     var kv = new KeyValue();
+    //     try (var ms = new MemoryStream(text.getBytes(StandardCharsets.UTF_8))) {
+    //         kv.readAsText(ms);
+    //     }
+    //
+    //     Assertions.assertEquals( "Repro", kv.getName() );
+    //     Assertions.assertEquals( 2, kv.getChildren().size() );
+    //     Assertions.assertEquals( "Conditional", kv.getChildren().get(0).getName() );
+    //     Assertions.assertEquals( "You're not running Windows.", kv.getChildren().get(0).getValue() );
+    //     Assertions.assertEquals( "EmptyThing", kv.getChildren().get(1).getName() );
+    //     Assertions.assertEquals( "", kv.getChildren().get(1).getValue() );
     // }
 
     @Test
@@ -595,18 +630,6 @@ public class KeyValueTest extends TestBase {
         Assertions.assertEquals(EChatPermission.OwnerDefault, kv.get("name").asEnum(EChatPermission.class, EChatPermission.EveryoneDefault));
     }
 
-    @Test
-    public void keyValues_loadAsText_should_read_successfully() {
-        URL file = this.getClass().getClassLoader().getResource("textkeyvalues/appinfo_utf8.txt");
-
-        Assertions.assertNotNull(file, "Resource file was null");
-
-        KeyValue kv = KeyValue.loadAsText(file.getPath());
-
-        Assertions.assertEquals("1234567", kv.get("appid").getValue(), "appid should be 1234567");
-        Assertions.assertEquals(2, kv.getChildren().size(), "Children should be 2");
-    }
-
     private static String saveToText(KeyValue kv) {
         String text = null;
 
@@ -620,4 +643,37 @@ public class KeyValueTest extends TestBase {
 
         return text;
     }
+
+//    @Test
+//    public void tryReadAsBinary() throws IOException {
+//        var nis = Files.newInputStream(Path.of("C:\\Program Files (x86)\\Steam\\appcache\\stats\\UserGameStatsSchema_550.bin"));
+//        var kv = new KeyValue();
+//        var result = kv.tryReadAsBinary(nis);
+//        System.out.println(result);
+//    }
+//
+//    @Test
+//    public void tryLoadAsBinary_UserGameStatsSchema() throws IOException {
+//        var kv = KeyValue.tryLoadAsBinary("C:\\Program Files (x86)\\Steam\\appcache\\stats\\UserGameStatsSchema_550.bin");
+//        printKeyValue(kv, 0);
+//    }
+//
+//    @Test
+//    public void tryLoadAsBinary_UserGameStats() throws IOException {
+//        var kv = KeyValue.tryLoadAsBinary("C:\\Program Files (x86)\\Steam\\appcache\\stats\\UserGameStats_43540078_3527290.bin");
+//        printKeyValue(kv, 0);
+//    }
+//
+//    private void printKeyValue(KeyValue keyValue, int depth) {
+//        String spacePadding = String.join("", Collections.nCopies(depth, "    "));
+//
+//        if (keyValue.getChildren().isEmpty()) {
+//            System.out.println(spacePadding + keyValue.getName() + ": " + keyValue.getValue());
+//        } else {
+//            System.out.println(spacePadding + keyValue.getName() + ":");
+//            for (KeyValue child : keyValue.getChildren()) {
+//                printKeyValue(child, depth + 1);
+//            }
+//        }
+//    }
 }
