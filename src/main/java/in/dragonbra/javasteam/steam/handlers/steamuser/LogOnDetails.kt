@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamuser
 
+import `in`.dragonbra.javasteam.enums.EGamingDeviceType
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EUIMode
 import `in`.dragonbra.javasteam.steam.authentication.AuthSessionDetails
@@ -33,6 +34,7 @@ import `in`.dragonbra.javasteam.util.Utils
  * @param machineName Gets or sets the machine name.
  * @param chatMode Gets or sets the chat mode.
  * @param uiMode Gets or sets the ui mode.
+ * @param gamingDeviceType Gets or sets the gaming device type.
  * @param isSteamDeck Gets or sets whether this is Steam Deck login.
  */
 data class LogOnDetails(
@@ -52,5 +54,6 @@ data class LogOnDetails(
     var machineName: String = HardwareUtils.getMachineName(true),
     var chatMode: ChatMode = ChatMode.DEFAULT,
     var uiMode: EUIMode = EUIMode.Unknown,
-    var isSteamDeck: Boolean = false,
+    var gamingDeviceType: EGamingDeviceType = EGamingDeviceType.Unknown,
+    @Deprecated("Use gamingDeviceType instead") var isSteamDeck: Boolean = false,
 )

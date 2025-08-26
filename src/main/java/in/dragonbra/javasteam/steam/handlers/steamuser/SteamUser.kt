@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EAccountType
+import `in`.dragonbra.javasteam.enums.EGamingDeviceType
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EUIMode
@@ -116,8 +117,13 @@ class SteamUser : ClientMsgHandler() {
             logon.body.uiMode = details.uiMode.code()
         }
 
+        if (details.gamingDeviceType != EGamingDeviceType.Unknown) {
+            logon.body.gamingDeviceType = details.gamingDeviceType.code()
+        }
+
+        @Suppress("DEPRECATION")
         if (details.isSteamDeck) {
-            logon.body.isSteamDeck = true
+            logon.body.isSteamDeckDeprecated = true
         }
 
         // steam guard
