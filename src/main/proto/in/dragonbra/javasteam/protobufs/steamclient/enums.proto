@@ -136,8 +136,9 @@ enum ESystemFanControlMode {
 
 enum EStartupMovieVariant {
   k_EStartupMovieVariant_Invalid = 0;
-  k_EStartupMovieVariant_Default = 1;
-  k_EStartupMovieVariant_Orange = 2;
+  k_EStartupMovieVariant_Generic = 1;
+  k_EStartupMovieVariant_DeckBlue = 2;
+  k_EStartupMovieVariant_DeckOrange = 3;
 }
 
 enum EColorGamutLabelSet {
@@ -223,21 +224,12 @@ enum EGPUPerformanceLevel {
   k_EGPUPerformanceLevel_Profiling = 5;
 }
 
-enum EScalingFilter {
-  k_EScalingFilter_Invalid = 0;
-  k_EScalingFilter_FSR = 1;
-  k_EScalingFilter_Nearest = 2;
-  k_EScalingFilter_Integer = 3;
-  k_EScalingFilter_Linear = 4;
-  k_EScalingFilter_NIS = 5;
-}
-
 enum ESplitScalingFilter {
   k_ESplitScalingFilter_Invalid = 0;
   k_ESplitScalingFilter_Linear = 1;
   k_ESplitScalingFilter_Nearest = 2;
-  k_ESplitScalingFilter_FSR = 3;
-  k_ESplitScalingFilter_NIS = 4;
+  k_ESplitScalingFilter_Sharp = 3;
+  k_ESplitScalingFilter_NIS_Deprecated = 4;
 }
 
 enum ESplitScalingScaler {
@@ -262,6 +254,7 @@ enum ESLSHelper {
   k_ESLSHelper_Journal = 3;
   k_ESLSHelper_Gpu = 4;
   k_ESLSHelper_SystemInfo = 5;
+  k_ESLSHelper_Devcoredump = 6;
 }
 
 enum EHDRVisualization {
@@ -334,6 +327,19 @@ enum ESystemDisplayCompatibilityMode {
   k_ESystemDisplayCompatibilityMode_Invalid = 0;
   k_ESystemDisplayCompatibilityMode_None = 1;
   k_ESystemDisplayCompatibilityMode_MinimalBandwith = 2;
+}
+
+enum ESteamOSCompatibilityCategory {
+  k_ESteamOSCompatibilityCategory_Unknown = 0;
+  k_ESteamOSCompatibilityCategory_Unsupported = 1;
+  k_ESteamOSCompatibilityCategory_Compatible = 2;
+}
+
+enum ESteamOSCompatibilityResultDisplayType {
+  k_ESteamOSCompatibilityResultDisplayType_Invisible = 0;
+  k_ESteamOSCompatibilityResultDisplayType_Informational = 1;
+  k_ESteamOSCompatibilityResultDisplayType_Unsupported = 2;
+  k_ESteamOSCompatibilityResultDisplayType_Compatible = 3;
 }
 
 enum ESteamDeckCompatibilityCategory {
@@ -565,6 +571,8 @@ enum ECompromiseDetectionType {
   k_ECompromiseDetectionType_Manual = 3;
   k_ECompromiseDetectionType_TicketAction = 4;
   k_ECompromiseDetectionType_MaliciousRefund = 5;
+  k_ECompromiseDetectionType_Move2FA = 6;
+  k_ECompromiseDetectionType_DeviceType = 7;
 }
 
 enum EAsyncGameSessionUserState {
@@ -617,6 +625,21 @@ enum EProtoAppType {
   k_EAppTypeDepotOnly = -2147483648;
 }
 
+enum EChildProcessQueryCommand {
+  k_EChildProcessQueryCommand_Invalid = 0;
+  k_EChildProcessQueryCommand_GpuTopology = 1;
+  k_EChildProcessQueryCommand_Max = 2;
+}
+
+enum EChildProcessQueryExitCode {
+  k_EChildProcessQueryExitCode_Success = 0;
+  k_EChildProcessQueryExitCode_ErrorCommandline = -1;
+  k_EChildProcessQueryExitCode_ErrorOther = -2;
+  k_EChildProcessQueryExitCode_ErrorUnimplemented = -3;
+  k_EChildProcessQueryExitCode_ErrorFileSave = -4;
+  k_EChildProcessQueryExitCode_ErrorNotSupportedByPlatform = -5;
+}
+
 enum EWindowsUpdateInstallationImpact {
   k_EWindowsUpdateInstallationImpact_Unknown = -1;
   k_EWindowsUpdateInstallationImpact_Normal = 0;
@@ -638,4 +661,54 @@ enum EExternalSaleEventType {
   k_EExternalSaleEventType_Region = 3;
   k_EExternalSaleEventType_Theme = 4;
   k_EExternalSaleEventType_Franchise = 5;
+}
+
+enum EContentReportSubjectType {
+  k_EContentReportSubjectType_Invalid = 0;
+  k_EContentReportSubjectType_ForumPost = 1;
+  k_EContentReportSubjectType_UGCComment = 2;
+  k_EContentReportSubjectType_UGCFile = 3;
+  k_EContentReportSubjectType_MAX = 4;
+}
+
+enum EContentReportReason {
+  k_EContentReportReason_Invalid = 0;
+  k_EContentReportReason_Abusive = 1;
+  k_EContentReportReason_Commercial = 2;
+  k_EContentReportReason_OffTopic = 3;
+  k_EContentReportReason_Prohibited = 4;
+  k_EContentReportReason_Other = 5;
+  k_EContentReportReason_CSAM = 6;
+  k_EContentReportReason_Terrorism = 7;
+  k_EContentReportReason_MAX = 8;
+}
+
+enum EControlledLegalCategoryStatus {
+  k_EControlledLegalCategoryStatus_None = 0;
+  k_EControlledLegalCategoryStatus_Accused = 1;
+  k_EControlledLegalCategoryStatus_Convicted = 2;
+  k_EControlledLegalCategoryStatus_Acquitted = 3;
+}
+
+enum EContentModeratorLevel {
+  k_EContentModeratorLevel_Any = 0;
+  k_EContentModeratorLevel_Supervisor = 1;
+  k_EContentModeratorLevel_Valve = 10;
+  k_EContentModeratorLevel_MAX = 11;
+}
+
+enum EContentReportResolution {
+  k_EContentReportResolution_Unresolved = 0;
+  k_EContentReportResolution_Acquitted = 1;
+  k_EContentReportResolution_Removed = 2;
+  k_EContentReportResolution_Relabelled = 3;
+  k_EContentReportResolution_MAX = 4;
+}
+
+enum EContentModeratedReason {
+  k_EContentModeratedReason_Invalid = 0;
+  k_EContentModeratedReason_None = 1;
+  k_EContentModeratedReason_Unknown = 2;
+  k_EContentModeratedReason_AnimalHarm = 3;
+  k_EContentModeratedReason_MAX = 4;
 }
