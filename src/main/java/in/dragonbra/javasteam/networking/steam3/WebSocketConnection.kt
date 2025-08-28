@@ -13,6 +13,7 @@ import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.close
 import io.ktor.websocket.readBytes
 import io.ktor.websocket.readText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -85,11 +86,14 @@ class WebSocketConnection :
                                 }
 
                                 is Frame.Close -> disconnect(false)
-                                is Frame.Ping -> logger.debug("Received pong")
-                                is Frame.Pong -> logger.debug("Received pong")
+                                is Frame.Ping -> logger.debug("Received pong") // Never Used.
+                                is Frame.Pong -> logger.debug("Received pong") // Never Used.
                                 is Frame.Text -> logger.debug("Received plain text ${frame.readText()}")
                             }
                         }
+                    } catch (e: CancellationException) {
+                        // This won't print most times.
+                        logger.debug("Websocket cancelling: ${e.message}")
                     } catch (e: Exception) {
                         logger.error("An error occurred while receiving data", e)
                         disconnect(false)

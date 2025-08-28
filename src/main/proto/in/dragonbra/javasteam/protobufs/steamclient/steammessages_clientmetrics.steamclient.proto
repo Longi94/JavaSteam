@@ -114,6 +114,7 @@ message CClientMetrics_ReportClientError_Notification {
     optional string identifier = 1;
     optional string message = 2;
     optional uint32 count = 3;
+    optional string context = 4;
   }
 
   optional string product = 1;
@@ -212,6 +213,14 @@ message CClientMetrics_ReportLinuxStats_Notification {
   optional string process_name = 6;
 }
 
+message CClientMetrics_ReportAccessibilitySettings_Notification {
+  optional float accessibility_desktop_ui_scale = 1;
+  optional bool accessibility_screen_reader_enabled = 2;
+  optional bool accessibility_high_contrast_mode = 3;
+  optional bool accessibility_reduce_motion = 4;
+  optional string accessibility_color_filter_name = 5;
+}
+
 message CClientMetrics_ClipShare_Notification {
   optional uint32 eresult = 1 [default = 2];
   optional .EClipShareMethod share_method = 2 [default = k_EClipShareMethod_Chat];
@@ -242,6 +251,23 @@ message CClientMetrics_EndGameRecording_Notification {
   optional bool instant_clip = 5;
 }
 
+message CClientMetrics_GamePerformance_Notification {
+  message FrameRateReport {
+    optional fixed64 gameid = 1;
+    optional uint32 frame_rate = 2;
+    optional string manufacturer = 3;
+    optional string model = 4;
+    optional string dx_video_card = 5;
+    optional int32 dx_vendorid = 6;
+    optional int32 dx_deviceid = 7;
+    optional uint32 num_gpu = 8;
+    optional uint64 system_ram = 9;
+    optional int32 session_seconds = 10;
+  }
+
+  repeated .CClientMetrics_GamePerformance_Notification.FrameRateReport reports = 1;
+}
+
 service ClientMetrics {
   rpc ClientAppInterfaceStatsReport (.CClientMetrics_AppInterfaceStats_Notification) returns (.NoResponse);
   rpc ClientIPv6ConnectivityReport (.CClientMetrics_IPv6Connectivity_Notification) returns (.NoResponse);
@@ -255,7 +281,9 @@ service ClientMetrics {
   rpc ClientDownloadResponseCodeCounts (.CClientMetrics_ContentDownloadResponse_Counts_Notification) returns (.NoResponse);
   rpc ReportClientArgs (.CClientMetrics_ReportClientArgs_Notification) returns (.NoResponse);
   rpc ReportLinuxStats (.CClientMetrics_ReportLinuxStats_Notification) returns (.NoResponse);
+  rpc ReportAccessibilitySettings (.CClientMetrics_ReportAccessibilitySettings_Notification) returns (.NoResponse);
   rpc ReportClipShare (.CClientMetrics_ClipShare_Notification) returns (.NoResponse);
   rpc ReportClipRange (.CClientMetrics_ClipRange_Notification) returns (.NoResponse);
   rpc ReportEndGameRecording (.CClientMetrics_EndGameRecording_Notification) returns (.NoResponse);
+  rpc ReportGamePerformance (.CClientMetrics_GamePerformance_Notification) returns (.NoResponse);
 }

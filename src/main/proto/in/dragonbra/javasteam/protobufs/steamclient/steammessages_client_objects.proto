@@ -268,19 +268,13 @@ message CMsgSystemPerfLimits {
   repeated int32 fps_limit_options = 13;
   optional int32 tdp_limit_min = 14;
   optional int32 tdp_limit_max = 15;
-  optional bool is_nis_supported = 16;
-  optional int32 nis_sharpness_min = 17;
-  optional int32 nis_sharpness_max = 18;
   optional int32 display_external_refresh_manual_hz_min = 19;
   optional int32 display_external_refresh_manual_hz_max = 20;
   repeated int32 fps_limit_options_external = 21;
   optional bool is_vrr_supported = 23;
   optional bool is_dynamic_refresh_rate_in_steam_supported = 24;
-  optional bool is_split_scaling_and_filtering_supported = 25;
   repeated .ESplitScalingFilter split_scaling_filters_available = 26;
   repeated .ESplitScalingScaler split_scaling_scalers_available = 27;
-  optional bool is_hdr_supported = 28;
-  optional int32 display_refresh_manual_hz_oc_max = 29;
   optional bool disable_refresh_rate_management = 30;
 }
 
@@ -293,15 +287,10 @@ message CMsgSystemPerfSettingsGlobal {
   optional bool is_show_perf_overlay_over_steam_enabled = 6;
   optional bool is_advanced_settings_enabled = 7;
   optional bool allow_external_display_refresh_control = 8;
-  optional bool is_hdr_enabled = 9;
   optional .EHDRToneMapOperator hdr_on_sdr_tonemap_operator = 12 [default = k_EHDRToneMapOperator_Invalid];
   optional bool is_hdr_debug_heatmap_enabled = 13;
   optional bool force_hdr_wide_gammut_for_sdr = 15 [default = true];
-  optional bool allow_experimental_hdr = 16;
   optional float sdr_to_hdr_brightness = 22;
-  optional bool debug_force_hdr_support = 18;
-  optional bool force_hdr_10pq_output_debug = 19;
-  optional bool is_display_oc_enabled = 20;
   optional bool is_color_management_enabled = 21;
 }
 
@@ -321,7 +310,6 @@ message CMsgSystemPerfSettingsPerApp {
   optional int32 display_refresh_manual_hz = 13;
   optional bool is_game_perf_profile_enabled = 14;
   optional .EGPUPerformanceLevel gpu_performance_level = 15 [default = k_EGPUPerformanceLevel_Invalid];
-  optional int32 nis_sharpness = 16;
   optional int32 display_external_refresh_manual_hz = 17;
   optional int32 fps_limit_external = 18;
   optional bool is_tearing_enabled = 19;
@@ -498,9 +486,9 @@ message CMsgSystemDisplay {
   optional int32 refresh_rate_min = 12;
   optional int32 refresh_rate_max = 13;
   optional bool is_vrr_capable = 14;
-  optional bool is_vrr_enabled = 15;
+  optional bool is_vrr_output_active = 15;
   optional bool is_hdr_capable = 16;
-  optional bool is_hdr_enabled = 17;
+  optional bool is_hdr_output_active = 17;
   repeated int32 supported_refresh_rates = 18;
 }
 
@@ -618,7 +606,7 @@ message CMsgShortcutInfo {
   optional uint32 override_appid = 8;
   optional string flatpak_appid = 9;
   repeated string tags = 10;
-  optional bool is_remote = 11;
+  optional uint64 remote_client_id = 11;
   optional bool is_hidden = 12;
   optional bool is_temporary = 13;
   optional bool is_openvr = 14;
@@ -627,6 +615,12 @@ message CMsgShortcutInfo {
   optional uint32 rt_last_played_time = 17;
   optional bool is_devkit_shortcut = 18;
   optional string devkit_gameid = 19;
+  optional bool remote_launch_available = 20;
+  optional string sortas = 21;
+}
+
+message CMsgShortcutInfos {
+  repeated .CMsgShortcutInfo shorcuts = 1;
 }
 
 message CMsgShortcutAppIds {

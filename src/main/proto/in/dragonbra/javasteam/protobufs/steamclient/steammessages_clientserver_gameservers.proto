@@ -20,6 +20,7 @@ message CMsgGSServerType {
 
 message CMsgGSStatusReply {
   optional bool is_secure = 1;
+  optional bool is_valveds = 2;
 }
 
 message CMsgGSPlayerList {
@@ -86,6 +87,7 @@ message CMsgClientGMSServerQuery {
   optional uint32 region_code = 3;
   optional string filter_text = 4;
   optional uint32 max_servers = 5;
+  optional string sdr_ping_location = 6;
 }
 
 message CMsgGMSClientServerQueryResponse {
