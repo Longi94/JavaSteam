@@ -150,6 +150,8 @@ class DepotManifest {
 
         // SK has this below `return true;` but we cannot do that in Kotlin.
         fun tryDecryptName(name: String, iv: ByteArray, decoded: (String?) -> Unit): Boolean {
+            decoded(null)
+
             var decodedLength = name.length / 4 * 3 // This may be higher due to padding
 
             // Majority of filenames are short, even when they are encrypted and base64 encoded,
