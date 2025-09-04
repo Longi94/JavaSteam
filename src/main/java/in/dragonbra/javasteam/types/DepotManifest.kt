@@ -24,9 +24,6 @@ import javax.crypto.spec.SecretKeySpec
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
-import kotlin.compareTo
-import kotlin.dec
-import kotlin.text.get
 
 /**
  * Represents a Steam3 depot manifest.
