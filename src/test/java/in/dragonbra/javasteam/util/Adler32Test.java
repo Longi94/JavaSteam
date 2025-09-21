@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Random;
 
-public class Alder32Test {
+public class Adler32Test {
 
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 2})
@@ -18,14 +20,49 @@ public class Alder32Test {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 8, 215, 1024, 1024 + 15, 2034, 4096})
+    @ValueSource(ints = {0, 8, 15, 16, 17, 215, 1024, 1024 + 15, 2034, 4096, 5552 - 1, 5552, 5552 + 1, 5552 + 16, 5552 * 2})
     void matchesReference(int length) {
+        System.out.println("Using length: " + length);
         final var seed = 0;
         var data = new byte[length];
         new Random().nextBytes(data);
 
-        var expected = referenceImplementation(data);
+        var expected = referenceImplementation(seed, data);
         var actual = Adler32.calculate(seed, data);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a", "Wikipedia", "123456789", "SteamKit is good software, you should use it. :)"})
+    void matchesKnownVectors(String input) {
+        final int seed = 1;
+        final int[] expectedValues = {0x00620062, 0x11E60398, 0x091e01de, 0xaf8110e6};
+        final String[] testStrings = {"a", "Wikipedia", "123456789", "SteamKit is good software, you should use it. :)"};
+
+        // Find the expected value for this input string
+        int expectedIndex = -1;
+        for (int i = 0; i < testStrings.length; i++) {
+            if (testStrings[i].equals(input)) {
+                expectedIndex = i;
+                break;
+            }
+        }
+
+        var data = input.getBytes(StandardCharsets.US_ASCII);
+        var actual = Adler32.calculate(seed, data);
+        var expected = expectedValues[expectedIndex];
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    void noOverflowWithMaxBytes() {
+        var data = new byte[5552]; // NMAX value
+        Arrays.fill(data, (byte) 0xFF);
+
+        var expected = referenceImplementation(1, data);
+        var actual = Adler32.calculate(1, data);
 
         Assertions.assertEquals(expected, actual);
     }
@@ -162,8 +199,15 @@ public class Alder32Test {
         System.out.println();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private static int referenceImplementation(byte[] input) {
-        int a = 0, b = 0;
+        return referenceImplementation(0, input);
+    }
+
+    private static int referenceImplementation(int seed, byte[] input) {
+        var a = seed;
+        int b = 0;
+
         for (byte value : input) {
             // Use bitwise AND with 0xFF to treat byte as unsigned
             a = (a + (value & 0xFF)) % 65521;
