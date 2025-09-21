@@ -13,6 +13,7 @@ import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.types.FileData
 import `in`.dragonbra.javasteam.types.KeyValue
+import `in`.dragonbra.javasteam.util.Adler32
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Utils
@@ -421,7 +422,7 @@ class ContentDownloader(val steamClient: SteamClient) {
                             val tmp = ByteArray(match.oldChunk.uncompressedLength)
                             fsOld.readNBytesCompat(tmp, 0, tmp.size)
 
-                            val adler = Utils.adlerHash(tmp)
+                            val adler = Adler32.calculate(tmp)
                             if (adler != match.oldChunk.checksum) {
                                 neededChunks.add(match.newChunk)
                             } else {

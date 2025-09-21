@@ -1,8 +1,8 @@
 package `in`.dragonbra.javasteam.steam.cdn
 
 import `in`.dragonbra.javasteam.types.ChunkData
+import `in`.dragonbra.javasteam.util.Adler32
 import `in`.dragonbra.javasteam.util.Strings
-import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.VZipUtil
 import `in`.dragonbra.javasteam.util.VZstdUtil
 import `in`.dragonbra.javasteam.util.ZipUtil
@@ -126,7 +126,7 @@ object DepotChunk {
             )
         }
 
-        val dataCrc = Utils.adlerHash(destination.sliceArray(0 until writtenDecompressed))
+        val dataCrc = Adler32.calculate(destination.sliceArray(0 until writtenDecompressed))
 
         if (dataCrc != info.checksum) {
             throw IOException("Processed data checksum is incorrect ($dataCrc != ${info.checksum})! Downloaded depot chunk is corrupt or invalid/wrong depot key?")
