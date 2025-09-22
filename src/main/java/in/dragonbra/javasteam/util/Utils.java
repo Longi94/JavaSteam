@@ -195,20 +195,6 @@ public class Utils {
     }
 
     /**
-     * Performs an Adler32 on the given input
-     */
-    public static int adlerHash(byte[] input) {
-        int a = 0, b = 0;
-        for (byte value : input) {
-            // Use bitwise AND with 0xFF to treat byte as unsigned
-            a = (a + (value & 0xFF)) % 65521;
-            b = (b + a) % 65521;
-        }
-
-        return a | (b << 16);
-    }
-
-    /**
      * Validate a file against Steam3 Chunk data
      *
      * @param fs        FileInputStream to read from
@@ -235,7 +221,7 @@ public class Utils {
                 tempChunk = chunk;
             }
 
-            int adler = adlerHash(tempChunk);
+            int adler = Adler32.calculate(tempChunk);
             if (adler != data.getChecksum()) {
                 neededChunks.add(data);
             }
