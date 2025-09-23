@@ -85,7 +85,7 @@ public class SampleSteamGuardRememberMe implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample1: No username and password specified!");
+            System.out.println("Sample 005: No username and password specified!");
             return;
         }
 

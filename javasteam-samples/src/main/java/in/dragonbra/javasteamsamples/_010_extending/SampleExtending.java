@@ -51,7 +51,7 @@ public class SampleExtending implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample2: No username and password specified!");
+            System.out.println("Sample 010: No username and password specified!");
             return;
         }
 

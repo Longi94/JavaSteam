@@ -59,7 +59,7 @@ public class SampleDownloadApp implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample23: No username and password specified!");
+            System.out.println("Sample 023: No username and password specified!");
             return;
         }
 

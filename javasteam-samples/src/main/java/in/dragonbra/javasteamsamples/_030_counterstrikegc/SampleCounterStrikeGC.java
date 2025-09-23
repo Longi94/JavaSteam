@@ -62,7 +62,7 @@ public class SampleCounterStrikeGC implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample1: No username and password specified!");
+            System.out.println("Sample 030: No username and password specified!");
             return;
         }
 
@@ -195,11 +195,15 @@ public class SampleCounterStrikeGC implements Runnable {
             // GC acknowledges us, we can now send further GC messages.
             System.out.println("GC has Welcomed us!");
 
-            // Let's grab a random profile for this sample.
-            var sid = new SteamID(76561198386265483L); // Just pick a random notable CS2 player.
+            // Let's grab a random notable CS2 player for this example.
+            var sid = new SteamID(76561198386265483L);
 
             // Sanity check
-            if (!sid.isValid() || sid.getAccountUniverse() != EUniverse.Public || sid.getAccountType() != EAccountType.Individual || sid.getAccountInstance() != SteamID.DESKTOP_INSTANCE) {
+            if (!sid.isValid() ||
+                    sid.getAccountUniverse() != EUniverse.Public ||
+                    sid.getAccountType() != EAccountType.Individual ||
+                    sid.getAccountInstance() != SteamID.DESKTOP_INSTANCE
+            ) {
                 System.err.println("Invalid SteamID");
                 stopPlayingGame();
                 return;
