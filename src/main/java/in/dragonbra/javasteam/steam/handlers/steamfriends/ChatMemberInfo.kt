@@ -15,31 +15,31 @@ class ChatMemberInfo : MessageObject {
 
     /**
      * Initializes a new instance of the [ChatMemberInfo] class.
-     *
-     * @param keyValues The KeyValue backing store for this member info.
      */
-    constructor(keyValues: KeyValue?) : super(keyValues)
+    constructor() : super()
 
     /**
      * Initializes a new instance of the [ChatMemberInfo] class.
+     *
+     * @param keyValues The KeyValue backing store for this member info.
      */
-    constructor() : super()
+    constructor(keyValues: KeyValue) : super(keyValues)
 
     /**
      * Gets the clan permission details of this chat member.
      */
     val details: EnumSet<EClanPermission>
-        get() = keyValues.get("Details").asEnum(EClanPermission::class.java, EnumSet.of(EClanPermission.Nobody))
+        get() = keyValues["Details"].asEnum(EClanPermission::class.java, EnumSet.of(EClanPermission.Nobody))
 
     /**
      * Gets the permissions this user has with the chatroom.
      */
     val permissions: EnumSet<EChatPermission>
-        get() = keyValues.get("Details").asEnum(EChatPermission::class.java, EChatPermission.EveryoneDefault)
+        get() = keyValues["Permissions"].asEnum(EChatPermission::class.java, EChatPermission.EveryoneDefault)
 
     /**
      * @return the [SteamID] of this user.
      */
     val steamID: SteamID
-        get() = SteamID(keyValues.get("SteamID").asLong())
+        get() = SteamID(keyValues["SteamID"].asLong())
 }
