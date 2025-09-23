@@ -428,6 +428,7 @@ class KeyValue @JvmOverloads constructor(
             companion object {
                 private val codeMap = entries.associateBy { it.code }
 
+                @JvmStatic
                 fun from(code: Byte): Type? = codeMap[code]
             }
         }

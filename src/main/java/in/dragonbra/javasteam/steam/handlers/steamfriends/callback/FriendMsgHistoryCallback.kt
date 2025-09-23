@@ -18,7 +18,7 @@ import java.util.*
  */
 class FriendMsgHistoryCallback(
     msg: CMsgClientChatGetFriendMessageHistoryResponse.Builder,
-    universe: EUniverse?,
+    universe: EUniverse,
 ) : CallbackMsg() {
 
     /**
