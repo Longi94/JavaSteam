@@ -1,161 +1,87 @@
-package in.dragonbra.javasteam.types;
+package `in`.dragonbra.javasteam.types
 
-import in.dragonbra.javasteam.util.compat.ObjectsCompat;
-
-import java.util.Date;
+import `in`.dragonbra.javasteam.util.compat.ObjectsCompat
+import java.util.*
 
 /**
  * Represents a globally unique identifier within the Steam network.
  * Guaranteed to be unique across all racks and servers for a given Steam universe.
+ * @constructor Initializes a new instance of the [GlobalID] class.
+ * @param gid The GID value.
  */
-public class GlobalID {
+open class GlobalID @JvmOverloads constructor(gid: Long = Long.MAX_VALUE) {
 
-    private final BitVector64 gidBits;
-
-    /**
-     * Initializes a new instance of the {@link GlobalID} class.
-     */
-    public GlobalID() {
-        this(0xFFFFFFFFFFFFFFFFL);
-    }
+    private val gidBits: BitVector64 = BitVector64(gid)
 
     /**
-     * Initializes a new instance of the {@link GlobalID} class.
-     *
-     * @param gid The GID value.
+     * Gets or Sets the sequential count for this GID.
      */
-    public GlobalID(long gid) {
-        gidBits = new BitVector64(gid);
-    }
-
-    /**
-     * Sets the sequential count for this GID.
-     *
-     * @param value The sequential count.
-     */
-    public void setSequentialCount(long value) {
-        gidBits.setMask((short) 0, 0xFFFFFL, value);
-    }
-
-    /**
-     * Gets the sequential count for this GID.
-     *
-     * @return The sequential count.
-     */
-    public long getSequentialCount() {
-        return gidBits.getMask((short) 0, 0xFFFFFL);
-    }
-
-    /**
-     * Sets the start time of the server that generated this GID.
-     *
-     * @param startTime The start time.
-     */
-    public void setStartTime(Date startTime) {
-        long startTimeS = (startTime.getTime() - 1104537600000L) / 1000L;
-        gidBits.setMask((short) 20, 0x3FFFFFFFL, startTimeS);
-    }
-
-    /**
-     * Gets the start time of the server that generated this GID.
-     *
-     * @return The start time.
-     */
-    public Date getStartTime() {
-        long startTimeS = gidBits.getMask((short) 20, 0x3FFFFFFFL);
-        return new Date(startTimeS * 1000L);
-    }
-
-    /**
-     * Sets the process ID of the server that generated this GID.
-     *
-     * @param value The process ID.
-     */
-    public void setProcessID(long value) {
-        gidBits.setMask((short) 50, 0xFL, value);
-    }
-
-    /**
-     * Gets the process ID of the server that generated this GID.
-     *
-     * @return The process ID.
-     */
-    public long getProcessID() {
-        return gidBits.getMask((short) 50, 0xFL);
-    }
-
-    /**
-     * Sets the box ID of the server that generated this GID.
-     *
-     * @param value The box ID.
-     */
-    public void setBoxID(long value) {
-        gidBits.setMask((short) 54, 0x3FFL, value);
-    }
-
-    /**
-     * Gets the box ID of the server that generated this GID.
-     *
-     * @return The box ID.
-     */
-    public long getBoxID() {
-        return gidBits.getMask((short) 54, 0x3FFL);
-    }
-
-    /**
-     * Sets the entire 64bit value of this GID.
-     *
-     * @param value The value.
-     */
-    public void setValue(long value) {
-        gidBits.setData(value);
-    }
-
-    /**
-     * Sets the entire 64bit value of this GID.
-     *
-     * @return The value.
-     */
-    public long getValue() {
-        return gidBits.getData();
-    }
-
-    /**
-     * Determines whether the specified {@link Object} is equal to this instance.
-     *
-     * @param obj The {@link Object} to compare with this instance.
-     * @return <b>true</b> if the specified {@link Object} is equal to this instance; otherwise, <b>false</b>.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
+    var sequentialCount: Long
+        get() = gidBits.getMask(0, 0xFFFFFL)
+        set(value) {
+            gidBits.setMask(0, 0xFFFFFL, value)
         }
 
-        if (!(obj instanceof GlobalID)) {
-            return false;
+    /**
+     * Gets or Sets the start time of the server that generated this GID.
+     */
+    var startTime: Date
+        get() {
+            val startTimeS = gidBits.getMask(20, 0x3FFFFFFFL)
+            return Date(startTimeS * 1000L)
+        }
+        set(startTime) {
+            val startTimeS: Long = (startTime.time - 1104537600000L) / 1000L
+            gidBits.setMask(20, 0x3FFFFFFFL, startTimeS)
         }
 
-        return ObjectsCompat.equals(gidBits.getData(), ((GlobalID) obj).gidBits.getData());
+    /**
+     * Gets or Sets the process ID of the server that generated this GID.
+     */
+    var processID: Long
+        get() = gidBits.getMask(50, 0xFL)
+        set(value) {
+            gidBits.setMask(50, 0xFL, value)
+        }
+
+    /**
+     * Gets or Sets the box ID of the server that generated this GID.
+     */
+    var boxID: Long
+        get() = gidBits.getMask(54, 0x3FFL)
+        set(value) {
+            gidBits.setMask(54, 0x3FFL, value)
+        }
+
+    /**
+     * Sets or Sets the entire 64bit value of this GID.
+     */
+    var value: Long
+        get() = gidBits.data
+        set(value) {
+            gidBits.data = value
+        }
+
+    /**
+     * Determines whether the specified [Object] is equal to this instance.
+     * @param other The [Object] to compare with this instance.
+     * @return **true** if the specified [Object] is equal to this instance; otherwise, **false**.
+     */
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is GlobalID) return false
+        return ObjectsCompat.equals(gidBits.data, other.gidBits.data)
     }
 
     /**
      * Returns a hash code for this instance.
-     *
      * @return A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
      */
-    @Override
-    public int hashCode() {
-        return gidBits.getData().hashCode();
-    }
+    override fun hashCode(): Int = gidBits.data.hashCode()
 
     /**
-     * Returns a {@link String} that represents this instance.
-     *
-     * @return A {@link String} that represents this instance.
+     * Returns a [String] that represents this instance.
+     * @return A [String] that represents this instance.
      */
-    @Override
-    public String toString() {
-        return String.valueOf(getValue());
-    }
+    override fun toString(): String = value.toString()
 }

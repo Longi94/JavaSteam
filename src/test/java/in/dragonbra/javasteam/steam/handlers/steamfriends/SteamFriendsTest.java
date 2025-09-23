@@ -99,7 +99,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
     public void joinChat() {
         SteamID testId = new SteamID(123456789L);
         testId.setAccountType(EAccountType.Chat);
-        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.joinChat(testId);
 
         ClientMsg<MsgClientJoinChat> msg = verifySend(EMsg.ClientJoinChat);
@@ -111,7 +111,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
     public void leaveChat() {
         SteamID testId = new SteamID(123456789L);
         testId.setAccountType(EAccountType.Chat);
-        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.leaveChat(testId);
 
         ClientMsg<MsgClientChatMemberInfo> msg = verifySend(EMsg.ClientChatMemberInfo);
@@ -124,7 +124,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
     public void sendChatRoomMessage() throws IOException {
         SteamID testId = new SteamID(123456789L);
         testId.setAccountType(EAccountType.Chat);
-        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        testId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.sendChatRoomMessage(testId, EChatEntryType.ChatMsg, "testmessage");
 
         ClientMsg<MsgClientChatMsg> msg = verifySend(EMsg.ClientChatMsg);
@@ -142,7 +142,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         SteamID userId = new SteamID(987654321L);
         SteamID chatId = new SteamID(123456789L);
         chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.inviteUserToChat(userId, chatId);
 
         ClientMsgProtobuf<CMsgClientChatInvite.Builder> msg = verifySend(EMsg.ClientChatInvite);
@@ -156,7 +156,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         SteamID userId = new SteamID(987654321L);
         SteamID chatId = new SteamID(123456789L);
         chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.kickChatMember(chatId, userId);
 
         ClientMsg<MsgClientChatAction> msg = verifySend(EMsg.ClientChatAction);
@@ -171,7 +171,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         SteamID userId = new SteamID(987654321L);
         SteamID chatId = new SteamID(123456789L);
         chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.banChatMember(chatId, userId);
 
         ClientMsg<MsgClientChatAction> msg = verifySend(EMsg.ClientChatAction);
@@ -186,7 +186,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         SteamID userId = new SteamID(987654321L);
         SteamID chatId = new SteamID(123456789L);
         chatId.setAccountType(EAccountType.Chat);
-        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.code());
+        chatId.setAccountInstance(SteamID.ChatInstanceFlags.CLAN.getCode());
         handler.unbanChatMember(chatId, userId);
 
         ClientMsg<MsgClientChatAction> msg = verifySend(EMsg.ClientChatAction);

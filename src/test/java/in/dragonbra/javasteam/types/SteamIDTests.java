@@ -109,7 +109,7 @@ public class SteamIDTests extends TestBase {
         sidLobby.setFromSteam3String("[L:1:123]");
         assertEquals(123L, sidLobby.getAccountID());
         assertEquals(EUniverse.Public, sidLobby.getAccountUniverse());
-        assertTrue((sidLobby.getAccountInstance() & SteamID.ChatInstanceFlags.LOBBY.code()) > 0);
+        assertTrue((sidLobby.getAccountInstance() & SteamID.ChatInstanceFlags.LOBBY.getCode()) > 0);
         assertEquals(EAccountType.Chat, sidLobby.getAccountType());
 
         SteamID sidClanChat = new SteamID();
@@ -117,7 +117,7 @@ public class SteamIDTests extends TestBase {
         assertEquals(123L, sidClanChat.getAccountID());
         assertEquals(EUniverse.Public, sidClanChat.getAccountUniverse());
 
-        assertTrue((sidClanChat.getAccountInstance() & SteamID.ChatInstanceFlags.CLAN.code()) > 0);
+        assertTrue((sidClanChat.getAccountInstance() & SteamID.ChatInstanceFlags.CLAN.getCode()) > 0);
         assertEquals(EAccountType.Chat, sidClanChat.getAccountType());
 
         SteamID sidMultiseat = new SteamID();
@@ -299,13 +299,13 @@ public class SteamIDTests extends TestBase {
         sid.setFromSteam3String("[c:1:1234]");
         assertEquals(EUniverse.Public, sid.getAccountUniverse());
         assertEquals(EAccountType.Chat, sid.getAccountType());
-        assertEquals(SteamID.ChatInstanceFlags.CLAN.code(), sid.getAccountInstance());
+        assertEquals(SteamID.ChatInstanceFlags.CLAN.getCode(), sid.getAccountInstance());
         assertEquals(1234L, sid.getAccountID());
 
         sid.setFromSteam3String("[L:1:1234]");
         assertEquals(EUniverse.Public, sid.getAccountUniverse());
         assertEquals(EAccountType.Chat, sid.getAccountType());
-        assertEquals(SteamID.ChatInstanceFlags.LOBBY.code(), sid.getAccountInstance());
+        assertEquals(SteamID.ChatInstanceFlags.LOBBY.getCode(), sid.getAccountInstance());
         assertEquals(1234L, sid.getAccountID());
     }
 
@@ -344,7 +344,7 @@ public class SteamIDTests extends TestBase {
 
     @Test
     public void tryGetClanIDConvertsWellKnownID() {
-        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, EAccountType.Chat);
+        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.getCode(), EUniverse.Public, EAccountType.Chat);
         SteamID groupID = clanID.tryGetClanID();
         assertNotNull(groupID);
         assertEquals(103582791429521412L, groupID.convertToUInt64());
@@ -352,13 +352,13 @@ public class SteamIDTests extends TestBase {
 
     @Test
     public void tryGetClanIDDoesNotModifySelf() {
-        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, EAccountType.Chat);
+        SteamID clanID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.getCode(), EUniverse.Public, EAccountType.Chat);
         SteamID groupID = clanID.tryGetClanID();
         assertNotNull(groupID);
 
         assertEquals(EUniverse.Public, clanID.getAccountUniverse());
         assertEquals(EAccountType.Chat, clanID.getAccountType());
-        assertEquals(SteamID.ChatInstanceFlags.CLAN.code(), clanID.getAccountInstance());
+        assertEquals(SteamID.ChatInstanceFlags.CLAN.getCode(), clanID.getAccountInstance());
         assertEquals(4L, clanID.getAccountID());
     }
 
@@ -373,7 +373,7 @@ public class SteamIDTests extends TestBase {
     @ParameterizedTest
     @EnumSource(value = EAccountType.class, names = {"Invalid", "Chat"}, mode = EnumSource.Mode.EXCLUDE)
     public void tryGetClanIDOnlySupportsChatRooms(EAccountType type) {
-        SteamID chatID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.code(), EUniverse.Public, type);
+        SteamID chatID = new SteamID(4, SteamID.ChatInstanceFlags.CLAN.getCode(), EUniverse.Public, type);
 
         SteamID groupID = chatID.tryGetClanID();
         assertNull(groupID);
