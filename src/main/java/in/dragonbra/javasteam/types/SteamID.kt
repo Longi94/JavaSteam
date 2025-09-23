@@ -551,6 +551,7 @@ class SteamID {
         fun hasFlag(flags: Long): Boolean = (flags and code) != 0L
 
         companion object {
+            @JvmStatic
             fun from(code: Long): ChatInstanceFlags? = entries.find { it.code == code }
         }
     }

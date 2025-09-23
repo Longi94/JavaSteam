@@ -1,246 +1,165 @@
-package in.dragonbra.javasteam.types;
+package `in`.dragonbra.javasteam.types
 
-import in.dragonbra.javasteam.util.Utils;
-import in.dragonbra.javasteam.util.compat.ObjectsCompat;
+import `in`.dragonbra.javasteam.util.Utils
+import `in`.dragonbra.javasteam.util.compat.ObjectsCompat
 
 /**
  * This 64bit structure represents an app, mod, shortcut, or p2p file on the Steam network.
+ * @constructor Initializes a new instance of the [GameID] class.
+ * @param id The 64bit integer to assign this GameID from.
  */
-public class GameID {
+@Suppress("unused")
+class GameID @JvmOverloads constructor(id: Long = 0) {
 
-    private final BitVector64 gameId;
-
-    /**
-     * Initializes a new instance of the {@link GameID} class.
-     */
-    public GameID() {
-        this(0);
-    }
+    private val gameId: BitVector64 = BitVector64(id)
 
     /**
-     * Initializes a new instance of the {@link GameID} class.
-     *
-     * @param id The 64bit integer to assign this GameID from.
-     */
-    public GameID(long id) {
-        gameId = new BitVector64(id);
-    }
-
-    /**
-     * Initializes a new instance of the {@link GameID} class.
-     *
+     * Initializes a new instance of the [GameID] class.
      * @param nAppId The 32bit app id to assign this GameID from.
      */
-    public GameID(int nAppId) {
-        this((long) nAppId);
-    }
+    constructor(nAppId: Int) : this(nAppId.toLong())
 
     /**
-     * Initializes a new instance of the {@link GameID} class.
-     *
+     * Initializes a new instance of the [GameID] class.
      * @param nAppId  The base app id of the mod.
      * @param modPath The game folder name of the mod.
      */
-    public GameID(int nAppId, String modPath) {
-        this(0);
-        setAppID(nAppId);
-        setAppType(GameType.GAME_MOD);
-        setModID(Utils.crc32(modPath));
+    constructor(nAppId: Int, modPath: String) : this(0) {
+        appID = nAppId
+        appType = GameType.GAME_MOD
+        modID = Utils.crc32(modPath)
     }
 
     /**
-     * Initializes a new instance of the {@link GameID} class.
-     *
+     * Initializes a new instance of the [GameID] class.
      * @param exePath The path to the executable, usually quoted.
      * @param appName The name of the application shortcut.
      */
-    public GameID(String exePath, String appName) {
-        this(0);
-
-        StringBuilder builder = new StringBuilder();
+    constructor(exePath: String?, appName: String?) : this(0) {
+        val combined = StringBuilder()
         if (exePath != null) {
-            builder.append(exePath);
+            combined.append(exePath)
         }
         if (appName != null) {
-            builder.append(appName);
+            combined.append(appName)
         }
 
-        setAppID(0);
-        setAppType(GameType.SHORTCUT);
-        setModID(Utils.crc32(builder.toString()));
+        appID = 0
+        appType = GameType.SHORTCUT
+        modID = Utils.crc32(combined.toString())
     }
 
     /**
      * Sets the various components of this GameID from a 64bit integer form.
-     *
      * @param gameId The 64bit integer to assign this GameID from.
      */
-    public void set(long gameId) {
-        this.gameId.setData(gameId);
+    fun set(gameId: Long) {
+        this.gameId.data = gameId
     }
 
     /**
      * Converts this GameID into it's 64bit integer form.
-     *
      * @return A 64bit integer representing this GameID.
      */
-    public long toUInt64() {
-        return gameId.getData();
-    }
+    fun toUInt64(): Long = gameId.data
 
     /**
-     * Sets the app id.
-     *
-     * @param value The app ID.
+     * Gets or Sets the app id.
      */
-    public void setAppID(int value) {
-        gameId.setMask((short) 0, 0xFFFFFFL, value);
-    }
+    var appID: Int
+        get() = gameId.getMask(0, 0xFFFFFFL).toInt()
+        set(value) {
+            gameId.setMask(0, 0xFFFFFFL, value.toLong())
+        }
 
     /**
-     * Gets the app id.
-     *
-     * @return The app ID.
+     * Gets or Sets the type of the app.
      */
-    public int getAppID() {
-        return (int) gameId.getMask((short) 0, 0xFFFFFFL);
-    }
+    var appType: GameType?
+        get() = GameType.from(gameId.getMask(24, 0xFFL).toInt())
+        set(value) {
+            gameId.setMask(24, 0xFFL, value!!.code.toLong())
+        }
 
     /**
-     * Sets the type of the app.
-     *
-     * @param value The type of the app.
+     * Gets or Sets the mod id.
      */
-    public void setAppType(GameType value) {
-        gameId.setMask((short) 24, 0xFFL, value.code());
-    }
-
-    /**
-     * Gets the type of the app.
-     *
-     * @return The type of the app.
-     */
-    public GameType getAppType() {
-        return GameType.from((int) gameId.getMask((short) 24, 0xFFL));
-    }
-
-    /**
-     * Sets the mod id.
-     *
-     * @param value The mod ID.
-     */
-    public void setModID(long value) {
-        gameId.setMask((short) 32, 0xFFFFFFFFL, value);
-        gameId.setMask((short) 63, 0xFFL, 1L);
-    }
-
-    /**
-     * Gets the mod id.
-     *
-     * @return The mod ID.
-     */
-    public long getModID() {
-        return gameId.getMask((short) 32, 0xFFFFFFFFL);
-    }
+    var modID: Long
+        get() = gameId.getMask(32, 0xFFFFFFFFL)
+        set(value) {
+            gameId.setMask(32, 0xFFFFFFFFL, value)
+            gameId.setMask(63, 0xFFL, 1L)
+        }
 
     /**
      * Gets a value indicating whether this instance is a mod.
-     *
-     * @return <b>true</b> if this instance is a mod; otherwise, <b>false</b>.
+     * @return **true** if this instance is a mod; otherwise, **false**.
      */
-    public boolean isMod() {
-        return getAppType() == GameType.GAME_MOD;
-    }
+    val isMod: Boolean
+        get() = appType == GameType.GAME_MOD
 
     /**
      * Gets a value indicating whether this instance is a shortcut.
-     *
-     * @return <b>true</b> if this instance is a shortcut; otherwise, <b>false</b>.
+     * @return **true** if this instance is a shortcut; otherwise, **false**.
      */
-    public boolean isShortcut() {
-        return getAppType() == GameType.SHORTCUT;
-    }
+    val isShortcut: Boolean
+        get() = appType == GameType.SHORTCUT
 
     /**
      * Gets a value indicating whether this instance is a peer-to-peer file.
-     *
-     * @return <b>true</b> if this instance is a p2p file; otherwise, <b>false</b>.
+     * @return **true** if this instance is a p2p file; otherwise, **false**.
      */
-    public boolean isP2PFile() {
-        return getAppType() == GameType.P2P;
-    }
+    val isP2PFile: Boolean
+        get() = appType == GameType.P2P
 
     /**
      * Gets a value indicating whether this instance is a steam app.
-     *
-     * @return <b>true</b> if this instance is a steam app; otherwise, <b>false</b>.
+     * @return **true** if this instance is a steam app; otherwise, **false**.
      */
-    public boolean isSteamApp() {
-        return getAppType() == GameType.APP;
-    }
+    val isSteamApp: Boolean
+        get() = appType == GameType.APP
 
     /**
      * Sets the various components of this GameID from a 64bit integer form.
-     *
      * @param longSteamId The 64bit integer to assign this GameID from.
      */
-    public void setFromUInt64(long longSteamId) {
-        this.gameId.setData(longSteamId);
+    fun setFromUInt64(longSteamId: Long) {
+        gameId.data = longSteamId
     }
 
     /**
      * Converts this GameID into it's 64bit integer form.
-     *
      * @return A 64bit integer representing this GameID.
      */
-    public long convertToUInt64() {
-        return this.gameId.getData();
-    }
+    fun convertToUInt64(): Long = gameId.data
 
     /**
-     * Determines whether the specified {@link Object} is equal to this instance.
-     *
-     * @param obj The {@link Object} to compare with this instance.
-     * @return <b>true</b> if the specified {@link Object} is equal to this instance; otherwise, <b>false</b>.
+     * Determines whether the specified [Object] is equal to this instance.
+     * @param other The [Object] to compare with this instance.
+     * @return **true** if the specified [Object] is equal to this instance; otherwise, **false**.
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-
-        if (!(obj instanceof GameID)) {
-            return false;
-        }
-
-        return ObjectsCompat.equals(gameId.getData(), ((GameID) obj).gameId.getData());
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is GameID) return false
+        return ObjectsCompat.equals(gameId.data, other.gameId.data)
     }
 
     /**
      * Returns a hash code for this instance.
-     *
      * @return A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
      */
-    @Override
-    public int hashCode() {
-        return gameId.hashCode();
-    }
+    override fun hashCode(): Int = gameId.hashCode()
 
     /**
-     * Returns a {@link String} that represents this instance.
-     *
-     * @return A {@link String} that represents this instance.
+     * Returns a [String] that represents this instance.
+     * @return A [String] that represents this instance.
      */
-    @Override
-    public String toString() {
-        return String.valueOf(toUInt64());
-    }
+    override fun toString(): String = toUInt64().toString()
 
     /**
      * Represents various types of games.
      */
-    public enum GameType {
-
+    enum class GameType(val code: Int) {
         /**
          * A Steam application.
          */
@@ -259,25 +178,12 @@ public class GameID {
         /**
          * A peer-to-peer file.
          */
-        P2P(3);
+        P2P(3),
+        ;
 
-        private final int code;
-
-        GameType(int code) {
-            this.code = code;
-        }
-
-        public int code() {
-            return code;
-        }
-
-        public static GameType from(int code) {
-            for (GameType e : GameType.values()) {
-                if (e.code == code) {
-                    return e;
-                }
-            }
-            return null;
+        companion object {
+            @JvmStatic
+            fun from(code: Int): GameType? = entries.find { it.code == code }
         }
     }
 }
