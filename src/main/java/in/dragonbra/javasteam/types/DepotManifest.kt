@@ -145,71 +145,94 @@ class DepotManifest {
         var bufferDecoded = ByteArray(256)
         var bufferDecrypted = ByteArray(256)
 
+        // SK has this below `return true;` but we cannot do that in Kotlin.
+        fun tryDecryptName(name: String, iv: ByteArray, decoded: (String?) -> Unit): Boolean {
+            decoded(null)
+
+            var decodedLength = name.length / 4 * 3 // This may be higher due to padding
+
+            // Majority of filenames are short, even when they are encrypted and base64 encoded,
+            // so this resize will be hit *very* rarely
+            if (decodedLength > bufferDecoded.size) {
+                bufferDecoded = ByteArray(decodedLength)
+                bufferDecrypted = ByteArray(decodedLength)
+            }
+
+            val decoder = Base64.getUrlDecoder()
+            decodedLength = try {
+                val tempBytes = decoder.decode(
+                    name
+                        .replace('+', '-')
+                        .replace('/', '_')
+                        .replace("\n", "")
+                        .replace("\r", "")
+                        .replace(" ", "")
+                )
+                if (tempBytes.size <= bufferDecoded.size) {
+                    tempBytes.copyInto(bufferDecoded)
+                    tempBytes.size
+                } else {
+                    // Buffer too small
+                    throw IllegalArgumentException("Buffer too small")
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to base64 decode the filename: ${e.message}", e)
+                return false
+            }
+
+            try {
+                // Get a slice of the decoded buffer up to decodedLength
+                val encryptedFilename = bufferDecoded.copyOfRange(0, decodedLength)
+
+                // Decrypt the IV portion (first 16 bytes) using ECB mode
+                ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
+                ecbCipher.doFinal(encryptedFilename, 0, iv.size, iv, 0)
+
+                // Decrypt the rest using CBC mode with the IV we just decrypted
+                val ivSpec = IvParameterSpec(iv)
+                aes.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
+
+                // Decrypt the remaining data after the IV
+                val remainingData = encryptedFilename.copyOfRange(iv.size, encryptedFilename.size)
+                filenameLength = aes.doFinal(remainingData, 0, remainingData.size, bufferDecrypted, 0)
+            } catch (e: Exception) {
+                logger.error("Failed to decrypt the filename.", e)
+                return false
+            }
+
+            // Trim the ending null byte, safe for UTF-8
+            if (filenameLength > 0 && bufferDecrypted[filenameLength - 1] == 0.toByte()) {
+                filenameLength--
+            }
+
+            for (i in 0 until filenameLength) {
+                if (bufferDecrypted[i] == '\\'.code.toByte()) {
+                    bufferDecrypted[i] = File.separatorChar.code.toByte()
+                }
+            }
+
+            decoded(String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8))
+            return true
+        }
+
         try {
             files.forEach { file ->
-                var decodedLength = file.fileName.length / 4 * 3 // This may be higher due to padding
+                var name: String? = null
 
-                // Majority of filenames are short, even when they are encrypted and base64 encoded,
-                // so this resize will be hit *very* rarely
-                if (decodedLength > bufferDecoded.size) {
-                    bufferDecoded = ByteArray(decodedLength)
-                    bufferDecrypted = ByteArray(decodedLength)
-                }
-
-                val decoder = Base64.getUrlDecoder()
-                decodedLength = try {
-                    val tempBytes = decoder.decode(
-                        file.fileName
-                            .replace('+', '-')
-                            .replace('/', '_')
-                            .replace("\n", "")
-                            .replace("\r", "")
-                            .replace(" ", "")
-                    )
-                    if (tempBytes.size <= bufferDecoded.size) {
-                        tempBytes.copyInto(bufferDecoded)
-                        tempBytes.size
-                    } else {
-                        // Buffer too small
-                        throw IllegalArgumentException("Buffer too small")
-                    }
-                } catch (e: Exception) {
-                    logger.error("Failed to base64 decode the filename: ${e.message}", e)
+                if (!tryDecryptName(name = file.fileName, iv = iv, decoded = { name = it })) {
                     return false
                 }
 
-                try {
-                    // Get a slice of the decoded buffer up to decodedLength
-                    val encryptedFilename = bufferDecoded.copyOfRange(0, decodedLength)
+                file.fileName = name.orEmpty()
 
-                    // Decrypt the IV portion (first 16 bytes) using ECB mode
-                    ecbCipher.init(Cipher.DECRYPT_MODE, secretKey)
-                    ecbCipher.doFinal(encryptedFilename, 0, iv.size, iv, 0)
-
-                    // Decrypt the rest using CBC mode with the IV we just decrypted
-                    val ivSpec = IvParameterSpec(iv)
-                    aes.init(Cipher.DECRYPT_MODE, secretKey, ivSpec)
-
-                    // Decrypt the remaining data after the IV
-                    val remainingData = encryptedFilename.copyOfRange(iv.size, encryptedFilename.size)
-                    filenameLength = aes.doFinal(remainingData, 0, remainingData.size, bufferDecrypted, 0)
-                } catch (e: Exception) {
-                    logger.error("Failed to decrypt the filename.", e)
-                    return false
-                }
-
-                // Trim the ending null byte, safe for UTF-8
-                if (filenameLength > 0 && bufferDecrypted[filenameLength - 1] == 0.toByte()) {
-                    filenameLength--
-                }
-
-                for (i in 0 until filenameLength) {
-                    if (bufferDecrypted[i] == '\\'.code.toByte()) {
-                        bufferDecrypted[i] = File.separatorChar.code.toByte()
+                var linkName: String? = null
+                if (!file.linkTarget.isNullOrEmpty()) {
+                    if (!tryDecryptName(name = file.linkTarget!!, iv = iv, decoded = { linkName = it })) {
+                        return false
                     }
-                }
 
-                file.fileName = String(bufferDecrypted, 0, filenameLength, Charsets.UTF_8)
+                    file.linkTarget = linkName
+                }
             }
         } finally {
             bufferDecoded.fill(0)
