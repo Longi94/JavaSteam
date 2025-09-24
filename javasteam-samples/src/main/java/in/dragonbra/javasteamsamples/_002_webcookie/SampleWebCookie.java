@@ -49,7 +49,7 @@ public class SampleWebCookie implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("SampleWebCookie: No username and password specified!");
+            System.out.println("Sample 002: No username and password specified!");
             return;
         }
 

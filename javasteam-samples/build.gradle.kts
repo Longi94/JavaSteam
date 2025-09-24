@@ -13,6 +13,7 @@ java {
 
 dependencies {
     implementation(rootProject)
+    implementation(project(":javasteam-cs"))
 
     implementation(libs.bouncyCastle)
     implementation(libs.gson)

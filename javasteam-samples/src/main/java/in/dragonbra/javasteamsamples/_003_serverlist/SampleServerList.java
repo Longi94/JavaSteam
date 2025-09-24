@@ -54,7 +54,7 @@ public class SampleServerList implements Runnable {
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Sample7: No username and password specified!");
+            System.out.println("Sample 003: No username and password specified!");
             return;
         }
 
