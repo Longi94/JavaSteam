@@ -28,8 +28,8 @@ import in.dragonbra.javasteam.util.stream.BinaryReader;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
@@ -371,36 +371,26 @@ public abstract class CMClient {
             return;
         }
 
-        ClientMsgProtobuf<CMsgMulti.Builder> msgMulti = new ClientMsgProtobuf<>(CMsgMulti.class, packetMsg);
+        var msgMulti = new ClientMsgProtobuf<CMsgMulti.Builder>(CMsgMulti.class, packetMsg);
+        var payload = msgMulti.getBody().getMessageBody().toByteArray();
 
-        byte[] payload = msgMulti.getBody().getMessageBody().toByteArray();
+        try {
+            InputStream inputStream;
 
-        if (msgMulti.getBody().getSizeUnzipped() > 0) {
-            try (var gzin = new GZIPInputStream(new ByteArrayInputStream(payload));
-                 var baos = new ByteArrayOutputStream()) {
-                int res = 0;
-                byte[] buf = new byte[1024];
-                while (res >= 0) {
-                    res = gzin.read(buf, 0, buf.length);
-                    if (res > 0) {
-                        baos.write(buf, 0, res);
-                    }
-                }
-                payload = baos.toByteArray();
-            } catch (IOException e) {
-                logger.debug("HandleMulti encountered an exception when decompressing.", e);
-                return;
+            if (msgMulti.getBody().getSizeUnzipped() > 0) {
+                inputStream = new GZIPInputStream(new ByteArrayInputStream(payload));
+            } else {
+                inputStream = new ByteArrayInputStream(payload);
             }
-        }
 
-        try (var bais = new ByteArrayInputStream(payload);
-             var br = new BinaryReader(bais)) {
-            while (br.available() > 0) {
-                int subSize = br.readInt();
-                byte[] subData = br.readBytes(subSize);
+            try (inputStream; var br = new BinaryReader(inputStream)) {
+                while (br.available() > 0) {
+                    var subSize = br.readInt();
+                    var subData = br.readBytes(subSize);
 
-                if (!onClientMsgReceived(getPacketMsg(subData))) {
-                    break;
+                    if (!onClientMsgReceived(getPacketMsg(subData))) {
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {
