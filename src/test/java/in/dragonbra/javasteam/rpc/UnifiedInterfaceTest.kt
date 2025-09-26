@@ -78,6 +78,8 @@ class UnifiedInterfaceTest {
             "RemoteClientSteamClient.kt",
             "TwoFactor.kt",
             "UserAccount.kt",
+            "PublishedFile.kt",
+            "PublishedFileClient.kt",
         )
     }
 }
