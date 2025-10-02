@@ -10,12 +10,13 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.Stats
 import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 
-// JavaSteam Addition
 /**
  * This callback is fired in response to [SteamUserStats.getUserStats].
  */
+@JavaSteamAddition
 class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
 
     /**

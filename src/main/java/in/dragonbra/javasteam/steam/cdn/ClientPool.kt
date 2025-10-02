@@ -39,7 +39,7 @@ class ClientPool(internal val steamClient: SteamClient, private val appId: Int, 
 
     private val monitorJob: Job
 
-    private val logger: Logger = LogManager.getLogger(ClientPool::class.java)
+    private val logger: Logger = LogManager.getLogger<ClientPool>()
 
     init {
         monitorJob = parentScope.launch { connectionPoolMonitor().await() }

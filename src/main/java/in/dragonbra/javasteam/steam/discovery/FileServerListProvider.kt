@@ -20,6 +20,10 @@ import java.time.Instant
  */
 class FileServerListProvider(val file: Path) : IServerListProvider {
 
+    companion object {
+        private val logger: Logger = LogManager.getLogger<FileServerListProvider>()
+    }
+
     /**
      * Instantiates a [FileServerListProvider] object.
      * @param file the file that will store the servers
@@ -101,9 +105,5 @@ class FileServerListProvider(val file: Path) : IServerListProvider {
         } catch (e: IOException) {
             logger.error("Failed to write servers to file ${file.fileName}", e)
         }
-    }
-
-    companion object {
-        private val logger: Logger = LogManager.getLogger(FileServerListProvider::class.java)
     }
 }

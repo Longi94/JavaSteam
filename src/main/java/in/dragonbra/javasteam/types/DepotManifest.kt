@@ -32,7 +32,8 @@ import kotlin.collections.HashSet
 class DepotManifest {
 
     companion object {
-        private val logger: Logger = LogManager.getLogger(DepotManifest::class.java)
+
+        private val logger: Logger = LogManager.getLogger<DepotManifest>()
 
         private const val PROTOBUF_PAYLOAD_MAGIC: Int = 0x71F617D0
         private const val PROTOBUF_METADATA_MAGIC: Int = 0x1F4812BE

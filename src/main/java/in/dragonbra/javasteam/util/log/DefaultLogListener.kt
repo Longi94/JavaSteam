@@ -1,52 +1,39 @@
-package in.dragonbra.javasteam.util.log;
+package `in`.dragonbra.javasteam.util.log
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * @author lngtr
  * @since 2018-03-02
  */
-public class DefaultLogListener implements LogListener {
+class DefaultLogListener : LogListener {
 
-    private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
-
-    @Override
-    public void onLog(Class<?> clazz, String message, Throwable throwable) {
-        if (clazz == null) {
-            throw new IllegalArgumentException("class is null");
-        }
-        String threadName = Thread.currentThread().getName();
-        threadName = threadName.substring(0, Math.min(10, threadName.length()));
-        String className = clazz.getName();
-
-        if (message == null) {
-            System.out.printf("%s [%10s] %s%n", FORMAT.format(new Date()), threadName, className);
-        } else {
-            System.out.printf("%s [%10s] %s - %s%n", FORMAT.format(new Date()), threadName, className, message);
-        }
-
-        if (throwable != null) {
-            throwable.printStackTrace();
-        }
+    companion object {
+        private val FORMAT = SimpleDateFormat("HH:mm:ss.SSS")
     }
 
-    public void onError(Class<?> clazz, String message, Throwable throwable) {
-        if (clazz == null) {
-            throw new IllegalArgumentException("class is null");
-        }
-        String threadName = Thread.currentThread().getName();
-        threadName = threadName.substring(0, Math.min(10, threadName.length()));
-        String className = clazz.getName();
+    override fun onLog(clazz: Class<*>, message: String?, throwable: Throwable?) {
+        val threadName = Thread.currentThread().name.take(10)
 
         if (message == null) {
-            System.err.printf("%s [%10s] %s%n", FORMAT.format(new Date()), threadName, className);
+            System.out.printf("%s [%10s] %s%n", FORMAT.format(Date()), threadName, clazz.name)
         } else {
-            System.err.printf("%s [%10s] %s - %s%n", FORMAT.format(new Date()), threadName, className, message);
+            System.out.printf("%s [%10s] %s - %s%n", FORMAT.format(Date()), threadName, clazz.name, message)
         }
 
-        if (throwable != null) {
-            throwable.printStackTrace();
+        throwable?.printStackTrace()
+    }
+
+    override fun onError(clazz: Class<*>, message: String?, throwable: Throwable?) {
+        val threadName = Thread.currentThread().name.take(10)
+
+        if (message == null) {
+            System.err.printf("%s [%10s] %s%n", FORMAT.format(Date()), threadName, clazz.name)
+        } else {
+            System.err.printf("%s [%10s] %s - %s%n", FORMAT.format(Date()), threadName, clazz.name, message)
         }
+
+        throwable?.printStackTrace()
     }
 }

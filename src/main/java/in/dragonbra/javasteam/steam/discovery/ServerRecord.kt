@@ -54,7 +54,8 @@ class ServerRecord private constructor(
     override fun hashCode(): Int = endpoint.hashCode() xor protocolTypes.hashCode()
 
     companion object {
-        private val logger = LogManager.getLogger(ServerRecord::class.java)
+
+        private val logger = LogManager.getLogger<ServerRecord>()
 
         /**
          * Creates a server record for a given endpoint.

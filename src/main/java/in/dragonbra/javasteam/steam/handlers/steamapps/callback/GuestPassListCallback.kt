@@ -15,7 +15,7 @@ import java.io.IOException
 class GuestPassListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     companion object {
-        private val logger = LogManager.getLogger(GuestPassListCallback::class.java)
+        private val logger = LogManager.getLogger<GuestPassListCallback>()
     }
 
     /**

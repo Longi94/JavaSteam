@@ -38,7 +38,7 @@ class Client(steamClient: SteamClient) : Closeable {
 
     companion object {
 
-        private val logger: Logger = LogManager.getLogger(Client::class.java)
+        private val logger: Logger = LogManager.getLogger<Client>()
 
         /**
          * Default timeout to use when making requests

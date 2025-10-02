@@ -21,7 +21,7 @@ import java.util.*
 class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     companion object {
-        private val logger = LogManager.getLogger(ChatMemberInfoCallback::class.java)
+        private val logger = LogManager.getLogger<ChatMemberInfoCallback>()
     }
 
     /**

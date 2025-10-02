@@ -39,7 +39,7 @@ open class AuthSession(
 ) {
 
     companion object {
-        private val logger = LogManager.getLogger(AuthSession::class.java)
+        private val logger = LogManager.getLogger<AuthSession>()
     }
 
     init {

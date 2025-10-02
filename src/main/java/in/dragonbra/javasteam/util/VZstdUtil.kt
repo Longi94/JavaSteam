@@ -11,7 +11,7 @@ object VZstdUtil {
 
     private const val VZSTD_HEADER: Int = 0x615A5356
 
-    private val logger = LogManager.getLogger(VZstdUtil::class.java)
+    private val logger = LogManager.getLogger<VZstdUtil>()
 
     @Throws(IOException::class, IllegalArgumentException::class)
     @JvmStatic

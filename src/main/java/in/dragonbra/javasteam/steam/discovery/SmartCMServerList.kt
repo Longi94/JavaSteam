@@ -18,7 +18,8 @@ import java.util.EnumSet
 class SmartCMServerList(private val configuration: SteamConfiguration) {
 
     companion object {
-        private val logger: Logger = LogManager.getLogger(SmartCMServerList::class.java)
+
+        private val logger: Logger = LogManager.getLogger<SmartCMServerList>()
 
         /**
          * The default fallback Websockets server to attempt connecting to if fetching server list through other means fails.
