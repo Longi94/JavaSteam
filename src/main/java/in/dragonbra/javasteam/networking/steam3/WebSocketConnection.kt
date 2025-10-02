@@ -34,7 +34,7 @@ class WebSocketConnection :
     CoroutineScope {
 
     companion object {
-        private val logger = LogManager.getLogger(WebSocketConnection::class.java)
+        private val logger = LogManager.getLogger<WebSocketConnection>()
     }
 
     private val job: Job = SupervisorJob()
