@@ -20,9 +20,6 @@ data class DepotConfigStore(
 
         private val json = Json { prettyPrint = true }
 
-        val isLoaded: Boolean
-            get() = instance != null
-
         fun loadFromFile(path: Path) {
             // require(!isLoaded) { "Config already loaded" }
 
@@ -48,6 +45,7 @@ data class DepotConfigStore(
             }
         }
 
+        @Throws(IllegalArgumentException::class)
         fun getInstance(): DepotConfigStore = requireNotNull(instance) { "Config not loaded" }
     }
 }

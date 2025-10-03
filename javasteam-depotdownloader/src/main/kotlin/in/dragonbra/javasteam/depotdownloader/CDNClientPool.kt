@@ -7,9 +7,6 @@ import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.jvm.Throws
@@ -18,7 +15,7 @@ import kotlin.jvm.Throws
  * [CDNClientPool] provides a pool of connections to CDN endpoints, requesting CDN tokens as needed.
  * @param steamClient an instance of [SteamClient]
  * @param appId the selected app id to ensure an endpoint supports the download.
- * @param scope (optional) the [CoroutineScope] to use.
+ * @param scope the [CoroutineScope] to use.
  * @param debug enable or disable logging through [LogManager]
  *
  * @author Oxters
@@ -28,17 +25,9 @@ import kotlin.jvm.Throws
 class CDNClientPool(
     private val steamClient: SteamClient,
     private val appId: Int,
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val scope: CoroutineScope,
     debug: Boolean = false,
 ) : AutoCloseable {
-
-    companion object {
-        fun init(
-            steamClient: SteamClient,
-            appId: Int,
-            debug: Boolean,
-        ): CDNClientPool = CDNClientPool(steamClient = steamClient, appId = appId, debug = debug)
-    }
 
     private var logger: Logger? = null
 
@@ -63,8 +52,6 @@ class CDNClientPool(
     }
 
     override fun close() {
-        scope.cancel()
-
         servers.clear()
 
         cdnClient = null
@@ -134,7 +121,7 @@ class CDNClientPool(
         if (servers[nextServer % servers.count()] == server) {
             nextServer++
 
-            // TODO: Add server to ContentServerPenalty
+            // TODO: (SK) Add server to ContentServerPenalty
         }
     }
 }
