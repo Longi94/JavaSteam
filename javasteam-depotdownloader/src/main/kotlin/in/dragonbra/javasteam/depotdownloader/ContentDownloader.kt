@@ -696,7 +696,7 @@ class ContentDownloader @JvmOverloads constructor(
             return null
         }
 
-        val app = steam3!!.appInfo[appId] ?: return null
+        val app = steam3!!.appInfo[appId]?.value ?: return null
 
         val appInfo = app.keyValues
         val sectionKey = when (section) {
@@ -729,7 +729,7 @@ class ContentDownloader @JvmOverloads constructor(
         steam3!!.requestPackageInfo(licenseQuery)
 
         licenseQuery.forEach { license ->
-            steam3!!.packageInfo[license]?.let { pkg ->
+            steam3!!.packageInfo[license]?.value?.let { pkg ->
                 val appIds = pkg.keyValues["appids"].children.map { it.asInteger() }
                 val depotIds = pkg.keyValues["depotids"].children.map { it.asInteger() }
                 if (depotId in appIds) {
