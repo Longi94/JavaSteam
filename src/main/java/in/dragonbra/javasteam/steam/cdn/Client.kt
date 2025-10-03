@@ -6,22 +6,23 @@ import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
-import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.ByteArrayOutputStream
+import okhttp3.coroutines.executeAsync
+import java.io.ByteArrayInputStream
 import java.io.Closeable
 import java.io.IOException
-import java.util.concurrent.*
-import java.util.zip.DataFormatException
+import java.util.concurrent.CompletableFuture
 import java.util.zip.ZipInputStream
 
 /**
@@ -32,64 +33,76 @@ import java.util.zip.ZipInputStream
  */
 class Client(steamClient: SteamClient) : Closeable {
 
-    private val httpClient: OkHttpClient = steamClient.configuration.httpClient
-
-    private val defaultScope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     companion object {
 
-        private val logger: Logger = LogManager.getLogger<Client>()
+        private val logger: Logger = LogManager.getLogger(Client::class.java)
 
         /**
          * Default timeout to use when making requests
          */
-        var requestTimeout = 10000L
+        var requestTimeout = 10_000L
 
         /**
          * Default timeout to use when reading the response body
          */
-        var responseBodyTimeout = 60000L
+        var responseBodyTimeout = 60_000L
 
-        @JvmStatic
-        @JvmOverloads
-        fun buildCommand(
+        private fun buildCommand(
             server: Server,
             command: String,
             query: String? = null,
             proxyServer: Server? = null,
         ): HttpUrl {
-            // TODO look into this to mimic SK's method. Should be able to remove if/else and only have the if.
-            val httpUrl: HttpUrl
+            val scheme = if (server.protocol == Server.ConnectionProtocol.HTTP) "http" else "https"
+            var host = server.vHost ?: server.host ?: ""
+            var port = server.port
+            var path = command
+
             if (proxyServer != null && proxyServer.useAsProxy && proxyServer.proxyRequestPathTemplate != null) {
-                httpUrl = HttpUrl.Builder()
-                    .scheme(if (proxyServer.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
-                    .host(proxyServer.vHost)
-                    .port(proxyServer.port)
-                    .addPathSegment(server.vHost)
-                    .addPathSegments(command)
-                    .run {
-                        query?.let { this.query(it) } ?: this
-                    }.build()
-            } else {
-                httpUrl = HttpUrl.Builder()
-                    .scheme(if (server.protocol == Server.ConnectionProtocol.HTTP) "http" else "https")
-                    .host(server.vHost)
-                    .port(server.port)
-                    .addPathSegments(command)
-                    .run {
-                        query?.let { this.query(it) } ?: this
-                    }.build()
+                val pathTemplate = proxyServer.proxyRequestPathTemplate!!
+                    .replace("%host%", host)
+                    .replace("%path%", "/$command")
+
+                host = proxyServer.vHost ?: proxyServer.host ?: ""
+                port = proxyServer.port
+                path = pathTemplate
             }
 
-            return httpUrl
+            val urlBuilder = HttpUrl.Builder()
+                .scheme(scheme)
+                .host(host)
+                .port(port)
+                .addPathSegments(path.trimStart('/'))
+
+            query?.let { queryString ->
+                if (queryString.isNotEmpty()) {
+                    val params = queryString.split("&")
+                    for (param in params) {
+                        val keyValue = param.split("=", limit = 2)
+                        if (keyValue.size == 2) {
+                            urlBuilder.addQueryParameter(keyValue[0], keyValue[1])
+                        } else if (keyValue.size == 1 && keyValue[0].isNotEmpty()) {
+                            urlBuilder.addQueryParameter(keyValue[0], "")
+                        }
+                    }
+                }
+            }
+
+            return urlBuilder.build()
         }
     }
+
+    private val httpClient: OkHttpClient = steamClient.configuration.httpClient
 
     /**
      * Disposes of this object.
      */
     override fun close() {
+        scope.cancel()
         httpClient.connectionPool.evictAll()
+        httpClient.dispatcher.executorService.shutdown()
     }
 
     /**
@@ -106,7 +119,6 @@ class Client(steamClient: SteamClient) : Closeable {
      * @exception IllegalArgumentException [server] was null.
      * @exception IOException A network error occurred when performing the request.
      * @exception SteamKitWebRequestException A network error occurred when performing the request.
-     * @exception DataFormatException When the data received is not as expected
      */
     suspend fun downloadManifest(
         depotId: Int,
@@ -116,8 +128,9 @@ class Client(steamClient: SteamClient) : Closeable {
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
-    ): DepotManifest {
+    ): DepotManifest = withContext(Dispatchers.IO) {
         val manifestVersion = 5
+
         val url = if (manifestRequestCode > 0U) {
             "depot/$depotId/manifest/$manifestId/$manifestVersion/$manifestRequestCode"
         } else {
@@ -128,8 +141,12 @@ class Client(steamClient: SteamClient) : Closeable {
             .url(buildCommand(server, url, cdnAuthToken, proxyServer))
             .build()
 
-        return withTimeout(requestTimeout) {
-            val response = httpClient.newCall(request).execute()
+        logger.debug("Request URL is: $request")
+
+        try {
+            val response = withTimeout(requestTimeout) {
+                httpClient.newCall(request).executeAsync()
+            }
 
             if (!response.isSuccessful) {
                 throw SteamKitWebRequestException(
@@ -138,91 +155,36 @@ class Client(steamClient: SteamClient) : Closeable {
                 )
             }
 
-            val depotManifest = withTimeout(responseBodyTimeout) {
-                val contentLength = response.header("Content-Length")?.toIntOrNull()
+            return@withContext withTimeout(responseBodyTimeout) {
+                response.use { resp ->
+                    val responseBody = resp.body?.bytes()
+                        ?: throw SteamKitWebRequestException("Response body is null")
 
-                if (contentLength == null) {
-                    logger.debug("Manifest response does not have Content-Length, falling back to unbuffered read.")
-                }
+                    if (responseBody.isEmpty()) {
+                        throw SteamKitWebRequestException("Response is empty")
+                    }
 
-                response.body.byteStream().use { inputStream ->
-                    ByteArrayOutputStream().use { bs ->
-                        val bytesRead = inputStream.copyTo(bs, contentLength ?: DEFAULT_BUFFER_SIZE)
+                    // Decompress the zipped manifest data
+                    ZipInputStream(ByteArrayInputStream(responseBody)).use { zipInputStream ->
+                        zipInputStream.nextEntry
+                            ?: throw SteamKitWebRequestException("Expected the zip to contain at least one file")
 
-                        if (bytesRead != contentLength?.toLong()) {
-                            throw DataFormatException("Length mismatch after downloading depot manifest! (was $bytesRead, but should be $contentLength)")
+                        val manifestData = zipInputStream.readBytes()
+
+                        val depotManifest = DepotManifest.deserialize(ByteArrayInputStream(manifestData))
+
+                        if (depotKey != null) {
+                            depotManifest.decryptFilenames(depotKey)
                         }
 
-                        val contentBytes = bs.toByteArray()
-
-                        MemoryStream(contentBytes).use { ms ->
-                            ZipInputStream(ms).use { zip ->
-                                var entryCount = 0
-                                while (zip.nextEntry != null) {
-                                    entryCount++
-                                }
-                                if (entryCount > 1) {
-                                    logger.debug("Expected the zip to contain only one file")
-                                }
-                            }
-                        }
-
-                        // Decompress the zipped manifest data
-                        MemoryStream(contentBytes).use { ms ->
-                            ZipInputStream(ms).use { zip ->
-                                zip.nextEntry
-                                DepotManifest.deserialize(zip)
-                            }
-                        }
+                        depotManifest
                     }
                 }
             }
-
-            depotKey?.let { key ->
-                // if we have the depot key, decrypt the manifest filenames
-                depotManifest.decryptFilenames(key)
-            }
-
-            depotManifest
+        } catch (e: Exception) {
+            logger.error("Failed to download manifest ${request.url}: ${e.message}", e)
+            throw e
         }
-    }
-
-    /**
-     * Java Compat:
-     * Downloads the depot manifest specified by the given manifest ID, and optionally decrypts the manifest's filenames if the depot decryption key has been provided.
-     * @param depotId The id of the depot being accessed.
-     * @param manifestId The unique identifier of the manifest to be downloaded.
-     * @param manifestRequestCode The manifest request code for the manifest that is being downloaded.
-     * @param server The content server to connect to.
-     * @param depotKey The depot decryption key for the depot that will be downloaded.
-     * This is used for decrypting filenames (if needed) in depot manifests.
-     * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
-     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
-     * @return A [DepotManifest] instance that contains information about the files present within a depot.
-     * @exception IllegalArgumentException [server] was null.
-     * @exception IOException A network error occurred when performing the request.
-     * @exception SteamKitWebRequestException A network error occurred when performing the request.
-     * @exception DataFormatException When the data received is not as expected
-     */
-    @JvmOverloads
-    fun downloadManifestFuture(
-        depotId: Int,
-        manifestId: Long,
-        manifestRequestCode: Long,
-        server: Server,
-        depotKey: ByteArray? = null,
-        proxyServer: Server? = null,
-        cdnAuthToken: String? = null,
-    ): CompletableFuture<DepotManifest> = defaultScope.future {
-        return@future downloadManifest(
-            depotId = depotId,
-            manifestId = manifestId,
-            manifestRequestCode = manifestRequestCode.toULong(),
-            server = server,
-            depotKey = depotKey,
-            proxyServer = proxyServer,
-            cdnAuthToken = cdnAuthToken,
-        )
     }
 
     /**
@@ -252,7 +214,7 @@ class Client(steamClient: SteamClient) : Closeable {
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
-    ): Int {
+    ): Int = withContext(Dispatchers.IO) {
         require(chunk.chunkID != null) { "Chunk must have a ChunkID." }
 
         if (depotKey == null) {
@@ -268,82 +230,118 @@ class Client(steamClient: SteamClient) : Closeable {
         val chunkID = Strings.toHex(chunk.chunkID)
         val url = "depot/$depotId/chunk/$chunkID"
 
-        val request: Request = if (ClientLancache.useLanCacheServer) {
-            ClientLancache.buildLancacheRequest(server, url, cdnAuthToken)
+        val request = if (ClientLancache.useLanCacheServer) {
+            ClientLancache.buildLancacheRequest(server = server, command = url, query = cdnAuthToken)
         } else {
-            Request.Builder().url(buildCommand(server, url, cdnAuthToken, proxyServer)).build()
+            val url = buildCommand(server = server, command = url, query = cdnAuthToken, proxyServer = proxyServer)
+            Request.Builder()
+                .url(url)
+                .build()
         }
 
-        withTimeout(requestTimeout) {
-            httpClient.newCall(request).execute()
-        }.use { response ->
-            if (!response.isSuccessful) {
-                throw SteamKitWebRequestException(
-                    "Response status code does not indicate success: ${response.code} (${response.message})",
-                    response
-                )
+        try {
+            val response = withTimeout(requestTimeout) {
+                httpClient.newCall(request).executeAsync()
             }
 
-            var contentLength = chunk.compressedLength
-
-            response.header("Content-Length")?.toLongOrNull()?.let { responseContentLength ->
-                contentLength = responseContentLength.toInt()
-
-                // assert that lengths match only if the chunk has a length assigned.
-                if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
-                    throw IllegalStateException("Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})")
-                }
-            } ?: run {
-                if (contentLength > 0) {
-                    logger.debug("Response does not have Content-Length, falling back to chunk.compressedLength.")
-                } else {
+            response.use { resp ->
+                if (!resp.isSuccessful) {
                     throw SteamKitWebRequestException(
-                        "Response does not have Content-Length and chunk.compressedLength is not set.",
-                        response
+                        "Response status code does not indicate success: ${resp.code} (${resp.message})",
+                        resp
                     )
                 }
+
+                val contentLength = resp.body.contentLength().toInt()
+
+                if (contentLength == 0) {
+                    chunk.compressedLength
+                }
+
+                // Validate content length
+                if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
+                    throw SteamKitWebRequestException(
+                        "Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})"
+                    )
+                }
+
+                val responseBody = resp.body.bytes()
+
+                if (responseBody.isEmpty()) {
+                    throw SteamKitWebRequestException("Response is empty")
+                }
+
+                if (responseBody.size != contentLength) {
+                    throw SteamKitWebRequestException(
+                        "Length mismatch after downloading depot chunk! (was ${responseBody.size}, but should be $contentLength)"
+                    )
+                }
+
+                if (depotKey == null) {
+                    System.arraycopy(responseBody, 0, destination, 0, contentLength)
+                    return@withContext contentLength
+                }
+
+                return@withContext DepotChunk.process(chunk, responseBody, destination, depotKey)
             }
-
-            // If no depot key is provided, stream into the destination buffer without renting
-            if (depotKey == null) {
-                val bytesRead = withTimeout(responseBodyTimeout) {
-                    response.body.byteStream().use { input ->
-                        input.readNBytesCompat(destination, 0, contentLength)
-                    }
-                }
-
-                if (bytesRead != contentLength) {
-                    throw IOException("Length mismatch after downloading depot chunk! (was $bytesRead, but should be $contentLength)")
-                }
-
-                return contentLength
-            }
-
-            // We have to stream into a temporary buffer because a decryption will need to be performed
-            val buffer = ByteArray(contentLength)
-
-            try {
-                val bytesRead = withTimeout(responseBodyTimeout) {
-                    response.body.byteStream().use { input ->
-                        input.readNBytesCompat(buffer, 0, contentLength)
-                    }
-                }
-
-                if (bytesRead != contentLength) {
-                    throw IOException("Length mismatch after downloading encrypted depot chunk! (was $bytesRead, but should be $contentLength)")
-                }
-
-                // process the chunk immediately
-                return DepotChunk.process(chunk, buffer, destination, depotKey)
-            } catch (ex: Exception) {
-                logger.error("Failed to download a depot chunk ${request.url}", ex)
-                throw ex
-            }
+        } catch (e: Exception) {
+            logger.error("Failed to download a depot chunk ${request.url}: ${e.message}", e)
+            throw e
         }
     }
 
+    // region Java Compatibility
+
     /**
-     * Java Compat:
+     * Java-compatible version of downloadManifest that returns a CompletableFuture.
+     * Downloads the depot manifest specified by the given manifest ID, and optionally decrypts the manifest's filenames if the depot decryption key has been provided.
+     * @param depotId The id of the depot being accessed.
+     * @param manifestId The unique identifier of the manifest to be downloaded.
+     * @param manifestRequestCode The manifest request code for the manifest that is being downloaded.
+     * @param server The content server to connect to.
+     * @param depotKey The depot decryption key for the depot that will be downloaded.
+     * This is used for decrypting filenames (if needed) in depot manifests.
+     * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
+     * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
+     * @return A CompletableFuture that will complete with a [DepotManifest] instance that contains information about the files present within a depot.
+     * @exception IllegalArgumentException [server] was null.
+     * @exception IOException A network error occurred when performing the request.
+     * @exception SteamKitWebRequestException A network error occurred when performing the request.
+     */
+    @JvmOverloads
+    fun downloadManifestFuture(
+        depotId: Int,
+        manifestId: Long,
+        manifestRequestCode: Long,
+        server: Server,
+        depotKey: ByteArray? = null,
+        proxyServer: Server? = null,
+        cdnAuthToken: String? = null,
+    ): CompletableFuture<DepotManifest> {
+        val future = CompletableFuture<DepotManifest>()
+
+        scope.launch {
+            try {
+                val result = downloadManifest(
+                    depotId = depotId,
+                    manifestId = manifestId,
+                    manifestRequestCode = manifestRequestCode.toULong(),
+                    server = server,
+                    depotKey = depotKey,
+                    proxyServer = proxyServer,
+                    cdnAuthToken = cdnAuthToken
+                )
+                future.complete(result)
+            } catch (e: Exception) {
+                future.completeExceptionally(e)
+            }
+        }
+
+        return future
+    }
+
+    /**
+     * Java-compatible version of downloadDepotChunk that returns a CompletableFuture.
      * Downloads the specified depot chunk, and optionally processes the chunk and verifies the checksum if the depot decryption key has been provided.
      * This function will also validate the length of the downloaded chunk with the value of [ChunkData.compressedLength],
      * if it has been assigned a value.
@@ -357,7 +355,7 @@ class Client(steamClient: SteamClient) : Closeable {
      * This is used to process the chunk data.
      * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
      * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
-     * @return The total number of bytes written to [destination].
+     * @return A CompletableFuture that will complete with the total number of bytes written to [destination].
      * @exception IllegalArgumentException Thrown if the chunk's [ChunkData.chunkID] was null or if the [destination] buffer is too small.
      * @exception IllegalStateException Thrown if the downloaded data does not match the expected length.
      * @exception SteamKitWebRequestException A network error occurred when performing the request.
@@ -371,15 +369,28 @@ class Client(steamClient: SteamClient) : Closeable {
         depotKey: ByteArray? = null,
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
-    ): CompletableFuture<Int> = defaultScope.future {
-        return@future downloadDepotChunk(
-            depotId = depotId,
-            chunk = chunk,
-            server = server,
-            destination = destination,
-            depotKey = depotKey,
-            proxyServer = proxyServer,
-            cdnAuthToken = cdnAuthToken,
-        )
+    ): CompletableFuture<Int> {
+        val future = CompletableFuture<Int>()
+
+        scope.launch {
+            try {
+                val bytesWritten = downloadDepotChunk(
+                    depotId = depotId,
+                    chunk = chunk,
+                    server = server,
+                    destination = destination,
+                    depotKey = depotKey,
+                    proxyServer = proxyServer,
+                    cdnAuthToken = cdnAuthToken
+                )
+                future.complete(bytesWritten)
+            } catch (e: Exception) {
+                future.completeExceptionally(e)
+            }
+        }
+
+        return future
     }
+
+    // endregion
 }

@@ -4,7 +4,6 @@ import `in`.dragonbra.javasteam.enums.EClientPersonaStateFlag
 import `in`.dragonbra.javasteam.enums.EUniverse
 import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
-import `in`.dragonbra.javasteam.steam.contentdownloader.IManifestProvider
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import okhttp3.OkHttpClient
 import java.util.*
@@ -22,7 +21,6 @@ data class SteamConfigurationState(
     var httpClient: OkHttpClient,
     var protocolTypes: EnumSet<ProtocolTypes>,
     var serverListProvider: IServerListProvider,
-    var depotManifestProvider: IManifestProvider,
     var universe: EUniverse,
     var webAPIBaseAddress: String,
     var webAPIKey: String?,

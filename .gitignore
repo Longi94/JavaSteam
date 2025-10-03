@@ -75,7 +75,9 @@ loginkey.txt
 sentry.bin
 server_list.bin
 /steamapps/
+/depots/
 /userfiles/
+refreshtoken.txt
 
 # Kotlin 2.0
 /.kotlin/sessions/

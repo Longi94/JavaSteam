@@ -41,6 +41,7 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
+okHttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
@@ -65,6 +66,7 @@ qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
 
@@ -85,4 +87,9 @@ ktor = [
     "ktor-client-core",
     "ktor-client-cio",
     "ktor-client-websocket",
+]
+
+okHttp = [
+    "okHttp",
+    "okHttp-coroutines",
 ]
