@@ -67,14 +67,13 @@ tasks.withType<FormatTask> {
 }
 
 dependencies {
-    implementation(rootProject) // TODO verify if this causes something like a circular dependency.
-
-    implementation("com.squareup.okio:okio:3.16.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation(rootProject)
 
     implementation(libs.bundles.ktor)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)
+    implementation(libs.kotlin.serialization.json)
     implementation(libs.kotlin.stdib)
+    implementation(libs.okio)
     implementation(libs.protobuf.java)
 }

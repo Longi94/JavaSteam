@@ -21,6 +21,10 @@ publishPlugin = "2.0.0" # https://mvnrepository.com/artifact/io.github.gradle-ne
 xz = "1.10" # https://mvnrepository.com/artifact/org.tukaani/xz
 zstd = "1.5.7-4" # https://search.maven.org/artifact/com.github.luben/zstd-jni
 
+# Depot Downloader
+kotlin-serialization-json = "1.9.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
+okio = "3.16.0" # https://mvnrepository.com/artifact/com.squareup.okio/okio
+
 # Testing Lib versions
 commons-io = "2.20.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commonsCodec = "1.19.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
@@ -46,6 +50,10 @@ protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "p
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 zstd = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
+
+# Depot Downloader
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json"}
+okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
 
 # Tests
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
