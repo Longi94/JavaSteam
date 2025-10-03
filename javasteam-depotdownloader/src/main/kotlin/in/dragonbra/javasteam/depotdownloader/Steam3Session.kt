@@ -42,8 +42,8 @@ class Steam3Session(
     internal val packageTokens = ConcurrentHashMap<Int, Long>()
     internal val depotKeys = ConcurrentHashMap<Int, ByteArray>()
     internal val cdnAuthTokens = ConcurrentHashMap<Pair<Int, String>, CompletableDeferred<CDNAuthToken>>()
-    internal val appInfo = ConcurrentHashMap<Int, PICSProductInfo?>()
-    internal val packageInfo = ConcurrentHashMap<Int, PICSProductInfo?>()
+    internal val appInfo = ConcurrentHashMap<Int, Optional<PICSProductInfo>>()
+    internal val packageInfo = ConcurrentHashMap<Int, Optional<PICSProductInfo>>()
     internal val appBetaPasswords = ConcurrentHashMap<String, ByteArray>()
 
     private var unifiedMessages: SteamUnifiedMessages? = null
@@ -52,6 +52,9 @@ class Steam3Session(
     internal var steamApps: SteamApps? = null
     internal var steamCloud: SteamCloud? = null
     internal var steamPublishedFile: PublishedFile? = null
+
+    // ConcurrentHashMap can't have nullable Keys or Values
+    internal data class Optional<T>(val value: T?)
 
     init {
         if (debug) {
@@ -127,10 +130,10 @@ class Steam3Session(
         appInfoMultiple.results.forEach { appInfo ->
             appInfo.apps.forEach { appValue ->
                 val app = appValue.value
-                this.appInfo[app.id] = app
+                this.appInfo[app.id] = Optional(app)
             }
             appInfo.unknownApps.forEach { app ->
-                this.appInfo[app] = null
+                this.appInfo[app] = Optional(null)
             }
         }
     }
@@ -166,10 +169,10 @@ class Steam3Session(
             packageInfoMultiple.results.forEach { pkgInfo ->
                 pkgInfo.packages.forEach { pkgValue ->
                     val pkg = pkgValue.value
-                    packageInfo[pkg.id] = pkg
+                    packageInfo[pkg.id] = Optional(pkg)
                 }
                 pkgInfo.unknownPackages.forEach { pkgValue ->
-                    packageInfo[pkgValue] = null
+                    packageInfo[pkgValue] = Optional(null)
                 }
             }
         }
