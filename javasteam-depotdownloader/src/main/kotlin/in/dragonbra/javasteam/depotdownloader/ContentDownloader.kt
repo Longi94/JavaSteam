@@ -112,10 +112,10 @@ class ContentDownloader @JvmOverloads constructor(
     // What is a PriorityQueue?
 
     private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val items = CopyOnWriteArrayList(ArrayList<DownloadItem>())
     private val listeners = CopyOnWriteArrayList<IDownloadListener>()
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var logger: Logger? = null
     private val isStarted: AtomicBoolean = AtomicBoolean(false)
     private val processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
@@ -242,7 +242,7 @@ class ContentDownloader @JvmOverloads constructor(
         filesystem.createDirectories(fileFinalPath.parent!!)
         filesystem.createDirectories(fileStagingPath.parent!!)
 
-        HttpClient.httpClient.use { client ->
+        HttpClient.getClient(maxDownloads).use { client ->
             logger?.debug("Starting download of $fileName...")
 
             val response = client.get(url)
@@ -300,7 +300,7 @@ class ContentDownloader @JvmOverloads constructor(
         var depotManifestIds = depotManifestIds.toMutableList()
 
         val steamUser = requireNotNull(steam3!!.steamUser)
-        cdnClientPool = CDNClientPool.init(steamClient, appId, debug)
+        cdnClientPool = CDNClientPool(steamClient, appId, scope, debug)
 
         // Load our configuration data containing the depots currently installed
         var configPath = config.installPath
@@ -1578,9 +1578,12 @@ class ContentDownloader @JvmOverloads constructor(
             return
         }
 
-        items.add(0, item)
-
-        notifyListeners { it.onItemAdded(item, 0) }
+        try {
+            items.add(0, item)
+            notifyListeners { it.onItemAdded(item, 0) }
+        } catch (e: Exception) {
+            logger?.error(e)
+        }
     }
 
     fun addAt(index: Int, item: DownloadItem): Boolean {
@@ -1604,11 +1607,16 @@ class ContentDownloader @JvmOverloads constructor(
             return null
         }
 
-        return if (items.isNotEmpty()) {
-            val item = items.removeAt(0)
-            notifyListeners { it.onItemRemoved(item, 0) }
-            item
-        } else {
+        return try {
+            if (items.isNotEmpty()) {
+                val item = items.removeAt(0)
+                notifyListeners { it.onItemRemoved(item, 0) }
+                item
+            } else {
+                null
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            logger?.error(e)
             null
         }
     }
@@ -1619,12 +1627,17 @@ class ContentDownloader @JvmOverloads constructor(
             return null
         }
 
-        return if (items.isNotEmpty()) {
-            val lastIndex = items.size - 1
-            val item = items.removeAt(lastIndex)
-            notifyListeners { it.onItemRemoved(item, lastIndex) }
-            item
-        } else {
+        return try {
+            if (items.isNotEmpty()) {
+                val lastIndex = items.size - 1
+                val item = items.removeAt(lastIndex)
+                notifyListeners { it.onItemRemoved(item, lastIndex) }
+                item
+            } else {
+                null
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            logger?.error(e)
             null
         }
     }
@@ -1636,11 +1649,16 @@ class ContentDownloader @JvmOverloads constructor(
         }
 
         val index = items.indexOf(item)
-        return if (index >= 0) {
-            items.removeAt(index)
-            notifyListeners { it.onItemRemoved(item, index) }
-            true
-        } else {
+        return try {
+            if (index >= 0) {
+                items.removeAt(index)
+                notifyListeners { it.onItemRemoved(item, index) }
+                true
+            } else {
+                false
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            logger?.error(e)
             false
         }
     }
@@ -1720,6 +1738,16 @@ class ContentDownloader @JvmOverloads constructor(
         remainingItems.set(initialItems.size)
         initialItems.forEach { processingChannel.send(it) }
 
+        if (ClientLancache.useLanCacheServer) {
+            logger?.debug("Detected Lan-Cache server! Downloads will be directed through the Lancache.")
+
+            // Increasing the number of concurrent downloads when the cache is detected since the downloads will likely
+            // be served much faster than over the internet.  Steam internally has this behavior as well.
+            if (maxDownloads == 8) {
+                maxDownloads = 25
+            }
+        }
+
         repeat(remainingItems.get()) {
             // Process exactly this many
             ensureActive()
@@ -1731,16 +1759,6 @@ class ContentDownloader @JvmOverloads constructor(
                 runBlocking {
                     if (useLanCache) {
                         ClientLancache.detectLancacheServer()
-                    }
-
-                    if (ClientLancache.useLanCacheServer) {
-                        logger?.debug("Detected Lan-Cache server! Downloads will be directed through the Lancache.")
-
-                        // Increasing the number of concurrent downloads when the cache is detected since the downloads will likely
-                        // be served much faster than over the internet.  Steam internally has this behavior as well.
-                        if (maxDownloads == 8) {
-                            maxDownloads = 25
-                        }
                     }
 
                     // Set some configuration values, first.

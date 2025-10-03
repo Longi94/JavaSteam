@@ -13,34 +13,34 @@ import kotlinx.coroutines.isActive
  */
 object HttpClient {
 
-    private var _httpClient: HttpClient? = null
+    private var httpClient: HttpClient? = null
 
-    val httpClient: HttpClient
-        get() {
-            if (_httpClient?.isActive != true) {
-                _httpClient = HttpClient(CIO) {
-                    install(UserAgent) {
-                        agent = "DepotDownloader/${Versions.getVersion()}"
-                    }
-                    engine {
-                        maxConnectionsCount = 10
-                        endpoint {
-                            maxConnectionsPerRoute = 5
-                            pipelineMaxSize = 20
-                            keepAliveTime = 5000
-                            connectTimeout = 5000
-                            requestTimeout = 30000
-                        }
+    fun getClient(maxConnections: Int = 8): HttpClient {
+        if (httpClient?.isActive != true) {
+            httpClient = HttpClient(CIO) {
+                install(UserAgent) {
+                    agent = "DepotDownloader/${Versions.getVersion()}"
+                }
+                engine {
+                    maxConnectionsCount = maxConnections
+                    endpoint {
+                        maxConnectionsPerRoute = (maxConnections / 2).coerceAtLeast(1)
+                        pipelineMaxSize = maxConnections * 2
+                        keepAliveTime = 5000
+                        connectTimeout = 5000
+                        requestTimeout = 30000
                     }
                 }
             }
-            return _httpClient!!
         }
 
+        return httpClient!!
+    }
+
     fun close() {
-        if (httpClient.isActive) {
-            _httpClient?.close()
-            _httpClient = null
+        if (httpClient?.isActive == true) {
+            httpClient?.close()
+            httpClient = null
         }
     }
 }

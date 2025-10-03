@@ -5,6 +5,8 @@ import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.types.ChunkData
 import `in`.dragonbra.javasteam.types.DepotManifest
 import `in`.dragonbra.javasteam.util.Adler32
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
 import okio.FileHandle
 import okio.FileSystem
 import okio.Path
@@ -13,12 +15,15 @@ import okio.buffer
 import org.apache.commons.lang3.SystemUtils
 import java.io.IOException
 import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 /**
  * @author Lossy
  * @since Oct 1, 2025
  */
 object Util {
+
+    private val logger: Logger = LogManager.getLogger<Util>()
 
     @JvmOverloads
     @JvmStatic
@@ -47,7 +52,12 @@ object Util {
 
     @JvmStatic
     fun getSteamArch(): String {
-        val arch = System.getProperty("os.arch")?.lowercase() ?: ""
+        val arch = try {
+            System.getProperty("os.arch")?.lowercase() ?: ""
+        } catch (e: Exception) {
+            logger.error(e)
+            ""
+        }
         return when {
             arch.contains("64") -> "64"
             arch.contains("86") -> "32"
@@ -60,6 +70,7 @@ object Util {
     }
 
     @JvmStatic
+    @Throws(IOException::class)
     fun saveManifestToFile(directory: Path, manifest: DepotManifest): Boolean = try {
         val filename = directory / "${manifest.depotID}_${manifest.manifestGID}.manifest"
         manifest.saveToFile(filename.toString())
@@ -70,11 +81,13 @@ object Util {
         }
 
         true
-    } catch (e: Exception) {
+    } catch (e: IOException) {
+        logger.error(e)
         false
     }
 
     @JvmStatic
+    @Throws(NoSuchAlgorithmException::class, IllegalArgumentException::class, IOException::class)
     fun loadManifestFromFile(
         directory: Path,
         depotId: Int,
@@ -98,7 +111,7 @@ object Util {
             if (expectedChecksum != null && expectedChecksum.contentEquals(currentChecksum)) {
                 return DepotManifest.loadFromFile(filename.toString())
             } else if (badHashWarning) {
-                println("Manifest $manifestId on disk did not match the expected checksum.")
+                logger.debug("Manifest $manifestId on disk did not match the expected checksum.")
             }
         }
 
@@ -106,6 +119,7 @@ object Util {
     }
 
     @JvmStatic
+    @Throws(NoSuchAlgorithmException::class, IllegalArgumentException::class, IOException::class)
     fun fileSHAHash(filename: Path): ByteArray {
         val digest = MessageDigest.getInstance("SHA-1")
 
@@ -131,6 +145,7 @@ object Util {
      * @return List of ChunkData that are needed
      * @throws IOException If there's an error reading the file
      */
+    @JvmStatic
     @Throws(IOException::class)
     fun validateSteam3FileChecksums(handle: FileHandle, chunkData: List<ChunkData>): List<ChunkData> {
         val neededChunks = mutableListOf<ChunkData>()
@@ -155,6 +170,7 @@ object Util {
     }
 
     @JvmStatic
+    @Throws(IOException::class)
     fun dumpManifestToTextFile(depot: DepotDownloadInfo, manifest: DepotManifest) {
         val txtManifest = depot.installDir / "manifest_${depot.depotId}_${depot.manifestId}.txt"
 
