@@ -37,5 +37,17 @@ jobs:
         run: ./gradlew build -x signMavenJavaPublication
       - uses: actions/upload-artifact@v4
         with:
-          name: JavaSteam
+          name: javasteam
           path: build/libs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javasteam-cs
+          path: javasteam-cs/build/libs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javasteam-deadlock
+          path: javasteam-deadlock/build/libs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javasteam-tf
+          path: javasteam-tf/build/libs
