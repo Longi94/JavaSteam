@@ -15,7 +15,7 @@ import java.util.*
 class VACStatusCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     companion object {
-        private val logger = LogManager.getLogger(VACStatusCallback::class.java)
+        private val logger = LogManager.getLogger<VACStatusCallback>()
     }
 
     /**

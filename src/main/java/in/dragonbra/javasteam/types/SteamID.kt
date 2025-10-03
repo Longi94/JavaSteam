@@ -3,6 +3,7 @@ package `in`.dragonbra.javasteam.types
 import `in`.dragonbra.javasteam.enums.EAccountType
 import `in`.dragonbra.javasteam.enums.EUniverse
 import `in`.dragonbra.javasteam.util.CollectionUtils
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.compat.ObjectsCompat
 import java.util.regex.Matcher
@@ -249,7 +250,7 @@ class SteamID {
      * Sets the various components of this SteamID from a 64bit string integer form.
      * @param stringSteamId The 64bit string integer to assign this SteamID from.
      */
-    // JavaSteam addition
+    @JavaSteamAddition
     fun setFromUInt64String(stringSteamId: String) {
         val longSteamId = stringSteamId.toLong()
         setFromUInt64(longSteamId)

@@ -28,6 +28,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.HardwareUtils
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.NetHelpers
 
 /**
@@ -191,7 +192,7 @@ class SteamUser : ClientMsgHandler() {
      *
      * @param onlyStopGame Whether to only stop the game or quit the Steam client as well
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     fun kickPlayingSession(
         onlyStopGame: Boolean = false,
     ) {

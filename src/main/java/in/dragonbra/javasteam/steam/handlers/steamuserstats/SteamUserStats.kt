@@ -18,6 +18,7 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.callback.UserStats
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
  * This handler handles Steam user statistic related actions.
@@ -150,14 +151,13 @@ class SteamUserStats : ClientMsgHandler() {
         return AsyncJobSingle(this.client, msg.sourceJobID)
     }
 
-    // JavaSteam addition.
-
     /**
      * Gets the Stats-Schema for the specified app. This schema includes Global Achievements and Stats,
      * @param appId The appID of the game.
      * @param steamID The [SteamID] that owns the game. Note the SteamID user has to have a public profile.
      * @return The Job ID of the request. This can be used to find the appropriate [UserStatsCallback].
      */
+    @JavaSteamAddition
     fun getUserStats(appId: Int, steamID: SteamID): AsyncJobSingle<UserStatsCallback> {
         val msg = ClientMsgProtobuf<CMsgClientGetUserStats.Builder>(
             CMsgClientGetUserStats::class.java,

@@ -38,6 +38,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobMultiple
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.GameID
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.NetHelpers
 import io.ktor.client.request.request
 
@@ -345,7 +346,7 @@ class SteamApps : ClientMsgHandler() {
      * @param gameId Holds information pertaining to the app being launched
      * @param usageEvent The type of launch occurring
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     fun sendClientAppUsageEvent(
         gameId: GameID,
         usageEvent: EAppUsageEvent,
@@ -365,7 +366,7 @@ class SteamApps : ClientMsgHandler() {
      * @param gamesPlayed The list of the different game processes
      * @param clientOsType The OS type of the client launching the games
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @Suppress("DuplicatedCode", "unused")
     @JvmOverloads
     fun notifyGamesPlayed(

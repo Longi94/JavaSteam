@@ -411,6 +411,9 @@ class KeyValue @JvmOverloads constructor(
     }
 
     companion object {
+
+        private val logger: Logger = LogManager.getLogger<KeyValue>()
+
         enum class Type(val code: Byte) {
             NONE(0),
             STRING(1),
@@ -432,8 +435,6 @@ class KeyValue @JvmOverloads constructor(
                 fun from(code: Byte): Type? = codeMap[code]
             }
         }
-
-        private val logger: Logger = LogManager.getLogger(KeyValue::class.java)
 
         /**
          * Represents an invalid [KeyValue] given when a searched for child does not exist.

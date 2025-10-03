@@ -19,7 +19,7 @@ import java.util.*
 class PICSProductInfo : CallbackMsg {
 
     companion object {
-        private val logger = LogManager.getLogger(PICSProductInfo::class.java)
+        private val logger = LogManager.getLogger<PICSProductInfo>()
     }
 
     /**

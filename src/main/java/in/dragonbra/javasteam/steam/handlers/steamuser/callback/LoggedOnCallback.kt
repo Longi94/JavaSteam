@@ -25,7 +25,7 @@ import java.util.*
 class LoggedOnCallback : CallbackMsg {
 
     companion object {
-        private val logger = LogManager.getLogger(LoggedOnCallback::class.java)
+        private val logger = LogManager.getLogger<LoggedOnCallback>()
     }
 
     /**

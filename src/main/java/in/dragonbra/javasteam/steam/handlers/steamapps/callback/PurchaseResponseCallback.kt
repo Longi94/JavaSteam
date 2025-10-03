@@ -17,7 +17,7 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
 class PurchaseResponseCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     companion object {
-        private val logger = LogManager.getLogger(PurchaseResponseCallback::class.java)
+        private val logger = LogManager.getLogger<PurchaseResponseCallback>()
     }
 
     /**

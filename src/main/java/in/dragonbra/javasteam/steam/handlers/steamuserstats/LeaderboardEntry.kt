@@ -15,7 +15,7 @@ import java.io.IOException
 class LeaderboardEntry(entry: CMsgClientLBSGetLBEntriesResponse.Entry) {
 
     companion object {
-        private val logger = LogManager.getLogger(LeaderboardEntry::class.java)
+        private val logger = LogManager.getLogger<LeaderboardEntry>()
     }
 
     /**

@@ -18,7 +18,7 @@ import `in`.dragonbra.javasteam.util.stream.BinaryReader
 class ChatEnterCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     companion object {
-        private val logger = LogManager.getLogger(ChatEnterCallback::class.java)
+        private val logger = LogManager.getLogger<ChatEnterCallback>()
     }
 
     /**

@@ -18,6 +18,10 @@ import java.util.*
  */
 class MarketingMessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
+    companion object {
+        private val logger: Logger = LogManager.getLogger<MarketingMessageCallback>()
+    }
+
     /**
      * Gets the time of this marketing message update.
      */
@@ -87,9 +91,5 @@ class MarketingMessageCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                 logger.error("Failed to parse marketing messages", e)
             }
         }
-    }
-
-    companion object {
-        private val logger: Logger = LogManager.getLogger(MarketingMessageCallback::class.java)
     }
 }

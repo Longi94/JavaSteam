@@ -17,7 +17,7 @@ import kotlin.math.max
 @Suppress("SpellCheckingInspection", "unused")
 object VZipUtil {
 
-    private val logger = LogManager.getLogger(VZipUtil::class.java)
+    private val logger = LogManager.getLogger<VZipUtil>()
 
     private const val VZIP_HEADER: Short = 0x5A56 // "VZ" in hex
     private const val VZIP_FOOTER: Short = 0x767A // "vz" in hex

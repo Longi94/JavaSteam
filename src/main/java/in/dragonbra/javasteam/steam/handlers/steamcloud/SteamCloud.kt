@@ -34,6 +34,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.future.future
@@ -135,7 +136,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param syncedChangeNumber The sync change number
      * @return A [AppFileChangeList] containing the files changed
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun getAppFileListChange(
         appId: Int,
@@ -161,7 +162,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param forceProxy Whether to force proxy
      * @return A [FileDownloadInfo] containing information about how to download the user file
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun clientFileDownload(
         appId: Int,
@@ -193,7 +194,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param appBuildId    The build ID of the app
      * @return An [AppUploadBatchResponse] containing the batch ID and the app change number
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun beginAppUploadBatch(
         appId: Int,
@@ -229,7 +230,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param uploadBatchId The ID of the upload batch this file upload belongs to (see [beginAppUploadBatch])
      * @return The upload information needed to upload the file in blocks
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     fun beginFileUpload(
         appId: Int,
         fileSize: Int,
@@ -274,7 +275,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param filename          The path of the file including the prefix (ex %GameInstall%)
      * @return Whether the file has been committed
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun commitFileUpload(
         transferSucceeded: Boolean,
@@ -302,7 +303,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param batchId      The ID of the batch
      * @param batchEResult The result of the upload batch
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun completeAppUploadBatch(
         appId: Int,
@@ -334,7 +335,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param microsecDownloadFiles The time the sync took to download all the required files in micro-seconds
      * @param microsecUploadFiles The time the sync took to upload all the required files in micro-seconds
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun appCloudSyncStats(
         appId: Int,
@@ -418,7 +419,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param osType                  The OS type of the machine launching the app
      * @return A list of the pending remote operations, empty if none
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun signalAppLaunchIntent(
         appId: Int,
@@ -450,7 +451,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param appId    The ID of the app who finished syncing
      * @param clientId The ID given when authenticating the user [AuthSession.clientID]
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     fun signalAppExitSyncDone(
         appId: Int,
         clientId: Long,
@@ -481,7 +482,7 @@ class SteamCloud : ClientMsgHandler() {
      * @param cellId         The cell ID
      * @param proxied        Whether the transfer was through a proxy
      */
-    // JavaSteam Addition
+    @JavaSteamAddition
     @JvmOverloads
     fun externalStorageTransferReport(
         host: String,

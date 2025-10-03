@@ -65,6 +65,7 @@ import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.GameID
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import java.io.IOException
@@ -79,6 +80,7 @@ class SteamFriends : ClientMsgHandler() {
 
     var friendsList: MutableList<SteamID> = mutableListOf()
         private set
+
     var clanList: MutableList<SteamID> = mutableListOf()
         private set
 
@@ -182,9 +184,9 @@ class SteamFriends : ClientMsgHandler() {
     }
 
     /**
-     * JavaSteam addition:
      * Sets the local user's persona state flag back to normal desktop mode.
      */
+    @JavaSteamAddition
     fun resetPersonaStateFlag() {
         ClientMsgProtobuf<CMsgClientChangeStatus.Builder>(
             CMsgClientChangeStatus::class.java,
@@ -196,15 +198,14 @@ class SteamFriends : ClientMsgHandler() {
     }
 
     /**
-     * JavaSteam addition:
      * Sets the local user's persona state flag to a valid ClientType
-     *
      * @param flag one of the following
      * [EPersonaStateFlag.ClientTypeWeb],
      * [EPersonaStateFlag.ClientTypeMobile],
      * [EPersonaStateFlag.ClientTypeTenfoot],
      * or [EPersonaStateFlag.ClientTypeVR].
      */
+    @JavaSteamAddition
     fun setPersonaStateFlag(flag: EPersonaStateFlag) {
         require(!(flag.code() < EPersonaStateFlag.ClientTypeWeb.code() || flag.code() > EPersonaStateFlag.ClientTypeVR.code())) { "Persona State Flag was not a valid ClientType" }
 
@@ -897,7 +898,8 @@ class SteamFriends : ClientMsgHandler() {
     }
 
     companion object {
-        private val logger: Logger = LogManager.getLogger(SteamFriends::class.java)
+
+        private val logger: Logger = LogManager.getLogger<SteamFriends>()
 
         private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
             EMsg.ClientClanState -> ClanStateCallback(packetMsg)
