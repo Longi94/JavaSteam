@@ -300,7 +300,7 @@ class ContentDownloader @JvmOverloads constructor(
         var depotManifestIds = depotManifestIds.toMutableList()
 
         val steamUser = requireNotNull(steam3!!.steamUser)
-        cdnClientPool = CDNClientPool(steamClient, appId, scope, debug)
+        cdnClientPool = CDNClientPool(steam3!!, appId, scope, debug)
 
         // Load our configuration data containing the depots currently installed
         var configPath = config.installPath

@@ -21,8 +21,6 @@ data class DepotConfigStore(
         private val json = Json { prettyPrint = true }
 
         fun loadFromFile(path: Path) {
-            // require(!isLoaded) { "Config already loaded" }
-
             instance = if (FileSystem.SYSTEM.exists(path)) {
                 FileSystem.SYSTEM.read(path) {
                     json.decodeFromString<DepotConfigStore>(readUtf8())
