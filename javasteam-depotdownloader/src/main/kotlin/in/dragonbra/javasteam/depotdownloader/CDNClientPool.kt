@@ -2,18 +2,15 @@ package `in`.dragonbra.javasteam.depotdownloader
 
 import `in`.dragonbra.javasteam.steam.cdn.Client
 import `in`.dragonbra.javasteam.steam.cdn.Server
-import `in`.dragonbra.javasteam.steam.handlers.steamcontent.SteamContent
-import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.jvm.Throws
 
 /**
  * [CDNClientPool] provides a pool of connections to CDN endpoints, requesting CDN tokens as needed.
- * @param steamClient an instance of [SteamClient]
+ * @param steamSession an instance of [Steam3Session]
  * @param appId the selected app id to ensure an endpoint supports the download.
  * @param scope the [CoroutineScope] to use.
  * @param debug enable or disable logging through [LogManager]
@@ -23,7 +20,7 @@ import kotlin.jvm.Throws
  * @since Nov 7, 2024
  */
 class CDNClientPool(
-    private val steamClient: SteamClient,
+    private val steamSession: Steam3Session,
     private val appId: Int,
     private val scope: CoroutineScope,
     debug: Boolean = false,
@@ -44,7 +41,7 @@ class CDNClientPool(
         private set
 
     init {
-        cdnClient = Client(steamClient)
+        cdnClient = Client(steamSession.steamClient)
 
         if (debug) {
             logger = LogManager.getLogger(CDNClientPool::class.java)
@@ -66,8 +63,8 @@ class CDNClientPool(
             servers.clear()
         }
 
-        val serversForSteamPipe = steamClient.getHandler<SteamContent>()!!.getServersForSteamPipe(
-            cellId = steamClient.cellID ?: 0,
+        val serversForSteamPipe = steamSession.steamContent!!.getServersForSteamPipe(
+            cellId = steamSession.steamClient.cellID ?: 0,
             maxNumServers = maxNumServers,
             parentScope = scope
         ).await()
@@ -85,8 +82,8 @@ class CDNClientPool(
 
         servers.addAll(weightedCdnServers)
 
-        //  servers.joinToString(separator = "\n", prefix = "Servers:\n") { "- $it" }
-        logger?.debug("Found ${servers.size} Servers: \n")
+        // servers.joinToString(separator = "\n", prefix = "Servers:\n") { "- $it" }
+        logger?.debug("Found ${servers.size} Servers")
 
         if (servers.isEmpty()) {
             throw Exception("Failed to retrieve any download servers.")
@@ -108,7 +105,7 @@ class CDNClientPool(
 
         logger?.debug("Returning connection: $server")
 
-        // nothing to do, maybe remove from ContentServerPenalty?
+        // (SK) nothing to do, maybe remove from ContentServerPenalty?
     }
 
     suspend fun returnBrokenConnection(server: Server?) = mutex.withLock {

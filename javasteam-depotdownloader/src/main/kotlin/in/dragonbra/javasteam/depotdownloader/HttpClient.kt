@@ -19,7 +19,7 @@ object HttpClient {
         if (httpClient?.isActive != true) {
             httpClient = HttpClient(CIO) {
                 install(UserAgent) {
-                    agent = "DepotDownloader/${Versions.getVersion()}"
+                    agent = "JavaSteam-DepotDownloader/${Versions.getVersion()}"
                 }
                 engine {
                     maxConnectionsCount = maxConnections

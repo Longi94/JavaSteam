@@ -32,11 +32,13 @@ import java.util.concurrent.ConcurrentHashMap
  * @since Oct 1, 2025
  */
 class Steam3Session(
-    private val steamClient: SteamClient,
+    internal val steamClient: SteamClient,
     debug: Boolean,
 ) : Closeable {
 
     private var logger: Logger? = null
+
+    private var isAborted: Boolean = false // Stubbed, no way to set true/false yet.
 
     internal val appTokens = ConcurrentHashMap<Int, Long>()
     internal val packageTokens = ConcurrentHashMap<Int, Long>()
@@ -96,7 +98,7 @@ class Steam3Session(
     }
 
     suspend fun requestAppInfo(appId: Int, bForce: Boolean = false) {
-        if (appInfo.containsKey(appId) && !bForce) {
+        if ((appInfo.containsKey(appId) && !bForce) || isAborted) {
             return
         }
 
@@ -145,7 +147,9 @@ class Steam3Session(
             // I have a silly race condition???
             val packages = packageIds.filter { !packageInfo.containsKey(it) }
 
-            if (packages.isEmpty()) return
+            if (packages.isEmpty() || isAborted) {
+                return
+            }
 
             val packageRequests = arrayListOf<PICSRequest>()
 
@@ -192,7 +196,7 @@ class Steam3Session(
     }
 
     suspend fun requestDepotKey(depotId: Int, appId: Int = 0) {
-        if (depotKeys.containsKey(depotId)) {
+        if (depotKeys.containsKey(depotId) || isAborted) {
             return
         }
 
@@ -216,6 +220,10 @@ class Steam3Session(
         manifestId: Long,
         branch: String,
     ): ULong = withContext(Dispatchers.IO) {
+        if (isAborted) {
+            return@withContext 0UL
+        }
+
         val requestCode = steamContent!!.getManifestRequestCode(
             depotId = depotId,
             appId = appId,
@@ -229,7 +237,7 @@ class Steam3Session(
             logger?.error("No manifest request code was returned for depot $depotId from app $appId, manifest $manifestId")
 
             if (steamClient.isDisconnected) {
-                logger?.debug("Suggestion: Try logging in with -username as old manifests may not be available for anonymous accounts.")
+                logger?.debug("Suggestion: Try logging in with a username as old manifests may not be available for anonymous accounts.")
             }
         } else {
             logger?.debug("Got manifest request code for depot $depotId from app $appId, manifest $manifestId, result: $requestCode")
@@ -252,30 +260,21 @@ class Steam3Session(
 
         val completion = CompletableDeferred<CDNAuthToken>()
 
-        val existing = cdnAuthTokens.putIfAbsent(cdnKey, completion)
-        if (existing != null) {
+        if (isAborted || cdnAuthTokens.putIfAbsent(cdnKey, completion) != null) {
             return@withContext
         }
 
         logger?.debug("Requesting CDN auth token for ${server.host}")
 
-        try {
-            val cdnAuth = steamContent!!.getCDNAuthToken(appId, depotId, server.host!!, this).await()
+        val cdnAuth = steamContent!!.getCDNAuthToken(appId, depotId, server.host!!, this).await()
 
-            logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
+        logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
 
-            if (cdnAuth.result != EResult.OK) {
-                cdnAuthTokens.remove(cdnKey) // Remove failed promise
-                completion.completeExceptionally(Exception("Failed to get CDN auth token: ${cdnAuth.result}"))
-                return@withContext
-            }
-
-            completion.complete(cdnAuth)
-        } catch (e: Exception) {
-            logger?.error(e)
-            cdnAuthTokens.remove(cdnKey) // Remove failed promise
-            completion.completeExceptionally(e)
+        if (cdnAuth.result != EResult.OK) {
+            return@withContext
         }
+
+        completion.complete(cdnAuth)
     }
 
     suspend fun checkAppBetaPassword(appId: Int, password: String) {

@@ -103,6 +103,7 @@ object Util {
                     readByteArray()
                 }
             } catch (e: IOException) {
+                logger.error(e)
                 null
             }
 
