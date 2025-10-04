@@ -28,7 +28,6 @@ protobuf.protoc {
     artifact = libs.protobuf.protoc.get().toString()
 }
 
-
 java {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
@@ -76,4 +75,42 @@ dependencies {
     implementation(libs.kotlin.stdib)
     implementation(libs.okio)
     implementation(libs.protobuf.java)
+}
+
+/* Artifact publishing */
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            pom {
+                name = "JavaSteam-depotdownloader"
+                packaging = "jar"
+                description = "Depot Downloader for JavaSteam."
+                url = "https://github.com/Longi94/JavaSteam"
+                inceptionYear = "2025"
+                scm {
+                    connection = "scm:git:git://github.com/Longi94/JavaSteam.git"
+                    developerConnection = "scm:git:ssh://github.com:Longi94/JavaSteam.git"
+                    url = "https://github.com/Longi94/JavaSteam/tree/master"
+                }
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://www.opensource.org/licenses/mit-license.php"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "Longi"
+                        name = "Long Tran"
+                        email = "lngtrn94@gmail.com"
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign(publishing.publications["mavenJava"])
 }
