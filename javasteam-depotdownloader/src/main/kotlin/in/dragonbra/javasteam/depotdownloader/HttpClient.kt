@@ -8,6 +8,11 @@ import io.ktor.client.plugins.UserAgent
 import kotlinx.coroutines.isActive
 
 /**
+ * Singleton HTTP client for content downloader operations.
+ * Provides a shared, configured Ktor HTTP client optimized for Steam CDN downloads.
+ * The client is lazily initialized on first use and reused across all download operations.
+ * Connection pooling and timeouts are configured based on the maximum concurrent downloads.
+ *
  * @author Lossy
  * @since Oct 1, 2025
  */

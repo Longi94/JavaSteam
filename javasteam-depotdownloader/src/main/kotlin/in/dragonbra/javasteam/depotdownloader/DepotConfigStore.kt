@@ -6,6 +6,13 @@ import okio.FileSystem
 import okio.Path
 
 /**
+ * Singleton storage for tracking installed depot manifests.
+ * Persists manifest IDs to disk to enable incremental updates and avoid
+ * re-downloading unchanged content. The configuration is serialized as JSON
+ * and must be loaded via [loadFromFile] before use.
+ *
+ * @property installedManifestIDs Map of depot IDs to their currently installed manifest IDs
+ *
  * @author Lossy
  * @since Oct 1, 2025
  */

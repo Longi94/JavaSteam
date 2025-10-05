@@ -1,6 +1,6 @@
 package in.dragonbra.javasteamsamples._023_downloadapp;
 
-import in.dragonbra.javasteam.depotdownloader.ContentDownloader;
+import in.dragonbra.javasteam.depotdownloader.DepotDownloader;
 import in.dragonbra.javasteam.depotdownloader.IDownloadListener;
 import in.dragonbra.javasteam.depotdownloader.data.*;
 import in.dragonbra.javasteam.enums.EResult;
@@ -30,8 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -123,6 +123,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
 
         for (var subscription : subscriptions) {
             try {
+                System.out.println("Closing: " + subscription.getClass().getName());
                 subscription.close();
             } catch (IOException e) {
                 System.out.println("Couldn't close a callback.");
@@ -238,7 +239,6 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         System.out.println("Got " + licenseList.size() + " licenses from account!");
     }
 
-    @SuppressWarnings("ExtractMethodRecommender")
     private void onFreeLicense(FreeLicenseCallback callback) {
         if (callback.getResult() != EResult.OK) {
             System.out.println("Failed to get a free license for Rocky Mayhem");
@@ -248,69 +248,72 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
 
         // Initiate the DepotDownloader, it is a Closable so it can be cleaned up when no longer used.
         // You will need to subscribe to LicenseListCallback to obtain your app licenses.
-        try (var depotDownloader = new ContentDownloader(steamClient, licenseList, false)) {
+        try (var depotDownloader = new DepotDownloader(steamClient, licenseList, false)) {
 
+            // Add this class as a listener of IDownloadListener
             depotDownloader.addListener(this);
 
             // An app id is required at minimum for all item types.
             var pubItem = new PubFileItem(
                     /* appId */ 0,
                     /* pubfile */ 0,
-                    /* installToGameNameDirectory */ false,
-                    /* installDirectory */ null,
-                    /* downloadManifestOnly */ false
+                    /* (Optional) installToGameNameDirectory */ false,
+                    /* (Optional) installDirectory */ null,
+                    /* (Optional) downloadManifestOnly */ false
             ); // TODO find actual pub item
 
             var ugcItem = new UgcItem(
                     /* appId */0,
                     /* ugcId */ 0,
-                    /* installToGameNameDirectory */ false,
-                    /* installDirectory */ null,
-                    /* downloadManifestOnly */ false
+                    /* (Optional) installToGameNameDirectory */ false,
+                    /* (Optional) installDirectory */ null,
+                    /* (Optional) downloadManifestOnly */ false
             ); // TODO find actual ugc item
 
             var appItem = new AppItem(
                     /* appId */ 204360,
-                    /* installToGameNameDirectory */ true,
-                    /* installDirectory */ DEFAULT_INSTALL_DIRECTORY,
-                    /* branch */ "public",
-                    /* branchPassword */ "",
-                    /* downloadAllPlatforms */ false,
-                    /* os */ "windows",
-                    /* downloadAllArchs */ false,
-                    /* osArch */ "64",
-                    /* downloadAllLanguages */ false,
-                    /* language */ "english",
-                    /* lowViolence */ false,
-                    /* depot */ List.of(),
-                    /* manifest */ List.of(),
-                    /* downloadManifestOnly */ false
+                    /* (Optional) installToGameNameDirectory */ true,
+                    /* (Optional) installDirectory */ DEFAULT_INSTALL_DIRECTORY,
+                    /* (Optional) branch */ "public",
+                    /* (Optional) branchPassword */ "",
+                    /* (Optional) downloadAllPlatforms */ false,
+                    /* (Optional) os */ "windows",
+                    /* (Optional) downloadAllArchs */ false,
+                    /* (Optional) osArch */ "64",
+                    /* (Optional) downloadAllLanguages */ false,
+                    /* (Optional) language */ "english",
+                    /* (Optional) lowViolence */ false,
+                    /* (Optional) depot */ List.of(),
+                    /* (Optional) manifest */ List.of(),
+                    /* (Optional) downloadManifestOnly */ false
             );
 
-            var appItem2 = new AppItem(225840, true);
-            var appItem3 = new AppItem(3527290, true);
-            var appItem4 = new AppItem(ROCKY_MAYHEM_APP_ID, true);
+            var scanner = new Scanner(System.in);
+            System.out.print("Enter a game app id: ");
+            var appId = scanner.nextInt();
 
-            var downloadList = List.of(pubItem, ugcItem, appItem);
+            // After 'depotDownloader' is constructed, items added are downloaded in a First-In, First-Out queue on the fly.
 
-            // Add specified games to the queue. Add, Remove, Move, and general array manipulation methods are available.
-            // depotDownloader.addAll(downloadList); // TODO
-            depotDownloader.addAll(List.of(appItem));
+            // Add a singular item to process.
+            depotDownloader.add(new AppItem(appId, true));
 
-            // Start downloading your items. Array manipulation is now disabled. You can still add to the list.
-            var success = depotDownloader.start().get(); // Future<Boolean>
+            // You can add a List of items to be processed.
+            // depotDownloader.add(List.of());
 
-            if (success) {
-                System.out.println("Download completed successfully");
+            // Stay here while content downloads. Note this sample is synchronous so we'll loop here.
+            while (depotDownloader.isProcessing()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    break;
+                }
             }
 
+            // Remove this class as a listener of IDownloadListener
             depotDownloader.removeListener(this);
-        } catch (IllegalStateException | InterruptedException | ExecutionException e) {
-            System.out.println("Something happened");
-            System.err.println(e.getMessage());
         } finally {
-            steamUser.logOff();
             System.out.println("Done Downloading");
+            steamUser.logOff();
         }
     }
 
@@ -323,38 +326,26 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     // Depot Downloader Callbacks.
 
     @Override
-    public void onItemAdded(@NotNull DownloadItem item, int index) {
-        System.out.println("Depot Downloader: Item Added: " + item.getAppId() + ", index: " + index);
+    public void onItemAdded(int appId) {
+        System.out.println("Depot Downloader: Item Added: " + appId);
         System.out.println(" ---- ");
     }
 
     @Override
-    public void onItemRemoved(@NotNull DownloadItem item, int index) {
-        System.out.println("Depot Downloader: Item Removed: " + item.getAppId() + ", index: " + index);
+    public void onDownloadStarted(int appId) {
+        System.out.println("Depot Downloader: Download started for item: " + appId);
         System.out.println(" ---- ");
     }
 
     @Override
-    public void onQueueCleared(@NotNull List<? extends @NotNull DownloadItem> previousItems) {
-        System.out.println("Depot Downloader: Queue size of " + previousItems.size() + " cleared");
+    public void onDownloadCompleted(int appId) {
+        System.out.println("Depot Downloader: Download completed for item: " + appId);
         System.out.println(" ---- ");
     }
 
     @Override
-    public void onDownloadStarted(@NotNull DownloadItem item) {
-        System.out.println("Depot Downloader: Download started for item: " + item.getAppId());
-        System.out.println(" ---- ");
-    }
-
-    @Override
-    public void onDownloadCompleted(@NotNull DownloadItem item) {
-        System.out.println("Depot Downloader: Download completed for item: " + item.getAppId());
-        System.out.println(" ---- ");
-    }
-
-    @Override
-    public void onDownloadFailed(@NotNull DownloadItem item, @NotNull Throwable error) {
-        System.out.println("Depot Downloader: Download failed for item: " + item.getAppId());
+    public void onDownloadFailed(int appId, @NotNull Throwable error) {
+        System.out.println("Depot Downloader: Download failed for item: " + appId);
         System.err.println(error.getMessage());
         System.out.println(" ---- ");
     }
@@ -372,9 +363,8 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     }
 
     @Override
-    public void onDepotProgress(int depotId, @NotNull DepotProgress progress) {
+    public void onDepotProgress(@NotNull DepotProgress progress) {
         System.out.println("Depot Downloader: Depot Progress");
-        System.out.println("depotId: " + depotId);
         System.out.println("depotId: " + progress.getDepotId());
         System.out.println("filesCompleted: " + progress.getFilesCompleted());
         System.out.println("totalFiles: " + progress.getTotalFiles());
@@ -386,10 +376,9 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     }
 
     @Override
-    public void onFileProgress(int depotId, @NotNull String fileName, @NotNull FileProgress progress) {
+    public void onFileProgress(@NotNull FileProgress progress) {
         System.out.println("Depot Downloader: File Progress");
-        System.out.println("depotId: " + depotId);
-        System.out.println("fileName: " + fileName);
+        System.out.println("depotId: " + progress.getDepotId());
         System.out.println("fileName: " + progress.getFileName());
         System.out.println("bytesDownloaded: " + progress.getBytesDownloaded());
         System.out.println("totalBytes: " + progress.getTotalBytes());
@@ -403,12 +392,6 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     @Override
     public void onStatusUpdate(@NotNull String message) {
         System.out.println("Depot Downloader: Status Message: " + message);
-        System.out.println(" ---- ");
-    }
-
-    @Override
-    public void onAndroidEmulation(boolean value) {
-        System.out.println("Depot Downloader: Android Emulation: " + value);
         System.out.println(" ---- ");
     }
 }
