@@ -9,8 +9,6 @@ import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
 import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
 import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
 import in.dragonbra.javasteam.steam.handlers.steamapps.License;
-import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
-import in.dragonbra.javasteam.steam.handlers.steamapps.callback.FreeLicenseCallback;
 import in.dragonbra.javasteam.steam.handlers.steamapps.callback.LicenseListCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
@@ -42,26 +40,20 @@ import java.util.concurrent.CancellationException;
  * <p>
  * this sample introduces the usage of the content downloader API
  * <p>
- * content downloader lets you download an app from a Steam depot given
- * an app ID
+ * content downloader lets you download an app, pub file, or ugc item given some parameters.
  * <p>
- * in this case, this sample will demonstrate how to download the free game
- * called Rocky Mayhem
+ * in this case, this sample will ask which game app id you'd like to download.
+ * You can find the app id of a game by the url of the store page.
+ * For example "store.steampowered.com/app/1303350/Rocky_Mayhem/", where 1303350 is the app id.
  */
 @SuppressWarnings("FieldCanBeLocal")
 public class SampleDownloadApp implements Runnable, IDownloadListener {
-
-    private final int ROCKY_MAYHEM_APP_ID = 1303350;
-
-    private final String DEFAULT_INSTALL_DIRECTORY = "steamapps";
 
     private SteamClient steamClient;
 
     private CallbackManager manager;
 
     private SteamUser steamUser;
-
-    private SteamApps steamApps;
 
     private boolean isRunning;
 
@@ -100,8 +92,6 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
 
         steamUser = steamClient.getHandler(SteamUser.class);
 
-        steamApps = steamClient.getHandler(SteamApps.class);
-
         subscriptions = new ArrayList<>();
 
         subscriptions.add(manager.subscribe(ConnectedCallback.class, this::onConnected));
@@ -109,7 +99,6 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         subscriptions.add(manager.subscribe(LoggedOnCallback.class, this::onLoggedOn));
         subscriptions.add(manager.subscribe(LoggedOffCallback.class, this::onLoggedOff));
         subscriptions.add(manager.subscribe(LicenseListCallback.class, this::onLicenseList));
-        subscriptions.add(manager.subscribe(FreeLicenseCallback.class, this::onFreeLicense));
 
         isRunning = true;
 
@@ -121,9 +110,9 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             manager.runWaitCallbacks(1000L);
         }
 
+        System.out.println("Closing " + subscriptions.size() + " subscriptions.");
         for (var subscription : subscriptions) {
             try {
-                System.out.println("Closing: " + subscription.getClass().getName());
                 subscription.close();
             } catch (IOException e) {
                 System.out.println("Couldn't close a callback.");
@@ -223,8 +212,9 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
 
         System.out.println("Successfully logged on!");
 
-        // now that we are logged in, we can request a free license for Rocky Mayhem
-        steamApps.requestFreeLicense(ROCKY_MAYHEM_APP_ID);
+        // at this point, we'd be able to perform actions on Steam
+
+        // The sample continues in onLicenseList
     }
 
     private void onLicenseList(LicenseListCallback callback) {
@@ -237,15 +227,17 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         licenseList = callback.getLicenseList();
 
         System.out.println("Got " + licenseList.size() + " licenses from account!");
+
+        downloadApp();
     }
 
-    private void onFreeLicense(FreeLicenseCallback callback) {
-        if (callback.getResult() != EResult.OK) {
-            System.out.println("Failed to get a free license for Rocky Mayhem");
-            steamClient.disconnect();
-            return;
-        }
+    private void onLoggedOff(LoggedOffCallback callback) {
+        System.out.println("Logged off of Steam: " + callback.getResult());
 
+        isRunning = false;
+    }
+
+    private void downloadApp() {
         // Initiate the DepotDownloader, it is a Closable so it can be cleaned up when no longer used.
         // You will need to subscribe to LicenseListCallback to obtain your app licenses.
         try (var depotDownloader = new DepotDownloader(steamClient, licenseList, false)) {
@@ -273,7 +265,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             var appItem = new AppItem(
                     /* appId */ 204360,
                     /* (Optional) installToGameNameDirectory */ true,
-                    /* (Optional) installDirectory */ DEFAULT_INSTALL_DIRECTORY,
+                    /* (Optional) installDirectory */ "steamapps",
                     /* (Optional) branch */ "public",
                     /* (Optional) branchPassword */ "",
                     /* (Optional) downloadAllPlatforms */ false,
@@ -315,12 +307,6 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             System.out.println("Done Downloading");
             steamUser.logOff();
         }
-    }
-
-    private void onLoggedOff(LoggedOffCallback callback) {
-        System.out.println("Logged off of Steam: " + callback.getResult());
-
-        isRunning = false;
     }
 
     // Depot Downloader Callbacks.
