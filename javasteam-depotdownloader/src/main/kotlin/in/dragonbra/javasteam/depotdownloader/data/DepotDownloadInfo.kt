@@ -3,6 +3,18 @@ package `in`.dragonbra.javasteam.depotdownloader.data
 import okio.Path
 
 /**
+ * Contains all information required to download a specific depot manifest and its content.
+ * This class aggregates the depot identification, authentication, and installation details
+ * needed to perform a complete depot download operation. It is created during the depot
+ * resolution phase and passed through the download pipeline.
+ *
+ * @property depotId The Steam depot identifier
+ * @property appId The owning application ID (may differ from the app being downloaded if the depot uses `depotfromapp` proxying)
+ * @property manifestId The specific manifest version to download
+ * @property branch The branch name this manifest belongs to (e.g., "public", "beta")
+ * @property installDir The target directory for downloaded files
+ * @property depotKey The AES decryption key for depot chunks. Cleared on disposal for security.
+ *
  * @author Oxters
  * @author Lossy
  * @since Oct 29, 2024

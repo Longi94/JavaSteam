@@ -9,11 +9,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * [CDNClientPool] provides a pool of connections to CDN endpoints, requesting CDN tokens as needed.
- * @param steamSession an instance of [Steam3Session]
- * @param appId the selected app id to ensure an endpoint supports the download.
- * @param scope the [CoroutineScope] to use.
- * @param debug enable or disable logging through [LogManager]
+ * Manages a pool of CDN server connections for efficient content downloading.
+ * This class maintains a list of available CDN servers, automatically selects appropriate
+ * servers based on load and app compatibility, and handles connection rotation when
+ * servers fail or become unavailable.
+ *
+ * @param steamSession The Steam3 session for server communication
+ * @param appId The application ID to download - used to filter compatible CDN servers
+ * @param scope The coroutine scope for async operations
+ * @param debug If true, enables debug logging
  *
  * @author Oxters
  * @author Lossy

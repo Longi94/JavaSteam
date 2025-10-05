@@ -52,7 +52,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -70,31 +69,48 @@ import java.lang.IllegalStateException
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.mutableListOf
 import kotlin.collections.set
 import kotlin.text.toLongOrNull
 
 /**
- * [ContentDownloader] is a JavaSteam module that is able to download Games, Workshop Items, and other content from Steam.
- * @param steamClient an instance of [SteamClient]
- * @param licenses a list of licenses the logged-in user has. This is provided by [LicenseListCallback]
- * @param debug enable or disable logging through [LogManager]
- * @param useLanCache try and detect a local Steam Cache server.
- * @param maxDownloads the number of simultaneous downloads.
+ * Downloads games, workshop items, and other Steam content via depot manifests.
+ *
+ * This class provides a queue-based FIFO download system that processes items sequentially.
+ * Items are added via [add] or [addAll] and processed automatically in order. The processing
+ * loop starts immediately upon construction and waits for items to be queued.
+ *
+ * ## Download Process
+ * 1. Validates account access and obtains depot keys
+ * 2. Downloads and caches depot manifests
+ * 3. Allocates disk space for files
+ * 4. Downloads chunks concurrently (configured by [maxDownloads])
+ * 5. Verifies checksums and moves files to final location
+ *
+ * ## Thread Safety
+ * Methods [add], [addAll], [addListener], and [removeListener] are thread-safe.
+ * Multiple concurrent calls are supported.
+ *
+ * @param steamClient Connected Steam client instance with valid login session
+ * @param licenses User's license list from [LicenseListCallback]. Required to determine which depots the account has access to.
+ * @param debug Enables detailed logging of all operations via [LogManager]
+ * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
+ * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8
+ * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  *
  * @author Oxters
  * @author Lossy
  * @since Oct 29, 2024
  */
 @Suppress("unused")
-class ContentDownloader @JvmOverloads constructor(
+class DepotDownloader @JvmOverloads constructor(
     private val steamClient: SteamClient,
-    private val licenses: List<License>, // To be provided from [LicenseListCallback]
-    private val debug: Boolean = false, // Enable debugging features, such as logging
-    private val useLanCache: Boolean = false, // Try and detect a lan cache server.
-    private var maxDownloads: Int = 8, // Max concurrent downloads
+    private val licenses: List<License>,
+    private val debug: Boolean = false,
+    private val useLanCache: Boolean = false,
+    private var maxDownloads: Int = 8,
+    private val androidEmulation: Boolean = false,
 ) : Closeable {
 
     companion object {
@@ -109,17 +125,13 @@ class ContentDownloader @JvmOverloads constructor(
         val STAGING_DIR: Path = CONFIG_DIR.toPath() / "staging"
     }
 
-    // What is a PriorityQueue?
-
     private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private val items = CopyOnWriteArrayList(ArrayList<DownloadItem>())
+    private val activeDownloads = AtomicInteger(0)
     private val listeners = CopyOnWriteArrayList<IDownloadListener>()
     private var logger: Logger? = null
-    private val isStarted: AtomicBoolean = AtomicBoolean(false)
-    private val processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
-    private val remainingItems = AtomicInteger(0)
+    private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
     private val lastFileProgressUpdate = ConcurrentHashMap<String, Long>()
     private val progressUpdateInterval = 500L // ms
 
@@ -127,7 +139,7 @@ class ContentDownloader @JvmOverloads constructor(
 
     private var cdnClientPool: CDNClientPool? = null
 
-    private var config: Config = Config()
+    private var config: Config = Config(androidEmulation = androidEmulation)
 
     // region [REGION] Private data classes.
 
@@ -161,15 +173,21 @@ class ContentDownloader @JvmOverloads constructor(
 
     init {
         if (debug) {
-            logger = LogManager.getLogger(ContentDownloader::class.java)
+            logger = LogManager.getLogger(DepotDownloader::class.java)
         }
 
         logger?.debug("DepotDownloader launched with ${licenses.size} for account")
 
         steam3 = Steam3Session(steamClient, debug)
+
+        // Launch the processing loop
+        scope.launch {
+            processItems()
+        }
     }
 
     // region [REGION] Downloading Operations
+
     @Throws(IllegalStateException::class)
     suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
         val details = requireNotNull(
@@ -321,7 +339,7 @@ class ContentDownloader @JvmOverloads constructor(
                 steam3!!.requestAppInfo(appId, true)
             } else {
                 val contentName = getAppName(appId)
-                throw ContentDownloaderException("App $appId ($contentName) is not available from this account.")
+                throw DepotDownloaderException("App $appId ($contentName) is not available from this account.")
             }
         }
 
@@ -405,12 +423,12 @@ class ContentDownloader @JvmOverloads constructor(
             }
 
             if (depotManifestIds.isEmpty() && !hasSpecificDepots) {
-                throw ContentDownloaderException("Couldn't find any depots to download for app $appId")
+                throw DepotDownloaderException("Couldn't find any depots to download for app $appId")
             }
 
             if (depotIdsFound.size < depotIdsExpected.size) {
                 val remainingDepotIds = depotIdsExpected.subtract(depotIdsFound.toSet())
-                throw ContentDownloaderException("Depot ${remainingDepotIds.joinToString(", ")} not listed for app $appId")
+                throw DepotDownloaderException("Depot ${remainingDepotIds.joinToString(", ")} not listed for app $appId")
             }
         }
 
@@ -704,7 +722,7 @@ class ContentDownloader @JvmOverloads constructor(
             EAppInfoSection.Extended -> "extended"
             EAppInfoSection.Config -> "config"
             EAppInfoSection.Depots -> "depots"
-            else -> throw ContentDownloaderException("${section.name} not implemented")
+            else -> throw DepotDownloaderException("${section.name} not implemented")
         }
 
         val sectionKV = appInfo.children.firstOrNull { c -> c.name == sectionKey }
@@ -1047,7 +1065,7 @@ class ContentDownloader @JvmOverloads constructor(
                                 )
                             ) {
                                 notifyListeners { listener ->
-                                    listener.onDepotProgress(depot.depotId, snapshot)
+                                    listener.onDepotProgress(snapshot)
                                 }
                             }
                         }
@@ -1072,7 +1090,7 @@ class ContentDownloader @JvmOverloads constructor(
                             )
                         }
                         notifyListeners { listener ->
-                            listener.onDepotProgress(depot.depotId, snapshot)
+                            listener.onDepotProgress(snapshot)
                         }
                     }
                 }
@@ -1173,7 +1191,7 @@ class ContentDownloader @JvmOverloads constructor(
                     handle.resize(file.totalSize)
                 }
             } catch (e: IOException) {
-                throw ContentDownloaderException("Failed to allocate file $fileFinalPath: ${e.message}")
+                throw DepotDownloaderException("Failed to allocate file $fileFinalPath: ${e.message}")
             }
 
             neededChunks = ArrayList(file.chunks)
@@ -1242,7 +1260,7 @@ class ContentDownloader @JvmOverloads constructor(
                                     try {
                                         newHandle.resize(file.totalSize)
                                     } catch (ex: IOException) {
-                                        throw ContentDownloaderException(
+                                        throw DepotDownloaderException(
                                             "Failed to resize file to expected size $fileFinalPath: ${ex.message}"
                                         )
                                     }
@@ -1269,7 +1287,7 @@ class ContentDownloader @JvmOverloads constructor(
                         try {
                             handle.resize(file.totalSize)
                         } catch (ex: IOException) {
-                            throw ContentDownloaderException(
+                            throw DepotDownloaderException(
                                 "Failed to allocate file $fileFinalPath: ${ex.message}"
                             )
                         }
@@ -1483,9 +1501,8 @@ class ContentDownloader @JvmOverloads constructor(
 
             notifyListeners { listener ->
                 listener.onFileProgress(
-                    depotId = depot.depotId,
-                    fileName = file.fileName,
                     progress = FileProgress(
+                        depotId = depot.depotId,
                         fileName = file.fileName,
                         bytesDownloaded = approximateBytesDownloaded,
                         totalBytes = file.totalSize,
@@ -1542,356 +1559,166 @@ class ContentDownloader @JvmOverloads constructor(
 
     // endregion
 
-    // region [REGION] Array Operations
+    // region [REGION] Queue Operations
 
-    fun getItems(): List<DownloadItem> = items.toList()
-
-    fun size(): Int = items.size
-
-    fun isEmpty(): Boolean = items.isEmpty()
-
-    fun get(index: Int): DownloadItem? = items.getOrNull(index)
-
-    fun contains(item: DownloadItem): Boolean = items.contains(item)
-
-    fun indexOf(item: DownloadItem): Int = items.indexOf(item)
-
-    fun addAll(items: List<DownloadItem>) {
-        items.forEach(::add)
-    }
-
+    /**
+     * Add a singular item of either [AppItem], [PubFileItem], or [UgcItem]
+     */
     fun add(item: DownloadItem) {
-        val index = items.size
-        items.add(item)
-
-        if (isStarted.get()) {
-            remainingItems.incrementAndGet()
-            scope.launch { processingChannel.send(item) }
-        }
-
-        notifyListeners { it.onItemAdded(item, index) }
-    }
-
-    fun addFirst(item: DownloadItem) {
-        if (isStarted.get()) {
-            logger?.debug("Cannot add item when started.")
-            return
-        }
-
-        try {
-            items.add(0, item)
-            notifyListeners { it.onItemAdded(item, 0) }
-        } catch (e: Exception) {
-            logger?.error(e)
+        runBlocking {
+            processingChannel.send(item)
+            activeDownloads.incrementAndGet()
+            notifyListeners { it.onItemAdded(item.appId) }
         }
     }
 
-    fun addAt(index: Int, item: DownloadItem): Boolean {
-        if (isStarted.get()) {
-            logger?.debug("Cannot addAt item when started.")
-            return false
-        }
-
-        return try {
-            items.add(index, item)
-            notifyListeners { it.onItemAdded(item, index) }
-            true
-        } catch (e: IndexOutOfBoundsException) {
-            false
-        }
-    }
-
-    fun removeFirst(): DownloadItem? {
-        if (isStarted.get()) {
-            logger?.debug("Cannot removeFirst item when started.")
-            return null
-        }
-
-        return try {
-            if (items.isNotEmpty()) {
-                val item = items.removeAt(0)
-                notifyListeners { it.onItemRemoved(item, 0) }
-                item
-            } else {
-                null
+    /**
+     * Add a list items of either [AppItem], [PubFileItem], or [UgcItem]
+     */
+    fun addAll(items: List<DownloadItem>) {
+        runBlocking {
+            items.forEach { item ->
+                processingChannel.send(item)
+                activeDownloads.incrementAndGet()
+                notifyListeners { it.onItemAdded(item.appId) }
             }
-        } catch (e: IndexOutOfBoundsException) {
-            logger?.error(e)
-            null
         }
     }
 
-    fun removeLast(): DownloadItem? {
-        if (isStarted.get()) {
-            logger?.debug("Cannot removeLast item when started.")
-            return null
-        }
+    /**
+     * Get the current queue size of pending items to be downloaded.
+     */
+    fun queueSize(): Int = activeDownloads.get()
 
-        return try {
-            if (items.isNotEmpty()) {
-                val lastIndex = items.size - 1
-                val item = items.removeAt(lastIndex)
-                notifyListeners { it.onItemRemoved(item, lastIndex) }
-                item
-            } else {
-                null
-            }
-        } catch (e: IndexOutOfBoundsException) {
-            logger?.error(e)
-            null
-        }
-    }
-
-    fun remove(item: DownloadItem): Boolean {
-        if (isStarted.get()) {
-            logger?.debug("Cannot remove item when started.")
-            return false
-        }
-
-        val index = items.indexOf(item)
-        return try {
-            if (index >= 0) {
-                items.removeAt(index)
-                notifyListeners { it.onItemRemoved(item, index) }
-                true
-            } else {
-                false
-            }
-        } catch (e: IndexOutOfBoundsException) {
-            logger?.error(e)
-            false
-        }
-    }
-
-    fun removeAt(index: Int): DownloadItem? {
-        if (isStarted.get()) {
-            logger?.debug("Cannot removeAt item when started.")
-            return null
-        }
-
-        return try {
-            val item = items.removeAt(index)
-            notifyListeners { it.onItemRemoved(item, index) }
-            item
-        } catch (e: IndexOutOfBoundsException) {
-            null
-        }
-    }
-
-    fun moveItem(fromIndex: Int, toIndex: Int): Boolean {
-        if (isStarted.get()) {
-            logger?.debug("Cannot moveItem item when started.")
-            return false
-        }
-
-        return try {
-            val item = items.removeAt(fromIndex)
-            items.add(toIndex, item)
-            true
-        } catch (e: IndexOutOfBoundsException) {
-            false
-        }
-    }
-
-    fun clear() {
-        if (isStarted.get()) {
-            logger?.debug("Cannot clear item when started.")
-            return
-        }
-
-        val oldItems = items.toList()
-        items.clear()
-
-        notifyListeners { it.onQueueCleared(oldItems) }
-    }
+    /**
+     * Get a boolean value if there are items in queue to be downloaded.
+     */
+    fun isProcessing(): Boolean = activeDownloads.get() > 0
 
     // endregion
 
-    /**
-     * Some android emulators prefer using "Windows", so this will set downloading to prefer the Windows version.
-     */
-    fun setAndroidEmulation(value: Boolean) {
-        if (isStarted.get()) {
-            logger?.error("Can't set android emulation value once started.")
-            return
+    private suspend fun processItems() = coroutineScope {
+        if (useLanCache) {
+            ClientLancache.detectLancacheServer()
         }
-
-        config = config.copy(androidEmulation = value)
-
-        notifyListeners { it.onAndroidEmulation(config.androidEmulation) }
-    }
-
-    @Throws(IllegalStateException::class)
-    fun start(): CompletableFuture<Boolean> = scope.future {
-        if (isStarted.getAndSet(true)) {
-            logger?.debug("Downloading already started.")
-            return@future false
-        }
-
-        val initialItems = items.toList()
-        if (initialItems.isEmpty()) {
-            logger?.debug("No items to download")
-            return@future false
-        }
-
-        // Send initial items
-        remainingItems.set(initialItems.size)
-        initialItems.forEach { processingChannel.send(it) }
 
         if (ClientLancache.useLanCacheServer) {
             logger?.debug("Detected Lan-Cache server! Downloads will be directed through the Lancache.")
-
-            // Increasing the number of concurrent downloads when the cache is detected since the downloads will likely
-            // be served much faster than over the internet.  Steam internally has this behavior as well.
             if (maxDownloads == 8) {
                 maxDownloads = 25
             }
         }
 
-        repeat(remainingItems.get()) {
-            // Process exactly this many
-            ensureActive()
-
-            // Obtain the next item in queue.
-            val item = processingChannel.receive()
-
+        for (item in processingChannel) {
             try {
-                runBlocking {
-                    if (useLanCache) {
-                        ClientLancache.detectLancacheServer()
+                ensureActive()
+
+                // Set configuration values
+                config = config.copy(
+                    downloadManifestOnly = item.downloadManifestOnly,
+                    installPath = item.installDirectory?.toPath(),
+                    installToGameNameDirectory = item.installToGameNameDirectory,
+                )
+
+                when (item) {
+                    is PubFileItem -> {
+                        if (item.pubfile == INVALID_MANIFEST_ID) {
+                            logger?.debug("Invalid Pub File ID for ${item.appId}")
+                            continue
+                        }
+                        logger?.debug("Downloading PUB File for ${item.appId}")
+                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        downloadPubFile(item.appId, item.pubfile)
                     }
 
-                    // Set some configuration values, first.
-                    config = config.copy(
-                        downloadManifestOnly = item.downloadManifestOnly,
-                        installPath = item.installDirectory?.toPath(),
-                        installToGameNameDirectory = item.installToGameNameDirectory,
-                    )
-
-                    // Sequential looping.
-                    when (item) {
-                        is PubFileItem -> {
-                            if (item.pubfile == INVALID_MANIFEST_ID) {
-                                logger?.debug("Invalid Pub File ID for ${item.appId}")
-                                return@runBlocking
-                            }
-
-                            logger?.debug("Downloading PUB File for ${item.appId}")
-
-                            notifyListeners { it.onDownloadStarted(item) }
-                            downloadPubFile(item.appId, item.pubfile)
+                    is UgcItem -> {
+                        if (item.ugcId == INVALID_MANIFEST_ID) {
+                            logger?.debug("Invalid UGC ID for ${item.appId}")
+                            continue
                         }
-
-                        is UgcItem -> {
-                            if (item.ugcId == INVALID_MANIFEST_ID) {
-                                logger?.debug("Invalid UGC ID for ${item.appId}")
-                                return@runBlocking
-                            }
-
-                            logger?.debug("Downloading UGC File for ${item.appId}")
-
-                            notifyListeners { it.onDownloadStarted(item) }
-                            downloadUGC(item.appId, item.ugcId)
-                        }
-
-                        is AppItem -> {
-                            val branch = item.branch ?: DEFAULT_BRANCH
-                            config = config.copy(betaPassword = item.branchPassword)
-
-                            if (!config.betaPassword.isNullOrBlank() && branch.isBlank()) {
-                                logger?.error("Error: Cannot specify 'branchpassword' when 'branch' is not specified.")
-                                return@runBlocking
-                            }
-
-                            config = config.copy(downloadAllPlatforms = item.downloadAllPlatforms)
-
-                            val os = item.os
-
-                            if (config.downloadAllPlatforms && !os.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `os` when `all-platforms` is specified.")
-                                return@runBlocking
-                            }
-
-                            config = config.copy(downloadAllArchs = item.downloadAllArchs)
-
-                            val arch = item.osArch
-
-                            if (config.downloadAllArchs && !arch.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `osarch` when `all-archs` is specified.")
-                                return@runBlocking
-                            }
-
-                            config = config.copy(downloadAllLanguages = item.downloadAllLanguages)
-
-                            val language = item.language
-
-                            if (config.downloadAllLanguages && !language.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `language` when `all-languages` is specified.")
-                                return@runBlocking
-                            }
-
-                            val lv = item.lowViolence
-
-                            val depotManifestIds = mutableListOf<Pair<Int, Long>>()
-                            val isUGC = false
-
-                            val depotIdList = item.depot
-                            val manifestIdList = item.manifest
-
-                            if (manifestIdList.isNotEmpty()) {
-                                if (depotIdList.size != manifestIdList.size) {
-                                    logger?.error("Error: `manifest` requires one id for every `depot` specified")
-                                    return@runBlocking
-                                }
-                                val zippedDepotManifest = depotIdList.zip(manifestIdList) { depotId, manifestId ->
-                                    Pair(depotId, manifestId)
-                                }
-                                depotManifestIds.addAll(zippedDepotManifest)
-                            } else {
-                                depotManifestIds.addAll(
-                                    depotIdList.map { depotId ->
-                                        Pair(depotId, INVALID_MANIFEST_ID)
-                                    }
-                                )
-                            }
-
-                            logger?.debug("Downloading App for ${item.appId}")
-
-                            notifyListeners { it.onDownloadStarted(item) }
-                            downloadApp(
-                                appId = item.appId,
-                                depotManifestIds = depotManifestIds,
-                                branch = branch,
-                                os = os,
-                                arch = arch,
-                                language = language,
-                                lv = lv,
-                                isUgc = isUGC,
-                            )
-                        }
+                        logger?.debug("Downloading UGC File for ${item.appId}")
+                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        downloadUGC(item.appId, item.ugcId)
                     }
 
-                    notifyListeners { it.onDownloadCompleted(item) }
+                    is AppItem -> {
+                        val branch = item.branch ?: DEFAULT_BRANCH
+                        config = config.copy(betaPassword = item.branchPassword)
+
+                        if (!config.betaPassword.isNullOrBlank() && branch.isBlank()) {
+                            logger?.error("Error: Cannot specify 'branchpassword' when 'branch' is not specified.")
+                            continue
+                        }
+
+                        config = config.copy(downloadAllPlatforms = item.downloadAllPlatforms)
+                        val os = item.os
+
+                        if (config.downloadAllPlatforms && !os.isNullOrBlank()) {
+                            logger?.error("Error: Cannot specify `os` when `all-platforms` is specified.")
+                            continue
+                        }
+
+                        config = config.copy(downloadAllArchs = item.downloadAllArchs)
+                        val arch = item.osArch
+
+                        if (config.downloadAllArchs && !arch.isNullOrBlank()) {
+                            logger?.error("Error: Cannot specify `osarch` when `all-archs` is specified.")
+                            continue
+                        }
+
+                        config = config.copy(downloadAllLanguages = item.downloadAllLanguages)
+                        val language = item.language
+
+                        if (config.downloadAllLanguages && !language.isNullOrBlank()) {
+                            logger?.error("Error: Cannot specify `language` when `all-languages` is specified.")
+                            continue
+                        }
+
+                        val depotManifestIds = mutableListOf<Pair<Int, Long>>()
+                        val depotIdList = item.depot
+                        val manifestIdList = item.manifest
+
+                        if (manifestIdList.isNotEmpty()) {
+                            if (depotIdList.size != manifestIdList.size) {
+                                logger?.error("Error: `manifest` requires one id for every `depot` specified")
+                                continue
+                            }
+                            depotManifestIds.addAll(depotIdList.zip(manifestIdList))
+                        } else {
+                            depotManifestIds.addAll(depotIdList.map { it to INVALID_MANIFEST_ID })
+                        }
+
+                        logger?.debug("Downloading App for ${item.appId}")
+                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        downloadApp(
+                            appId = item.appId,
+                            depotManifestIds = depotManifestIds,
+                            branch = branch,
+                            os = os,
+                            arch = arch,
+                            language = language,
+                            lv = item.lowViolence,
+                            isUgc = false,
+                        )
+                    }
                 }
-            } catch (e: IOException) {
+
+                notifyListeners { it.onDownloadCompleted(item.appId) }
+            } catch (e: Exception) {
                 logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
-
-                notifyListeners { it.onDownloadFailed(item, e) }
-
-                throw e
+                notifyListeners { it.onDownloadFailed(item.appId, e) }
+            } finally {
+                activeDownloads.decrementAndGet()
             }
         }
-
-        return@future true
     }
 
     override fun close() {
-        isStarted.set(false)
+        processingChannel.close()
+
+        scope.cancel("DepotDownloader Closing")
 
         HttpClient.close()
-
-        items.clear()
-        processingChannel.close()
 
         lastFileProgressUpdate.clear()
         listeners.clear()

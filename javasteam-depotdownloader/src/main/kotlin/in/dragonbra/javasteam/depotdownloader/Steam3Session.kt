@@ -28,6 +28,14 @@ import java.io.Closeable
 import java.util.concurrent.ConcurrentHashMap
 
 /**
+ * Manages Steam protocol session state and API interactions for content downloading.
+ *
+ * All Steam API handlers are initialized during construction and must remain valid
+ * for the lifetime of this session.
+ *
+ * @param steamClient The connected Steam client instance
+ * @param debug If true, enables debug logging for all Steam API operations
+ *
  * @author Lossy
  * @since Oct 1, 2025
  */
@@ -304,7 +312,7 @@ class Steam3Session(
         return privateBeta.depotSection
     }
 
-    @Throws(ContentDownloaderException::class)
+    @Throws(DepotDownloaderException::class)
     suspend fun getPublishedFileDetails(
         appId: Int,
         pubFile: PublishedFileID,
@@ -323,7 +331,7 @@ class Steam3Session(
             return details.body.publishedfiledetailsBuilderList.firstOrNull()?.build()
         }
 
-        throw ContentDownloaderException("EResult ${details.result.code()} (${details.result}) while retrieving file details for pubfile $pubFile.")
+        throw DepotDownloaderException("EResult ${details.result.code()} (${details.result}) while retrieving file details for pubfile $pubFile.")
     }
 
     suspend fun getUGCDetails(ugcHandle: UGCHandle): UGCDetailsCallback? {
@@ -337,6 +345,6 @@ class Steam3Session(
             return null
         }
 
-        throw ContentDownloaderException("EResult ${callback.result.code()} (${callback.result}) while retrieving UGC details for ${ugcHandle.value}.")
+        throw DepotDownloaderException("EResult ${callback.result.code()} (${callback.result}) while retrieving UGC details for ${ugcHandle.value}.")
     }
 }
