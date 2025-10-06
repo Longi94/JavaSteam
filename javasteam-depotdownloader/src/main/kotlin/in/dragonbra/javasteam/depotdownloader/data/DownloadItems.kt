@@ -2,6 +2,8 @@ package `in`.dragonbra.javasteam.depotdownloader.data
 
 // https://kotlinlang.org/docs/coding-conventions.html#source-file-organization
 
+// TODO should these be a builder pattern for Java users?
+
 /**
  * Base class for downloadable Steam content items.
  * @property appId The Steam application ID
@@ -16,6 +18,7 @@ abstract class DownloadItem(
     val appId: Int,
     val installDirectory: String?,
     val installToGameNameDirectory: Boolean,
+    val verify: Boolean, // TODO
     val downloadManifestOnly: Boolean,
 )
 
@@ -32,8 +35,9 @@ class UgcItem @JvmOverloads constructor(
     val ugcId: Long,
     installToGameNameDirectory: Boolean = false,
     installDirectory: String? = null,
+    verify: Boolean = false,
     downloadManifestOnly: Boolean = false,
-) : DownloadItem(appId, installDirectory, installToGameNameDirectory, downloadManifestOnly)
+) : DownloadItem(appId, installDirectory, installToGameNameDirectory, verify, downloadManifestOnly)
 
 /**
  * Represents a Steam published file for download.
@@ -48,8 +52,9 @@ class PubFileItem @JvmOverloads constructor(
     val pubfile: Long,
     installToGameNameDirectory: Boolean = false,
     installDirectory: String? = null,
+    verify: Boolean = false,
     downloadManifestOnly: Boolean = false,
-) : DownloadItem(appId, installDirectory, installToGameNameDirectory, downloadManifestOnly)
+) : DownloadItem(appId, installDirectory, installToGameNameDirectory, verify, downloadManifestOnly)
 
 /**
  * Represents a Steam application/game for download from a depot.
@@ -84,5 +89,6 @@ class AppItem @JvmOverloads constructor(
     val lowViolence: Boolean = false,
     val depot: List<Int> = emptyList(),
     val manifest: List<Long> = emptyList(),
+    verify: Boolean = false,
     downloadManifestOnly: Boolean = false,
-) : DownloadItem(appId, installDirectory, installToGameNameDirectory, downloadManifestOnly)
+) : DownloadItem(appId, installDirectory, installToGameNameDirectory, verify, downloadManifestOnly)

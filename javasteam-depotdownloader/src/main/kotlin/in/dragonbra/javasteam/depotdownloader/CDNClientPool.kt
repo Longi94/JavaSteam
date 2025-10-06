@@ -7,6 +7,8 @@ import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Manages a pool of CDN server connections for efficient content downloading.
@@ -32,9 +34,9 @@ class CDNClientPool(
 
     private var logger: Logger? = null
 
-    private val servers: ArrayList<Server> = arrayListOf()
+    private val servers = AtomicReference<List<Server>>(emptyList())
 
-    private var nextServer: Int = 0
+    private var nextServer: AtomicInteger = AtomicInteger(0)
 
     private val mutex: Mutex = Mutex()
 
@@ -53,7 +55,7 @@ class CDNClientPool(
     }
 
     override fun close() {
-        servers.clear()
+        servers.set(emptyList())
 
         cdnClient = null
         proxyServer = null
@@ -63,10 +65,6 @@ class CDNClientPool(
 
     @Throws(Exception::class)
     suspend fun updateServerList(maxNumServers: Int? = null) = mutex.withLock {
-        if (servers.isNotEmpty()) {
-            servers.clear()
-        }
-
         val serversForSteamPipe = steamSession.steamContent!!.getServersForSteamPipe(
             cellId = steamSession.steamClient.cellID ?: 0,
             maxNumServers = maxNumServers,
@@ -84,27 +82,32 @@ class CDNClientPool(
 
         // ContentServerPenalty removed for now.
 
-        servers.addAll(weightedCdnServers)
+        servers.set(weightedCdnServers)
+
+        nextServer.set(0)
 
         // servers.joinToString(separator = "\n", prefix = "Servers:\n") { "- $it" }
-        logger?.debug("Found ${servers.size} Servers")
+        logger?.debug("Found ${weightedCdnServers.size} Servers")
 
-        if (servers.isEmpty()) {
+        if (weightedCdnServers.isEmpty()) {
             throw Exception("Failed to retrieve any download servers.")
         }
     }
 
-    suspend fun getConnection(): Server = mutex.withLock {
-        val server = servers[nextServer % servers.count()]
+    fun getConnection(): Server {
+        val servers = servers.get()
+
+        val index = nextServer.getAndIncrement()
+        val server = servers[index % servers.size]
 
         logger?.debug("Getting connection $server")
 
         return server
     }
 
-    suspend fun returnConnection(server: Server?) = mutex.withLock {
+    fun returnConnection(server: Server?) {
         if (server == null) {
-            return@withLock
+            return
         }
 
         logger?.debug("Returning connection: $server")
@@ -112,15 +115,18 @@ class CDNClientPool(
         // (SK) nothing to do, maybe remove from ContentServerPenalty?
     }
 
-    suspend fun returnBrokenConnection(server: Server?) = mutex.withLock {
+    fun returnBrokenConnection(server: Server?) {
         if (server == null) {
-            return@withLock
+            return
         }
 
         logger?.debug("Returning broken connection: $server")
 
-        if (servers[nextServer % servers.count()] == server) {
-            nextServer++
+        val servers = servers.get()
+        val currentIndex = nextServer.get()
+
+        if (servers.isNotEmpty() && servers[currentIndex % servers.size] == server) {
+            nextServer.incrementAndGet()
 
             // TODO: (SK) Add server to ContentServerPenalty
         }
