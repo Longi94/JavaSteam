@@ -1,6 +1,7 @@
 package `in`.dragonbra.javasteam.depotdownloader
 
 import `in`.dragonbra.javasteam.depotdownloader.data.DepotProgress
+import `in`.dragonbra.javasteam.depotdownloader.data.DownloadItem
 import `in`.dragonbra.javasteam.depotdownloader.data.FileProgress
 import `in`.dragonbra.javasteam.depotdownloader.data.OverallProgress
 
@@ -17,31 +18,31 @@ interface IDownloadListener {
     /**
      * Called when an item is added to the download queue.
      *
-     * @param appId The application ID that was queued
+     * @param item The [DownloadItem] that was queued
      */
-    fun onItemAdded(appId: Int) {}
+    fun onItemAdded(item: DownloadItem) {}
 
     /**
      * Called when a download begins processing.
      *
-     * @param appId The application ID being downloaded
+     * @param item The [DownloadItem] being downloaded
      */
-    fun onDownloadStarted(appId: Int) {}
+    fun onDownloadStarted(item: DownloadItem) {}
 
     /**
      * Called when a download completes successfully.
      *
-     * @param appId The application ID that finished downloading
+     * @param item The [DownloadItem] that finished downloading
      */
-    fun onDownloadCompleted(appId: Int) {}
+    fun onDownloadCompleted(item: DownloadItem) {}
 
     /**
      * Called when a download fails with an error.
      *
-     * @param appId The application ID that failed
+     * @param item The [DownloadItem] that failed
      * @param error The exception that caused the failure
      */
-    fun onDownloadFailed(appId: Int, error: Throwable) {}
+    fun onDownloadFailed(item: DownloadItem, error: Throwable) {}
 
     /**
      * Called periodically with overall download progress across all items.

@@ -17,7 +17,6 @@ import java.util.EnumSet
  * @param fileHash Gets SHA-1 hash of this file.
  * @param linkTarget Gets symlink target of this file.
  */
-@Suppress("ArrayInDataClass")
 data class FileData(
     var fileName: String = "",
     var fileNameHash: ByteArray = byteArrayOf(),
@@ -48,4 +47,32 @@ data class FileData(
         fileHash = hash,
         linkTarget = linkTarget,
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FileData
+
+        if (totalSize != other.totalSize) return false
+        if (fileName != other.fileName) return false
+        if (!fileNameHash.contentEquals(other.fileNameHash)) return false
+        if (chunks != other.chunks) return false
+        if (flags != other.flags) return false
+        if (!fileHash.contentEquals(other.fileHash)) return false
+        if (linkTarget != other.linkTarget) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = totalSize.hashCode()
+        result = 31 * result + fileName.hashCode()
+        result = 31 * result + fileNameHash.contentHashCode()
+        result = 31 * result + chunks.hashCode()
+        result = 31 * result + flags.hashCode()
+        result = 31 * result + fileHash.contentHashCode()
+        result = 31 * result + (linkTarget?.hashCode() ?: 0)
+        return result
+    }
 }

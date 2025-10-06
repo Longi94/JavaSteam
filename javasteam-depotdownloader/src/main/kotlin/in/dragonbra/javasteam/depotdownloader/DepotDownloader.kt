@@ -125,21 +125,29 @@ class DepotDownloader @JvmOverloads constructor(
         val STAGING_DIR: Path = CONFIG_DIR.toPath() / "staging"
     }
 
-    private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
     private val activeDownloads = AtomicInteger(0)
-    private val listeners = CopyOnWriteArrayList<IDownloadListener>()
-    private var logger: Logger? = null
-    private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
+
+    private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
+
+    private val httpClient: HttpClient by lazy { HttpClient(maxConnections = maxDownloads) }
+
     private val lastFileProgressUpdate = ConcurrentHashMap<String, Long>()
+
+    private val listeners = CopyOnWriteArrayList<IDownloadListener>()
+
     private val progressUpdateInterval = 500L // ms
 
-    private var steam3: Steam3Session? = null
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private var cdnClientPool: CDNClientPool? = null
 
     private var config: Config = Config(androidEmulation = androidEmulation)
+
+    private var logger: Logger? = null
+
+    private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
+
+    private var steam3: Steam3Session? = null
 
     // region [REGION] Private data classes.
 
@@ -189,7 +197,7 @@ class DepotDownloader @JvmOverloads constructor(
     // region [REGION] Downloading Operations
 
     @Throws(IllegalStateException::class)
-    suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
+    private suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
         val details = requireNotNull(
             steam3!!.getPublishedFileDetails(appId, PublishedFileID(publishedFileId))
         ) { "Pub File Null" }
@@ -212,7 +220,7 @@ class DepotDownloader @JvmOverloads constructor(
         }
     }
 
-    suspend fun downloadUGC(
+    private suspend fun downloadUGC(
         appId: Int,
         ugcId: Long,
     ) {
@@ -245,7 +253,7 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     @Throws(IllegalStateException::class, IOException::class)
-    suspend fun downloadWebFile(appId: Int, fileName: String, url: String) {
+    private suspend fun downloadWebFile(appId: Int, fileName: String, url: String) {
         val (success, installDir) = createDirectories(appId, 0, appId)
 
         if (!success) {
@@ -260,7 +268,7 @@ class DepotDownloader @JvmOverloads constructor(
         filesystem.createDirectories(fileFinalPath.parent!!)
         filesystem.createDirectories(fileStagingPath.parent!!)
 
-        HttpClient.getClient(maxDownloads).use { client ->
+        httpClient.getClient().use { client ->
             logger?.debug("Starting download of $fileName...")
 
             val response = client.get(url)
@@ -305,7 +313,7 @@ class DepotDownloader @JvmOverloads constructor(
 
     // L4D2 (app) supports LV
     @Throws(IllegalStateException::class)
-    suspend fun downloadApp(
+    private suspend fun downloadApp(
         appId: Int,
         depotManifestIds: List<Pair<Int, Long>>,
         branch: String,
@@ -1210,6 +1218,8 @@ class DepotDownloader @JvmOverloads constructor(
                     val matchingChunks = arrayListOf<ChunkMatch>()
 
                     file.chunks.forEach { chunk ->
+                        ensureActive()
+
                         val oldChunk = oldManifestFile.chunks.firstOrNull { c ->
                             c.chunkID.contentEquals(chunk.chunkID)
                         }
@@ -1227,6 +1237,8 @@ class DepotDownloader @JvmOverloads constructor(
 
                     filesystem.openReadOnly(fileFinalPath).use { handle ->
                         orderedChunks.forEach { match ->
+                            ensureActive()
+
                             // Read the chunk data into a byte array
                             val length = match.oldChunk.uncompressedLength
                             val buffer = ByteArray(length)
@@ -1266,6 +1278,8 @@ class DepotDownloader @JvmOverloads constructor(
                                     }
 
                                     for (match in copyChunks) {
+                                        ensureActive()
+
                                         val tmp = ByteArray(match.oldChunk.uncompressedLength)
                                         oldHandle.read(match.oldChunk.offset, tmp, 0, tmp.size)
                                         newHandle.write(match.newChunk.offset, tmp, 0, tmp.size)
@@ -1383,7 +1397,8 @@ class DepotDownloader @JvmOverloads constructor(
                 var connection: Server? = null
 
                 try {
-                    connection = cdnClientPool!!.getConnection()
+                    connection = cdnClientPool?.getConnection()
+                        ?: throw IllegalStateException("ContentDownloader already closed")
 
                     var cdnToken: String? = null
 
@@ -1566,9 +1581,14 @@ class DepotDownloader @JvmOverloads constructor(
      */
     fun add(item: DownloadItem) {
         runBlocking {
-            processingChannel.send(item)
-            activeDownloads.incrementAndGet()
-            notifyListeners { it.onItemAdded(item.appId) }
+            try {
+                processingChannel.send(item)
+                activeDownloads.incrementAndGet()
+                notifyListeners { it.onItemAdded(item) }
+            } catch (e: Exception) {
+                logger?.error(e)
+                throw e
+            }
         }
     }
 
@@ -1577,10 +1597,15 @@ class DepotDownloader @JvmOverloads constructor(
      */
     fun addAll(items: List<DownloadItem>) {
         runBlocking {
-            items.forEach { item ->
-                processingChannel.send(item)
-                activeDownloads.incrementAndGet()
-                notifyListeners { it.onItemAdded(item.appId) }
+            try {
+                items.forEach { item ->
+                    processingChannel.send(item)
+                    activeDownloads.incrementAndGet()
+                    notifyListeners { it.onItemAdded(item) }
+                }
+            } catch (e: Exception) {
+                logger?.error(e)
+                throw e
             }
         }
     }
@@ -1622,22 +1647,14 @@ class DepotDownloader @JvmOverloads constructor(
 
                 when (item) {
                     is PubFileItem -> {
-                        if (item.pubfile == INVALID_MANIFEST_ID) {
-                            logger?.debug("Invalid Pub File ID for ${item.appId}")
-                            continue
-                        }
                         logger?.debug("Downloading PUB File for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        notifyListeners { it.onDownloadStarted(item) }
                         downloadPubFile(item.appId, item.pubfile)
                     }
 
                     is UgcItem -> {
-                        if (item.ugcId == INVALID_MANIFEST_ID) {
-                            logger?.debug("Invalid UGC ID for ${item.appId}")
-                            continue
-                        }
                         logger?.debug("Downloading UGC File for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        notifyListeners { it.onDownloadStarted(item) }
                         downloadUGC(item.appId, item.ugcId)
                     }
 
@@ -1689,7 +1706,7 @@ class DepotDownloader @JvmOverloads constructor(
                         }
 
                         logger?.debug("Downloading App for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item.appId) }
+                        notifyListeners { it.onDownloadStarted(item) }
                         downloadApp(
                             appId = item.appId,
                             depotManifestIds = depotManifestIds,
@@ -1703,10 +1720,10 @@ class DepotDownloader @JvmOverloads constructor(
                     }
                 }
 
-                notifyListeners { it.onDownloadCompleted(item.appId) }
+                notifyListeners { it.onDownloadCompleted(item) }
             } catch (e: Exception) {
                 logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
-                notifyListeners { it.onDownloadFailed(item.appId, e) }
+                notifyListeners { it.onDownloadFailed(item, e) }
             } finally {
                 activeDownloads.decrementAndGet()
             }
@@ -1718,7 +1735,7 @@ class DepotDownloader @JvmOverloads constructor(
 
         scope.cancel("DepotDownloader Closing")
 
-        HttpClient.close()
+        httpClient.close()
 
         lastFileProgressUpdate.clear()
         listeners.clear()

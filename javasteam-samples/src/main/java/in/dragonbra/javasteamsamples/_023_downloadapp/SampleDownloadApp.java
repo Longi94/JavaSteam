@@ -146,7 +146,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
                 accountName = pollResponse.getAccountName();
                 refreshToken = pollResponse.getRefreshToken();
 
-                // Save out refresh token for automatic login on next sample run.
+                // Save our refresh token for automatic login on next sample run.
                 Files.writeString(path, pollResponse.getRefreshToken());
             } else {
                 System.out.println("Existing refresh token found");
@@ -251,6 +251,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
                     /* pubfile */ 0,
                     /* (Optional) installToGameNameDirectory */ false,
                     /* (Optional) installDirectory */ null,
+                    /* (Optional) verify */ false,
                     /* (Optional) downloadManifestOnly */ false
             ); // TODO find actual pub item
 
@@ -259,6 +260,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
                     /* ugcId */ 0,
                     /* (Optional) installToGameNameDirectory */ false,
                     /* (Optional) installDirectory */ null,
+                    /* (Optional) verify */ false,
                     /* (Optional) downloadManifestOnly */ false
             ); // TODO find actual ugc item
 
@@ -277,6 +279,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
                     /* (Optional) lowViolence */ false,
                     /* (Optional) depot */ List.of(),
                     /* (Optional) manifest */ List.of(),
+                    /* (Optional) verify */ false,
                     /* (Optional) downloadManifestOnly */ false
             );
 
@@ -287,7 +290,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             // After 'depotDownloader' is constructed, items added are downloaded in a First-In, First-Out queue on the fly.
 
             // Add a singular item to process.
-            depotDownloader.add(new AppItem(appId, true));
+            depotDownloader.add(new AppItem(appId, true, "steamapps"));
 
             // You can add a List of items to be processed.
             // depotDownloader.add(List.of());
@@ -312,72 +315,93 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     // Depot Downloader Callbacks.
 
     @Override
-    public void onItemAdded(int appId) {
-        System.out.println("Depot Downloader: Item Added: " + appId);
-        System.out.println(" ---- ");
+    public void onItemAdded(@NotNull DownloadItem item) {
+        System.out.println("Depot Downloader: Item Added: " + item.getAppId() + "\n ---- ");
     }
 
     @Override
-    public void onDownloadStarted(int appId) {
-        System.out.println("Depot Downloader: Download started for item: " + appId);
-        System.out.println(" ---- ");
+    public void onDownloadStarted(@NotNull DownloadItem item) {
+        System.out.println("Depot Downloader: Download started for item: " + item.getAppId() + "\n ---- ");
     }
 
     @Override
-    public void onDownloadCompleted(int appId) {
-        System.out.println("Depot Downloader: Download completed for item: " + appId);
-        System.out.println(" ---- ");
+    public void onDownloadCompleted(@NotNull DownloadItem item) {
+        System.out.println("Depot Downloader: Download completed for item: " + item.getAppId() + "\n ---- ");
     }
 
     @Override
-    public void onDownloadFailed(int appId, @NotNull Throwable error) {
-        System.out.println("Depot Downloader: Download failed for item: " + appId);
-        System.err.println(error.getMessage());
-        System.out.println(" ---- ");
+    public void onDownloadFailed(@NotNull DownloadItem item, @NotNull Throwable error) {
+        System.out.println("Depot Downloader: Download failed for item: " + item.getAppId() + "\n ---- ");
+        if (!error.getMessage().isEmpty()) {
+            System.err.println(error.getMessage());
+        }
     }
 
     @Override
     public void onOverallProgress(@NotNull OverallProgress progress) {
-        System.out.println("Depot Downloader: Overall Progress");
-        System.out.println("currentItem: " + progress.getCurrentItem());
-        System.out.println("totalItems: " + progress.getTotalItems());
-        System.out.println("totalBytesDownloaded: " + progress.getTotalBytesDownloaded());
-        System.out.println("totalBytesExpected: " + progress.getTotalBytesExpected());
-        System.out.println("status: " + progress.getStatus());
-        System.out.println("percentComplete: " + progress.getPercentComplete());
-        System.out.println(" ---- ");
+        System.out.printf(
+                "Depot Downloader: Overall Progress\n" +
+                        "currentItem: %d\n" +
+                        "totalItems: %d\n" +
+                        "totalBytesDownloaded: %d\n" +
+                        "totalBytesExpected: %d\n" +
+                        "status: %s\n" +
+                        "percentComplete: %.2f\n ---- %n \n",
+                progress.getCurrentItem(),
+                progress.getTotalItems(),
+                progress.getTotalBytesDownloaded(),
+                progress.getTotalBytesExpected(),
+                progress.getStatus(),
+                progress.getPercentComplete()
+        );
     }
 
     @Override
     public void onDepotProgress(@NotNull DepotProgress progress) {
-        System.out.println("Depot Downloader: Depot Progress");
-        System.out.println("depotId: " + progress.getDepotId());
-        System.out.println("filesCompleted: " + progress.getFilesCompleted());
-        System.out.println("totalFiles: " + progress.getTotalFiles());
-        System.out.println("bytesDownloaded: " + progress.getBytesDownloaded());
-        System.out.println("totalBytes: " + progress.getTotalBytes());
-        System.out.println("status: " + progress.getStatus());
-        System.out.println("percentComplete: " + progress.getPercentComplete());
-        System.out.println(" ---- ");
+        System.out.printf(
+                "Depot Downloader: Depot Progress\n" +
+                        "depotId: %d\n" +
+                        "filesCompleted: %d\n" +
+                        "totalFiles: %d\n" +
+                        "bytesDownloaded: %d\n" +
+                        "totalBytes: %d\n" +
+                        "status: %s\n" +
+                        "percentComplete: %.2f\n ---- %n \n",
+                progress.getDepotId(),
+                progress.getFilesCompleted(),
+                progress.getTotalFiles(),
+                progress.getBytesDownloaded(),
+                progress.getTotalBytes(),
+                progress.getStatus(),
+                progress.getPercentComplete()
+        );
     }
 
     @Override
     public void onFileProgress(@NotNull FileProgress progress) {
-        System.out.println("Depot Downloader: File Progress");
-        System.out.println("depotId: " + progress.getDepotId());
-        System.out.println("fileName: " + progress.getFileName());
-        System.out.println("bytesDownloaded: " + progress.getBytesDownloaded());
-        System.out.println("totalBytes: " + progress.getTotalBytes());
-        System.out.println("chunksCompleted: " + progress.getChunksCompleted());
-        System.out.println("totalChunks: " + progress.getTotalChunks());
-        System.out.println("status: " + progress.getStatus());
-        System.out.println("percentComplete: " + progress.getPercentComplete());
-        System.out.println(" ---- ");
+        System.out.printf(
+                "Depot Downloader: File Progress\n" +
+                        "depotId: %d\n" +
+                        "fileName: %s\n" +
+                        "bytesDownloaded: %d\n" +
+                        "totalBytes: %d\n" +
+                        "chunksCompleted: %d\n" +
+                        "totalChunks: %d\n" +
+                        "status: %s\n" +
+                        "percentComplete: %.2f\n ---- %n \n",
+                progress.getDepotId(),
+                progress.getFileName(),
+                progress.getBytesDownloaded(),
+                progress.getTotalBytes(),
+                progress.getChunksCompleted(),
+                progress.getTotalChunks(),
+                progress.getStatus(),
+                progress.getPercentComplete()
+        );
     }
 
     @Override
     public void onStatusUpdate(@NotNull String message) {
-        System.out.println("Depot Downloader: Status Message: " + message);
-        System.out.println(" ---- ");
+        System.out.println("Depot Downloader: Status Message: " + message + "\n ---- ");
     }
 }

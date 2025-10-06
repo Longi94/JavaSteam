@@ -6,21 +6,36 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.engine.cio.endpoint
 import io.ktor.client.plugins.UserAgent
 import kotlinx.coroutines.isActive
+import java.io.Closeable
 
 /**
- * Singleton HTTP client for content downloader operations.
- * Provides a shared, configured Ktor HTTP client optimized for Steam CDN downloads.
- * The client is lazily initialized on first use and reused across all download operations.
- * Connection pooling and timeouts are configured based on the maximum concurrent downloads.
+ * HTTP client wrapper for content downloader operations.
+ *
+ * Provides a configured Ktor HTTP client optimized for Steam CDN downloads.
+ * Each instance maintains its own connection pool based on the specified
+ * maximum concurrent connections.
+ *
+ * @param maxConnections Maximum number of concurrent connections
  *
  * @author Lossy
  * @since Oct 1, 2025
  */
-object HttpClient {
+class HttpClient(
+    private val maxConnections: Int,
+) : Closeable {
 
     private var httpClient: HttpClient? = null
 
-    fun getClient(maxConnections: Int = 8): HttpClient {
+    /**
+     * Returns the HTTP client instance, creating it lazily on first access.
+     *
+     * The client is configured with:
+     * - Custom User-Agent identifying JavaSteam DepotDownloader
+     * - Connection pooling based on [maxConnections]
+     * - 5 second keep-alive and connect timeout
+     * - 30 second request timeout
+     */
+    fun getClient(): HttpClient {
         if (httpClient?.isActive != true) {
             httpClient = HttpClient(CIO) {
                 install(UserAgent) {
@@ -42,7 +57,7 @@ object HttpClient {
         return httpClient!!
     }
 
-    fun close() {
+    override fun close() {
         if (httpClient?.isActive == true) {
             httpClient?.close()
             httpClient = null
