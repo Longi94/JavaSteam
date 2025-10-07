@@ -25,15 +25,17 @@ import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 import in.dragonbra.javasteam.util.stream.BinaryReader;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.GzipSource;
+import okio.Okio;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
-import java.util.zip.GZIPInputStream;
 
 /**
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
@@ -374,20 +376,19 @@ public abstract class CMClient {
         var msgMulti = new ClientMsgProtobuf<CMsgMulti.Builder>(CMsgMulti.class, packetMsg);
         var payload = msgMulti.getBody().getMessageBody().toByteArray();
 
-        try {
-            InputStream inputStream;
+        try(var payloadBuffer = new Buffer().write(payload)) {
+            BufferedSource source;
 
             if (msgMulti.getBody().getSizeUnzipped() > 0) {
-                inputStream = new GZIPInputStream(new ByteArrayInputStream(payload));
+                source = Okio.buffer(new GzipSource(payloadBuffer));
             } else {
-                inputStream = new ByteArrayInputStream(payload);
+                source = payloadBuffer;
             }
 
-            try (inputStream; var br = new BinaryReader(inputStream)) {
-                while (br.available() > 0) {
-                    var subSize = br.readInt();
-                    var subData = br.readBytes(subSize);
-
+            try(source) {
+                while(!source.exhausted()) {
+                    int subSize = source.readIntLe();
+                    byte[] subData = source.readByteArray(subSize);
                     if (!onClientMsgReceived(getPacketMsg(subData))) {
                         break;
                     }
