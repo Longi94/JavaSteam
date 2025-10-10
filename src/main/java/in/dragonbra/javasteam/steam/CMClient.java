@@ -376,7 +376,7 @@ public abstract class CMClient {
         var msgMulti = new ClientMsgProtobuf<CMsgMulti.Builder>(CMsgMulti.class, packetMsg);
         var payload = msgMulti.getBody().getMessageBody().toByteArray();
 
-        try(var payloadBuffer = new Buffer().write(payload)) {
+        try (var payloadBuffer = new Buffer().write(payload)) {
             BufferedSource source;
 
             if (msgMulti.getBody().getSizeUnzipped() > 0) {
@@ -385,14 +385,16 @@ public abstract class CMClient {
                 source = payloadBuffer;
             }
 
-            try(source) {
-                while(!source.exhausted()) {
-                    int subSize = source.readIntLe();
-                    byte[] subData = source.readByteArray(subSize);
-                    if (!onClientMsgReceived(getPacketMsg(subData))) {
+            try (source) {
+                do {
+                    var subSize = source.readIntLe();
+                    var subData = source.readByteArray(subSize);
+                    var msg = getPacketMsg(subData);
+
+                    if (!onClientMsgReceived(msg)) {
                         break;
                     }
-                }
+                } while (!source.exhausted());
             }
         } catch (IOException e) {
             logger.error("error in handleMulti()", e);
