@@ -148,7 +148,7 @@ class GameID @JvmOverloads constructor(id: Long = 0) {
      * Returns a hash code for this instance.
      * @return A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
      */
-    override fun hashCode(): Int = gameId.hashCode()
+    override fun hashCode(): Int = gameId.data.hashCode()
 
     /**
      * Returns a [String] that represents this instance.

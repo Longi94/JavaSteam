@@ -1,9 +1,8 @@
 package in.dragonbra.javasteam.types;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author lngtr
@@ -13,24 +12,37 @@ public class GameIDTest {
 
     @Test
     public void modCrcCorrect() {
-        GameID gameId = new GameID(420, "Research and Development");
+        var gameId = new GameID(420, "Research and Development");
 
-        assertTrue(gameId.isMod());
-        assertEquals(420, gameId.getAppID());
-        assertEquals(new GameID(0x8db24e81010001a4L), gameId);
+        Assertions.assertTrue(gameId.isMod());
+        Assertions.assertEquals(420, gameId.getAppID());
+        Assertions.assertEquals(new GameID(0x8db24e81010001a4L), gameId);
 
-        GameID gameId2 = new GameID(215, "hidden");
+        var gameId2 = new GameID(215, "hidden");
 
-        assertTrue(gameId2.isMod());
-        assertEquals(215, gameId2.getAppID());
-        assertEquals(new GameID(0x885de9bd010000d7L), gameId2);
+        Assertions.assertTrue(gameId2.isMod());
+        Assertions.assertEquals(215, gameId2.getAppID());
+        Assertions.assertEquals(new GameID(0x885de9bd010000d7L), gameId2);
     }
 
     @Test
     public void shortcutCrcCorrect() {
-        GameID gameId = new GameID("\"C:\\Program Files (x86)\\Git\\mingw64\\bin\\wintoast.exe\"", "Git for Windows");
+        var gameId = new GameID("\"C:\\Program Files (x86)\\Git\\mingw64\\bin\\wintoast.exe\"", "Git for Windows");
 
-        assertTrue(gameId.isShortcut());
-        assertEquals(new GameID(0xb102133802000000L), gameId);
+        Assertions.assertTrue(gameId.isShortcut());
+        Assertions.assertEquals(new GameID(0xb102133802000000L), gameId);
+    }
+
+    @Test
+    public void gameIDsKHashcodeEquality() {
+        var gameId1 = new GameID(570);
+        var gameId2 = new GameID(570);
+        var gameId3 = new GameID(570, "test");
+        var gameid4 = new GameID(440);
+
+        Assertions.assertEquals(gameId1.hashCode(), gameId2.hashCode());
+        Assertions.assertNotEquals(gameId1.hashCode(), gameId3.hashCode());
+        Assertions.assertNotEquals(gameId2.hashCode(), gameId3.hashCode());
+        Assertions.assertNotEquals(gameId1.hashCode(), gameid4.hashCode());
     }
 }
