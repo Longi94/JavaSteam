@@ -20,7 +20,7 @@ plugins {
 
 allprojects {
     group = "in.dragonbra"
-    version = "1.7.1-SNAPSHOT"
+    version = "1.8.0-SNAPSHOT"
 }
 
 repositories {
