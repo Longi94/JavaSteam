@@ -24,14 +24,12 @@ import in.dragonbra.javasteam.util.event.EventHandler;
 import in.dragonbra.javasteam.util.event.ScheduledFunction;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
-import in.dragonbra.javasteam.util.stream.BinaryReader;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.GzipSource;
 import okio.Okio;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -336,8 +334,8 @@ public abstract class CMClient {
         }
 
         int rawEMsg = 0;
-        try (var reader = new BinaryReader(new ByteArrayInputStream(data))) {
-            rawEMsg = reader.readInt();
+        try (var buffer = new Buffer().write(data)) {
+             rawEMsg = buffer.readIntLe();
         } catch (IOException e) {
             logger.debug("Exception while getting EMsg code", e);
         }
