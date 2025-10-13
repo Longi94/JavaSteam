@@ -123,6 +123,15 @@ class SteamClient @JvmOverloads constructor(
     }
 
     /**
+     * Kotlin Helper:
+     * Removes a registered handler by name.
+     * @param T The handler name to remove.
+     */
+    inline fun <reified T : ClientMsgHandler> removeHandler() {
+        removeHandler(T::class.java)
+    }
+
+    /**
      * Removes a registered handler.
      * @param handler The handler name to remove.
      */
