@@ -99,7 +99,7 @@ object Util {
 
         if (FileSystem.SYSTEM.exists(filename)) {
             val expectedChecksum = try {
-                FileSystem.SYSTEM.read(filename / ".sha") {
+                FileSystem.SYSTEM.read("$filename.sha".toPath()) {
                     readByteArray()
                 }
             } catch (e: IOException) {
