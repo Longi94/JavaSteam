@@ -1,9 +1,6 @@
 package `in`.dragonbra.javasteam.depotdownloader
 
-import `in`.dragonbra.javasteam.depotdownloader.data.DepotProgress
 import `in`.dragonbra.javasteam.depotdownloader.data.DownloadItem
-import `in`.dragonbra.javasteam.depotdownloader.data.FileProgress
-import `in`.dragonbra.javasteam.depotdownloader.data.OverallProgress
 
 /**
  * Listener interface for receiving download progress and status events.
@@ -17,64 +14,47 @@ import `in`.dragonbra.javasteam.depotdownloader.data.OverallProgress
 interface IDownloadListener {
     /**
      * Called when an item is added to the download queue.
-     *
-     * @param item The [DownloadItem] that was queued
      */
     fun onItemAdded(item: DownloadItem) {}
 
     /**
      * Called when a download begins processing.
-     *
-     * @param item The [DownloadItem] being downloaded
      */
     fun onDownloadStarted(item: DownloadItem) {}
 
     /**
      * Called when a download completes successfully.
-     *
-     * @param item The [DownloadItem] that finished downloading
      */
     fun onDownloadCompleted(item: DownloadItem) {}
 
     /**
      * Called when a download fails with an error.
-     *
-     * @param item The [DownloadItem] that failed
-     * @param error The exception that caused the failure
      */
     fun onDownloadFailed(item: DownloadItem, error: Throwable) {}
 
     /**
-     * Called periodically with overall download progress across all items.
-     * Reports progress for the entire download queue, including completed
-     * and remaining items.
-     *
-     * @param progress Overall download statistics
-     */
-    fun onOverallProgress(progress: OverallProgress) {}
-
-    /**
-     * Called periodically with progress for a specific depot.
-     * Reports file allocation and download progress for an individual depot.
-     *
-     * @param progress Depot-specific download statistics
-     */
-    fun onDepotProgress(progress: DepotProgress) {}
-
-    /**
-     * Called periodically with progress for a specific file.
-     * Reports chunk-level download progress for individual files.
-     *
-     * @param progress File-specific download statistics
-     */
-    fun onFileProgress(progress: FileProgress) {}
-
-    /**
-     * Called with informational status messages during download operations.
-     * Used for logging or displaying current operations like manifest
-     * downloads, file validation, and allocation.
-     *
-     * @param message Human-readable status message
+     * Called during file preparation with informational messages.
+     * Examples: "Pre-allocating depots\441\file.txt", "Validating file.cab"
      */
     fun onStatusUpdate(message: String) {}
+
+    /**
+     * Called when a file completes downloading.
+     * Use this for printing progress like "20.42% depots\441\maps\ctf_haarp.bsp"
+     *
+     * @param depotId The depot being downloaded
+     * @param fileName Relative file path
+     * @param depotPercentComplete Overall depot completion percentage (0f to 1f)
+     */
+    fun onFileCompleted(depotId: Int, fileName: String, depotPercentComplete: Float) {}
+
+    /**
+     * Called when a depot finishes downloading.
+     * Use this for printing summary like "Depot 228990 - Downloaded X bytes (Y bytes uncompressed)"
+     *
+     * @param depotId The depot that completed
+     * @param compressedBytes Bytes transferred (compressed)
+     * @param uncompressedBytes Actual data size (uncompressed)
+     */
+    fun onDepotCompleted(depotId: Int, compressedBytes: Long, uncompressedBytes: Long) {}
 }

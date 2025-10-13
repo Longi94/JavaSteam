@@ -28,9 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.CancellationException;
-
 
 /**
  * @author Oxters
@@ -245,27 +243,26 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             // Add this class as a listener of IDownloadListener
             depotDownloader.addListener(this);
 
-            // An app id is required at minimum for all item types.
             var pubItem = new PubFileItem(
-                    /* appId */ 0,
-                    /* pubfile */ 0,
+                    /* (Required) appId */ 0,
+                    /* (Required) pubFile */ 0,
                     /* (Optional) installToGameNameDirectory */ false,
                     /* (Optional) installDirectory */ null,
                     /* (Optional) verify */ false,
                     /* (Optional) downloadManifestOnly */ false
-            ); // TODO find actual pub item
+            );
 
             var ugcItem = new UgcItem(
-                    /* appId */0,
-                    /* ugcId */ 0,
+                    /* (Required) appId */0,
+                    /* (Required) ugcId */ 0,
                     /* (Optional) installToGameNameDirectory */ false,
                     /* (Optional) installDirectory */ null,
                     /* (Optional) verify */ false,
                     /* (Optional) downloadManifestOnly */ false
-            ); // TODO find actual ugc item
+            );
 
             var appItem = new AppItem(
-                    /* appId */ 204360,
+                    /* (Required) appId */ 1303350,
                     /* (Optional) installToGameNameDirectory */ true,
                     /* (Optional) installDirectory */ "steamapps",
                     /* (Optional) branch */ "public",
@@ -283,26 +280,25 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
                     /* (Optional) downloadManifestOnly */ false
             );
 
-            var scanner = new Scanner(System.in);
-            System.out.print("Enter a game app id: ");
-            var appId = scanner.nextInt();
-
-            // After 'depotDownloader' is constructed, items added are downloaded in a First-In, First-Out queue on the fly.
+            // Items added are downloaded automatically in a FIFO (First-In, First-Out) queue.
 
             // Add a singular item to process.
-            depotDownloader.add(new AppItem(appId, true, "steamapps"));
+            depotDownloader.add(appItem);
 
             // You can add a List of items to be processed.
-            // depotDownloader.add(List.of());
+            // depotDownloader.add(List.of(a, b, c));
 
-            // Stay here while content downloads. Note this sample is synchronous so we'll loop here.
-            while (depotDownloader.isProcessing()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
+            // Signal the downloader that no more items will be added.
+            // Once all items in queue are done, 'completion' will signal that everything had finished.
+            depotDownloader.finishAdding();
+
+            // Block until we're done downloading.
+            // Note: If you did not call `finishAdding()` before awaiting, depotDownloader will be expecting
+            // more items to be added to queue. It may look like a hang. You could call `close()` to finish too.
+            depotDownloader.awaitCompletion();
+
+            // Kotlin users can use:
+            // depotDownloader.getCompletion().await()
 
             // Remove this class as a listener of IDownloadListener
             depotDownloader.removeListener(this);
@@ -316,92 +312,40 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
 
     @Override
     public void onItemAdded(@NotNull DownloadItem item) {
-        System.out.println("Depot Downloader: Item Added: " + item.getAppId() + "\n ---- ");
+        System.out.println("Item " + item.getAppId() + " added to queue.");
     }
 
     @Override
     public void onDownloadStarted(@NotNull DownloadItem item) {
-        System.out.println("Depot Downloader: Download started for item: " + item.getAppId() + "\n ---- ");
+        System.out.println("Item " + item.getAppId() + " download started.");
     }
 
     @Override
     public void onDownloadCompleted(@NotNull DownloadItem item) {
-        System.out.println("Depot Downloader: Download completed for item: " + item.getAppId() + "\n ---- ");
+        System.out.println("Item " + item.getAppId() + " download completed.");
     }
 
     @Override
     public void onDownloadFailed(@NotNull DownloadItem item, @NotNull Throwable error) {
-        System.out.println("Depot Downloader: Download failed for item: " + item.getAppId() + "\n ---- ");
-        if (!error.getMessage().isEmpty()) {
-            System.err.println(error.getMessage());
-        }
-    }
-
-    @Override
-    public void onOverallProgress(@NotNull OverallProgress progress) {
-        System.out.printf(
-                "Depot Downloader: Overall Progress\n" +
-                        "currentItem: %d\n" +
-                        "totalItems: %d\n" +
-                        "totalBytesDownloaded: %d\n" +
-                        "totalBytesExpected: %d\n" +
-                        "status: %s\n" +
-                        "percentComplete: %.2f\n ---- %n \n",
-                progress.getCurrentItem(),
-                progress.getTotalItems(),
-                progress.getTotalBytesDownloaded(),
-                progress.getTotalBytesExpected(),
-                progress.getStatus(),
-                progress.getPercentComplete()
-        );
-    }
-
-    @Override
-    public void onDepotProgress(@NotNull DepotProgress progress) {
-        System.out.printf(
-                "Depot Downloader: Depot Progress\n" +
-                        "depotId: %d\n" +
-                        "filesCompleted: %d\n" +
-                        "totalFiles: %d\n" +
-                        "bytesDownloaded: %d\n" +
-                        "totalBytes: %d\n" +
-                        "status: %s\n" +
-                        "percentComplete: %.2f\n ---- %n \n",
-                progress.getDepotId(),
-                progress.getFilesCompleted(),
-                progress.getTotalFiles(),
-                progress.getBytesDownloaded(),
-                progress.getTotalBytes(),
-                progress.getStatus(),
-                progress.getPercentComplete()
-        );
-    }
-
-    @Override
-    public void onFileProgress(@NotNull FileProgress progress) {
-        System.out.printf(
-                "Depot Downloader: File Progress\n" +
-                        "depotId: %d\n" +
-                        "fileName: %s\n" +
-                        "bytesDownloaded: %d\n" +
-                        "totalBytes: %d\n" +
-                        "chunksCompleted: %d\n" +
-                        "totalChunks: %d\n" +
-                        "status: %s\n" +
-                        "percentComplete: %.2f\n ---- %n \n",
-                progress.getDepotId(),
-                progress.getFileName(),
-                progress.getBytesDownloaded(),
-                progress.getTotalBytes(),
-                progress.getChunksCompleted(),
-                progress.getTotalChunks(),
-                progress.getStatus(),
-                progress.getPercentComplete()
-        );
+        System.out.println("Item " + item.getAppId() + " failed to download");
+        System.err.println(error.getMessage());
     }
 
     @Override
     public void onStatusUpdate(@NotNull String message) {
-        System.out.println("Depot Downloader: Status Message: " + message + "\n ---- ");
+        System.out.println("Status: " + message);
+    }
+
+    @Override
+    public void onFileCompleted(int depotId, @NotNull String fileName, float depotPercentComplete) {
+        var complete = String.format("%.2f%%", depotPercentComplete * 100f);
+        System.out.println("Depot " + depotId + " with file " + fileName + " completed. " + complete);
+    }
+
+    @Override
+    public void onDepotCompleted(int depotId, long compressedBytes, long uncompressedBytes) {
+        System.out.println("Depot " + depotId + " completed.");
+        System.out.println("\t" + compressedBytes + " compressed bytes");
+        System.out.println("\t" + uncompressedBytes + " uncompressed bytes");
     }
 }

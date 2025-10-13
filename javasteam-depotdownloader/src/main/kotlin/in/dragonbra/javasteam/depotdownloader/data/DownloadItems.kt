@@ -49,7 +49,7 @@ class UgcItem @JvmOverloads constructor(
  */
 class PubFileItem @JvmOverloads constructor(
     appId: Int,
-    val pubfile: Long,
+    val pubFile: Long,
     installToGameNameDirectory: Boolean = false,
     installDirectory: String? = null,
     verify: Boolean = false,

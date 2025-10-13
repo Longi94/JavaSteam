@@ -152,6 +152,8 @@ class Steam3Session(
     private val packageInfoMutex = Mutex()
     suspend fun requestPackageInfo(packageIds: List<Int>) {
         packageInfoMutex.withLock {
+            logger?.debug("requestPackageInfo() invoked with ${packageIds.size} packageIds")
+
             // I have a silly race condition???
             val packages = packageIds.filter { !packageInfo.containsKey(it) }
 
@@ -173,10 +175,7 @@ class Steam3Session(
 
             val packageInfoMultiple = steamApps!!.picsGetProductInfo(emptyList(), packageRequests).await()
 
-            logger?.debug(
-                "requestPackageInfo(packageIds =${packageIds.size}) \n" +
-                    "picsGetProductInfo result size: ${packageInfoMultiple.results.size} "
-            )
+            logger?.debug("requestPackageInfo() picsGetProductInfo result size: ${packageInfoMultiple.results.size} ")
 
             packageInfoMultiple.results.forEach { pkgInfo ->
                 pkgInfo.packages.forEach { pkgValue ->
