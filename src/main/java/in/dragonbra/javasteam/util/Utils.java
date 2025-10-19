@@ -193,40 +193,4 @@ public class Utils {
         checksum.update(bytes, 0, bytes.length);
         return checksum.getValue();
     }
-
-    /**
-     * Validate a file against Steam3 Chunk data
-     *
-     * @param fs        FileInputStream to read from
-     * @param chunkData Array of ChunkData to validate against
-     * @return List of ChunkData that are needed
-     * @throws IOException              If there's an error reading the file
-     * @throws ClosedChannelException   If this channel is closed
-     * @throws IllegalArgumentException If the new position is negative
-     */
-    @SuppressWarnings("resource")
-    public static List<ChunkData> validateSteam3FileChecksums(RandomAccessFile fs, ChunkData[] chunkData) throws IOException {
-        List<ChunkData> neededChunks = new ArrayList<>();
-        int read;
-
-        for (ChunkData data : chunkData) {
-            byte[] chunk = new byte[data.getUncompressedLength()];
-            fs.getChannel().position(data.getOffset());
-            read = fs.read(chunk, 0, data.getUncompressedLength());
-
-            byte[] tempChunk;
-            if (read > 0 && read < data.getUncompressedLength()) {
-                tempChunk = Arrays.copyOf(chunk, read);
-            } else {
-                tempChunk = chunk;
-            }
-
-            int adler = Adler32.calculate(tempChunk);
-            if (adler != data.getChecksum()) {
-                neededChunks.add(data);
-            }
-        }
-
-        return neededChunks;
-    }
 }
