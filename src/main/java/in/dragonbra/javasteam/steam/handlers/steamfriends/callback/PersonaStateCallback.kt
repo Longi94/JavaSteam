@@ -36,11 +36,13 @@ class PersonaStateCallback(
     /**
      * Gets the persona state.
      */
+    @get:JvmName("getState")
     val personaState: EPersonaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
 
     /**
      * Gets the game app ID being played.
      */
+    @get:JvmName("getGameAppID")
     val gamePlayedAppId: Int = friend.gamePlayedAppId
 
     /**
@@ -71,6 +73,7 @@ class PersonaStateCallback(
     /**
      * Gets the player name.
      */
+    @get:JvmName("getName")
     val playerName: String = friend.playerName
 
     /**
