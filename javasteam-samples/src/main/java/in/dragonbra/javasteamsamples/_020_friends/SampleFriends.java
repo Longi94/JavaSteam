@@ -207,6 +207,6 @@ public class SampleFriends implements Runnable {
         // this callback is received when the persona state (friend information) of a friend changes
 
         // for this sample we'll simply display the names of the friends
-        System.out.println("State change: " + callback.getName() + " | " + callback.getState() + " | " + callback.getStatusFlags());
+        System.out.println("State change: " + callback.getPlayerName() + " | " + callback.getPersonaState() + " | " + callback.getStatusFlags());
     }
 }
