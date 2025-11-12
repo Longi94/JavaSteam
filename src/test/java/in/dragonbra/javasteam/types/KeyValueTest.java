@@ -82,6 +82,20 @@ public class KeyValueTest extends TestBase {
     }
 
     @Test
+    public void keyValueIndexerHandlesCaseInsensitiveDuplicates() {
+        var kv = new KeyValue();
+
+        kv.set("key", new KeyValue());
+        Assertions.assertEquals(1, kv.getChildren().size());
+
+        kv.set("KEY", new KeyValue()); // Different case
+        Assertions.assertEquals(1, kv.getChildren().size()); // Should still be 1, not 2
+
+        kv.set("Key", new KeyValue()); // Another variation
+        Assertions.assertEquals(1, kv.getChildren().size()); // Should still be 1
+    }
+
+    @Test
     public void keyValueLoadsFromString() {
         KeyValue kv = KeyValue.loadFromString("" +
                 "\"root\"" +

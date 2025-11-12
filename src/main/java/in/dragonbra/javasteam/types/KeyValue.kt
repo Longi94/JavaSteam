@@ -42,13 +42,25 @@ class KeyValue @JvmOverloads constructor(
      * @param key key
      * @return the child [KeyValue]
      */
-    operator fun get(key: String): KeyValue = children.firstOrNull {
-        it.name?.equals(key, ignoreCase = true) == true
-    } ?: INVALID
+    operator fun get(key: String): KeyValue {
+        children.forEach { c ->
+            if (c.name?.equals(key, ignoreCase = true) == true) {
+                return c
+            }
+        }
 
+        return INVALID
+    }
+
+    /**
+     * Sets the child [KeyValue] with the specified key.
+     * If no child with the given key exists, [KeyValue.INVALID] is returned.
+     * @param key key
+     * @param value the child [KeyValue]
+     */
     operator fun set(key: String, value: KeyValue) {
-        // Remove existing key if it exists
-        children.removeAll { it.name?.equals(key, ignoreCase = true) == true }
+        // if the key already exists, remove the old one
+        children.removeIf { c -> c.name?.equals(key, ignoreCase = true) == true }
 
         // Ensure the given KV has the correct key assigned
         value.name = key
