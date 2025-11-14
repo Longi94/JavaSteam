@@ -59,6 +59,7 @@ import okio.buffer
 import org.apache.commons.lang3.SystemUtils
 import java.io.Closeable
 import java.io.IOException
+import java.io.RandomAccessFile
 import java.lang.IllegalStateException
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -1130,8 +1131,9 @@ class DepotDownloader @JvmOverloads constructor(
 
             // create new file. need all chunks
             try {
-                filesystem.openReadWrite(fileFinalPath).use { handle ->
-                    handle.resize(file.totalSize)
+                // okio resize can OOM for large files on android.
+                RandomAccessFile(fileFinalPath.toFile(), "rw").use {
+                    it.setLength(file.totalSize)
                 }
             } catch (e: IOException) {
                 throw DepotDownloaderException("Failed to allocate file $fileFinalPath: ${e.message}")
@@ -1201,16 +1203,19 @@ class DepotDownloader @JvmOverloads constructor(
                     if (!hashMatches || neededChunks.isNotEmpty()) {
                         filesystem.atomicMove(fileFinalPath, fileStagingPath)
 
+                        try {
+                            RandomAccessFile(fileFinalPath.toFile(), "rw").use { raf ->
+                                raf.setLength(file.totalSize)
+                            }
+                        } catch (ex: IOException) {
+                            throw DepotDownloaderException(
+                                "Failed to resize file to expected size $fileFinalPath: ${ex.message}"
+                            )
+                        }
+
                         filesystem.openReadOnly(fileStagingPath).use { oldHandle ->
                             filesystem.openReadWrite(fileFinalPath).use { newHandle ->
-                                try {
-                                    newHandle.resize(file.totalSize)
-                                } catch (ex: IOException) {
-                                    throw DepotDownloaderException(
-                                        "Failed to resize file to expected size $fileFinalPath: ${ex.message}"
-                                    )
-                                }
-
+                                // okio resize can OOM for large files on android.
                                 for (match in copyChunks) {
                                     ensureActive()
 
@@ -1226,18 +1231,21 @@ class DepotDownloader @JvmOverloads constructor(
                 }
             } else {
                 // No old manifest or file not in old manifest. We must validate.
-                filesystem.openReadWrite(fileFinalPath).use { handle ->
-                    val fileSize = filesystem.metadata(fileFinalPath).size ?: 0L
-                    if (fileSize.toULong() != file.totalSize.toULong()) {
-                        try {
-                            handle.resize(file.totalSize)
-                        } catch (ex: IOException) {
-                            throw DepotDownloaderException(
-                                "Failed to allocate file $fileFinalPath: ${ex.message}"
-                            )
+                val fileSize = filesystem.metadata(fileFinalPath).size ?: 0L
+                if (fileSize.toULong() != file.totalSize.toULong()) {
+                    try {
+                        // okio resize can OOM for large files on android.
+                        RandomAccessFile(fileFinalPath.toFile(), "rw").use { raf ->
+                            raf.setLength(file.totalSize)
                         }
+                    } catch (ex: IOException) {
+                        throw DepotDownloaderException(
+                            "Failed to allocate file $fileFinalPath: ${ex.message}"
+                        )
                     }
+                }
 
+                filesystem.openReadWrite(fileFinalPath).use { handle ->
                     logger?.debug("Validating $fileFinalPath")
                     notifyListeners { it.onStatusUpdate("Validating: ${file.fileName}") }
 
