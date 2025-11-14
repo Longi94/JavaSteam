@@ -13,6 +13,7 @@ import `in`.dragonbra.javasteam.depotdownloader.data.UgcItem
 import `in`.dragonbra.javasteam.enums.EAccountType
 import `in`.dragonbra.javasteam.enums.EAppInfoSection
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
+import `in`.dragonbra.javasteam.enums.EWorkshopFileType
 import `in`.dragonbra.javasteam.steam.cdn.ClientLancache
 import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.License
@@ -118,6 +119,15 @@ class DepotDownloader @JvmOverloads constructor(
         const val DEFAULT_DOWNLOAD_DIR: String = "depots"
 
         val STAGING_DIR: Path = CONFIG_DIR.toPath() / "staging"
+
+        private val SupportedWorkshopFileTypes: Set<EWorkshopFileType> = setOf(
+            EWorkshopFileType.Community,
+            EWorkshopFileType.Art,
+            EWorkshopFileType.Screenshot,
+            EWorkshopFileType.Merch,
+            EWorkshopFileType.IntegratedGuide,
+            EWorkshopFileType.ControllerBinding,
+        )
     }
 
     private val completionFuture = CompletableFuture<Void>()
@@ -189,27 +199,55 @@ class DepotDownloader @JvmOverloads constructor(
 
     // region [REGION] Downloading Operations
 
+    private suspend fun processPublishedFile(
+        appId: Int,
+        publishedFileId: Long,
+        fileUrls: MutableList<Pair<String, String>>,
+        contentFileIds: MutableList<Long>,
+    ) {
+        val details = steam3!!.getPublishedFileDetails(appId, PublishedFileID(publishedFileId))
+        val fileType = EWorkshopFileType.from(details!!.fileType)
+
+        if (fileType == EWorkshopFileType.Collection) {
+            details.childrenList.forEach { child ->
+                processPublishedFile(appId, child.publishedfileid, fileUrls, contentFileIds)
+            }
+        } else if (SupportedWorkshopFileTypes.contains(fileType)) {
+            if (details.fileUrl.isNotEmpty()) {
+                fileUrls.add(Pair(details.filename, details.fileUrl))
+            } else if (details.hcontentFile > 0) {
+                contentFileIds.add(details.hcontentFile)
+            } else {
+                logger?.error("Unable to locate manifest ID for published file $publishedFileId")
+            }
+        } else {
+            logger?.error("Published file $publishedFileId has unsupported file type $fileType. Skipping file")
+        }
+    }
+
     @Throws(IllegalStateException::class)
     private suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
-        val details = requireNotNull(
-            steam3!!.getPublishedFileDetails(appId, PublishedFileID(publishedFileId))
-        ) { "Pub File Null" }
+        val fileUrls = mutableListOf<Pair<String, String>>()
+        val contentFileIds = mutableListOf<Long>()
 
-        if (!details.fileUrl.isNullOrBlank()) {
-            downloadWebFile(appId, details.filename, details.fileUrl)
-        } else if (details.hcontentFile > 0) {
+        processPublishedFile(appId, publishedFileId, fileUrls, contentFileIds)
+
+        fileUrls.forEach { item ->
+            downloadWebFile(appId, item.first, item.second)
+        }
+
+        if (contentFileIds.isNotEmpty()) {
+            val depotManifestIds = contentFileIds.map { id -> appId to id }
             downloadApp(
                 appId = appId,
-                depotManifestIds = listOf(appId to details.hcontentFile),
+                depotManifestIds = depotManifestIds,
                 branch = DEFAULT_BRANCH,
                 os = null,
                 arch = null,
                 language = null,
                 lv = false,
-                isUgc = true,
+                isUgc = true
             )
-        } else {
-            logger?.error("Unable to locate manifest ID for published file $publishedFileId")
         }
     }
 

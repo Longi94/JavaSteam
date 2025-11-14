@@ -319,6 +319,7 @@ class Steam3Session(
         val pubFileRequest =
             SteammessagesPublishedfileSteamclient.CPublishedFile_GetDetails_Request.newBuilder().apply {
                 this.appid = appId
+                this.includechildren = true
                 this.addPublishedfileids(pubFile.toLong())
             }.build()
 
