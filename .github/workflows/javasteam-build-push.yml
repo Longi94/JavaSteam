@@ -51,3 +51,7 @@ jobs:
         with:
           name: javasteam-tf
           path: javasteam-tf/build/libs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javasteam-depotdownloader
+          path: javasteam-depotdownloader/build/libs

@@ -109,6 +109,16 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(handler)
     }
 
+    /**
+     * Kotlin Helper:
+     * Adds a new handler to the internal list of message handlers.
+     * @param T The handler to add.
+     */
+    inline fun <reified T : ClientMsgHandler> addHandler() {
+        val handler = T::class.java.getDeclaredConstructor().newInstance()
+        addHandler(handler)
+    }
+
     private fun addHandlerCore(handler: ClientMsgHandler) {
         handler.setup(this)
         handlers[handler.javaClass] = handler
@@ -120,6 +130,15 @@ class SteamClient @JvmOverloads constructor(
      */
     fun removeHandler(handler: Class<out ClientMsgHandler>) {
         handlers.remove(handler)
+    }
+
+    /**
+     * Kotlin Helper:
+     * Removes a registered handler by name.
+     * @param T The handler name to remove.
+     */
+    inline fun <reified T : ClientMsgHandler> removeHandler() {
+        removeHandler(T::class.java)
     }
 
     /**
