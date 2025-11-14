@@ -763,7 +763,8 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private suspend fun downloadSteam3(depots: List<DepotDownloadInfo>): Unit = coroutineScope {
-        cdnClientPool?.updateServerList()
+        val maxNumServers = maxDownloads.coerceIn(20, 64) // Hard clamp at 64. Not sure how high we can go.
+        cdnClientPool?.updateServerList(maxNumServers)
 
         val downloadCounter = GlobalDownloadCounter()
         val depotsToDownload = ArrayList<DepotFilesData>(depots.size)
