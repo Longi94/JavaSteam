@@ -29,7 +29,7 @@ dependencies {
 // Allow running samples from command line
 // Usage: ./gradlew :javasteam-samples:run -PmainClass=<fully.qualified.ClassName> --args="username password"
 application {
-    mainClass.set(project.findProperty("mainClass") as String? ?: "in.dragonbra.javasteamsamples._031_get_categories_games.SampleGameCategories")
+    mainClass.set(project.findProperty("mainClass") as String? ?: "in.dragonbra.javasteamsamples._000_authentication.SampleLogonAuthentication")
 }
 
 // Enable stdin for interactive 2FA input
