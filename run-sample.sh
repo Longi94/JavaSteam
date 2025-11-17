@@ -5,14 +5,13 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: ./run-sample.sh <sample_number> [username] [password]"
-    echo "Example: ./run-sample.sh 031 myuser mypass"
+    echo "Example: ./run-sample.sh 001 myuser mypass"
     echo ""
     echo "Available samples:"
     echo "  000 - Authentication"
     echo "  001 - Authentication with QR Code"
     echo "  015 - Achievements"
     echo "  020 - Friends"
-    echo "  031 - Game Categories and Favorites"
     echo ""
     echo "If username/password not provided, will use STEAM_USER and STEAM_PASS env vars"
     echo "Note: You will be prompted for 2FA code interactively after login attempt"
@@ -42,9 +41,6 @@ case $SAMPLE_NUM in
         ;;
     "020")
         SAMPLE_CLASS="in.dragonbra.javasteamsamples._020_friends.SampleFriends"
-        ;;
-    "031")
-        SAMPLE_CLASS="in.dragonbra.javasteamsamples._031_get_categories_games.SampleGameCategories"
         ;;
     *)
         echo "Unknown sample number: $SAMPLE_NUM"
