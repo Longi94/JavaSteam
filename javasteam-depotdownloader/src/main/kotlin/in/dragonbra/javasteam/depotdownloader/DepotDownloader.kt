@@ -187,9 +187,14 @@ class DepotDownloader @JvmOverloads constructor(
             logger = LogManager.getLogger(DepotDownloader::class.java)
         }
 
-        logger?.debug("DepotDownloader launched with ${licenses.size} for account")
-
         steam3 = Steam3Session(steamClient, debug)
+
+        logger?.debug("DepotDownloader launched with ${licenses.size} for account")
+        licenses.forEach { license ->
+            if (license.accessToken.toULong() > 0UL) {
+                steam3!!.packageTokens[license.packageID] = license.accessToken
+            }
+        }
 
         // Launch the processing loop
         scope.launch {
