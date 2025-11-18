@@ -70,12 +70,70 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
         stats = resp.statsList.map {
             Stats(statId = it.statId, statValue = it.statValue)
         }
-        achievementBlocks = resp.achievementBlocksList.map {
-            AchievementBlocks(achievementId = it.achievementId, unlockTime = it.unlockTimeList)
+
+        // Parse the schema first so we can enrich achievement data
+        // Some games may have empty or invalid schemas, so handle gracefully
+        try {
+            if (schema.size() > 0) {
+                MemoryStream(schema.toByteArray()).use {
+                    schemaKeyValues.tryReadAsBinary(it)
+                }
+            }
+        } catch (e: Exception) {
+            // Schema parsing failed, schemaKeyValues will remain empty
+            // This is okay - we'll just have achievements without enriched metadata
         }
 
-        MemoryStream(schema.toByteArray()).use {
-            schemaKeyValues.tryReadAsBinary(it)
+        // Build a map of achievement metadata from schema for quick lookup
+        val achievementMetadata = buildAchievementMetadataMap(schemaKeyValues)
+
+        // Map achievement blocks and enrich with metadata from schema
+        achievementBlocks = resp.achievementBlocksList.map { block ->
+            val metadata = achievementMetadata[block.achievementId]
+            AchievementBlocks(
+                achievementId = block.achievementId,
+                unlockTime = block.unlockTimeList,
+                name = metadata?.get("name"),
+                displayName = metadata?.get("displayName"),
+                description = metadata?.get("description"),
+                icon = metadata?.get("icon"),
+                iconGray = metadata?.get("iconGray"),
+                hidden = metadata?.get("hidden")?.equals("1", ignoreCase = true) ?: false
+            )
         }
+    }
+
+    /**
+     * Builds a map of achievement ID to metadata from the schema KeyValue.
+     */
+    private fun buildAchievementMetadataMap(schema: KeyValue): Map<Int, Map<String, String>> {
+        val metadataMap = mutableMapOf<Int, Map<String, String>>()
+
+        try {
+            val achievements = schema.get("stats")?.get("achievements")
+
+            if (achievements != null) {
+                for (achievement in achievements.children) {
+                    val idKey = achievement.get("id")
+                    if (idKey != null) {
+                        val achievementId = idKey.asInteger()
+                        val metadata = mutableMapOf<String, String>()
+
+                        achievement.get("name")?.value?.let { metadata["name"] = it }
+                        achievement.get("displayName")?.value?.let { metadata["displayName"] = it }
+                        achievement.get("description")?.value?.let { metadata["description"] = it }
+                        achievement.get("icon")?.value?.let { metadata["icon"] = it }
+                        achievement.get("icon_gray")?.value?.let { metadata["iconGray"] = it }
+                        achievement.get("hidden")?.value?.let { metadata["hidden"] = it }
+
+                        metadataMap[achievementId] = metadata
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If schema parsing fails, return empty map
+        }
+
+        return metadataMap
     }
 }
