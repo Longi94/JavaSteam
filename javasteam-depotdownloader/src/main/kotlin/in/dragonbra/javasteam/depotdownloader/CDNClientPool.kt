@@ -55,6 +55,8 @@ class CDNClientPool(
     }
 
     override fun close() {
+        logger?.debug("Closing...")
+
         servers.set(emptyList())
 
         cdnClient = null
@@ -107,6 +109,7 @@ class CDNClientPool(
 
     fun returnConnection(server: Server?) {
         if (server == null) {
+            logger?.error("null server returned to cdn pool.")
             return
         }
 
@@ -117,6 +120,7 @@ class CDNClientPool(
 
     fun returnBrokenConnection(server: Server?) {
         if (server == null) {
+            logger?.error("null broken server returned to pool")
             return
         }
 

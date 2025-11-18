@@ -107,6 +107,7 @@ class Steam3Session(
 
     suspend fun requestAppInfo(appId: Int, bForce: Boolean = false) {
         if ((appInfo.containsKey(appId) && !bForce) || isAborted) {
+            logger?.debug("requestAppInfo already has $appId or is aborting")
             return
         }
 
@@ -204,6 +205,7 @@ class Steam3Session(
 
     suspend fun requestDepotKey(depotId: Int, appId: Int = 0) {
         if (depotKeys.containsKey(depotId) || isAborted) {
+            logger?.debug("requestDepotKey already has $depotId or is aborting.")
             return
         }
 
@@ -215,6 +217,7 @@ class Steam3Session(
         )
 
         if (depotKey.result != EResult.OK) {
+            logger?.error("requestDepotKey result was ${depotKey.result}")
             return
         }
 
@@ -228,6 +231,7 @@ class Steam3Session(
         branch: String,
     ): ULong = withContext(Dispatchers.IO) {
         if (isAborted) {
+            logger?.debug("getDepotManifestRequestCode aborting.")
             return@withContext 0UL
         }
 
@@ -262,12 +266,14 @@ class Steam3Session(
         val cdnKey = depotId to server.host!!
 
         if (cdnAuthTokens.containsKey(cdnKey)) {
+            logger?.debug("requestCDNAuthToken already has $cdnKey")
             return@withContext
         }
 
         val completion = CompletableDeferred<CDNAuthToken>()
 
         if (isAborted || cdnAuthTokens.putIfAbsent(cdnKey, completion) != null) {
+            logger?.debug("requestCDNAuthToken is aborting or unable to map $cdnKey")
             return@withContext
         }
 
@@ -278,6 +284,7 @@ class Steam3Session(
         logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
 
         if (cdnAuth.result != EResult.OK) {
+            logger?.error("requestCDNAuthToken result was ${cdnAuth.result}")
             return@withContext
         }
 
@@ -342,6 +349,7 @@ class Steam3Session(
         if (callback.result == EResult.OK) {
             return callback
         } else if (callback.result == EResult.FileNotFound) {
+            logger?.error("getUGCDetails got FileNotFound for ${ugcHandle.value}")
             return null
         }
 

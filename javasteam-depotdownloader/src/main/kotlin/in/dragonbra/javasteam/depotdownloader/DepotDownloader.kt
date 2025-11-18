@@ -288,7 +288,7 @@ class DepotDownloader @JvmOverloads constructor(
         val (success, installDir) = createDirectories(appId, 0, appId)
 
         if (!success) {
-            logger?.debug("Error: Unable to create install directories!")
+            logger?.error("Error: Unable to create install directories!")
             return
         }
 
@@ -337,12 +337,13 @@ class DepotDownloader @JvmOverloads constructor(
             filesystem.atomicMove(fileStagingPath, fileFinalPath)
             logger?.debug("File '$fileStagingPath' moved to final location: $fileFinalPath")
         } catch (e: IOException) {
+            logger?.error(e)
             throw e
         }
     }
 
     // L4D2 (app) supports LV
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, DepotDownloaderException::class)
     private suspend fun downloadApp(
         appId: Int,
         depotManifestIds: List<Pair<Int, Long>>,
@@ -674,7 +675,7 @@ class DepotDownloader @JvmOverloads constructor(
         return depotChild["depotfromapp"].asInteger()
     }
 
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IOException::class)
     private fun createDirectories(depotId: Int, depotVersion: Int, appId: Int = 0): DirectoryResult {
         var installDir: Path?
         try {
@@ -1593,7 +1594,7 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         if (ClientLancache.useLanCacheServer) {
-            logger?.debug("Detected Lan-Cache server! Downloads will be directed through the Lancache.")
+            logger?.debug("Detected Lan-Cache server! Downloads will be directed through the LanCache.")
             if (maxDownloads == 8) {
                 maxDownloads = 25
             }

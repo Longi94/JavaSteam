@@ -1,9 +1,12 @@
 package `in`.dragonbra.javasteam.depotdownloader
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okio.FileSystem
+import okio.IOException
 import okio.Path
+import kotlin.IllegalArgumentException
 
 /**
  * Singleton storage for tracking installed depot manifests.
@@ -27,6 +30,11 @@ data class DepotConfigStore(
 
         private val json = Json { prettyPrint = true }
 
+        @Throws(
+            IOException::class,
+            SerializationException::class,
+            IllegalArgumentException::class,
+        )
         fun loadFromFile(path: Path) {
             instance = if (FileSystem.SYSTEM.exists(path)) {
                 FileSystem.SYSTEM.read(path) {
@@ -39,6 +47,7 @@ data class DepotConfigStore(
             filePath = path
         }
 
+        @Throws(IllegalArgumentException::class)
         fun save() {
             val currentInstance = requireNotNull(instance) { "Saved config before loading" }
             val currentPath = requireNotNull(filePath) { "File path not set" }
