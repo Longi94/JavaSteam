@@ -14,7 +14,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -38,16 +37,6 @@ class Client(steamClient: SteamClient) : Closeable {
     companion object {
 
         private val logger: Logger = LogManager.getLogger(Client::class.java)
-
-        /**
-         * Default timeout to use when making requests
-         */
-        var requestTimeout = 10_000L
-
-        /**
-         * Default timeout to use when reading the response body
-         */
-        var responseBodyTimeout = 60_000L
 
         private fun buildCommand(
             server: Server,
@@ -144,9 +133,7 @@ class Client(steamClient: SteamClient) : Closeable {
         logger.debug("Request URL is: $request")
 
         try {
-            val response = withTimeout(requestTimeout) {
-                httpClient.newCall(request).executeAsync()
-            }
+            val response = httpClient.newCall(request).executeAsync()
 
             if (!response.isSuccessful) {
                 throw SteamKitWebRequestException(
@@ -155,30 +142,28 @@ class Client(steamClient: SteamClient) : Closeable {
                 )
             }
 
-            return@withContext withTimeout(responseBodyTimeout) {
-                response.use { resp ->
-                    val responseBody = resp.body?.bytes()
-                        ?: throw SteamKitWebRequestException("Response body is null")
+            return@withContext response.use { resp ->
+                val responseBody = resp.body?.bytes()
+                    ?: throw SteamKitWebRequestException("Response body is null")
 
-                    if (responseBody.isEmpty()) {
-                        throw SteamKitWebRequestException("Response is empty")
+                if (responseBody.isEmpty()) {
+                    throw SteamKitWebRequestException("Response is empty")
+                }
+
+                // Decompress the zipped manifest data
+                ZipInputStream(ByteArrayInputStream(responseBody)).use { zipInputStream ->
+                    zipInputStream.nextEntry
+                        ?: throw SteamKitWebRequestException("Expected the zip to contain at least one file")
+
+                    val manifestData = zipInputStream.readBytes()
+
+                    val depotManifest = DepotManifest.deserialize(ByteArrayInputStream(manifestData))
+
+                    if (depotKey != null) {
+                        depotManifest.decryptFilenames(depotKey)
                     }
 
-                    // Decompress the zipped manifest data
-                    ZipInputStream(ByteArrayInputStream(responseBody)).use { zipInputStream ->
-                        zipInputStream.nextEntry
-                            ?: throw SteamKitWebRequestException("Expected the zip to contain at least one file")
-
-                        val manifestData = zipInputStream.readBytes()
-
-                        val depotManifest = DepotManifest.deserialize(ByteArrayInputStream(manifestData))
-
-                        if (depotKey != null) {
-                            depotManifest.decryptFilenames(depotKey)
-                        }
-
-                        depotManifest
-                    }
+                    depotManifest
                 }
             }
         } catch (e: Exception) {
@@ -240,9 +225,7 @@ class Client(steamClient: SteamClient) : Closeable {
         }
 
         try {
-            val response = withTimeout(requestTimeout) {
-                httpClient.newCall(request).executeAsync()
-            }
+            val response = httpClient.newCall(request).executeAsync()
 
             response.use { resp ->
                 if (!resp.isSuccessful) {
@@ -252,16 +235,23 @@ class Client(steamClient: SteamClient) : Closeable {
                     )
                 }
 
-                val contentLength = resp.body.contentLength().toInt()
+                var contentLength = chunk.compressedLength
 
-                if (contentLength == 0) {
-                    chunk.compressedLength
-                }
+                if (resp.body.contentLength().toInt() > 0) {
+                    contentLength = resp.body.contentLength().toInt()
 
-                // Validate content length
-                if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
+                    // assert that lengths match only if the chunk has a length assigned.
+                    if (chunk.compressedLength > 0 && contentLength != chunk.compressedLength) {
+                        throw SteamKitWebRequestException(
+                            "Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})"
+                        )
+                    }
+                } else if (contentLength > 0) {
+                    logger.debug("Response does not have Content-Length, falling back to chunk.CompressedLength.")
+                } else {
                     throw SteamKitWebRequestException(
-                        "Content-Length mismatch for depot chunk! (was $contentLength, but should be ${chunk.compressedLength})"
+                        "Response does not have Content-Length and chunk.CompressedLength is not set.",
+                        response
                     )
                 }
 

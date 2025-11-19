@@ -18,8 +18,10 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
+import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
+import okhttp3.OkHttpClient;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
@@ -29,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oxters
@@ -84,7 +87,18 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         // Most everything has been described in earlier samples.
         // Anything pertaining to this sample will be commented.
 
-        steamClient = new SteamClient();
+        // Depot chunks are downloaded using OKHttp, it's best to set some timeouts.
+        var config = SteamConfiguration.create(builder -> {
+            builder.withHttpClient(
+                    new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)   // Time to establish connection
+                            .readTimeout(60, TimeUnit.SECONDS)      // Max inactivity between reads
+                            .writeTimeout(30, TimeUnit.SECONDS)     // Time for writes
+                            .build()
+            );
+        });
+
+        steamClient = new SteamClient(config);
 
         manager = new CallbackManager(steamClient);
 
@@ -238,7 +252,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     private void downloadApp() {
         // Initiate the DepotDownloader, it is a Closable so it can be cleaned up when no longer used.
         // You will need to subscribe to LicenseListCallback to obtain your app licenses.
-        try (var depotDownloader = new DepotDownloader(steamClient, licenseList, false)) {
+        try (var depotDownloader = new DepotDownloader(steamClient, licenseList, true)) {
 
             // Add this class as a listener of IDownloadListener
             depotDownloader.addListener(this);
