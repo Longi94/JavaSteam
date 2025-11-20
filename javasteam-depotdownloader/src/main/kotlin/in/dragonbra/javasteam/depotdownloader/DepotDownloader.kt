@@ -928,7 +928,10 @@ class DepotDownloader @JvmOverloads constructor(
 
                             // If we could not get the manifest code, this is a fatal error
                             if (manifestRequestCode == 0UL) {
-                                cancel("manifestRequestCode is 0UL")
+                                // TODO this should be a fatal error and bail out. But I guess we can continue.
+                                logger?.error("Manifest request code is 0. Skipping depot ${depot.depotId}")
+                                return@withContext null
+                                // cancel("manifestRequestCode is 0UL")
                             }
                         }
 
