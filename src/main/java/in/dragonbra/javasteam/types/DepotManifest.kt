@@ -23,7 +23,6 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 
 /**
  * Represents a Steam3 depot manifest.
@@ -400,24 +399,22 @@ class DepotManifest {
      * @param output The stream to which the serialized depot manifest will be written.
      */
     fun serialize(output: OutputStream) {
-        val payload = ContentManifestPayload.newBuilder()
-        val uniqueChunks = object : HashSet<ByteArray>() {
-            // This acts like "ChunkIdComparer"
-            private val items = mutableListOf<ByteArray>()
+        // Basically like ChunkIdComparer from DepotDownloader
+        class ByteArrayKey(private val byteArray: ByteArray) {
+            override fun equals(other: Any?): Boolean = other is ByteArrayKey && byteArray.contentEquals(other.byteArray)
 
-            override fun add(element: ByteArray): Boolean {
-                if (contains(element)) return false
-                items.add(element)
-                return true
+            override fun hashCode(): Int = if (byteArray.size >= 4) {
+                ((byteArray[0].toInt() and 0xFF)) or
+                    ((byteArray[1].toInt() and 0xFF) shl 8) or
+                    ((byteArray[2].toInt() and 0xFF) shl 16) or
+                    ((byteArray[3].toInt() and 0xFF) shl 24)
+            } else {
+                byteArray.contentHashCode()
             }
-
-            override fun contains(element: ByteArray): Boolean = items.any { it.contentEquals(element) }
-
-            override fun iterator(): MutableIterator<ByteArray> = items.iterator()
-
-            override val size: Int
-                get() = items.size
         }
+
+        val payload = ContentManifestPayload.newBuilder()
+        val uniqueChunks = hashSetOf<ByteArrayKey>()
 
         files.forEach { file ->
             val protofile = ContentManifestPayload.FileMapping.newBuilder().apply {
@@ -457,7 +454,7 @@ class DepotManifest {
                 }.build()
 
                 protofile.addChunks(protochunk)
-                uniqueChunks.add(chunk.chunkID!!)
+                uniqueChunks.add(ByteArrayKey(chunk.chunkID!!))
             }
 
             payload.addMappings(protofile.build())

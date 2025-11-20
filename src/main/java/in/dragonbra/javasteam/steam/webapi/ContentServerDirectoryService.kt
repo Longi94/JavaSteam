@@ -8,6 +8,7 @@ import `in`.dragonbra.javasteam.steam.cdn.Server
  */
 object ContentServerDirectoryService {
 
+    @JvmStatic
     internal fun convertServerList(
         response: CContentServerDirectory_GetServersForSteamPipe_Response,
     ): List<Server> = response.serversList.map { child ->
@@ -18,21 +19,21 @@ object ContentServerDirectoryService {
             Server.ConnectionProtocol.HTTP
         }
 
-        Server(
-            protocol = protocol,
-            host = child.host,
-            vHost = child.vhost,
-            port = if (protocol == Server.ConnectionProtocol.HTTPS) 443 else 80,
-            type = child.type,
-            sourceID = child.sourceId,
-            cellID = child.cellId,
-            load = child.load,
-            weightedLoad = child.weightedLoad,
-            numEntries = child.numEntriesInClientList,
-            steamChinaOnly = child.steamChinaOnly,
-            useAsProxy = child.useAsProxy,
-            proxyRequestPathTemplate = child.proxyRequestPathTemplate,
-            allowedAppIds = child.allowedAppIdsList.toIntArray()
-        )
+        Server().apply {
+            this.protocol = protocol
+            this.host = child.host
+            this.vHost = child.vhost
+            this.port = if (protocol == Server.ConnectionProtocol.HTTPS) 443 else 80
+            this.type = child.type
+            this.sourceId = child.sourceId
+            this.cellId = child.cellId
+            this.load = child.load
+            this.weightedLoad = child.weightedLoad
+            this.numEntries = child.numEntriesInClientList
+            this.steamChinaOnly = child.steamChinaOnly
+            this.useAsProxy = child.useAsProxy
+            this.proxyRequestPathTemplate = child.proxyRequestPathTemplate
+            this.allowedAppIds = child.allowedAppIdsList.toIntArray()
+        }
     }
 }
