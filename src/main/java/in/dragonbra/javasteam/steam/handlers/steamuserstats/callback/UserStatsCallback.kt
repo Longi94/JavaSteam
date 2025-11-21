@@ -110,7 +110,7 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
 
         try {
             val stats = schemaKeyValues.get("stats")
-            if (stats == null) return achievementBlocks // Return original blocks if schema parsing failed
+            if (stats == KeyValue.INVALID) return achievementBlocks // Return original blocks if schema parsing failed
 
             // Iterate through each achievement block
             for (block in achievementBlocks) {
