@@ -40,7 +40,7 @@ public class SampleAchievements implements Runnable {
     // Default to Team Fortress 2 (Free to play game with achievements)
     // Other free games with achievements you can try:
     // - 730 (CS:GO/CS2)
-    // - 440 (Team Fortress 2) 
+    // - 440 (Team Fortress 2)
     // - 570 (Dota 2)
     // - 49520 (Borderlands 2 - requires ownership)
     private static final int DEFAULT_APP_ID = 440;
@@ -65,7 +65,7 @@ public class SampleAchievements implements Runnable {
         if (args.length < 2) {
             System.out.println("Sample 032: Steam Achievements");
             System.out.println("Usage: sample032 <username> <password> [appid]");
-            System.out.println("  appid: Optional Steam App ID (default: 49520 - Borderlands 2)");
+            System.out.println("  appid: Optional Steam App ID (default: 440 - Team Fortress 2)");
             System.out.println("  You will be prompted for 2FA code if needed");
             return;
         }
@@ -156,6 +156,7 @@ public class SampleAchievements implements Runnable {
         steamUserStats.getUserStats(appId, currentUserSteamID);
     }
 
+    //! This is where the meat of the Sample is.
     private void onUserStats(UserStatsCallback callback) {
         System.out.println("\n" + "=".repeat(80));
         System.out.println("ACHIEVEMENT DATA RECEIVED");
@@ -179,6 +180,11 @@ public class SampleAchievements implements Runnable {
         List<AchievementBlocks> blocks = callback.getAchievementBlocks();
         System.out.println("\nAchievement Blocks (Base Game + DLCs): " + blocks.size());
 
+        // There can be multiple blocks when you grab an appId. (Usually Game + DLC/Expansions)
+        // AchievementBlocks are filtered into unlockTimes
+        // Timestamp exists? -> Unlocked
+        // Timestamp does not exist? -> Locked
+        // Timestamps are in an array and are sorted by the ID of the specific achievement
         for (int i = 0; i < blocks.size(); i++) {
             AchievementBlocks block = blocks.get(i);
             long unlocked = block.getUnlockTime().stream().filter(t -> t > 0).count();
@@ -188,8 +194,10 @@ public class SampleAchievements implements Runnable {
 
         // Get the expanded individual achievements
         List<AchievementBlocks> achievements = callback.getExpandedAchievements();
+
         System.out.println("\nTotal Individual Achievements: " + achievements.size());
 
+        // Now we can filter out if they are unlocked thanks to the timestamp.
         long unlockedCount = achievements.stream().filter(AchievementBlocks::isUnlocked).count();
         System.out.println("Unlocked: " + unlockedCount);
         System.out.println("Locked: " + (achievements.size() - unlockedCount));
