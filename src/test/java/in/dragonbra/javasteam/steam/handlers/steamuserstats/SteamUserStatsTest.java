@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import com.google.protobuf.ByteString;
-
+import java.text.SimpleDateFormat;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
@@ -35,6 +35,8 @@ import in.dragonbra.javasteam.types.KeyValue;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected SteamUserStats createHandler() {
@@ -276,7 +278,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach0.getHidden());
         assertTrue(ach0.isUnlocked());
         assertEquals(1609459200, ach0.getUnlockTimestamp());
-        assertEquals(new Date("2020-01-01 00:00:00"), ach0.getFormattedUnlockTime());
+        assertEquals(dateFormat.format(new Date("2020-01-01 00:00:00")), ach0.getFormattedUnlockTime());
 
         // Verify second achievement (block 21, bit 1) - locked
         AchievementBlocks ach1 = expandedAchievements.get(1);
@@ -295,8 +297,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertTrue(ach2.getHidden());
         assertTrue(ach2.isUnlocked());
         assertEquals(1640995200, ach2.getUnlockTimestamp());
-        assertEquals(new Date("2022-01-01 00:00:00"), ach2.getFormattedUnlockTime());
-
+        assertEquals(dateFormat.format(new Date("2022-01-01 00:00:00")), ach2.getFormattedUnlockTime());
         // Verify first DLC achievement (block 22, bit 0) - unlocked
         AchievementBlocks ach3 = expandedAchievements.get(3);
         assertEquals("ACH_DLC_MASTER", ach3.getName());
@@ -305,7 +306,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach3.getHidden());
         assertTrue(ach3.isUnlocked());
         assertEquals(1672531200, ach3.getUnlockTimestamp());
-        assertEquals(new Date("2023-01-01 00:00:00"), ach3.getFormattedUnlockTime());
+        assertEquals(dateFormat.format(new Date("2023-01-01 00:00:00")), ach3.getFormattedUnlockTime());
 
         // Verify second DLC achievement (block 22, bit 1) - locked
         AchievementBlocks ach4 = expandedAchievements.get(4);
