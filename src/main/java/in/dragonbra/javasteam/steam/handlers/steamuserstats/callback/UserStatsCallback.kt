@@ -117,8 +117,9 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
                 val statBlock = stats.get(block.achievementId.toString())
                 val bitsBlock = statBlock?.get("bits")
 
+
                 if (bitsBlock != null) {
-                    // This block has bit-level achievements, expand them
+                    // This block has bit-level achievements, expand them and get the values
                     for (bitEntry in bitsBlock.children) {
                         val bitIndex = bitEntry.get("bit")?.asInteger() ?: continue
                         val displaySection = bitEntry.get("display")
@@ -163,39 +164,5 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
         }
 
         return expandedAchievements
-    }
-
-    /**
-     * Builds a map of achievement ID to metadata from the schema KeyValue.
-     */
-    private fun buildAchievementMetadataMap(schema: KeyValue): Map<Int, Map<String, String>> {
-        val metadataMap = mutableMapOf<Int, Map<String, String>>()
-
-        try {
-            val achievements = schema.get("stats")?.get("achievements")
-
-            if (achievements != null) {
-                for (achievement in achievements.children) {
-                    val idKey = achievement.get("id")
-                    if (idKey != null) {
-                        val achievementId = idKey.asInteger()
-                        val metadata = mutableMapOf<String, String>()
-
-                        achievement.get("name")?.value?.let { metadata["name"] = it }
-                        achievement.get("displayName")?.value?.let { metadata["displayName"] = it }
-                        achievement.get("description")?.value?.let { metadata["description"] = it }
-                        achievement.get("icon")?.value?.let { metadata["icon"] = it }
-                        achievement.get("icon_gray")?.value?.let { metadata["iconGray"] = it }
-                        achievement.get("hidden")?.value?.let { metadata["hidden"] = it }
-
-                        metadataMap[achievementId] = metadata
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            // If schema parsing fails, return empty map
-        }
-
-        return metadataMap
     }
 }
