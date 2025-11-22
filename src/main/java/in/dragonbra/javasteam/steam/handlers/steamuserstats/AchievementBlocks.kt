@@ -5,7 +5,7 @@ import `in`.dragonbra.javasteam.util.JavaSteamAddition
 /**
  * A Block of achievements with the timestamp of when the achievement (in order of the schema) is unlocked.
  * @param achievementId the achievement id.
- * @param unlockTime a [List] of integers containing when an achievement was unlocked.
+ * @param unlockTime a [List] of integers (Unix Timestamps) containing when an achievement was unlocked.
  *  An unlockTime of 0 means it has not been achieved, unlocked achievements are displayed as valve-timestamps.
  * @param name the internal name of the achievement (e.g., "ACH_FIRST_BLOOD")
  * @param displayName the localized display name of the achievement
