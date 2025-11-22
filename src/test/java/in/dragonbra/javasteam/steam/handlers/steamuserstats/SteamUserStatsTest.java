@@ -2,7 +2,7 @@ package in.dragonbra.javasteam.steam.handlers.steamuserstats;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.sql.Date;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -278,7 +278,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach0.getHidden());
         assertTrue(ach0.isUnlocked());
         assertEquals(1609459200, ach0.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date("2020-01-01 00:00:00")), ach0.getFormattedUnlockTime());
+        assertEquals(dateFormat.format(new Date(1609459200L * 1000L)), ach0.getFormattedUnlockTime());
 
         // Verify second achievement (block 21, bit 1) - locked
         AchievementBlocks ach1 = expandedAchievements.get(1);
@@ -297,7 +297,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertTrue(ach2.getHidden());
         assertTrue(ach2.isUnlocked());
         assertEquals(1640995200, ach2.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date("2022-01-01 00:00:00")), ach2.getFormattedUnlockTime());
+        assertEquals(dateFormat.format(new Date(1640995200L * 1000L)), ach2.getFormattedUnlockTime());
         // Verify first DLC achievement (block 22, bit 0) - unlocked
         AchievementBlocks ach3 = expandedAchievements.get(3);
         assertEquals("ACH_DLC_MASTER", ach3.getName());
@@ -306,7 +306,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach3.getHidden());
         assertTrue(ach3.isUnlocked());
         assertEquals(1672531200, ach3.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date("2023-01-01 00:00:00")), ach3.getFormattedUnlockTime());
+        assertEquals(dateFormat.format(new Date(1672531200L * 1000L)), ach3.getFormattedUnlockTime());
 
         // Verify second DLC achievement (block 22, bit 1) - locked
         AchievementBlocks ach4 = expandedAchievements.get(4);

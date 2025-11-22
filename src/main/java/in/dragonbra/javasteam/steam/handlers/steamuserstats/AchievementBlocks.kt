@@ -25,7 +25,7 @@ data class AchievementBlocks(
     val description: String? = null,
     val icon: String? = null,
     val iconGray: String? = null,
-    val hidden: Boolean = false
+    val hidden: Boolean = false,
 ) {
     /**
      * Returns true if this achievement is unlocked.

@@ -117,7 +117,6 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
                 val statBlock = stats.get(block.achievementId.toString())
                 val bitsBlock = statBlock?.get("bits")
 
-
                 if (bitsBlock != null) {
                     // This block has bit-level achievements, expand them and get the values
                     for (bitEntry in bitsBlock.children) {
