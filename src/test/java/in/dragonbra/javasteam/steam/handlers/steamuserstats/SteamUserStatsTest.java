@@ -2,6 +2,7 @@ package in.dragonbra.javasteam.steam.handlers.steamuserstats;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,7 +52,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
      * Opento suggestions/input on how to improve it.
      */
     private byte[] createMockSchema() throws IOException {
-        // Create a wrapper so schemaKeyValues will have "stats" as a child, not be "stats" itself
+        // Create a wrapper so schemaKeyValues will have "stats" as a child, not be
+        // "stats" itself
         KeyValue wrapper = new KeyValue("UserGameStatsSchema"); // Mimicking Steam's actual format
         KeyValue stats = new KeyValue("stats");
 
@@ -172,8 +174,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
      * data.
      */
     private IPacketMsg createUserStatsResponseMessage(boolean includeSchema) throws IOException {
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg
-                = new ClientMsgProtobuf<>(CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
+                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
 
         CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
         body.setGameId(440L); // Team Fortress 2
@@ -187,21 +189,21 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
 
         // Add achievement block 21 with 3 achievements
         // Achievements 0 and 2 are unlocked, achievement 1 is locked
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block21
-                = CMsgClientGetUserStatsResponse.Achievement_Blocks.newBuilder();
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block21 = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
         block21.setAchievementId(21);
         block21.addUnlockTime(1609459200); // Achievement 0 unlocked on Jan 1, 2021
-        block21.addUnlockTime(0);           // Achievement 1 locked
+        block21.addUnlockTime(0); // Achievement 1 locked
         block21.addUnlockTime(1640995200); // Achievement 2 unlocked on Jan 1, 2022
         body.addAchievementBlocks(block21);
 
         // Add achievement block 22 with 2 achievements
         // Achievement 0 is unlocked, achievement 1 is locked
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block22
-                = CMsgClientGetUserStatsResponse.Achievement_Blocks.newBuilder();
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block22 = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
         block22.setAchievementId(22);
         block22.addUnlockTime(1672531200); // Achievement 0 unlocked on Jan 1, 2023
-        block22.addUnlockTime(0);           // Achievement 1 locked
+        block22.addUnlockTime(0); // Achievement 1 locked
         body.addAchievementBlocks(block22);
 
         // Add some stats for completeness
@@ -274,7 +276,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach0.getHidden());
         assertTrue(ach0.isUnlocked());
         assertEquals(1609459200, ach0.getUnlockTimestamp());
-        assertEquals("2021-01-01 00:00:00", ach0.getFormattedUnlockTime());
+        assertEquals(new Date(2020, 1, 1), ach0.getFormattedUnlockTime());
 
         // Verify second achievement (block 21, bit 1) - locked
         AchievementBlocks ach1 = expandedAchievements.get(1);
@@ -347,14 +349,14 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
     @Test
     public void testSchemaParsingHandlesCorruptData() {
         // Create a packet with invalid schema data
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg
-                = new ClientMsgProtobuf<>(CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
+                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
 
         CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
         body.setGameId(440L);
         body.setEresult(EResult.OK.code());
         body.setCrcStats(123456);
-        body.setSchema(ByteString.copyFrom(new byte[]{0x01, 0x02, 0x03})); // Invalid schema
+        body.setSchema(ByteString.copyFrom(new byte[] { 0x01, 0x02, 0x03 })); // Invalid schema
 
         // Serialize and convert to IPacketMsg
         IPacketMsg packetMsg = CMClient.getPacketMsg(msg.serialize());
@@ -378,8 +380,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
     @Test
     public void testAchievementBlockWithManyUnlocks() throws IOException {
         // Test with a block that has many achievements unlocked
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg
-                = new ClientMsgProtobuf<>(CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
+                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
 
         CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
         body.setGameId(440L);
@@ -388,8 +390,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         body.setSchema(ByteString.copyFrom(createMockSchema()));
 
         // Create a block with 32 achievements (maximum per block)
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block
-                = CMsgClientGetUserStatsResponse.Achievement_Blocks.newBuilder();
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
         block.setAchievementId(21);
 
         // Add 32 unlock times (some locked, some unlocked)
