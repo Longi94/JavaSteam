@@ -71,8 +71,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         KeyValue desc0 = new KeyValue("desc");
         desc0.getChildren().add(new KeyValue("english", "Kill your first enemy"));
         display0.getChildren().add(desc0);
-        display0.getChildren().add(new KeyValue("icon", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_0.jpg"));
-        display0.getChildren().add(new KeyValue("icon_gray", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_0_gray.jpg"));
+        display0.getChildren().add(new KeyValue("icon", "achievement_0.jpg"));
+        display0.getChildren().add(new KeyValue("icon_gray", "achievement_0_gray.jpg"));
         display0.getChildren().add(new KeyValue("hidden", "0"));
         bit0.getChildren().add(display0);
         bits21.getChildren().add(bit0);
@@ -88,8 +88,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         KeyValue desc1 = new KeyValue("desc");
         desc1.getChildren().add(new KeyValue("english", "Reach level 10"));
         display1.getChildren().add(desc1);
-        display1.getChildren().add(new KeyValue("icon", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_1.jpg"));
-        display1.getChildren().add(new KeyValue("icon_gray", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_1_gray.jpg"));
+        display1.getChildren().add(new KeyValue("icon", "achievement_1.jpg"));
+        display1.getChildren().add(new KeyValue("icon_gray", "achievement_1_gray.jpg"));
         display1.getChildren().add(new KeyValue("hidden", "0"));
         bit1.getChildren().add(display1);
         bits21.getChildren().add(bit1);
@@ -105,8 +105,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         KeyValue desc2 = new KeyValue("desc");
         desc2.getChildren().add(new KeyValue("english", "Find the secret"));
         display2.getChildren().add(desc2);
-        display2.getChildren().add(new KeyValue("icon", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_2.jpg"));
-        display2.getChildren().add(new KeyValue("icon_gray", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_2_gray.jpg"));
+        display2.getChildren().add(new KeyValue("icon", "achievement_2.jpg"));
+        display2.getChildren().add(new KeyValue("icon_gray", "achievement_2_gray.jpg"));
         display2.getChildren().add(new KeyValue("hidden", "1")); // Hidden achievement
         bit2.getChildren().add(display2);
         bits21.getChildren().add(bit2);
@@ -131,8 +131,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         KeyValue desc22_0 = new KeyValue("desc");
         desc22_0.getChildren().add(new KeyValue("english", "Complete all DLC missions"));
         display22_0.getChildren().add(desc22_0);
-        display22_0.getChildren().add(new KeyValue("icon", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_dlc_0.jpg"));
-        display22_0.getChildren().add(new KeyValue("icon_gray", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_dlc_0_gray.jpg"));
+        display22_0.getChildren().add(new KeyValue("icon", "achievement_dlc_0.jpg"));
+        display22_0.getChildren().add(new KeyValue("icon_gray", "achievement_dlc_0_gray.jpg"));
         display22_0.getChildren().add(new KeyValue("hidden", "0"));
         bit22_0.getChildren().add(display22_0);
         bits22.getChildren().add(bit22_0);
@@ -148,8 +148,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         KeyValue desc22_1 = new KeyValue("desc");
         desc22_1.getChildren().add(new KeyValue("english", "Master the DLC content"));
         display22_1.getChildren().add(desc22_1);
-        display22_1.getChildren().add(new KeyValue("icon", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_dlc_1.jpg"));
-        display22_1.getChildren().add(new KeyValue("icon_gray", "https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/440/achievement_dlc_1_gray.jpg"));
+        display22_1.getChildren().add(new KeyValue("icon", "achievement_dlc_1.jpg"));
+        display22_1.getChildren().add(new KeyValue("icon_gray", "achievement_dlc_1_gray.jpg"));
         display22_1.getChildren().add(new KeyValue("hidden", "0"));
         bit22_1.getChildren().add(display22_1);
         bits22.getChildren().add(bit22_1);
