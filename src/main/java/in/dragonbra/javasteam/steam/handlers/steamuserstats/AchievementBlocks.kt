@@ -10,8 +10,8 @@ import `in`.dragonbra.javasteam.util.JavaSteamAddition
  * @param name the internal name of the achievement (e.g., "ACH_FIRST_BLOOD")
  * @param displayName the localized display name of the achievement
  * @param description the localized description of the achievement
- * @param icon the relative URL to the achievement's icon (You will still need to complete the URL with Steam's CDN.)
- * @param iconGray the relative URL to the achievement's grayscale icon (shown when locked) (You will still need to complete the URL with Steam's CDN.)
+ * @param icon the relative URL to the achievement's icon (You will still need to complete the URL with Steam's CDN URL and appId)
+ * @param iconGray the relative URL to the achievement's grayscale icon (shown when locked) (You will still need to complete the URL with Steam's URL and appId)
  * @param hidden whether the achievement is hidden until unlocked
  */
 @JavaSteamAddition
