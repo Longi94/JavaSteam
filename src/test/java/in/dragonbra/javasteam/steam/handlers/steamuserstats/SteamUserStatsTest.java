@@ -47,7 +47,8 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
      * The schema needs to be structured so that when read by
      * KeyValue.tryReadAsBinary(), it creates: schemaKeyValues -> stats ->
      * [blocks] This means we need to write binary that starts with a wrapper
-     * node containing stats.
+     * node containing stats. ! This is a decently clunky was of doing it.
+     * Opento suggestions/input on how to improve it.
      */
     private byte[] createMockSchema() throws IOException {
         // Create a wrapper so schemaKeyValues will have "stats" as a child, not be "stats" itself
@@ -273,6 +274,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach0.getHidden());
         assertTrue(ach0.isUnlocked());
         assertEquals(1609459200, ach0.getUnlockTimestamp());
+        assertEquals("2021-01-01 00:00:00", ach0.getFormattedUnlockTime());
 
         // Verify second achievement (block 21, bit 1) - locked
         AchievementBlocks ach1 = expandedAchievements.get(1);
@@ -282,6 +284,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach1.getHidden());
         assertFalse(ach1.isUnlocked());
         assertEquals(0, ach1.getUnlockTimestamp());
+        assertNull(ach1.getFormattedUnlockTime());
 
         // Verify third achievement (block 21, bit 2) - hidden and unlocked
         AchievementBlocks ach2 = expandedAchievements.get(2);
@@ -290,6 +293,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertTrue(ach2.getHidden());
         assertTrue(ach2.isUnlocked());
         assertEquals(1640995200, ach2.getUnlockTimestamp());
+        assertEquals("2022-01-01 00:00:00", ach2.getFormattedUnlockTime());
 
         // Verify first DLC achievement (block 22, bit 0) - unlocked
         AchievementBlocks ach3 = expandedAchievements.get(3);
@@ -299,6 +303,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertFalse(ach3.getHidden());
         assertTrue(ach3.isUnlocked());
         assertEquals(1672531200, ach3.getUnlockTimestamp());
+        assertEquals("2023-01-01 00:00:00", ach3.getFormattedUnlockTime());
 
         // Verify second DLC achievement (block 22, bit 1) - locked
         AchievementBlocks ach4 = expandedAchievements.get(4);
@@ -306,6 +311,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         assertEquals("DLC Expert", ach4.getDisplayName());
         assertFalse(ach4.getHidden());
         assertFalse(ach4.isUnlocked());
+        assertNull(ach4.getFormattedUnlockTime());
     }
 
     @Test

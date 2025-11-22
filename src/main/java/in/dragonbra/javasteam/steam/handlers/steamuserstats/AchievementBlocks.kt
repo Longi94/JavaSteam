@@ -1,6 +1,8 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamuserstats
 
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
+import java.text.SimpleDateFormat
+import java.util.Date
 
 /**
  * A Block of achievements with the timestamp of when the achievement (in order of the schema) is unlocked.
@@ -39,4 +41,17 @@ data class AchievementBlocks(
      */
     val unlockTimestamp: Int
         get() = unlockTime.firstOrNull { it > 0 } ?: 0
+
+    /**
+     * Returns the unlock timestamp formatted as "yyyy-MM-dd HH:mm:ss".
+     * Returns null if the achievement is not unlocked.
+     * The timestamp is converted from Unix epoch seconds to a formatted date string.
+     */
+    fun getFormattedUnlockTime(): String? {
+        val timestamp = unlockTimestamp
+        if (timestamp == 0) return null
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        return dateFormat.format(Date(timestamp * 1000L))
+    }
 }
