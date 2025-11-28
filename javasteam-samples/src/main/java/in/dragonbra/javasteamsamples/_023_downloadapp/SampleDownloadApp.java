@@ -1,9 +1,15 @@
 package in.dragonbra.javasteamsamples._023_downloadapp;
 
+import in.dragonbra.javasteam.depotdownloader.DepotDownloader;
+import in.dragonbra.javasteam.depotdownloader.IDownloadListener;
+import in.dragonbra.javasteam.depotdownloader.data.*;
 import in.dragonbra.javasteam.enums.EResult;
-import in.dragonbra.javasteam.steam.contentdownloader.ContentDownloader;
-import in.dragonbra.javasteam.steam.handlers.steamapps.SteamApps;
-import in.dragonbra.javasteam.steam.handlers.steamapps.callback.FreeLicenseCallback;
+import in.dragonbra.javasteam.steam.authentication.AuthPollResult;
+import in.dragonbra.javasteam.steam.authentication.AuthSessionDetails;
+import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
+import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
+import in.dragonbra.javasteam.steam.handlers.steamapps.License;
+import in.dragonbra.javasteam.steam.handlers.steamapps.callback.LicenseListCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -12,10 +18,20 @@ import in.dragonbra.javasteam.steam.steamclient.SteamClient;
 import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
+import in.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
+import okhttp3.OkHttpClient;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
+import java.io.Closeable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Oxters
@@ -25,23 +41,20 @@ import java.io.File;
  * <p>
  * this sample introduces the usage of the content downloader API
  * <p>
- * content downloader lets you download an app from a Steam depot given
- * an app ID
+ * content downloader lets you download an app, pub file, or ugc item given some parameters.
  * <p>
- * in this case, this sample will demonstrate how to download the free game
- * called Rocky Mayhem
+ * in this case, this sample will ask which game app id you'd like to download.
+ * You can find the app id of a game by the url of the store page.
+ * For example "store.steampowered.com/app/1303350/Rocky_Mayhem/", where 1303350 is the app id.
  */
 @SuppressWarnings("FieldCanBeLocal")
-public class SampleDownloadApp implements Runnable {
-
-    private final int ROCKY_MAYHEM_APP_ID = 1303350;
-    private final int ROCKY_MAYHEM_DEPOT_ID = 1303351;
+public class SampleDownloadApp implements Runnable, IDownloadListener {
 
     private SteamClient steamClient;
 
     private CallbackManager manager;
+
     private SteamUser steamUser;
-    private SteamApps steamApps;
 
     private boolean isRunning;
 
@@ -49,12 +62,13 @@ public class SampleDownloadApp implements Runnable {
 
     private final String pass;
 
-    private final String twoFactor;
+    private List<Closeable> subscriptions;
 
-    public SampleDownloadApp(String user, String pass, String twoFactor) {
+    private List<License> licenseList;
+
+    public SampleDownloadApp(String user, String pass) {
         this.user = user;
         this.pass = pass;
-        this.twoFactor = twoFactor;
     }
 
     public static void main(String[] args) {
@@ -65,68 +79,120 @@ public class SampleDownloadApp implements Runnable {
 
         LogManager.addListener(new DefaultLogListener());
 
-        String twoFactor = null;
-        if (args.length == 3)
-            twoFactor = args[2];
-        new SampleDownloadApp(args[0], args[1], twoFactor).run();
+        new SampleDownloadApp(args[0], args[1]).run();
     }
 
     @Override
     public void run() {
-        // create our steamclient instance
-        steamClient = new SteamClient();
+        // Most everything has been described in earlier samples.
+        // Anything pertaining to this sample will be commented.
 
-        // create the callback manager which will route callbacks to function calls
+        // Depot chunks are downloaded using OKHttp, it's best to set some timeouts.
+        var config = SteamConfiguration.create(builder -> {
+            builder.withHttpClient(
+                    new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)   // Time to establish connection
+                            .readTimeout(60, TimeUnit.SECONDS)      // Max inactivity between reads
+                            .writeTimeout(30, TimeUnit.SECONDS)     // Time for writes
+                            .build()
+            );
+        });
+
+        steamClient = new SteamClient(config);
+
         manager = new CallbackManager(steamClient);
 
-        // get the steamuser handler, which is used for logging on after successfully connecting
         steamUser = steamClient.getHandler(SteamUser.class);
-        steamApps = steamClient.getHandler(SteamApps.class);
 
-        // register a few callbacks we're interested in
-        // these are registered upon creation to a callback manager, which will then route the callbacks
-        // to the functions specified
-        manager.subscribe(ConnectedCallback.class, this::onConnected);
-        manager.subscribe(DisconnectedCallback.class, this::onDisconnected);
+        subscriptions = new ArrayList<>();
 
-        manager.subscribe(LoggedOnCallback.class, this::onLoggedOn);
-        manager.subscribe(LoggedOffCallback.class, this::onLoggedOff);
-
-        manager.subscribe(FreeLicenseCallback.class, this::onFreeLicense);
+        subscriptions.add(manager.subscribe(ConnectedCallback.class, this::onConnected));
+        subscriptions.add(manager.subscribe(DisconnectedCallback.class, this::onDisconnected));
+        subscriptions.add(manager.subscribe(LoggedOnCallback.class, this::onLoggedOn));
+        subscriptions.add(manager.subscribe(LoggedOffCallback.class, this::onLoggedOff));
+        subscriptions.add(manager.subscribe(LicenseListCallback.class, this::onLicenseList));
 
         isRunning = true;
 
         System.out.println("Connecting to steam...");
 
-        // initiate the connection
         steamClient.connect();
 
-        // create our callback handling loop
         while (isRunning) {
-            // in order for the callbacks to get routed, they need to be handled by the manager
             manager.runWaitCallbacks(1000L);
+        }
+
+        System.out.println("Closing " + subscriptions.size() + " subscriptions.");
+        for (var subscription : subscriptions) {
+            try {
+                subscription.close();
+            } catch (IOException e) {
+                System.out.println("Couldn't close a callback.");
+            }
         }
     }
 
     private void onConnected(ConnectedCallback callback) {
         System.out.println("Connected to Steam! Logging in " + user + "...");
 
-        LogOnDetails details = new LogOnDetails();
-        details.setUsername(user);
-        details.setPassword(pass);
-        if (twoFactor != null) {
-            details.setTwoFactorCode(twoFactor);
+        AuthSessionDetails authDetails = new AuthSessionDetails();
+        authDetails.username = user;
+        authDetails.password = pass;
+        authDetails.deviceFriendlyName = "JavaSteam - Sample 023";
+        authDetails.persistentSession = true;
+
+        authDetails.authenticator = new UserConsoleAuthenticator();
+
+        try {
+            var path = Paths.get("refreshtoken.txt");
+
+            String accountName;
+            String refreshToken;
+            if (!Files.exists(path)) {
+                System.out.println("No existing refresh token found. Beginning Authentication");
+
+                var authSession = steamClient.getAuthentication().beginAuthSessionViaCredentials(authDetails).get();
+
+                AuthPollResult pollResponse = authSession.pollingWaitForResult().get();
+
+                accountName = pollResponse.getAccountName();
+                refreshToken = pollResponse.getRefreshToken();
+
+                // Save our refresh token for automatic login on next sample run.
+                Files.writeString(path, pollResponse.getRefreshToken());
+            } else {
+                System.out.println("Existing refresh token found");
+                var token = Files.readString(path);
+
+                accountName = user;
+                refreshToken = token;
+            }
+
+            LogOnDetails details = new LogOnDetails();
+            details.setUsername(accountName);
+            details.setAccessToken(refreshToken);
+            details.setShouldRememberPassword(true);
+
+            details.setLoginID(149);
+
+            System.out.println("Logging in...");
+
+            steamUser.logOn(details);
+        } catch (Exception e) {
+            if (e instanceof AuthenticationException) {
+                System.err.println("An Authentication error has occurred. " + e.getMessage());
+            } else if (e instanceof CancellationException) {
+                System.err.println("An Cancellation exception was raised. Usually means a timeout occurred. " + e.getMessage());
+            } else {
+                System.err.println("An error occurred:" + e.getMessage());
+            }
+
+            steamUser.logOff();
         }
-
-        // Set LoginID to a non-zero value if you have another client connected using the same account,
-        // the same private ip, and same public ip.
-        details.setLoginID(149);
-
-        steamUser.logOn(details);
     }
 
     private void onDisconnected(DisconnectedCallback callback) {
-        System.out.println("Disconnected from Steam");
+        System.out.println("Disconnected from Steam, UserInitiated: " + callback.isUserInitiated());
 
         if (callback.isUserInitiated()) {
             isRunning = false;
@@ -143,9 +209,6 @@ public class SampleDownloadApp implements Runnable {
     private void onLoggedOn(LoggedOnCallback callback) {
         if (callback.getResult() != EResult.OK) {
             if (callback.getResult() == EResult.AccountLogonDenied) {
-                // if we receive AccountLogonDenied or one of its flavors (AccountLogonDeniedNoMailSent, etc.)
-                // then the account we're logging into is SteamGuard protected
-                // see sample 5 for how SteamGuard can be handled
                 System.out.println("Unable to logon to Steam: This account is SteamGuard protected.");
 
                 isRunning = false;
@@ -161,41 +224,142 @@ public class SampleDownloadApp implements Runnable {
 
         System.out.println("Successfully logged on!");
 
-        // now that we are logged in, we can request a free license for Rocky Mayhem
-        steamApps.requestFreeLicense(ROCKY_MAYHEM_APP_ID);
+        // at this point, we'd be able to perform actions on Steam
 
+        // The sample continues in onLicenseList
     }
 
-    private void onFreeLicense(FreeLicenseCallback callback) {
+    private void onLicenseList(LicenseListCallback callback) {
         if (callback.getResult() != EResult.OK) {
-            System.out.println("Failed to get a free license for Rocky Mayhem");
+            System.out.println("Failed to obtain licenses the account owns.");
             steamClient.disconnect();
             return;
         }
 
-        // we have successfully received a free license for Rocky Mayhem so now we can start the download process
-        // note: it is okay to see some errors about ContentDownloader failing to download a chunk, it will retry and continue.
-        new File("steamapps/staging/").mkdirs();
-        var contentDownloader = new ContentDownloader(steamClient);
-        contentDownloader.downloadApp(
-                ROCKY_MAYHEM_APP_ID,
-                ROCKY_MAYHEM_DEPOT_ID,
-                "steamapps/",
-                "steamapps/staging/",
-                "public",
-                8,
-                progress -> System.out.println("Download progress: " + progress)
-        ).thenAccept(success -> {
-            if (success) {
-                System.out.println("Download completed successfully");
-            }
-            steamClient.disconnect();
-        });
+        licenseList = callback.getLicenseList();
+
+        System.out.println("Got " + licenseList.size() + " licenses from account!");
+
+        downloadApp();
     }
 
     private void onLoggedOff(LoggedOffCallback callback) {
         System.out.println("Logged off of Steam: " + callback.getResult());
 
         isRunning = false;
+    }
+
+    private void downloadApp() {
+        // Initiate the DepotDownloader, it is a Closable so it can be cleaned up when no longer used.
+        // You will need to subscribe to LicenseListCallback to obtain your app licenses.
+        try (var depotDownloader = new DepotDownloader(steamClient, licenseList, true)) {
+
+            // Add this class as a listener of IDownloadListener
+            depotDownloader.addListener(this);
+
+            var pubItem = new PubFileItem(
+                    /* (Required) appId */ 0,
+                    /* (Required) pubFile */ 0,
+                    /* (Optional) installToGameNameDirectory */ false,
+                    /* (Optional) installDirectory */ null,
+                    /* (Optional) verify */ false,
+                    /* (Optional) downloadManifestOnly */ false
+            );
+
+            var ugcItem = new UgcItem(
+                    /* (Required) appId */0,
+                    /* (Required) ugcId */ 0,
+                    /* (Optional) installToGameNameDirectory */ false,
+                    /* (Optional) installDirectory */ null,
+                    /* (Optional) verify */ false,
+                    /* (Optional) downloadManifestOnly */ false
+            );
+
+            var appItem = new AppItem(
+                    /* (Required) appId */ 1303350,
+                    /* (Optional) installToGameNameDirectory */ true,
+                    /* (Optional) installDirectory */ "steamapps",
+                    /* (Optional) branch */ "public",
+                    /* (Optional) branchPassword */ "",
+                    /* (Optional) downloadAllPlatforms */ false,
+                    /* (Optional) os */ "windows",
+                    /* (Optional) downloadAllArchs */ false,
+                    /* (Optional) osArch */ "64",
+                    /* (Optional) downloadAllLanguages */ false,
+                    /* (Optional) language */ "english",
+                    /* (Optional) lowViolence */ false,
+                    /* (Optional) depot */ List.of(),
+                    /* (Optional) manifest */ List.of(),
+                    /* (Optional) verify */ false,
+                    /* (Optional) downloadManifestOnly */ false
+            );
+
+            // Items added are downloaded automatically in a FIFO (First-In, First-Out) queue.
+
+            // Add a singular item to process.
+            depotDownloader.add(appItem);
+
+            // You can add a List of items to be processed.
+            // depotDownloader.add(List.of(a, b, c));
+
+            // Signal the downloader that no more items will be added.
+            // Once all items in queue are done, 'completion' will signal that everything had finished.
+            depotDownloader.finishAdding();
+
+            // Block until we're done downloading.
+            // Note: If you did not call `finishAdding()` before awaiting, depotDownloader will be expecting
+            // more items to be added to queue. It may look like a hang. You could call `close()` to finish too.
+            depotDownloader.awaitCompletion();
+
+            // Kotlin users can use:
+            // depotDownloader.getCompletion().await()
+
+            // Remove this class as a listener of IDownloadListener
+            depotDownloader.removeListener(this);
+        } finally {
+            System.out.println("Done Downloading");
+            steamUser.logOff();
+        }
+    }
+
+    // Depot Downloader Callbacks.
+
+    @Override
+    public void onItemAdded(@NotNull DownloadItem item) {
+        System.out.println("Item " + item.getAppId() + " added to queue.");
+    }
+
+    @Override
+    public void onDownloadStarted(@NotNull DownloadItem item) {
+        System.out.println("Item " + item.getAppId() + " download started.");
+    }
+
+    @Override
+    public void onDownloadCompleted(@NotNull DownloadItem item) {
+        System.out.println("Item " + item.getAppId() + " download completed.");
+    }
+
+    @Override
+    public void onDownloadFailed(@NotNull DownloadItem item, @NotNull Throwable error) {
+        System.out.println("Item " + item.getAppId() + " failed to download");
+        System.err.println(error.getMessage());
+    }
+
+    @Override
+    public void onStatusUpdate(@NotNull String message) {
+        System.out.println("Status: " + message);
+    }
+
+    @Override
+    public void onFileCompleted(int depotId, @NotNull String fileName, float depotPercentComplete) {
+        var complete = String.format("%.2f%%", depotPercentComplete * 100f);
+        System.out.println("Depot " + depotId + " with file " + fileName + " completed. " + complete);
+    }
+
+    @Override
+    public void onDepotCompleted(int depotId, long compressedBytes, long uncompressedBytes) {
+        System.out.println("Depot " + depotId + " completed.");
+        System.out.println("\t" + compressedBytes + " compressed bytes");
+        System.out.println("\t" + uncompressedBytes + " uncompressed bytes");
     }
 }

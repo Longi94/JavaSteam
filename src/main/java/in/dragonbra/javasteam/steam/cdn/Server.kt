@@ -1,24 +1,35 @@
 package `in`.dragonbra.javasteam.steam.cdn
 
+import java.net.InetSocketAddress
+
 /**
  * Represents a single Steam3 'Steampipe' content server.
  */
-class Server @JvmOverloads constructor(
-    protocol: ConnectionProtocol = ConnectionProtocol.HTTP,
-    host: String,
-    vHost: String,
-    port: Int,
-    type: String? = null,
-    sourceID: Int = 0,
-    cellID: Int = 0,
-    load: Int = 0,
-    weightedLoad: Float = 0f,
-    numEntries: Int = 0,
-    steamChinaOnly: Boolean = false,
-    useAsProxy: Boolean = false,
-    proxyRequestPathTemplate: String? = null,
-    allowedAppIds: IntArray = IntArray(0),
-) {
+class Server {
+
+    companion object {
+        /**
+         * Creates a Server from an InetSocketAddress.
+         */
+        @JvmStatic
+        fun fromInetSocketAddress(endPoint: InetSocketAddress): Server = Server().apply {
+            protocol = if (endPoint.port == 443) ConnectionProtocol.HTTPS else ConnectionProtocol.HTTP
+            host = endPoint.address.hostAddress
+            vHost = endPoint.address.hostAddress
+            port = endPoint.port
+        }
+
+        /**
+         * Creates a Server from hostname and port.
+         */
+        @JvmStatic
+        fun fromHostAndPort(hostname: String, port: Int): Server = Server().apply {
+            protocol = if (port == 443) ConnectionProtocol.HTTPS else ConnectionProtocol.HTTP
+            host = hostname
+            vHost = hostname
+            this.port = port
+        }
+    }
 
     /**
      * The protocol used to connect to this server
@@ -38,86 +49,85 @@ class Server @JvmOverloads constructor(
     /**
      * Gets the supported connection protocol of the server.
      */
-    var protocol = protocol
+    var protocol: ConnectionProtocol = ConnectionProtocol.HTTP
         internal set
 
     /**
      * Gets the hostname of the server.
      */
-    var host = host
+    var host: String? = null
         internal set
 
     /**
      * Gets the virtual hostname of the server.
      */
-    var vHost = vHost
+    var vHost: String? = null
         internal set
 
     /**
      * Gets the port of the server.
      */
-    var port = port
+    var port: Int = 0
         internal set
 
     /**
      * Gets the type of the server.
      */
-    var type = type
+    var type: String? = null
         internal set
 
     /**
      * Gets the SourceID this server belongs to.
      */
-    @Suppress("unused")
-    var sourceID = sourceID
+    var sourceId: Int = 0
         internal set
 
     /**
      * Gets the CellID this server belongs to.
      */
-    var cellID = cellID
+    var cellId: Int = 0
         internal set
 
     /**
      * Gets the load value associated with this server.
      */
-    var load = load
+    var load: Int = 0
         internal set
 
     /**
      * Gets the weighted load.
      */
-    var weightedLoad = weightedLoad
+    var weightedLoad: Float = 0F
         internal set
 
     /**
      * Gets the number of entries this server is worth.
      */
-    var numEntries = numEntries
+    var numEntries: Int = 0
         internal set
 
     /**
      * Gets the flag whether this server is for Steam China only.
      */
-    var steamChinaOnly = steamChinaOnly
+    var steamChinaOnly: Boolean = false
         internal set
 
     /**
      * Gets the download proxy status.
      */
-    var useAsProxy = useAsProxy
+    var useAsProxy: Boolean = false
         internal set
 
     /**
      * Gets the transformation template applied to request paths.
      */
-    var proxyRequestPathTemplate = proxyRequestPathTemplate
+    var proxyRequestPathTemplate: String? = null
         internal set
 
     /**
      * Gets the list of app ids this server can be used with.
      */
-    var allowedAppIds = allowedAppIds
+    var allowedAppIds: IntArray = intArrayOf()
         internal set
 
     /**
