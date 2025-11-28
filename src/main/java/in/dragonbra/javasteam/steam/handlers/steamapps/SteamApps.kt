@@ -105,6 +105,7 @@ class SteamApps : ClientMsgHandler() {
      * @return The Job ID of the request. This can be used to find the appropriate [EncryptedAppTicketCallback].
      */
     @JavaSteamAddition
+    @JvmOverloads
     fun requestEncryptedAppTicket(appId: Int, userdata: ByteArray? = null): AsyncJobSingle<EncryptedAppTicketCallback> {
         val request = ClientMsgProtobuf<CMsgClientRequestEncryptedAppTicket.Builder>(
             CMsgClientRequestEncryptedAppTicket::class.java,
