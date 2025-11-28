@@ -11,6 +11,7 @@ import `in`.dragonbra.javasteam.generated.MsgClientAppUsageEvent
 import `in`.dragonbra.javasteam.generated.MsgClientGetLegacyGameKey
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGamesPlayed
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientGetAppOwnershipTicket
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientRequestEncryptedAppTicket
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientCheckAppBetaPassword
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientGetDepotDecryptionKey
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientRequestFreeLicense
@@ -22,6 +23,7 @@ import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.AppOwnershipTicketCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.CheckAppBetaPasswordCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.DepotKeyCallback
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.EncryptedAppTicketCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.FreeLicenseCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.GameConnectTokensCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.GuestPassListCallback
@@ -87,6 +89,33 @@ class SteamApps : ClientMsgHandler() {
 
             body.depotId = depotId
             body.appId = appId
+        }
+
+        client.send(request)
+
+        return AsyncJobSingle(client, request.sourceJobID)
+    }
+
+    /**
+     * Requests an encrypted app ticket for the specified AppID.
+     * Results are returned in an [EncryptedAppTicketCallback] callback.
+     *
+     * @param appId The appid to request the encrypted ticket for.
+     * @param userdata Optional user data to include in the ticket.
+     * @return The Job ID of the request. This can be used to find the appropriate [EncryptedAppTicketCallback].
+     */
+    @JavaSteamAddition
+    fun requestEncryptedAppTicket(appId: Int, userdata: ByteArray? = null): AsyncJobSingle<EncryptedAppTicketCallback> {
+        val request = ClientMsgProtobuf<CMsgClientRequestEncryptedAppTicket.Builder>(
+            CMsgClientRequestEncryptedAppTicket::class.java,
+            EMsg.ClientRequestEncryptedAppTicket
+        ).apply {
+            sourceJobID = client.getNextJobID()
+
+            body.appId = appId
+            userdata?.let {
+                body.userdata = ByteString.copyFrom(it)
+            }
         }
 
         client.send(request)
@@ -468,6 +497,7 @@ class SteamApps : ClientMsgHandler() {
             EMsg.ClientUpdateGuestPassesList -> GuestPassListCallback(packetMsg)
             EMsg.ClientCheckAppBetaPasswordResponse -> CheckAppBetaPasswordCallback(packetMsg)
             EMsg.ClientPICSPrivateBetaResponse -> PrivateBetaCallback(packetMsg)
+            EMsg.ClientRequestEncryptedAppTicketResponse -> EncryptedAppTicketCallback(packetMsg)
             else -> null
         }
     }
