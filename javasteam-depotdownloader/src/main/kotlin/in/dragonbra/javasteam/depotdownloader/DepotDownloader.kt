@@ -342,7 +342,7 @@ class DepotDownloader @JvmOverloads constructor(
             filesystem.atomicMove(fileStagingPath, fileFinalPath)
             logger?.debug("File '$fileStagingPath' moved to final location: $fileFinalPath")
         } catch (e: IOException) {
-            logger?.error(e)
+            logger?.error("Failed to move files", e)
             throw e
         }
     }
@@ -734,7 +734,7 @@ class DepotDownloader @JvmOverloads constructor(
                 filesystem.createDirectories(installDir / STAGING_DIR)
             }
         } catch (e: IOException) {
-            logger?.error(e)
+            logger?.error("Failed to create directory for depot $depotId, app $appId", e)
             return DirectoryResult(false, null)
         }
 
@@ -950,7 +950,7 @@ class DepotDownloader @JvmOverloads constructor(
                         cdnClientPool!!.returnConnection(connection)
                     } catch (e: CancellationException) {
                         // logger?.error("Connection timeout downloading depot manifest ${depot.depotId} ${depot.manifestId}. Retrying.")
-                        logger?.error(e)
+                        logger?.error("Cancellation Exception thrown in process manifest", e)
                         break
                     } catch (e: SteamKitWebRequestException) {
                         // If the CDN returned 403, attempt to get a cdn auth if we didn't yet
@@ -1414,7 +1414,7 @@ class DepotDownloader @JvmOverloads constructor(
 
                 break
             } catch (e: CancellationException) {
-                logger?.error(e)
+                logger?.error("Cancellation exception in download depot file chunk", e)
             } catch (e: SteamKitWebRequestException) {
                 // If the CDN returned 403, attempt to get a cdn auth if we didn't yet,
                 // if auth task already exists, make sure it didn't complete yet, so that it gets awaited above
@@ -1560,7 +1560,7 @@ class DepotDownloader @JvmOverloads constructor(
                 processingChannel.send(item)
                 notifyListeners { it.onItemAdded(item) }
             } catch (e: Exception) {
-                logger?.error(e)
+                logger?.error("Could not add item ${item.appId}", e)
                 throw e
             }
         }
@@ -1577,7 +1577,7 @@ class DepotDownloader @JvmOverloads constructor(
                     notifyListeners { it.onItemAdded(item) }
                 }
             } catch (e: Exception) {
-                logger?.error(e)
+                logger?.error("Could not add all files", e)
                 throw e
             }
         }
