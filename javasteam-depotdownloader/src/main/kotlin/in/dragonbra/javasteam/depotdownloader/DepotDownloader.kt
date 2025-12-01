@@ -694,13 +694,14 @@ class DepotDownloader @JvmOverloads constructor(
                 filesystem.createDirectories(DEFAULT_DOWNLOAD_DIR.toPath())
 
                 if (config.installToGameNameDirectory) {
-                    val gameName = getAppName(appId)
+                    val info = getSteam3AppSection(appId, EAppInfoSection.Config) ?: KeyValue.INVALID
+                    val appInstallDir = info["installdir"].asString()
 
-                    if (gameName.isBlank()) {
-                        throw IOException("Game name is blank, cannot create directory")
+                    if (appInstallDir.isNullOrBlank()) {
+                        throw IOException("Config install directory is blank, cannot create directory")
                     }
 
-                    installDir = DEFAULT_DOWNLOAD_DIR.toPath() / gameName
+                    installDir = DEFAULT_DOWNLOAD_DIR.toPath() / appInstallDir
 
                     filesystem.createDirectories(installDir)
                 } else {
@@ -717,13 +718,14 @@ class DepotDownloader @JvmOverloads constructor(
                 filesystem.createDirectories(config.installPath!!)
 
                 if (config.installToGameNameDirectory) {
-                    val gameName = getAppName(appId)
+                    val info = getSteam3AppSection(appId, EAppInfoSection.Config) ?: KeyValue.INVALID
+                    val appInstallDir = info["installdir"].asString()
 
-                    if (gameName.isBlank()) {
-                        throw IOException("Game name is blank, cannot create directory")
+                    if (appInstallDir.isNullOrBlank()) {
+                        throw IOException("Config install directory is blank, cannot create directory")
                     }
 
-                    installDir = config.installPath!! / gameName
+                    installDir = config.installPath!! / appInstallDir
 
                     filesystem.createDirectories(installDir)
                 } else {
