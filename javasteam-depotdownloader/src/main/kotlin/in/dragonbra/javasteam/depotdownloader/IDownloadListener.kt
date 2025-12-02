@@ -49,6 +49,17 @@ interface IDownloadListener {
     fun onFileCompleted(depotId: Int, fileName: String, depotPercentComplete: Float) {}
 
     /**
+     * Called when a chunk completes downloading.
+     * Provides more frequent progress updates than onFileCompleted.
+     *
+     * @param depotId The depot being downloaded
+     * @param depotPercentComplete Overall depot completion percentage (0f to 1f)
+     * @param compressedBytes Total compressed bytes downloaded so far for this depot
+     * @param uncompressedBytes Total uncompressed bytes downloaded so far for this depot
+     */
+    fun onChunkCompleted(depotId: Int, depotPercentComplete: Float, compressedBytes: Long, uncompressedBytes: Long) {}
+
+    /**
      * Called when a depot finishes downloading.
      * Use this for printing summary like "Depot 228990 - Downloaded X bytes (Y bytes uncompressed)"
      *

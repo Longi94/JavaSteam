@@ -1499,16 +1499,35 @@ class DepotDownloader @JvmOverloads constructor(
 
             logger?.debug("%.2f%% %s".format(depotPercentage, fileFinalPath))
         } else {
-            // Just update counters without notifying
+            // Update counters and notify on chunk completion
+            val sizeDownloaded: Long
+            val depotPercentage: Float
+            val compressedBytes: Long
+            val uncompressedBytes: Long
+
             synchronized(depotDownloadCounter) {
                 depotDownloadCounter.sizeDownloaded += written.toLong()
                 depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
                 depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
+
+                sizeDownloaded = depotDownloadCounter.sizeDownloaded
+                compressedBytes = depotDownloadCounter.depotBytesCompressed
+                uncompressedBytes = depotDownloadCounter.depotBytesUncompressed
+                depotPercentage = (sizeDownloaded.toFloat() / depotDownloadCounter.completeDownloadSize)
             }
 
             synchronized(downloadCounter) {
                 downloadCounter.totalBytesCompressed += chunk.compressedLength
                 downloadCounter.totalBytesUncompressed += chunk.uncompressedLength
+            }
+
+            notifyListeners { listener ->
+                listener.onChunkCompleted(
+                    depotId = depot.depotId,
+                    depotPercentComplete = depotPercentage,
+                    compressedBytes = compressedBytes,
+                    uncompressedBytes = uncompressedBytes
+                )
             }
         }
     }
