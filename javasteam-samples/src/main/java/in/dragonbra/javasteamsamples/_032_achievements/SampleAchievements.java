@@ -43,7 +43,7 @@ public class SampleAchievements implements Runnable {
     // - 440 (Team Fortress 2)
     // - 570 (Dota 2)
     // - 49520 (Borderlands 2 - requires ownership)
-    private static final int DEFAULT_APP_ID = 440;
+    private static final int DEFAULT_APP_ID = 3527290;
 
     private SteamClient steamClient;
     private CallbackManager manager;
@@ -122,6 +122,8 @@ public class SampleAchievements implements Runnable {
             details.setUsername(pollResponse.getAccountName());
             details.setAccessToken(pollResponse.getRefreshToken());
             details.setShouldRememberPassword(true);
+
+            details.setLoginID(149);
 
             steamUser.logOn(details);
         } catch (Exception e) {
