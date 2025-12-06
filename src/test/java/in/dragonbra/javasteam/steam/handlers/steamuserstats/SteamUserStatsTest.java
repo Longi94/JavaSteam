@@ -98,11 +98,11 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
 
         // Grab a few random stats
 
-        Stats statFirst = callback.getStats().getFirst();
+        Stats statFirst = callback.getStats().get(0);
         Assertions.assertEquals(17, statFirst.getStatId());
         Assertions.assertEquals(2737815391L, Integer.toUnsignedLong(statFirst.getStatValue()));
 
-        Stats statLast = callback.getStats().getLast();
+        Stats statLast = callback.getStats().get(1);
         Assertions.assertEquals(19, statLast.getStatId());
         Assertions.assertEquals(487, statLast.getStatValue());
     }
@@ -119,11 +119,11 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
 
         // Grab a few random achievement blocks
 
-        AchievementBlocks blockFirst = callback.getAchievementBlocks().getFirst();
+        AchievementBlocks blockFirst = callback.getAchievementBlocks().get(0);
         Assertions.assertEquals(17, blockFirst.getAchievementId());
-        Assertions.assertEquals(1733977234, blockFirst.getUnlockTime().getFirst());
+        Assertions.assertEquals(1733977234, blockFirst.getUnlockTime().get(0));
 
-        AchievementBlocks blockSecond = callback.getAchievementBlocks().getLast();
+        AchievementBlocks blockSecond = callback.getAchievementBlocks().get(1);
         Assertions.assertEquals(19, blockSecond.getAchievementId());
         Assertions.assertEquals(1733721477, blockSecond.getUnlockTime().get(8));
     }

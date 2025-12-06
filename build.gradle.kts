@@ -138,7 +138,8 @@ val mockitoAgent = configurations.create("mockitoAgent")
 tasks.withType<Test> {
     doFirst {
         jvmArgs("-javaagent:${mockitoAgent.asPath}")
-    }}
+    }
+}
 
 dependencies {
     mockitoAgent(libs.test.mock.core) { isTransitive = false }

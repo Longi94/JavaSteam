@@ -113,23 +113,6 @@ public abstract class TestPackets {
         }
     }
 
-    /**
-     * Load packets captured from {@link in.dragonbra.javasteam.util.NetHookNetworkListener}.
-     *
-     * @param name the bin file name.
-     * @return a byte array from the loaded file.
-     */
-    private static byte[] loadNetHookFile(String name) {
-        try (var file = TestPackets.class.getClassLoader().getResourceAsStream("packets/" + name)) {
-            if (file == null) {
-                return null;
-            }
-            return IOUtils.toByteArray(file);
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
     private static byte[] loadFile(String name) {
         try (var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
             if (file == null) {
@@ -407,7 +390,7 @@ public abstract class TestPackets {
     }
 
     private static byte[] clientGetUserStatsResponse() {
-        return loadNetHookFile("226_in_819_k_EMsgClientGetUserStatsResponse.bin");
+        return loadFile("ClientGetUserStatsResponse.bin");
     }
 
     private static byte[] clientGameConnectTokens() {
