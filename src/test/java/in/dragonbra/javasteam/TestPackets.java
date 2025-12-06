@@ -106,14 +106,33 @@ public abstract class TestPackets {
             //     return clientGetCDNAuthTokenResponse();
             case ClientCheckAppBetaPasswordResponse:
                 return clientCheckAppBetaPasswordResponse();
+            case ClientGetUserStatsResponse:
+                return clientGetUserStatsResponse();
             default:
                 throw new NullPointerException();
         }
     }
 
+    /**
+     * Load packets captured from {@link in.dragonbra.javasteam.util.NetHookNetworkListener}.
+     *
+     * @param name the bin file name.
+     * @return a byte array from the loaded file.
+     */
+    private static byte[] loadNetHookFile(String name) {
+        try (var file = TestPackets.class.getClassLoader().getResourceAsStream("packets/" + name)) {
+            if (file == null) {
+                return null;
+            }
+            return IOUtils.toByteArray(file);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     private static byte[] loadFile(String name) {
-        try(var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
-            if(file == null) {
+        try (var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
+            if (file == null) {
                 return null;
             }
             return IOUtils.toByteArray(file);
@@ -385,6 +404,10 @@ public abstract class TestPackets {
 
     private static byte[] clientLicenseList() {
         return loadFile("ClientLicenseList.bin");
+    }
+
+    private static byte[] clientGetUserStatsResponse() {
+        return loadNetHookFile("226_in_819_k_EMsgClientGetUserStatsResponse.bin");
     }
 
     private static byte[] clientGameConnectTokens() {

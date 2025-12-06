@@ -79,7 +79,7 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
                     schemaKeyValues.tryReadAsBinary(it)
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Schema parsing failed, schemaKeyValues will remain empty
             // This is okay - we'll just have achievements without enriched metadata
         }
@@ -105,31 +105,34 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
      *
      * @return List of individual [AchievementBlocks] with enriched metadata from schema
      */
-    fun getExpandedAchievements(): List<AchievementBlocks> {
+    @JvmOverloads
+    fun getExpandedAchievements(language: String = "english"): List<AchievementBlocks> {
         val expandedAchievements = mutableListOf<AchievementBlocks>()
 
         try {
-            val stats = schemaKeyValues.get("stats")
-            if (stats == KeyValue.INVALID) return achievementBlocks // Return original blocks if schema parsing failed
+            val stats = schemaKeyValues["stats"]
+            if (stats == KeyValue.INVALID) {
+                return achievementBlocks // Return original blocks if schema parsing failed
+            }
 
             // Iterate through each achievement block
             for (block in achievementBlocks) {
-                val statBlock = stats.get(block.achievementId.toString())
-                val bitsBlock = statBlock?.get("bits")
+                val statBlock = stats[block.achievementId.toString()]
+                val bitsBlock = statBlock["bits"]
 
-                if (bitsBlock != null) {
+                if (bitsBlock != KeyValue.INVALID) {
                     // This block has bit-level achievements, expand them and get the values
                     for (bitEntry in bitsBlock.children) {
-                        val bitIndex = bitEntry.get("bit")?.asInteger() ?: continue
-                        val displaySection = bitEntry.get("display")
+                        val bitIndex = bitEntry["bit"].asInteger()
+                        val displaySection = bitEntry["display"]
 
                         // Extract metadata
-                        val name = bitEntry.get("name")?.value
-                        val displayName = displaySection?.get("name")?.get("english")?.value
-                        val description = displaySection?.get("desc")?.get("english")?.value
-                        val icon = displaySection?.get("icon")?.value
-                        val iconGray = displaySection?.get("icon_gray")?.value
-                        val hidden = displaySection?.get("hidden")?.value == "1"
+                        val name = bitEntry["name"].value
+                        val displayName = displaySection["name"][language].value
+                        val description = displaySection["desc"][language].value
+                        val icon = displaySection["icon"].value
+                        val iconGray = displaySection["icon_gray"].value
+                        val hidden = displaySection["hidden"].value == "1"
 
                         // Get unlock time for this specific bit
                         val unlockTime = if (bitIndex < block.unlockTime.size) {
@@ -157,7 +160,7 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
                     expandedAchievements.add(block)
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // If expansion fails, return original blocks
             return achievementBlocks
         }

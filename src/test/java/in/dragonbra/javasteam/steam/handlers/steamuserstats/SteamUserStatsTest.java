@@ -5,11 +5,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,7 +13,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import com.google.protobuf.ByteString;
+
 import java.text.SimpleDateFormat;
+
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.base.IPacketMsg;
 import in.dragonbra.javasteam.enums.EMsg;
@@ -28,9 +26,14 @@ import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.UserStatsCallback;
 import in.dragonbra.javasteam.types.KeyValue;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 /**
  * Unit tests for SteamUserStats handler, specifically testing achievement
  * parsing functionality.
+ * "ClientGetUserStatsResponse" returns a copy of Dredge
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -43,10 +46,304 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         return new SteamUserStats();
     }
 
+    @Test
+    public void testHandleUserStatsResponse() {
+        IPacketMsg testMsg = getPacket(EMsg.ClientGetUserStatsResponse, true);
+
+        // Call handler to process the message
+        handler.handleMsg(testMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        // Verify basic callback data
+        Assertions.assertEquals(EResult.OK, callback.getResult());
+        Assertions.assertEquals(1562430, callback.getGameId());
+
+        // CRC values can be long, but protobuf java converts uint32 to integers.
+        Assertions.assertEquals(3020832857L, Integer.toUnsignedLong(callback.getCrcStats()));
+
+        // Verify stats
+        List<Stats> stats = callback.getStats();
+        Assertions.assertNotNull(stats);
+        Assertions.assertFalse(stats.isEmpty());
+        Assertions.assertEquals(2, stats.size());
+
+        // Verify achievement blocks
+        List<AchievementBlocks> blocks = callback.getAchievementBlocks();
+        Assertions.assertNotNull(blocks);
+        Assertions.assertFalse(blocks.isEmpty());
+        Assertions.assertEquals(2, blocks.size());
+
+        // Verify schema size
+        var schema = callback.getSchema();
+        Assertions.assertNotNull(schema);
+        Assertions.assertFalse(schema.isEmpty());
+        Assertions.assertEquals(72959, schema.size());
+
+        // Verify version and game name.
+        Assertions.assertEquals("Dredge", callback.getSchemaKeyValues().get("gamename").asString());
+        Assertions.assertEquals(24, callback.getSchemaKeyValues().get("version").asInteger());
+    }
+
+    @Test
+    public void testUserStatsResponseStats() {
+        IPacketMsg testMsg = getPacket(EMsg.ClientGetUserStatsResponse, true);
+
+        // Call handler to process the message
+        handler.handleMsg(testMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        // Grab a few random stats
+
+        Stats statFirst = callback.getStats().getFirst();
+        Assertions.assertEquals(17, statFirst.getStatId());
+        Assertions.assertEquals(2737815391L, Integer.toUnsignedLong(statFirst.getStatValue()));
+
+        Stats statLast = callback.getStats().getLast();
+        Assertions.assertEquals(19, statLast.getStatId());
+        Assertions.assertEquals(487, statLast.getStatValue());
+    }
+
+    @Test
+    public void testUserStatsResponseBlocks() {
+        IPacketMsg testMsg = getPacket(EMsg.ClientGetUserStatsResponse, true);
+
+        // Call handler to process the message
+        handler.handleMsg(testMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        // Grab a few random achievement blocks
+
+        AchievementBlocks blockFirst = callback.getAchievementBlocks().getFirst();
+        Assertions.assertEquals(17, blockFirst.getAchievementId());
+        Assertions.assertEquals(1733977234, blockFirst.getUnlockTime().getFirst());
+
+        AchievementBlocks blockSecond = callback.getAchievementBlocks().getLast();
+        Assertions.assertEquals(19, blockSecond.getAchievementId());
+        Assertions.assertEquals(1733721477, blockSecond.getUnlockTime().get(8));
+    }
+
+    @Test
+    public void testSchemaParsingHandlesCorruptData() {
+        // Create a packet with invalid schema data
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+
+        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
+        body.setGameId(440L);
+        body.setEresult(EResult.OK.code());
+        body.setCrcStats(123456);
+        body.setSchema(ByteString.copyFrom(new byte[]{0x01, 0x02, 0x03})); // Invalid schema
+
+        // Serialize and convert to IPacketMsg
+        IPacketMsg packetMsg = CMClient.getPacketMsg(msg.serialize());
+
+        // Call handler to process the message
+        handler.handleMsg(packetMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        // Should not throw exception, just have empty schema
+        Assertions.assertNotNull(callback);
+        Assertions.assertEquals(EResult.OK, callback.getResult());
+
+        // getExpandedAchievements should still work and fall back to empty list
+        List<AchievementBlocks> expanded = callback.getExpandedAchievements();
+        Assertions.assertNotNull(expanded);
+        Assertions.assertTrue(expanded.isEmpty());
+    }
+
+    @Test
+    public void testGetExpandedAchievements() {
+        IPacketMsg testMsg = getPacket(EMsg.ClientGetUserStatsResponse, true);
+
+        // Call handler to process the message
+        handler.handleMsg(testMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        // Get expanded achievements
+        List<AchievementBlocks> expandedAchievements = callback.getExpandedAchievements();
+
+        Assertions.assertNotNull(expandedAchievements);
+        Assertions.assertFalse(expandedAchievements.isEmpty());
+        Assertions.assertEquals(60, expandedAchievements.size());
+
+        // Verify an unlocked achievement
+        AchievementBlocks ach0 = expandedAchievements.get(0);
+        Assertions.assertEquals("CATCH_FISH_ROD_1", ach0.getName());
+        Assertions.assertEquals("Lifted From the Deep", ach0.getDisplayName());
+        Assertions.assertEquals("Catch 250 fish using rods.", ach0.getDescription());
+        Assertions.assertNotNull(ach0.getIcon());
+        Assertions.assertTrue(ach0.getIcon().contains("12ee49fe9ad45969bb4d106c099517279a940521.jpg"));
+        Assertions.assertNotNull(ach0.getIconGray());
+        Assertions.assertFalse(ach0.getHidden());
+        Assertions.assertTrue(ach0.isUnlocked());
+        Assertions.assertEquals(1733977234, ach0.getUnlockTimestamp());
+        Assertions.assertEquals(dateFormat.format(new Date(1733977234 * 1000L)), ach0.getFormattedUnlockTime());
+
+        // Verify a locked achievement
+        AchievementBlocks ach1 = expandedAchievements.get(5);
+        Assertions.assertEquals("DISCARD_FISH", ach1.getName());
+        Assertions.assertEquals("Unwanted", ach1.getDisplayName());
+        Assertions.assertEquals("Discard 25 fish.", ach1.getDescription());
+        Assertions.assertFalse(ach1.getHidden());
+        Assertions.assertFalse(ach1.isUnlocked());
+        Assertions.assertEquals(0, ach1.getUnlockTimestamp());
+        Assertions.assertNull(ach1.getFormattedUnlockTime());
+
+        // Verify an unlocked DLC achievement
+        // TODO
+
+        // Verify a locked DLC achievement
+        AchievementBlocks ach3 = expandedAchievements.get(40);
+        Assertions.assertEquals("DLC_3_1", ach3.getName());
+        Assertions.assertEquals("Polar Angler", ach3.getDisplayName());
+        Assertions.assertEquals("Catch all known species of fish in The Pale Reach.", ach3.getDescription());
+        Assertions.assertFalse(ach3.getHidden());
+        Assertions.assertFalse(ach3.isUnlocked());
+        Assertions.assertEquals(0, ach3.getUnlockTimestamp());
+        Assertions.assertNull(ach1.getFormattedUnlockTime());
+    }
+
+    @Test
+    public void testGetExpandedAchievementsWithoutSchema() throws IOException {
+        // Test with no schema - should fall back to original blocks
+        IPacketMsg testMsg = createUserStatsResponseMessage(false);
+
+        // Call handler to process the message
+        handler.handleMsg(testMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+
+        List<AchievementBlocks> expandedAchievements = callback.getExpandedAchievements();
+
+        // Without schema, should return original blocks
+        assertNotNull(expandedAchievements);
+        assertEquals(2, expandedAchievements.size());
+
+        // Verify blocks have no enriched metadata
+        AchievementBlocks block21 = expandedAchievements.get(0);
+        assertEquals(21, block21.getAchievementId());
+        assertNull(block21.getName());
+        assertNull(block21.getDisplayName());
+        assertNull(block21.getDescription());
+
+        AchievementBlocks block22 = expandedAchievements.get(1);
+        assertEquals(22, block22.getAchievementId());
+        assertNull(block22.getName());
+        assertNull(block22.getDisplayName());
+    }
+
+
+    @Test
+    public void testAchievementBlockWithManyUnlocks() throws IOException {
+        // Test with a block that has many achievements unlocked
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
+                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+
+        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
+        body.setGameId(440L);
+        body.setEresult(EResult.OK.code());
+        body.setCrcStats(123456);
+        body.setSchema(ByteString.copyFrom(createMockSchema()));
+
+        // Create a block with 32 achievements (maximum per block)
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
+        block.setAchievementId(21);
+
+        // Add 32 unlock times (some locked, some unlocked)
+        for (int i = 0; i < 32; i++) {
+            if (i < 3) {
+                // First 3 achievements have unlock times (matching our schema)
+                block.addUnlockTime(1609459200 + i * 86400);
+            } else {
+                // Rest are locked
+                block.addUnlockTime(0);
+            }
+        }
+        body.addAchievementBlocks(block);
+
+        // Serialize and convert to IPacketMsg
+        IPacketMsg packetMsg = CMClient.getPacketMsg(msg.serialize());
+
+        // Call handler to process the message
+        handler.handleMsg(packetMsg);
+
+        // Verify the callback was posted
+        UserStatsCallback callback = verifyCallback();
+        List<AchievementBlocks> expanded = callback.getExpandedAchievements();
+
+        // Should only expand the 3 achievements that have schema entries
+        Assertions.assertEquals(3, expanded.size());
+
+        // Verify unlocked achievements have correct timestamps
+        Assertions.assertTrue(expanded.get(0).isUnlocked());
+        Assertions.assertTrue(expanded.get(1).isUnlocked());
+        Assertions.assertTrue(expanded.get(2).isUnlocked());
+    }
+
+    /**
+     * Helper method to create a mock UserStatsResponse packet with achievement
+     * data.
+     */
+    private IPacketMsg createUserStatsResponseMessage(boolean includeSchema) throws IOException {
+        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
+                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
+
+        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
+        body.setGameId(440L); // Team Fortress 2
+        body.setEresult(EResult.OK.code());
+        body.setCrcStats(123456);
+
+        // Add schema if requested
+        if (includeSchema) {
+            body.setSchema(ByteString.copyFrom(createMockSchema()));
+        }
+
+        // Add achievement block 21 with 3 achievements, 0 and 2 are unlocked, achievement 1 is locked
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block21 = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
+        block21.setAchievementId(21);
+        block21.addUnlockTime(1609459200); // Achievement 0 unlocked on Jan 1, 2021
+        block21.addUnlockTime(0); // Achievement 1 locked
+        block21.addUnlockTime(1640995200); // Achievement 2 unlocked on Jan 1, 2022
+        body.addAchievementBlocks(block21);
+
+        // Add achievement block 22 with 2 achievements
+        // Achievement 0 is unlocked, achievement 1 is locked
+        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block22 = CMsgClientGetUserStatsResponse.Achievement_Blocks
+                .newBuilder();
+        block22.setAchievementId(22);
+        block22.addUnlockTime(1672531200); // Achievement 0 unlocked on Jan 1, 2023
+        block22.addUnlockTime(0); // Achievement 1 locked
+        body.addAchievementBlocks(block22);
+
+        // Add some stats for completeness
+        body.addStats(CMsgClientGetUserStatsResponse.Stats.newBuilder()
+                .setStatId(1)
+                .setStatValue(100));
+        body.addStats(CMsgClientGetUserStatsResponse.Stats.newBuilder()
+                .setStatId(2)
+                .setStatValue(50));
+
+        // Serialize and convert to IPacketMsg
+        return CMClient.getPacketMsg(msg.serialize());
+    }
+
     /**
      * Helper method to create a mock schema with achievement metadata. This
      * simulates the KeyValue schema structure returned by Steam.
-     *
+     * <p>
      * The schema needs to be structured so that when read by
      * KeyValue.tryReadAsBinary(), it creates: schemaKeyValues -> stats ->
      * [blocks] This means we need to write binary that starts with a wrapper
@@ -171,258 +468,13 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
         return baos.toByteArray();
     }
 
-    /**
-     * Helper method to create a mock UserStatsResponse packet with achievement
-     * data.
-     */
-    private IPacketMsg createUserStatsResponseMessage(boolean includeSchema) throws IOException {
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
-                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
-
-        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
-        body.setGameId(440L); // Team Fortress 2
-        body.setEresult(EResult.OK.code());
-        body.setCrcStats(123456);
-
-        // Add schema if requested
-        if (includeSchema) {
-            body.setSchema(ByteString.copyFrom(createMockSchema()));
+    private static void printKeyValue(KeyValue keyvalue, int depth) {
+        if (keyvalue.getChildren().isEmpty())
+            System.out.println(" ".repeat(depth * 4) + " " + keyvalue.getName() + ": " + keyvalue.getValue());
+        else {
+            System.out.println(" ".repeat(depth * 4) + " " + keyvalue.getName() + ":");
+            for (KeyValue child : keyvalue.getChildren())
+                printKeyValue(child, depth + 1);
         }
-
-        // Add achievement block 21 with 3 achievements
-        // Achievements 0 and 2 are unlocked, achievement 1 is locked
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block21 = CMsgClientGetUserStatsResponse.Achievement_Blocks
-                .newBuilder();
-        block21.setAchievementId(21);
-        block21.addUnlockTime(1609459200); // Achievement 0 unlocked on Jan 1, 2021
-        block21.addUnlockTime(0); // Achievement 1 locked
-        block21.addUnlockTime(1640995200); // Achievement 2 unlocked on Jan 1, 2022
-        body.addAchievementBlocks(block21);
-
-        // Add achievement block 22 with 2 achievements
-        // Achievement 0 is unlocked, achievement 1 is locked
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block22 = CMsgClientGetUserStatsResponse.Achievement_Blocks
-                .newBuilder();
-        block22.setAchievementId(22);
-        block22.addUnlockTime(1672531200); // Achievement 0 unlocked on Jan 1, 2023
-        block22.addUnlockTime(0); // Achievement 1 locked
-        body.addAchievementBlocks(block22);
-
-        // Add some stats for completeness
-        body.addStats(CMsgClientGetUserStatsResponse.Stats.newBuilder()
-                .setStatId(1)
-                .setStatValue(100));
-        body.addStats(CMsgClientGetUserStatsResponse.Stats.newBuilder()
-                .setStatId(2)
-                .setStatValue(50));
-
-        // Serialize and convert to IPacketMsg
-        return CMClient.getPacketMsg(msg.serialize());
-    }
-
-    @Test
-    public void testHandleUserStatsResponse() throws IOException {
-        IPacketMsg testMsg = createUserStatsResponseMessage(true);
-
-        // Call handler to process the message
-        handler.handleMsg(testMsg);
-
-        // Verify the callback was posted
-        UserStatsCallback callback = verifyCallback();
-
-        // Verify basic callback data
-        assertEquals(EResult.OK, callback.getResult());
-        assertEquals(440L, callback.getGameId());
-        assertEquals(123456, callback.getCrcStats());
-
-        // Verify achievement blocks
-        List<AchievementBlocks> blocks = callback.getAchievementBlocks();
-        assertNotNull(blocks);
-        assertEquals(2, blocks.size());
-
-        // Verify block 21
-        AchievementBlocks block21 = blocks.get(0);
-        assertEquals(21, block21.getAchievementId());
-        assertEquals(3, block21.getUnlockTime().size());
-
-        // Verify block 22
-        AchievementBlocks block22 = blocks.get(1);
-        assertEquals(22, block22.getAchievementId());
-        assertEquals(2, block22.getUnlockTime().size());
-    }
-
-    @Test
-    public void testGetExpandedAchievements() throws IOException {
-        IPacketMsg testMsg = createUserStatsResponseMessage(true);
-
-        // Call handler to process the message
-        handler.handleMsg(testMsg);
-
-        // Verify the callback was posted
-        UserStatsCallback callback = verifyCallback();
-
-        // Get expanded achievements
-        List<AchievementBlocks> expandedAchievements = callback.getExpandedAchievements();
-
-        assertNotNull(expandedAchievements);
-        assertEquals(5, expandedAchievements.size()); // 3 from block 21 + 2 from block 22
-
-        // Verify first achievement (block 21, bit 0)
-        AchievementBlocks ach0 = expandedAchievements.get(0);
-        assertEquals("ACH_FIRST_BLOOD", ach0.getName());
-        assertEquals("First Blood", ach0.getDisplayName());
-        assertEquals("Kill your first enemy", ach0.getDescription());
-        assertNotNull(ach0.getIcon());
-        assertTrue(ach0.getIcon().contains("achievement_0.jpg"));
-        assertNotNull(ach0.getIconGray());
-        assertFalse(ach0.getHidden());
-        assertTrue(ach0.isUnlocked());
-        assertEquals(1609459200, ach0.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date(1609459200L * 1000L)), ach0.getFormattedUnlockTime());
-
-        // Verify second achievement (block 21, bit 1) - locked
-        AchievementBlocks ach1 = expandedAchievements.get(1);
-        assertEquals("ACH_VETERAN", ach1.getName());
-        assertEquals("Veteran", ach1.getDisplayName());
-        assertEquals("Reach level 10", ach1.getDescription());
-        assertFalse(ach1.getHidden());
-        assertFalse(ach1.isUnlocked());
-        assertEquals(0, ach1.getUnlockTimestamp());
-        assertNull(ach1.getFormattedUnlockTime());
-
-        // Verify third achievement (block 21, bit 2) - hidden and unlocked
-        AchievementBlocks ach2 = expandedAchievements.get(2);
-        assertEquals("ACH_SECRET", ach2.getName());
-        assertEquals("Secret Achievement", ach2.getDisplayName());
-        assertTrue(ach2.getHidden());
-        assertTrue(ach2.isUnlocked());
-        assertEquals(1640995200, ach2.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date(1640995200L * 1000L)), ach2.getFormattedUnlockTime());
-        // Verify first DLC achievement (block 22, bit 0) - unlocked
-        AchievementBlocks ach3 = expandedAchievements.get(3);
-        assertEquals("ACH_DLC_MASTER", ach3.getName());
-        assertEquals("DLC Master", ach3.getDisplayName());
-        assertEquals("Complete all DLC missions", ach3.getDescription());
-        assertFalse(ach3.getHidden());
-        assertTrue(ach3.isUnlocked());
-        assertEquals(1672531200, ach3.getUnlockTimestamp());
-        assertEquals(dateFormat.format(new Date(1672531200L * 1000L)), ach3.getFormattedUnlockTime());
-
-        // Verify second DLC achievement (block 22, bit 1) - locked
-        AchievementBlocks ach4 = expandedAchievements.get(4);
-        assertEquals("ACH_DLC_EXPERT", ach4.getName());
-        assertEquals("DLC Expert", ach4.getDisplayName());
-        assertFalse(ach4.getHidden());
-        assertFalse(ach4.isUnlocked());
-        assertNull(ach4.getFormattedUnlockTime());
-    }
-
-    @Test
-    public void testGetExpandedAchievementsWithoutSchema() throws IOException {
-        // Test with no schema - should fall back to original blocks
-        IPacketMsg testMsg = createUserStatsResponseMessage(false);
-
-        // Call handler to process the message
-        handler.handleMsg(testMsg);
-
-        // Verify the callback was posted
-        UserStatsCallback callback = verifyCallback();
-
-        List<AchievementBlocks> expandedAchievements = callback.getExpandedAchievements();
-
-        // Without schema, should return original blocks
-        assertNotNull(expandedAchievements);
-        assertEquals(2, expandedAchievements.size());
-
-        // Verify blocks have no enriched metadata
-        AchievementBlocks block21 = expandedAchievements.get(0);
-        assertEquals(21, block21.getAchievementId());
-        assertNull(block21.getName());
-        assertNull(block21.getDisplayName());
-        assertNull(block21.getDescription());
-
-        AchievementBlocks block22 = expandedAchievements.get(1);
-        assertEquals(22, block22.getAchievementId());
-        assertNull(block22.getName());
-        assertNull(block22.getDisplayName());
-    }
-
-    @Test
-    public void testSchemaParsingHandlesCorruptData() {
-        // Create a packet with invalid schema data
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
-                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
-
-        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
-        body.setGameId(440L);
-        body.setEresult(EResult.OK.code());
-        body.setCrcStats(123456);
-        body.setSchema(ByteString.copyFrom(new byte[] { 0x01, 0x02, 0x03 })); // Invalid schema
-
-        // Serialize and convert to IPacketMsg
-        IPacketMsg packetMsg = CMClient.getPacketMsg(msg.serialize());
-
-        // Call handler to process the message
-        handler.handleMsg(packetMsg);
-
-        // Verify the callback was posted
-        UserStatsCallback callback = verifyCallback();
-
-        // Should not throw exception, just have empty schema
-        assertNotNull(callback);
-        assertEquals(EResult.OK, callback.getResult());
-
-        // getExpandedAchievements should still work and fall back to empty list
-        List<AchievementBlocks> expanded = callback.getExpandedAchievements();
-        assertNotNull(expanded);
-        assertTrue(expanded.isEmpty());
-    }
-
-    @Test
-    public void testAchievementBlockWithManyUnlocks() throws IOException {
-        // Test with a block that has many achievements unlocked
-        ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
-                CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);
-
-        CMsgClientGetUserStatsResponse.Builder body = msg.getBody();
-        body.setGameId(440L);
-        body.setEresult(EResult.OK.code());
-        body.setCrcStats(123456);
-        body.setSchema(ByteString.copyFrom(createMockSchema()));
-
-        // Create a block with 32 achievements (maximum per block)
-        CMsgClientGetUserStatsResponse.Achievement_Blocks.Builder block = CMsgClientGetUserStatsResponse.Achievement_Blocks
-                .newBuilder();
-        block.setAchievementId(21);
-
-        // Add 32 unlock times (some locked, some unlocked)
-        for (int i = 0; i < 32; i++) {
-            if (i < 3) {
-                // First 3 achievements have unlock times (matching our schema)
-                block.addUnlockTime(1609459200 + i * 86400);
-            } else {
-                // Rest are locked
-                block.addUnlockTime(0);
-            }
-        }
-        body.addAchievementBlocks(block);
-
-        // Serialize and convert to IPacketMsg
-        IPacketMsg packetMsg = CMClient.getPacketMsg(msg.serialize());
-
-        // Call handler to process the message
-        handler.handleMsg(packetMsg);
-
-        // Verify the callback was posted
-        UserStatsCallback callback = verifyCallback();
-        List<AchievementBlocks> expanded = callback.getExpandedAchievements();
-
-        // Should only expand the 3 achievements that have schema entries
-        assertEquals(3, expanded.size());
-
-        // Verify unlocked achievements have correct timestamps
-        assertTrue(expanded.get(0).isUnlocked());
-        assertTrue(expanded.get(1).isUnlocked());
-        assertTrue(expanded.get(2).isUnlocked());
     }
 }
