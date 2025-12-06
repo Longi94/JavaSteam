@@ -106,14 +106,16 @@ public abstract class TestPackets {
             //     return clientGetCDNAuthTokenResponse();
             case ClientCheckAppBetaPasswordResponse:
                 return clientCheckAppBetaPasswordResponse();
+            case ClientGetUserStatsResponse:
+                return clientGetUserStatsResponse();
             default:
                 throw new NullPointerException();
         }
     }
 
     private static byte[] loadFile(String name) {
-        try(var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
-            if(file == null) {
+        try (var file = TestPackets.class.getClassLoader().getResourceAsStream("testpackets/" + name)) {
+            if (file == null) {
                 return null;
             }
             return IOUtils.toByteArray(file);
@@ -385,6 +387,10 @@ public abstract class TestPackets {
 
     private static byte[] clientLicenseList() {
         return loadFile("ClientLicenseList.bin");
+    }
+
+    private static byte[] clientGetUserStatsResponse() {
+        return loadFile("ClientGetUserStatsResponse.bin");
     }
 
     private static byte[] clientGameConnectTokens() {

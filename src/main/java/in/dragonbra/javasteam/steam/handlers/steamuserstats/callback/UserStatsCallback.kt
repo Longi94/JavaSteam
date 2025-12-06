@@ -70,12 +70,101 @@ class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
         stats = resp.statsList.map {
             Stats(statId = it.statId, statValue = it.statValue)
         }
-        achievementBlocks = resp.achievementBlocksList.map {
-            AchievementBlocks(achievementId = it.achievementId, unlockTime = it.unlockTimeList)
+
+        // Parse the schema first so we can enrich achievement data
+        // Some games may have empty or invalid schemas, so handle gracefully
+        try {
+            if (schema.size() > 0) {
+                MemoryStream(schema.toByteArray()).use {
+                    schemaKeyValues.tryReadAsBinary(it)
+                }
+            }
+        } catch (_: Exception) {
+            // Schema parsing failed, schemaKeyValues will remain empty
+            // This is okay - we'll just have achievements without enriched metadata
         }
 
-        MemoryStream(schema.toByteArray()).use {
-            schemaKeyValues.tryReadAsBinary(it)
+        // Build achievement blocks as originally provided
+        achievementBlocks = resp.achievementBlocksList.map { block ->
+            AchievementBlocks(
+                achievementId = block.achievementId,
+                unlockTime = block.unlockTimeList,
+                name = null,
+                displayName = null,
+                description = null,
+                icon = null,
+                iconGray = null,
+                hidden = false
+            )
         }
+    }
+
+    /**
+     * Expands achievement blocks into individual achievements based on the bit-level structure in the schema.
+     * Each achievement block contains multiple achievements as bits (typically 32 per block for base game and DLCs).
+     *
+     * @return List of individual [AchievementBlocks] with enriched metadata from schema
+     */
+    @JvmOverloads
+    fun getExpandedAchievements(language: String = "english"): List<AchievementBlocks> {
+        val expandedAchievements = mutableListOf<AchievementBlocks>()
+
+        try {
+            val stats = schemaKeyValues["stats"]
+            if (stats == KeyValue.INVALID) {
+                return achievementBlocks // Return original blocks if schema parsing failed
+            }
+
+            // Iterate through each achievement block
+            for (block in achievementBlocks) {
+                val statBlock = stats[block.achievementId.toString()]
+                val bitsBlock = statBlock["bits"]
+
+                if (bitsBlock != KeyValue.INVALID) {
+                    // This block has bit-level achievements, expand them and get the values
+                    for (bitEntry in bitsBlock.children) {
+                        val bitIndex = bitEntry["bit"].asInteger()
+                        val displaySection = bitEntry["display"]
+
+                        // Extract metadata
+                        val name = bitEntry["name"].value
+                        val displayName = displaySection["name"][language].value
+                        val description = displaySection["desc"][language].value
+                        val icon = displaySection["icon"].value
+                        val iconGray = displaySection["icon_gray"].value
+                        val hidden = displaySection["hidden"].value == "1"
+
+                        // Get unlock time for this specific bit
+                        val unlockTime = if (bitIndex < block.unlockTime.size) {
+                            block.unlockTime[bitIndex]
+                        } else {
+                            0
+                        }
+
+                        // Create individual achievement entry
+                        expandedAchievements.add(
+                            AchievementBlocks(
+                                achievementId = block.achievementId * 100 + bitIndex, // Create unique ID
+                                unlockTime = listOf(unlockTime), // Single timestamp for this achievement
+                                name = name,
+                                displayName = displayName,
+                                description = description,
+                                icon = icon,
+                                iconGray = iconGray,
+                                hidden = hidden
+                            )
+                        )
+                    }
+                } else {
+                    // No bits structure, keep the block as-is
+                    expandedAchievements.add(block)
+                }
+            }
+        } catch (_: Exception) {
+            // If expansion fails, return original blocks
+            return achievementBlocks
+        }
+
+        return expandedAchievements
     }
 }

@@ -131,7 +131,19 @@ tasks.withType<FormatTask> {
     this.source = this.source.minus(fileTree("build/generated")).asFileTree
 }
 
+/* JDK and Mockito self attachment fix */
+// "Mockito is currently self-attaching to enable the inline-mock-maker.
+//      This will no longer work in future releases of the JDK"
+val mockitoAgent = configurations.create("mockitoAgent")
+tasks.withType<Test> {
+    doFirst {
+        jvmArgs("-javaagent:${mockitoAgent.asPath}")
+    }
+}
+
 dependencies {
+    mockitoAgent(libs.test.mock.core) { isTransitive = false }
+
     implementation(libs.bundles.ktor)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)
