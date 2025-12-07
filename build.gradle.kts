@@ -114,21 +114,26 @@ tasks.jar {
     }
 }
 
-/* Dependencies */
-tasks.matching { it.name == "lintKotlin" }.configureEach { dependsOn("formatKotlin") }
+/* Tasks */
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
 tasks["compileKotlin"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
 tasks["generateRpcMethods"].dependsOn("extractProto", "extractIncludeProto")
-
-// tasks["build"].finalizedBy("dokkaGenerate")
+afterEvaluate {
+    tasks.named("lintKotlin") {
+        dependsOn("formatKotlin")
+    }
+}
 
 /* Kotlinter */
 tasks.withType<LintTask> {
-    this.source = this.source.minus(fileTree("build/generated")).asFileTree
+    val generatedFile = "${File.separator}build${File.separator}generated"
+    exclude { it.file.path.contains(generatedFile) }
 }
+
 tasks.withType<FormatTask> {
-    this.source = this.source.minus(fileTree("build/generated")).asFileTree
+    val generatedFile = "${File.separator}build${File.separator}generated"
+    exclude { it.file.path.contains(generatedFile) }
 }
 
 /* JDK and Mockito self attachment fix */
