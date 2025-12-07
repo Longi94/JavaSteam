@@ -76,14 +76,14 @@ class JavaGen(
 
             if ((node as ClassNode).ident != null) {
                 if (node.name.contains("MsgGC")) {
-                    imports.add("in.dragonbra.javasteam.base.IGCSerializableMessage")
+                    imports.add("in.dragonbra.javasteam.base.gc.IGCSerializableMessage")
                 } else {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableMessage")
                     imports.add("in.dragonbra.javasteam.enums.EMsg")
                 }
             } else if (node.name.contains("Hdr")) {
                 if (node.name.contains("MsgGC")) {
-                    imports.add("in.dragonbra.javasteam.base.IGCSerializableHeader")
+                    imports.add("in.dragonbra.javasteam.base.gc.IGCSerializableHeader")
                 } else {
                     imports.add("in.dragonbra.javasteam.base.ISteamSerializableHeader")
                 }

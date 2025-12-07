@@ -231,7 +231,7 @@ class SteamClient @JvmOverloads constructor(
         }
 
         // we want to handle some of the clientMsg's before we pass them along to registered handlers
-        when (packetMsg.getMsgType()) {
+        when (packetMsg.msgType) {
             EMsg.JobHeartbeat -> handleJobHeartbeat(packetMsg)
             EMsg.DestJobFailed -> handleJobFailed(packetMsg)
             else -> Unit
@@ -283,11 +283,11 @@ class SteamClient @JvmOverloads constructor(
     }
 
     private fun handleJobHeartbeat(packetMsg: IPacketMsg) {
-        JobID(packetMsg.getTargetJobID()).let(jobManager::heartbeatJob)
+        JobID(packetMsg.targetJobID).let(jobManager::heartbeatJob)
     }
 
     private fun handleJobFailed(packetMsg: IPacketMsg) {
-        JobID(packetMsg.getTargetJobID()).let(jobManager::failJob)
+        JobID(packetMsg.targetJobID).let(jobManager::failJob)
     }
 
     companion object {

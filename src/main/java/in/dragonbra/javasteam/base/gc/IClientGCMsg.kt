@@ -1,14 +1,12 @@
-package `in`.dragonbra.javasteam.base
+package `in`.dragonbra.javasteam.base.gc
 
-import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.types.JobID
-import `in`.dragonbra.javasteam.types.SteamID
 
 /**
  * Represents a unified interface into client messages.
  */
 @Suppress("unused")
-interface IClientMsg {
+interface IClientGCMsg {
 
     /**
      * Gets a value indicating whether this client message is protobuf backed.
@@ -20,18 +18,7 @@ interface IClientMsg {
      * Gets the network message type of this client message.
      * @return The message type.
      */
-    val msgType: EMsg
-
-    /**
-     * Gets or Sets the session id for this client message.
-     */
-    var sessionID: Int
-
-    /**
-     * Gets or Sets the [SteamID] for this client message.
-     * @return The [SteamID].
-     */
-    var steamID: SteamID?
+    val msgType: Int
 
     /**
      * Gets or Sets the target job id for this client message.
@@ -40,8 +27,6 @@ interface IClientMsg {
 
     /**
      * Gets or Sets the source job id for this client message.
-     *
-     * @return The source job id.
      */
     var sourceJobID: JobID
 

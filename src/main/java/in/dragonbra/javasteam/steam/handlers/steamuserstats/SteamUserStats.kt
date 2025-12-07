@@ -186,7 +186,7 @@ class SteamUserStats : ClientMsgHandler() {
     }
 
     companion object {
-        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.getMsgType()) {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
             EMsg.ClientGetNumberOfCurrentPlayersDPResponse -> NumberOfPlayersCallback(packetMsg)
             EMsg.ClientLBSFindOrCreateLBResponse -> FindOrCreateLeaderboardCallback(packetMsg)
             EMsg.ClientLBSGetLBEntriesResponse -> LeaderboardEntriesCallback(packetMsg)

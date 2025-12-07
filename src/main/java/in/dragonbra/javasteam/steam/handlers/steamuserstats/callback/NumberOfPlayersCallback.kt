@@ -11,7 +11,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
  * This callback is fired in response to [SteamUserStats.getNumberOfCurrentPlayers].
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class NumberOfPlayersCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
+class NumberOfPlayersCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
      * Gets the result of the request.

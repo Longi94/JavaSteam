@@ -13,7 +13,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
  * This callback is fired in response to [SteamUserStats.findLeaderBoard] and [SteamUserStats.createLeaderboard].
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class FindOrCreateLeaderboardCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
+class FindOrCreateLeaderboardCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
      * Gets the result of the request.

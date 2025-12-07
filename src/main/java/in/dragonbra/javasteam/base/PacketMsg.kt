@@ -1,18 +1,18 @@
 package `in`.dragonbra.javasteam.base
 
 import `in`.dragonbra.javasteam.enums.EMsg
-import `in`.dragonbra.javasteam.generated.ExtendedClientMsgHdr
+import `in`.dragonbra.javasteam.generated.MsgHdr
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.IOException
 
 /**
- * Represents a packet message with extended header information.
- * @constructor Initializes a new instance of the [PacketClientMsg] class.
+ * Represents a packet message with basic header information.
+ * Initializes a new instance of the[PacketMsg] class.
  * @param eMsg The network message type for this packet message.
  * @param data The data.
  * @throws IOException exception while deserializing the data
  */
-class PacketClientMsg
+class PacketMsg
 @Throws(IOException::class)
 constructor(
     private val eMsg: EMsg,
@@ -24,10 +24,10 @@ constructor(
     /**
      * Gets the header for this packet message.
      */
-    internal val header: ExtendedClientMsgHdr = ExtendedClientMsgHdr()
+    internal val header: MsgHdr = MsgHdr()
 
     /**
-     * The offset in payload after the header.
+     * Gets the offset in payload to the body after the header.
      */
     internal val bodyOffset: Long
 
@@ -63,7 +63,6 @@ constructor(
         get() = payload
 
     init {
-        // deserialize the extended header to get our hands on the job ids
         MemoryStream(data).use { ms ->
             header.deserialize(ms)
             bodyOffset = ms.position

@@ -2,8 +2,8 @@ package `in`.dragonbra.javasteam.steam.handlers.steamgamecoordinator
 
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
-import `in`.dragonbra.javasteam.base.IClientGCMsg
 import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.base.gc.IClientGCMsg
 import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgGCClient
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
@@ -24,7 +24,7 @@ class SteamGameCoordinator : ClientMsgHandler() {
     fun send(msg: IClientGCMsg, appId: Int) {
         val clientMsg = ClientMsgProtobuf<CMsgGCClient.Builder>(CMsgGCClient::class.java, EMsg.ClientToGC).apply {
             protoHeader.routingAppid = appId
-            body.msgtype = MsgUtil.makeGCMsg(msg.getMsgType(), msg.isProto())
+            body.msgtype = MsgUtil.makeGCMsg(msg.msgType, msg.isProto)
             body.appid = appId
 
             body.payload = ByteString.copyFrom(msg.serialize())

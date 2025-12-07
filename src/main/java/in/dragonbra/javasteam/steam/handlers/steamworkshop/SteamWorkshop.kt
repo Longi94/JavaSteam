@@ -51,7 +51,7 @@ class SteamWorkshop : ClientMsgHandler() {
     }
 
     companion object {
-        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.getMsgType()) {
+        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
             EMsg.ClientUCMEnumeratePublishedFilesByUserActionResponse -> UserActionPublishedFilesCallback(packetMsg)
             else -> null
         }

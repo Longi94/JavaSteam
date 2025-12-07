@@ -1,146 +1,190 @@
-package in.dragonbra.javasteam.base;
+package `in`.dragonbra.javasteam.base
 
-import in.dragonbra.javasteam.util.stream.BinaryReader;
-import in.dragonbra.javasteam.util.stream.BinaryWriter;
-import in.dragonbra.javasteam.util.stream.MemoryStream;
-import in.dragonbra.javasteam.util.stream.SeekOrigin;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import `in`.dragonbra.javasteam.util.stream.BinaryWriter
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
+import `in`.dragonbra.javasteam.util.stream.SeekOrigin
+import java.io.IOException
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 
 /**
  * This class provides a payload backing to client messages.
+ * @constructor Initializes a new instance of the [AbstractMsgBase] class.
+ * @param payloadReserve The number of bytes to initialize the payload capacity to.
  */
-@SuppressWarnings("unused")
-public abstract class AbstractMsgBase {
-
-    protected MemoryStream payload;
-
-    private final BinaryReader reader;
-
-    private final BinaryWriter writer;
+@Suppress("unused")
+abstract class AbstractMsgBase @JvmOverloads constructor(payloadReserve: Int = 0) {
 
     /**
-     * Initializes a new instance of the {@link AbstractMsgBase} class.
+     * Returns a [MemoryStream]which is the backing stream for client message payload data.
      */
-    public AbstractMsgBase() {
-        this(0);
-    }
+    val payload: MemoryStream = MemoryStream(payloadReserve)
 
-    /**
-     * Initializes a new instance of the {@link AbstractMsgBase} class.
-     *
-     * @param payloadReserve The number of bytes to initialize the payload capacity to.
-     */
-    public AbstractMsgBase(int payloadReserve) {
-        payload = new MemoryStream(payloadReserve);
+    private val reader: BinaryReader = BinaryReader(payload)
 
-        reader = new BinaryReader(payload);
-        writer = new BinaryWriter(payload.asOutputStream());
-    }
+    private val writer: BinaryWriter = BinaryWriter(payload.asOutputStream())
 
     /**
      * Seeks within the payload to the specified offset.
-     *
      * @param offset     The offset in the payload to seek to.
      * @param seekOrigin The origin to seek from.
      * @return The new position within the stream, calculated by combining the initial reference point and the offset.
      */
-    public long seek(long offset, SeekOrigin seekOrigin) {
-        return payload.seek(offset, seekOrigin);
+    fun seek(offset: Long, seekOrigin: SeekOrigin): Long = payload.seek(offset, seekOrigin)
+
+    /* Writers */
+
+    /**
+     * Writes a single [Byte] to the message payload.
+     * @param data the byte.
+     */
+    @Throws(IOException::class)
+    fun writeByte(data: Byte) {
+        writer.write(data.toInt())
     }
 
-    public void writeByte(byte data) throws IOException {
-        writer.write(data);
+    /**
+     * Writes the specified [ByteArray] to the message payload.
+     * @param data the byte array.
+     */
+    @Throws(IOException::class)
+    fun writeBytes(data: ByteArray) {
+        writer.write(data)
     }
 
-    public byte readByte() throws IOException {
-        return reader.readByte();
+    /**
+     * Writes a single [Short] to the message payload.
+     * @param data the short.
+     */
+    @Throws(IOException::class)
+    fun writeShort(data: Short) {
+        writer.writeShort(data)
     }
 
-    public void writeBytes(byte[] data) throws IOException {
-        writer.write(data);
+    /**
+     * Writes a single [Int] to the message payload.
+     * @param data the integer.
+     */
+    @Throws(IOException::class)
+    fun writeInt(data: Int) {
+        writer.writeInt(data)
     }
 
-    public byte[] readBytes(int numBytes) throws IOException {
-        return reader.readBytes(numBytes);
+    /**
+     * Writes a single [Long] to the message payload.
+     * @param data the long.
+     */
+    @Throws(IOException::class)
+    fun writeLong(data: Long) {
+        writer.writeLong(data)
     }
 
-    public void writeShort(short data) throws IOException {
-        writer.writeShort(data);
+    /**
+     * Writes a single [Float] to the message payload.
+     * @param data the float.
+     */
+    @Throws(IOException::class)
+    fun writeFloat(data: Float) {
+        writer.writeFloat(data)
     }
 
-    public short readShort() throws IOException {
-        return reader.readShort();
+    /**
+     * Writes a single [Double] to the message payload.
+     * @param data the double.
+     */
+    @Throws(IOException::class)
+    fun writeDouble(data: Double) {
+        writer.writeDouble(data)
     }
 
-    public void writeInt(int data) throws IOException {
-        writer.writeInt(data);
-    }
-
-    public int readInt() throws IOException {
-        return reader.readInt();
-    }
-
-    public void writeLong(long data) throws IOException {
-        writer.writeLong(data);
-    }
-
-    public long readLong() throws IOException {
-        return reader.readLong();
-    }
-
-    public void writeFloat(float data) throws IOException {
-        writer.writeFloat(data);
-    }
-
-    public float readFloat() throws IOException {
-        return reader.readFloat();
-    }
-
-    public void writeDouble(double data) throws IOException {
-        writer.writeDouble(data);
-    }
-
-    public double readDouble() throws IOException {
-        return reader.readDouble();
-    }
-
-    public void writeString(String data) throws IOException {
-        writeString(data, StandardCharsets.UTF_8);
-    }
-
-    public void writeString(String data, Charset charset) throws IOException {
+    /**
+     * Writes the specified string to the message payload using UTF-8 encoding.
+     * This function does not write a terminating null character.
+     * @param data The string to write.
+     * @param charset The encoding to use.
+     */
+    @JvmOverloads
+    @Throws(IOException::class)
+    fun writeString(data: String?, charset: Charset = StandardCharsets.UTF_8) {
         if (data == null) {
-            return;
+            return
         }
 
-        if (charset == null) {
-            throw new IllegalArgumentException("charset is null");
-        }
-
-        writeBytes(data.getBytes(charset));
+        writeBytes(data.toByteArray(charset))
     }
 
-    public void writeNullTermString(String data) throws IOException {
-        writeNullTermString(data, StandardCharsets.UTF_8);
+    /**
+     * Writes the specified string and a null terminator to the message payload using UTF-8 encoding.
+     * Default encoding is UTF-8
+     * @param data The string to write.
+     * @param charset The encoding to use.
+     */
+    @JvmOverloads
+    @Throws(IOException::class)
+    fun writeNullTermString(data: String?, charset: Charset = StandardCharsets.UTF_8) {
+        writeString(data, charset)
+        writeString("\u0000", charset)
     }
 
-    public void writeNullTermString(String data, Charset charset) throws IOException {
-        writeString(data, charset);
-        writeString("\0", charset);
-    }
+    /* Readers */
 
-    public String readNullTermString() throws IOException {
-        return readNullTermString(StandardCharsets.UTF_8);
-    }
+    /**
+     * Reads a single [Byte] from the message payload.
+     * @return The byte.
+     */
+    @Throws(IOException::class)
+    fun readByte(): Byte = reader.readByte()
 
-    public String readNullTermString(Charset charset) throws IOException {
-        return reader.readNullTermString(charset);
-    }
+    /**
+     * Reads a number of bytes from the message payload.
+     * @param numBytes The number of bytes to read.
+     * @return The data.
+     */
+    @Throws(IOException::class)
+    fun readBytes(numBytes: Int): ByteArray = reader.readBytes(numBytes)
 
-    public MemoryStream getPayload() {
-        return payload;
-    }
+    /**
+     * Reads a single [Short] from the message payload.
+     * @return The short.
+     */
+    @Throws(IOException::class)
+    fun readShort(): Short = reader.readShort()
+
+    /**
+     * Reads a single [Int] from the message payload.
+     * @return The integer.
+     */
+    @Throws(IOException::class)
+    fun readInt(): Int = reader.readInt()
+
+    /**
+     * Reads a single [Long] from the message payload.
+     * @return The long.
+     */
+    @Throws(IOException::class)
+    fun readLong(): Long = reader.readLong()
+
+    /**
+     * Reads a single [Float] from the message payload.
+     * @return The float.
+     */
+    @Throws(IOException::class)
+    fun readFloat(): Float = reader.readFloat()
+
+    /**
+     * Reads a single [Double] from the message payload.
+     * @return The double.
+     */
+    @Throws(IOException::class)
+    fun readDouble(): Double = reader.readDouble()
+
+    /**
+     * Reads a null terminated string from the message payload with the specified encoding.
+     * Default encoding is UTF-8
+     * @param charset The encoding to use.
+     */
+    @JvmOverloads
+    @Throws(IOException::class)
+    fun readNullTermString(charset: Charset = StandardCharsets.UTF_8): String = reader.readNullTermString(charset)
 }

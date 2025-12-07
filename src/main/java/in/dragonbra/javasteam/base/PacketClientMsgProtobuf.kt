@@ -1,71 +1,72 @@
-package in.dragonbra.javasteam.base;
+package `in`.dragonbra.javasteam.base
 
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.generated.MsgHdrProtoBuf;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.generated.MsgHdrProtoBuf
+import `in`.dragonbra.javasteam.util.stream.MemoryStream
+import java.io.IOException
+import kotlin.jvm.Throws
 
 /**
  * Represents a protobuf backed packet message.
+ * @constructor Initializes a new instance of the [PacketClientMsgProtobuf] class.
+ * @param eMsg The network message type for this packet message.
+ * @param data The data.
  */
-public class PacketClientMsgProtobuf implements IPacketMsg {
+class PacketClientMsgProtobuf
+@Throws(IOException::class)
+constructor(
+    private val eMsg: EMsg,
+    data: ByteArray,
+) : IPacketMsg {
 
-    private final EMsg msgType;
-
-    private final byte[] payload;
-
-    private final MsgHdrProtoBuf header;
-
-    /**
-     * Initializes a new instance of the {@link PacketClientMsgProtobuf} class.
-     *
-     * @param eMsg The network message type for this packet message.
-     * @param data The data.
-     * @throws IOException exception while deserializing the data
-     */
-    public PacketClientMsgProtobuf(EMsg eMsg, byte[] data) throws IOException {
-        this.msgType = eMsg;
-        this.payload = data;
-
-        header = new MsgHdrProtoBuf();
-
-        try (var stream = new ByteArrayInputStream(data)) {
-            header.deserialize(stream);
-        }
-    }
+    private val payload: ByteArray = data
 
     /**
      * Gets the header for this packet message.
-     *
-     * @return The header.
      */
-    public MsgHdrProtoBuf getHeader() {
-        return header;
-    }
+    internal val header: MsgHdrProtoBuf = MsgHdrProtoBuf()
 
-    @Override
-    public boolean isProto() {
-        return true;
-    }
+    /**
+     * Gets the offset in payload to the body after the header.
+     */
+    internal val bodyOffset: Long
 
-    @Override
-    public EMsg getMsgType() {
-        return msgType;
-    }
+    /**
+     * Gets a value indicating whether this packet message is protobuf backed.
+     * This type of message is always protobuf backed.
+     */
+    override val isProto: Boolean
+        get() = true
 
-    @Override
-    public long getTargetJobID() {
-        return header.getProto().getJobidTarget();
-    }
+    /**
+     * Gets the network message type of this packet message.
+     */
+    override val msgType: EMsg
+        get() = eMsg
 
-    @Override
-    public long getSourceJobID() {
-        return header.getProto().getJobidSource();
-    }
+    /**
+     * Gets the target job id for this packet message.
+     */
+    override val targetJobID: Long
+        get() = header.proto.jobidTarget
 
-    @Override
-    public byte[] getData() {
-        return payload;
+    /**
+     * Gets the source job id for this packet message.
+     */
+    override val sourceJobID: Long
+        get() = header.proto.jobidSource
+
+    /**
+     * Gets the underlying data that represents this client message.
+     */
+    override val data: ByteArray
+        get() = payload
+
+    init {
+        // we need to pull out the job ids, so we deserialize the protobuf header
+        MemoryStream(data).use { ms ->
+            header.deserialize(ms)
+            bodyOffset = ms.position
+        }
     }
 }

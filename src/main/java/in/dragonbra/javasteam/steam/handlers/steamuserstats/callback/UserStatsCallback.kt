@@ -17,7 +17,7 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
  * This callback is fired in response to [SteamUserStats.getUserStats].
  */
 @JavaSteamAddition
-class UserStatsCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
+class UserStatsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
      * Gets the result.
