@@ -48,6 +48,7 @@ class ChatMemberInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         when (type) {
             EChatInfoType.StateChange -> stateChangeInfo = StateChangeDetails(membInfo.payload)
+
             // todo: (SK) handle more types
             // based off disassembly
             //   - for InfoUpdate, a ChatMemberInfo object is present

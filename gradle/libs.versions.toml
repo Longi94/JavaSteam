@@ -6,7 +6,7 @@
 [versions]
 java = "11"
 kotlin = "2.2.21" # https://kotlinlang.org/docs/releases.html#release-details
-dokka = "2.1.0" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
+dokka = "2.0.0" # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 kotlinter = "5.3.0" # https://plugins.gradle.org/plugin/org.jmailen.kotlinter
 jacoco = "0.8.14" # https://www.eclemma.org/jacoco
 

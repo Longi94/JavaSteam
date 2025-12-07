@@ -86,8 +86,13 @@ class WebSocketConnection :
                                 }
 
                                 is Frame.Close -> disconnect(false)
-                                is Frame.Ping -> logger.debug("Received pong") // Never Used.
-                                is Frame.Pong -> logger.debug("Received pong") // Never Used.
+
+                                is Frame.Ping -> logger.debug("Received pong")
+
+                                // Never Used.
+                                is Frame.Pong -> logger.debug("Received pong")
+
+                                // Never Used.
                                 is Frame.Text -> logger.debug("Received plain text ${frame.readText()}")
                             }
                         }

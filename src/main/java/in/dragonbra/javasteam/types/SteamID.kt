@@ -236,6 +236,7 @@ class SteamID {
             }
 
             UNKNOWN_ACCOUNT_TYPE_CHAR -> accountType = EAccountType.Invalid
+
             else -> accountType = CollectionUtils.getKeyByValue(ACCOUNT_TYPE_CHARS, type)
         }
 

@@ -59,7 +59,9 @@ object ClientLancache {
                 192 -> bytes[1].toInt() and 0xFF == 168
                 else -> false
             }
+
             is Inet6Address -> (bytes[0].toInt() and 0xFE) == 0xFC || toTest.isLinkLocalAddress
+
             else -> false
         }
     }

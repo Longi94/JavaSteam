@@ -570,6 +570,7 @@ class KeyValue @JvmOverloads constructor(
                     }
 
                     Type.STRING -> localCurrent.value = input.readNullTermString(StandardCharsets.UTF_8)
+
                     Type.WIDESTRING -> {
                         logger.debug("Encountered WideString type when parsing binary KeyValue, which is unsupported. Returning false.")
                         return false
@@ -581,8 +582,11 @@ class KeyValue @JvmOverloads constructor(
                     -> localCurrent.value = input.readInt().toString()
 
                     Type.UINT64 -> localCurrent.value = input.readLong().toString()
+
                     Type.FLOAT32 -> localCurrent.value = input.readFloat().toString()
+
                     Type.INT64 -> localCurrent.value = input.readLong().toString()
+
                     else -> return false
                 }
 
