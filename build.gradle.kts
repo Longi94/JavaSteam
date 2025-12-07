@@ -115,7 +115,7 @@ tasks.jar {
 }
 
 /* Dependencies */
-tasks["lintKotlinMain"].dependsOn("formatKotlin")
+tasks.matching { it.name == "lintKotlin" }.configureEach { dependsOn("formatKotlin") }
 tasks["check"].dependsOn("jacocoTestReport")
 tasks["compileJava"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
 tasks["compileKotlin"].dependsOn("generateSteamLanguage", "generateProjectVersion", "generateRpcMethods")
