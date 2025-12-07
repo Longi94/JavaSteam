@@ -103,7 +103,7 @@ object NetHelpers {
                 return null
             }
 
-            var ip = stringValue.substring(0, split)
+            var ip = stringValue.take(split)
             val port = stringValue.substring(split + 1).toIntOrNull() ?: return null
 
             if (ip.startsWith("[") && ip.endsWith("]")) {

@@ -5,7 +5,6 @@ import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSProductInfoResponse
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import java.util.*
 
 /**
  * This callback is fired when the PICS returns the product information requested

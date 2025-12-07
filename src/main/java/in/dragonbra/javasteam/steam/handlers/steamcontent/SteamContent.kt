@@ -38,7 +38,7 @@ class SteamContent : ClientMsgHandler() {
         parentScope: CoroutineScope,
     ): Deferred<List<Server>> = parentScope.async {
         val request = CContentServerDirectory_GetServersForSteamPipe_Request.newBuilder().apply {
-            this.cellId = cellId ?: client.cellID?.toInt() ?: 0
+            this.cellId = cellId ?: client.cellID ?: 0
             maxNumServers?.let { this.maxServers = it }
         }.build()
 

@@ -273,11 +273,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         appId: Int,
         lobbySteamId: SteamID,
     ): AsyncJobSingle<JoinLobbyCallback>? {
-        val personaName = client.getHandler<SteamFriends>()?.getPersonaName()
-
-        if (personaName == null) {
-            return null
-        }
+        val personaName = client.getHandler<SteamFriends>()?.getPersonaName() ?: return null
 
         val joinLobby = ClientMsgProtobuf<CMsgClientMMSJoinLobby.Builder>(
             CMsgClientMMSJoinLobby::class.java,

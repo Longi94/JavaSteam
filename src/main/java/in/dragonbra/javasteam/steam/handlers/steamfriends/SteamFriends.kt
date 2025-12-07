@@ -328,7 +328,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID The clan steamid.
      * @return The relationship of the clan to the local user.
      */
-    fun getClanRelationship(steamID: SteamID): EClanRelationship? = cache.clans.getAccount(steamID).relationship
+    fun getClanRelationship(steamID: SteamID): EClanRelationship = cache.clans.getAccount(steamID).relationship
 
     /**
      * Gets an SHA-1 hash representing the clan's avatar.
