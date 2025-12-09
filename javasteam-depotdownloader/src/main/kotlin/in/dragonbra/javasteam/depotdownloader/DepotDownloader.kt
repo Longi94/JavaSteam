@@ -1522,8 +1522,10 @@ class DepotDownloader @JvmOverloads constructor(
         listeners.remove(listener)
     }
 
-    private fun notifyListeners(action: (IDownloadListener) -> Unit) {
-        listeners.forEach { listener -> action(listener) }
+    private suspend fun notifyListeners(action: (IDownloadListener) -> Unit) {
+        coroutineScope {
+            listeners.forEach { listener -> action(listener) }
+        }
     }
 
     // endregion
