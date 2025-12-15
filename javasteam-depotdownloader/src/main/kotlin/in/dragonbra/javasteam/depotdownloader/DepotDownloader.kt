@@ -1528,8 +1528,8 @@ class DepotDownloader @JvmOverloads constructor(
         listeners.remove(listener)
     }
 
-    private fun notifyListeners(action: (IDownloadListener) -> Unit) {
-        scope.launch(Dispatchers.Main) {
+    private suspend fun notifyListeners(action: (IDownloadListener) -> Unit) {
+        coroutineScope {
             listeners.forEach { listener -> action(listener) }
         }
     }
