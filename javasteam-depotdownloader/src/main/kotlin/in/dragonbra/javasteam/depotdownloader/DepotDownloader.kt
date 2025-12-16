@@ -40,6 +40,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -49,6 +51,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -95,6 +98,7 @@ import kotlin.text.toLongOrNull
  * @param debug Enables detailed logging of all operations via [LogManager]
  * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
  * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8
+ * @param maxFileWrites Number of concurrent files being written. Default: 8
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  *
  * @author Oxters
@@ -153,13 +157,22 @@ class DepotDownloader @JvmOverloads constructor(
 
     private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
 
+    private var networkChunkQueue = Channel<NetworkChunkItem>(Channel.UNLIMITED)
+
     private var fileWriteChannel = Channel<FileWriteItem>(Channel.UNLIMITED)
 
     private var steam3: Steam3Session? = null
 
+    private var processingItemsMap = mutableMapOf<Int, DownloadItem>()
+
+    private var networkWorkers: List<Job> = emptyList()
+    private var fileWriteWorkers: List<Job> = emptyList()
+
     // region [REGION] Private data classes.
 
     private data class NetworkChunkItem(
+        val downloadCounter: GlobalDownloadCounter,
+        val depotFilesData: DepotFilesData,
         val fileStreamData: FileStreamData,
         val fileData: FileData,
         val chunk: ChunkData,
@@ -215,15 +228,6 @@ class DepotDownloader @JvmOverloads constructor(
         // Launch the processing loop
         scope.launch {
             processItems()
-        }
-
-        // Launch the file writing receivers
-        List(maxFileWrites) {
-            scope.launch {
-                fileWriteChannel.receiveAsFlow().collect { item ->
-                    processFileWrites(item)
-                }
-            }
         }
     }
 
@@ -507,7 +511,7 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        downloadSteam3(infos)
+        downloadSteam3(appId, infos)
     }
 
     @Throws(IllegalStateException::class)
@@ -833,7 +837,7 @@ class DepotDownloader @JvmOverloads constructor(
         return info != null && info["FreeToDownload"].asBoolean()
     }
 
-    private suspend fun downloadSteam3(depots: List<DepotDownloadInfo>): Unit = coroutineScope {
+    private suspend fun downloadSteam3(mainAppId: Int, depots: List<DepotDownloadInfo>): Unit = coroutineScope {
         val maxNumServers = maxDownloads.coerceIn(20, 64) // Hard clamp at 64. Not sure how high we can go.
         cdnClientPool?.updateServerList(maxNumServers)
 
@@ -864,8 +868,18 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        depotsToDownload.forEach { depotFileData ->
-            downloadSteam3DepotFiles(downloadCounter, depotFileData, allFileNamesAllDepots)
+        if (depotsToDownload.isEmpty()) {
+            finishDepotDownload(mainAppId)
+        } else {
+            depotsToDownload.forEachIndexed { index, depotFileData ->
+                downloadSteam3DepotFiles(
+                    mainAppId,
+                    downloadCounter,
+                    depotFileData,
+                    allFileNamesAllDepots,
+                    index == depotsToDownload.size - 1
+                )
+            }
         }
 
         logger?.debug(
@@ -1075,9 +1089,11 @@ class DepotDownloader @JvmOverloads constructor(
 
     @OptIn(DelicateCoroutinesApi::class)
     private suspend fun downloadSteam3DepotFiles(
+        mainAppId: Int,
         downloadCounter: GlobalDownloadCounter,
         depotFilesData: DepotFilesData,
         allFileNamesAllDepots: HashSet<String>,
+        isLastDepot: Boolean,
     ) = withContext(Dispatchers.IO) {
         val depot = depotFilesData.depotDownloadInfo
         val depotCounter = depotFilesData.depotCounter
@@ -1085,11 +1101,10 @@ class DepotDownloader @JvmOverloads constructor(
         logger?.debug("Downloading depot ${depot.depotId}")
 
         val files = depotFilesData.filteredFiles.filter { !it.flags.contains(EDepotFileFlag.Directory) }
-        val networkChunkQueue = Channel<NetworkChunkItem>(Channel.UNLIMITED)
 
         try {
             coroutineScope {
-                // First parallel loop - process files and enqueue chunks
+                // Second parallel loop - process files and enqueue chunks
                 files.chunked(50).forEach { batch ->
                     yield()
 
@@ -1099,33 +1114,33 @@ class DepotDownloader @JvmOverloads constructor(
                                 downloadCounter = downloadCounter,
                                 depotFilesData = depotFilesData,
                                 file = file,
-                                networkChunkQueue = networkChunkQueue
                             )
                         }
                     }.awaitAll()
                 }
 
                 // Close the channel to signal no more items will be added
-                networkChunkQueue.close()
+                if (isLastDepot) {
+                    networkChunkQueue.close()
 
-                // Second parallel loop - process chunks from queue
-                List(maxDownloads) {
-                    async {
-                        for (item in networkChunkQueue) {
-                            downloadSteam3DepotFileChunk(
-                                downloadCounter = downloadCounter,
-                                depotFilesData = depotFilesData,
-                                file = item.fileData,
-                                fileStreamData = item.fileStreamData,
-                                chunk = item.chunk
-                            )
-                        }
-                    }
-                }.awaitAll()
+                    // Wait for all network workers to finish processing remaining items
+                    networkWorkers.joinAll()
+                }
             }
         } finally {
-            if (!networkChunkQueue.isClosedForSend) {
-                networkChunkQueue.close()
+            if (isLastDepot) {
+                if (!networkChunkQueue.isClosedForSend) {
+                    // Close the channel to signal no more items will be added
+                    networkChunkQueue.close()
+                }
+
+                // Close file write channel since no more network workers can send to it
+                if (!fileWriteChannel.isClosedForSend) {
+                    fileWriteChannel.close()
+                }
+
+                // Wait for all file write workers to finish processing remaining items
+                fileWriteWorkers.joinAll()
             }
         }
 
@@ -1170,13 +1185,16 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
+
+        if (isLastDepot) {
+            finishDepotDownload(mainAppId)
+        }
     }
 
     private suspend fun downloadSteam3DepotFile(
         downloadCounter: GlobalDownloadCounter,
         depotFilesData: DepotFilesData,
         file: FileData,
-        networkChunkQueue: Channel<NetworkChunkItem>,
     ) = withContext(Dispatchers.IO) {
         ensureActive()
 
@@ -1378,10 +1396,12 @@ class DepotDownloader @JvmOverloads constructor(
         neededChunks!!.forEach { chunk ->
             networkChunkQueue.send(
                 NetworkChunkItem(
+                    downloadCounter = downloadCounter,
+                    depotFilesData = depotFilesData,
                     fileStreamData = fileStreamData,
                     fileData = file,
                     chunk = chunk,
-                    totalChunksForFile = neededChunks!!.size
+                    totalChunksForFile = neededChunks!!.size,
                 )
             )
         }
@@ -1516,6 +1536,15 @@ class DepotDownloader @JvmOverloads constructor(
         return false
     }
 
+    private suspend fun finishDepotDownload(mainAppId: Int) {
+        val appItem = processingItemsMap[mainAppId]
+        if (appItem != null) {
+            notifyListeners { it.onDownloadCompleted(appItem) }
+        }
+
+        completionFuture.complete(null)
+    }
+
     // endregion
 
     // region [REGION] Listener Operations
@@ -1595,6 +1624,30 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
+        // First pre-launch coroutines
+        networkWorkers = List(maxDownloads) {
+            scope.launch {
+                networkChunkQueue.receiveAsFlow().collect { item ->
+                    downloadSteam3DepotFileChunk(
+                        downloadCounter = item.downloadCounter,
+                        depotFilesData = item.depotFilesData,
+                        file = item.fileData,
+                        fileStreamData = item.fileStreamData,
+                        chunk = item.chunk,
+                    )
+                }
+            }
+        }
+
+        // Launch the file writing receivers
+        fileWriteWorkers = List(maxFileWrites) {
+            scope.launch {
+                fileWriteChannel.receiveAsFlow().collect { item ->
+                    processFileWrites(item)
+                }
+            }
+        }
+
         for (item in processingChannel) {
             try {
                 ensureActive()
@@ -1605,6 +1658,8 @@ class DepotDownloader @JvmOverloads constructor(
                     installPath = item.installDirectory?.toPath(),
                     installToGameNameDirectory = item.installToGameNameDirectory,
                 )
+
+                processingItemsMap[item.appId] = item
 
                 when (item) {
                     is PubFileItem -> {
@@ -1680,52 +1735,17 @@ class DepotDownloader @JvmOverloads constructor(
                         )
                     }
                 }
-
-                notifyListeners { it.onDownloadCompleted(item) }
             } catch (e: Exception) {
                 logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
                 notifyListeners { it.onDownloadFailed(item, e) }
             }
         }
-
-        completionFuture.complete(null)
     }
 
-    /**
-     * Returns a CompletableFuture that completes when all queued downloads finish.
-     * @return CompletableFuture that completes when all downloads finish
-     */
-    fun getCompletion(): CompletableFuture<Void> = completionFuture
+    private suspend fun processFileWrites(item: FileWriteItem): Unit = withContext(Dispatchers.IO) {
+        // Throw the cancellation exception if requested so that this task is marked failed
+        ensureActive()
 
-    /**
-     * Blocks the current thread until all queued downloads complete.
-     * Convenience method that calls `getCompletion().join()`.
-     * @throws CompletionException if any download fails
-     */
-    fun awaitCompletion() {
-        completionFuture.join()
-    }
-
-    override fun close() {
-        processingChannel.close()
-        fileWriteChannel.close()
-
-        scope.cancel("DepotDownloader Closing")
-
-        httpClient.close()
-
-        listeners.clear()
-
-        steam3?.close()
-        steam3 = null
-
-        cdnClientPool?.close()
-        cdnClientPool = null
-
-        logger = null
-    }
-
-    private suspend fun processFileWrites(item: FileWriteItem) {
         val depot = item.depot
         val depotDownloadCounter = item.depotDownloadCounter
         val downloadCounter = item.downloadCounter
@@ -1809,5 +1829,38 @@ class DepotDownloader @JvmOverloads constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Returns a CompletableFuture that completes when all queued downloads finish.
+     * @return CompletableFuture that completes when all downloads finish
+     */
+    fun getCompletion(): CompletableFuture<Void> = completionFuture
+
+    /**
+     * Blocks the current thread until all queued downloads complete.
+     * Convenience method that calls `getCompletion().join()`.
+     * @throws CompletionException if any download fails
+     */
+    fun awaitCompletion() {
+        completionFuture.join()
+    }
+
+    override fun close() {
+        processingChannel.close()
+
+        scope.cancel("DepotDownloader Closing")
+
+        httpClient.close()
+
+        listeners.clear()
+
+        steam3?.close()
+        steam3 = null
+
+        cdnClientPool?.close()
+        cdnClientPool = null
+
+        logger = null
     }
 }
