@@ -53,20 +53,22 @@ class SteamContent : ClientMsgHandler() {
     }
 
     /**
-     * TODO kdoc
-     * @param appId
-     * @param depotId
-     * @param sourceManifestId
-     * @param targetManifestId
-     * @return A [DepotPatchInfo]
+     * Retrieves patch information for upgrading a depot from one manifest version to another.
+     * @param appId The application ID.
+     * @param depotId The depot ID to get patch info for.
+     * @param sourceManifestId The current manifest ID to upgrade from.
+     * @param targetManifestId The target manifest ID to upgrade to.
+     * @param parentScope Coroutine scope for the async operation.
+     * @return A [DepotPatchInfo] containing patch availability, patch file size, and total patched content size.
      */
     @JavaSteamAddition
+    @JvmOverloads
     fun getDepotPatchInfo(
         appId: Int,
         depotId: Int,
         sourceManifestId: Long,
         targetManifestId: Long,
-        parentScope: CoroutineScope,
+        parentScope: CoroutineScope = client.defaultScope,
     ): Deferred<DepotPatchInfo> = parentScope.async {
         val request = CContentServerDirectory_GetDepotPatchInfo_Request.newBuilder().apply {
             this.appid = appId
