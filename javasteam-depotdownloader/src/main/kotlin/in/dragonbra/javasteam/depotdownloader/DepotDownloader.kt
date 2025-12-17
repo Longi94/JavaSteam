@@ -15,6 +15,7 @@ import `in`.dragonbra.javasteam.enums.EAppInfoSection
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.enums.EWorkshopFileType
 import `in`.dragonbra.javasteam.steam.cdn.ClientLancache
+import `in`.dragonbra.javasteam.steam.cdn.DepotChunk
 import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.License
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.callback.LicenseListCallback
@@ -45,11 +46,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -96,13 +97,15 @@ import kotlin.text.toLongOrNull
  * @param debug Enables detailed logging of all operations via [LogManager]
  * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
  * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8
- * @param maxFileWrites Number of concurrent files being written. Default: 8
+ * @param maxDecompress Number of concurrent chunk decompress. Default: 8
+ * @param maxFileWrites Number of concurrent files being written. Default: 1
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  *
  * @author Oxters
  * @author Lossy
  * @since Oct 29, 2024
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("unused")
 class DepotDownloader @JvmOverloads constructor(
     private val steamClient: SteamClient,
@@ -110,7 +113,8 @@ class DepotDownloader @JvmOverloads constructor(
     private val debug: Boolean = false,
     private val useLanCache: Boolean = false,
     private var maxDownloads: Int = 8,
-    private var maxFileWrites: Int = 8,
+    private var maxDecompress: Int = 8,
+    private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
 ) : Closeable {
 
@@ -155,16 +159,15 @@ class DepotDownloader @JvmOverloads constructor(
 
     private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
 
-    private var networkChunkQueue = Channel<NetworkChunkItem>(Channel.UNLIMITED)
+    private val networkChunkFlow = MutableSharedFlow<NetworkChunkItem>(extraBufferCapacity = Int.MAX_VALUE)
 
-    private var fileWriteChannel = Channel<FileWriteItem>(Channel.UNLIMITED)
+    private val pendingChunks = AtomicInteger(0)
+
+    private var chunkProcessingJob: Job? = null
 
     private var steam3: Steam3Session? = null
 
     private var processingItemsMap = mutableMapOf<Int, DownloadItem>()
-
-    private var networkWorkers: List<Job> = emptyList()
-    private var fileWriteWorkers: List<Job> = emptyList()
 
     // region [REGION] Private data classes.
 
@@ -177,15 +180,26 @@ class DepotDownloader @JvmOverloads constructor(
         val totalChunksForFile: Int,
     )
 
-    private data class FileWriteItem(
+    private data class DecompressItem(
         val depot: DepotDownloadInfo,
         val depotDownloadCounter: DepotDownloadCounter,
         val downloadCounter: GlobalDownloadCounter,
-        val written: Int,
+        val downloaded: Int,
         val file: FileData,
         val fileStreamData: FileStreamData,
         val chunk: ChunkData,
         val chunkBuffer: ByteArray,
+    )
+
+    private data class FileWriteItem(
+        val depot: DepotDownloadInfo,
+        val depotDownloadCounter: DepotDownloadCounter,
+        val downloadCounter: GlobalDownloadCounter,
+        val file: FileData,
+        val fileStreamData: FileStreamData,
+        val chunk: ChunkData,
+        val decompressed: Int,
+        val decompressedBuffer: ByteArray,
     )
 
     private data class DirectoryResult(val success: Boolean, val installDir: Path?)
@@ -228,6 +242,50 @@ class DepotDownloader @JvmOverloads constructor(
             processItems()
         }
     }
+
+    private fun createChunkProcessingFlow(): kotlinx.coroutines.flow.Flow<Unit> = networkChunkFlow
+        .flatMapMerge<NetworkChunkItem, DecompressItem>(concurrency = maxDownloads) { item ->
+            flow<DecompressItem> {
+                try {
+                    val result = downloadSteam3DepotFileChunk(
+                        downloadCounter = item.downloadCounter,
+                        depotFilesData = item.depotFilesData,
+                        file = item.fileData,
+                        fileStreamData = item.fileStreamData,
+                        chunk = item.chunk
+                    )
+                    if (result != null) {
+                        emit(result)
+                    }
+                } catch (e: Exception) {
+                    logger?.error("Error downloading chunk: ${e.message}", e)
+                }
+            }.flowOn(Dispatchers.IO)
+        }
+        .flatMapMerge<DecompressItem, FileWriteItem>(concurrency = maxDecompress) { item ->
+            flow<FileWriteItem> {
+                try {
+                    val result = processFileDecompress(item)
+                    if (result != null) {
+                        emit(result)
+                    }
+                } catch (e: Exception) {
+                    logger?.error("Error decompressing chunk: ${e.message}", e)
+                }
+            }.flowOn(Dispatchers.Default)
+        }
+        .flatMapMerge<FileWriteItem, Unit>(concurrency = maxFileWrites) { item ->
+            flow<Unit> {
+                try {
+                    processFileWrites(item)
+                    pendingChunks.decrementAndGet()
+                    emit(Unit)
+                } catch (e: Exception) {
+                    logger?.error("Error writing file: ${e.message}", e)
+                    pendingChunks.decrementAndGet()
+                }
+            }.flowOn(Dispatchers.IO)
+        }
 
     // region [REGION] Downloading Operations
 
@@ -1116,29 +1174,22 @@ class DepotDownloader @JvmOverloads constructor(
                         }
                     }.awaitAll()
                 }
-
-                // Close the channel to signal no more items will be added
-                if (isLastDepot) {
-                    networkChunkQueue.close()
-
-                    // Wait for all network workers to finish processing remaining items
-                    networkWorkers.joinAll()
-                }
             }
         } finally {
             if (isLastDepot) {
-                if (!networkChunkQueue.isClosedForSend) {
-                    // Close the channel to signal no more items will be added
-                    networkChunkQueue.close()
+                logger?.debug("Waiting for ${pendingChunks.get()} pending chunks to complete for depot ${depot.depotId}")
+
+                // Wait for all pending chunks to complete processing
+                while (pendingChunks.get() > 0) {
+                    kotlinx.coroutines.delay(100)
                 }
 
-                // Close file write channel since no more network workers can send to it
-                if (!fileWriteChannel.isClosedForSend) {
-                    fileWriteChannel.close()
-                }
+                logger?.debug("All chunks completed, canceling processing job for depot ${depot.depotId}")
 
-                // Wait for all file write workers to finish processing remaining items
-                fileWriteWorkers.joinAll()
+                // Cancel the continuous flow job since no more chunks will be added
+                chunkProcessingJob?.cancel()
+
+                logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
             }
         }
 
@@ -1392,7 +1443,8 @@ class DepotDownloader @JvmOverloads constructor(
         )
 
         neededChunks!!.forEach { chunk ->
-            networkChunkQueue.send(
+            pendingChunks.incrementAndGet()
+            networkChunkFlow.tryEmit(
                 NetworkChunkItem(
                     downloadCounter = downloadCounter,
                     depotFilesData = depotFilesData,
@@ -1411,7 +1463,7 @@ class DepotDownloader @JvmOverloads constructor(
         file: FileData,
         fileStreamData: FileStreamData,
         chunk: ChunkData,
-    ): Unit = withContext(Dispatchers.IO) {
+    ): DecompressItem? = withContext(Dispatchers.Default) {
         ensureActive()
 
         val depot = depotFilesData.depotDownloadInfo
@@ -1419,8 +1471,8 @@ class DepotDownloader @JvmOverloads constructor(
 
         val chunkID = Strings.toHex(chunk.chunkID)
 
-        var written = 0
-        val chunkBuffer = ByteArray(chunk.uncompressedLength)
+        var downloaded = 0
+        val chunkBuffer = ByteArray(chunk.compressedLength)
 
         do {
             ensureActive()
@@ -1445,7 +1497,7 @@ class DepotDownloader @JvmOverloads constructor(
 
                 logger?.debug("Downloading chunk $chunkID from $connection with ${cdnClientPool!!.proxyServer ?: "no proxy"}")
 
-                written = cdnClientPool!!.cdnClient!!.downloadDepotChunk(
+                downloaded = cdnClientPool!!.cdnClient!!.downloadDepotChunk(
                     depotId = depot.depotId,
                     chunk = chunk,
                     server = connection,
@@ -1489,9 +1541,9 @@ class DepotDownloader @JvmOverloads constructor(
                 cdnClientPool!!.returnBrokenConnection(connection)
                 logger?.error("Encountered unexpected error downloading chunk $chunkID", e)
             }
-        } while (written == 0)
+        } while (downloaded == 0)
 
-        if (written == 0) {
+        if (downloaded == 0) {
             logger?.error("Failed to find any server with chunk ${chunk.chunkID} for depot ${depot.depotId}. Aborting.")
             cancel()
         }
@@ -1499,18 +1551,16 @@ class DepotDownloader @JvmOverloads constructor(
         // Throw the cancellation exception if requested so that this task is marked failed
         ensureActive()
 
-        // Queue the file write operation
-        fileWriteChannel.send(
-            FileWriteItem(
-                depot = depot,
-                depotDownloadCounter = depotDownloadCounter,
-                downloadCounter = downloadCounter,
-                written = written,
-                file = file,
-                fileStreamData = fileStreamData,
-                chunk = chunk,
-                chunkBuffer = chunkBuffer,
-            )
+        // Return the decompress item for the next stage in the pipeline
+        return@withContext DecompressItem(
+            depot = depot,
+            depotDownloadCounter = depotDownloadCounter,
+            downloadCounter = downloadCounter,
+            downloaded = downloaded,
+            file = file,
+            fileStreamData = fileStreamData,
+            chunk = chunk,
+            chunkBuffer = chunkBuffer,
         )
     }
 
@@ -1555,8 +1605,8 @@ class DepotDownloader @JvmOverloads constructor(
         listeners.remove(listener)
     }
 
-    private suspend fun notifyListeners(action: (IDownloadListener) -> Unit) {
-        coroutineScope {
+    private fun notifyListeners(action: (IDownloadListener) -> Unit) {
+        scope.launch(Dispatchers.IO) {
             listeners.forEach { listener -> action(listener) }
         }
     }
@@ -1622,28 +1672,9 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        // First pre-launch coroutines
-        networkWorkers = List(maxDownloads) {
-            scope.launch {
-                networkChunkQueue.receiveAsFlow().collect { item ->
-                    downloadSteam3DepotFileChunk(
-                        downloadCounter = item.downloadCounter,
-                        depotFilesData = item.depotFilesData,
-                        file = item.fileData,
-                        fileStreamData = item.fileStreamData,
-                        chunk = item.chunk,
-                    )
-                }
-            }
-        }
-
-        // Launch the file writing receivers
-        fileWriteWorkers = List(maxFileWrites) {
-            scope.launch {
-                fileWriteChannel.receiveAsFlow().collect { item ->
-                    processFileWrites(item)
-                }
-            }
+        // Launch the chunk processing pipeline using Flow
+        chunkProcessingJob = scope.launch {
+            createChunkProcessingFlow().collect()
         }
 
         for (item in processingChannel) {
@@ -1740,6 +1771,36 @@ class DepotDownloader @JvmOverloads constructor(
         }
     }
 
+    private suspend fun processFileDecompress(item: DecompressItem): FileWriteItem? = withContext(Dispatchers.Default) {
+        // Throw the cancellation exception if requested so that this task is marked failed
+        ensureActive()
+
+        val depot = item.depot
+        val depotKey = depot.depotKey
+        val downloaded = item.downloaded
+        val chunk = item.chunk
+        val chunkBuffer = item.chunkBuffer
+
+        var written = downloaded
+        var decompressedBuffer = chunkBuffer
+
+        if (depotKey != null) {
+            decompressedBuffer = ByteArray(chunk.uncompressedLength)
+            written = DepotChunk.process(chunk, chunkBuffer, decompressedBuffer, depotKey)
+        }
+
+        return@withContext FileWriteItem(
+            depot = depot,
+            depotDownloadCounter = item.depotDownloadCounter,
+            downloadCounter = item.downloadCounter,
+            file = item.file,
+            fileStreamData = item.fileStreamData,
+            chunk = chunk,
+            decompressed = written,
+            decompressedBuffer = decompressedBuffer,
+        )
+    }
+
     private suspend fun processFileWrites(item: FileWriteItem): Unit = withContext(Dispatchers.IO) {
         // Throw the cancellation exception if requested so that this task is marked failed
         ensureActive()
@@ -1747,11 +1808,11 @@ class DepotDownloader @JvmOverloads constructor(
         val depot = item.depot
         val depotDownloadCounter = item.depotDownloadCounter
         val downloadCounter = item.downloadCounter
-        val written = item.written
         val file = item.file
         val fileStreamData = item.fileStreamData
         val chunk = item.chunk
-        val chunkBuffer = item.chunkBuffer
+        val written = item.decompressed
+        val decompressedBuffer = item.decompressedBuffer
 
         try {
             fileStreamData.fileLock.lock()
@@ -1761,7 +1822,7 @@ class DepotDownloader @JvmOverloads constructor(
                 fileStreamData.fileHandle = filesystem.openReadWrite(fileFinalPath)
             }
 
-            fileStreamData.fileHandle!!.write(chunk.offset, chunkBuffer, 0, written)
+            fileStreamData.fileHandle!!.write(chunk.offset, decompressedBuffer, 0, written)
         } finally {
             fileStreamData.fileLock.unlock()
         }

@@ -207,8 +207,8 @@ class Client(steamClient: SteamClient) : Closeable {
                 throw IllegalArgumentException("The destination buffer must be longer than the chunk CompressedLength (since no depot key was provided).")
             }
         } else {
-            if (destination.size < chunk.uncompressedLength) {
-                throw IllegalArgumentException("The destination buffer must be longer than the chunk UncompressedLength.")
+            if (destination.size != chunk.compressedLength) {
+                throw IllegalArgumentException("The destination buffer must be the same size as the chunk UncompressedLength.")
             }
         }
 
@@ -267,12 +267,8 @@ class Client(steamClient: SteamClient) : Closeable {
                     )
                 }
 
-                if (depotKey == null) {
-                    System.arraycopy(responseBody, 0, destination, 0, contentLength)
-                    return@withContext contentLength
-                }
-
-                return@withContext DepotChunk.process(chunk, responseBody, destination, depotKey)
+                System.arraycopy(responseBody, 0, destination, 0, contentLength)
+                return@withContext contentLength
             }
         } catch (e: Exception) {
             logger.error("Failed to download a depot chunk ${request.url}: ${e.message}", e)
@@ -364,16 +360,25 @@ class Client(steamClient: SteamClient) : Closeable {
 
         scope.launch {
             try {
-                val bytesWritten = downloadDepotChunk(
+                val downloadedBytes = ByteArray(chunk.compressedLength)
+
+                val bytesDownloaded = downloadDepotChunk(
                     depotId = depotId,
                     chunk = chunk,
                     server = server,
-                    destination = destination,
+                    destination = downloadedBytes,
                     depotKey = depotKey,
                     proxyServer = proxyServer,
                     cdnAuthToken = cdnAuthToken
                 )
-                future.complete(bytesWritten)
+
+                if (depotKey != null) {
+                    val bytesProcessed = DepotChunk.process(chunk, downloadedBytes, destination, depotKey)
+                    future.complete(bytesProcessed)
+                } else {
+                    System.arraycopy(downloadedBytes, 0, destination, 0, bytesDownloaded)
+                    future.complete(bytesDownloaded)
+                }
             } catch (e: Exception) {
                 future.completeExceptionally(e)
             }
