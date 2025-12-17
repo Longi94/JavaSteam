@@ -12,12 +12,14 @@ import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_Un
 import `in`.dragonbra.javasteam.rpc.service.ClientComm
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 
 /**
  * Allows controlling of other running Steam clients.
  */
+@JavaSteamAddition
 class SteamClientCommunication : ClientMsgHandler() {
 
     private val clientComm: ClientComm by lazy {

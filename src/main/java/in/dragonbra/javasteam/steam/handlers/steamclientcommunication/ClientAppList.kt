@@ -1,5 +1,7 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
+
 /**
  * TODO kdoc
  * @param bytesAvailable
@@ -9,6 +11,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
  * @param refetchIntervalSecChanging
  * @param refetchIntervalSecUpdating
  */
+@JavaSteamAddition
 data class ClientAppList(
     val bytesAvailable: Long,
     val apps: List<ClientAppListAppData>,

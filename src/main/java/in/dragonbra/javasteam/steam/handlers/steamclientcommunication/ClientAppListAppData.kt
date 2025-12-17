@@ -1,5 +1,7 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
+
 /**
  * TODO kdoc
  * @param appid
@@ -29,6 +31,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
  * @param running
  * @param updatePercentage
  */
+@JavaSteamAddition
 data class ClientAppListAppData(
     val appid: Int,
     val app: String,

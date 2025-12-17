@@ -85,6 +85,7 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(SteamContent())
         addHandlerCore(SteamAuthTicket())
         addHandlerCore(SteamNotifications()) // JavaSteam Addition
+        // addHandlerCore(SteamClientCommunication()) // JavaSteam Addition, not enabled by default
 
         if (handlers.size != HANDLERS_COUNT) {
             logger.error("Handlers size didnt match handlers count (${handlers.size}) when initializing")

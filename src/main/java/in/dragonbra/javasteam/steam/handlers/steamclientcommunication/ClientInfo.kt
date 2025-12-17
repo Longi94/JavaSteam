@@ -1,5 +1,7 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
+
 /**
  * TODO kdoc
  * @param packageVersion
@@ -13,6 +15,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
  * @param clientCommVersion
  * @param localUsers
  */
+@JavaSteamAddition
 data class ClientInfo(
     val packageVersion: Int,
     val os: String,

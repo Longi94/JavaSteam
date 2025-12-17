@@ -1,5 +1,8 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
+
+@JavaSteamAddition
 enum class InstalledAppsFilter {
     /**
      * Return everything, including not installed apps

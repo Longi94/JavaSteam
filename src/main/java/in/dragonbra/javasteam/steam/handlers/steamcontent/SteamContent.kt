@@ -13,6 +13,7 @@ import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.webapi.ContentServerDirectoryService
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -59,6 +60,7 @@ class SteamContent : ClientMsgHandler() {
      * @param targetManifestId
      * @return A [DepotPatchInfo]
      */
+    @JavaSteamAddition
     fun getDepotPatchInfo(
         appId: Int,
         depotId: Int,
@@ -88,6 +90,7 @@ class SteamContent : ClientMsgHandler() {
      * @param cachedSignature
      * @return A [ClientUpdateHosts]
      */
+    @JavaSteamAddition
     fun getClientUpdateHosts(
         cachedSignature: String,
         parentScope: CoroutineScope,
@@ -181,6 +184,7 @@ class SteamContent : ClientMsgHandler() {
      * @param currentBuildId
      * @return A [RequestPeerContentServer]
      */
+    @JavaSteamAddition
     fun requestPeerContentServer(
         remoteClientId: Long,
         steamId: Long,
@@ -214,6 +218,7 @@ class SteamContent : ClientMsgHandler() {
      * @param serverRemoteClientId
      * @return A [GetPeerContentInfo]
      */
+    @JavaSteamAddition
     fun getPeerContentInfo(
         remoteClientId: Long,
         steamId: Long,
