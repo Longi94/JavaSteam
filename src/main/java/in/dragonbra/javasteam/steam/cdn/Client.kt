@@ -202,14 +202,8 @@ class Client(steamClient: SteamClient) : Closeable {
     ): Int = withContext(Dispatchers.IO) {
         require(chunk.chunkID != null) { "Chunk must have a ChunkID." }
 
-        if (depotKey == null) {
-            if (destination.size < chunk.compressedLength) {
-                throw IllegalArgumentException("The destination buffer must be longer than the chunk CompressedLength (since no depot key was provided).")
-            }
-        } else {
-            if (destination.size != chunk.compressedLength) {
-                throw IllegalArgumentException("The destination buffer must be the same size as the chunk UncompressedLength.")
-            }
+        if (destination.size != chunk.compressedLength) {
+            throw IllegalArgumentException("The destination buffer must be the same size as the chunk CompressedLength (Since we take out decompression step from download")
         }
 
         val chunkID = Strings.toHex(chunk.chunkID)
@@ -360,6 +354,16 @@ class Client(steamClient: SteamClient) : Closeable {
 
         scope.launch {
             try {
+                if (depotKey != null) {
+                    if (destination.size < chunk.compressedLength) {
+                        throw IllegalArgumentException("The destination buffer must be longer than the chunk CompressedLength (since no depot key was provided).")
+                    }
+                } else {
+                    if (destination.size != chunk.compressedLength) {
+                        throw IllegalArgumentException("The destination buffer must be the same size as the chunk UncompressedLength.")
+                    }
+                }
+
                 val downloadedBytes = ByteArray(chunk.compressedLength)
 
                 val bytesDownloaded = downloadDepotChunk(
