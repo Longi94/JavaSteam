@@ -80,6 +80,9 @@ class UnifiedInterfaceTest {
             "UserAccount.kt",
             "PublishedFile.kt",
             "PublishedFileClient.kt",
+
+            // WebUI
+            "ClientComm.kt"
         )
     }
 }

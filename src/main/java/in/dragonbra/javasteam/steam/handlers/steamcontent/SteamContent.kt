@@ -2,12 +2,15 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetCDNAuthToken_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetClientUpdateHosts_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetDepotPatchInfo_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetPeerContentInfo_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetServersForSteamPipe_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_RequestPeerContentServer_Request
 import `in`.dragonbra.javasteam.rpc.service.ContentServerDirectory
 import `in`.dragonbra.javasteam.steam.cdn.Server
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
-import `in`.dragonbra.javasteam.steam.handlers.steamcontent.CDNAuthToken
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.webapi.ContentServerDirectoryService
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +49,57 @@ class SteamContent : ClientMsgHandler() {
         val response = message.body.build()
 
         return@async ContentServerDirectoryService.convertServerList(response)
+    }
+
+    /**
+     * TODO kdoc
+     * @param appId
+     * @param depotId
+     * @param sourceManifestId
+     * @param targetManifestId
+     * @return A [DepotPatchInfo]
+     */
+    fun getDepotPatchInfo(
+        appId: Int,
+        depotId: Int,
+        sourceManifestId: Long,
+        targetManifestId: Long,
+        parentScope: CoroutineScope,
+    ): Deferred<DepotPatchInfo> = parentScope.async {
+        val request = CContentServerDirectory_GetDepotPatchInfo_Request.newBuilder().apply {
+            this.appid = appId
+            this.depotid = depotId
+            this.sourceManifestid = sourceManifestId
+            this.targetManifestid = targetManifestId
+        }.build()
+
+        val message = contentService.getDepotPatchInfo(request).await()
+        val response = message.body.build()
+
+        return@async DepotPatchInfo(
+            isAvailable = response.isAvailable,
+            patchSize = response.patchSize,
+            patchedChunksSize = response.patchedChunksSize
+        )
+    }
+
+    /**
+     * TODO kdoc
+     * @param cachedSignature
+     * @return A [ClientUpdateHosts]
+     */
+    fun getClientUpdateHosts(
+        cachedSignature: String,
+        parentScope: CoroutineScope,
+    ): Deferred<ClientUpdateHosts> = parentScope.async {
+        val request = CContentServerDirectory_GetClientUpdateHosts_Request.newBuilder().apply {
+            this.cachedSignature = cachedSignature
+        }.build()
+
+        val message = contentService.getClientUpdateHosts(request).await()
+        val response = message.body.build()
+
+        return@async ClientUpdateHosts(response.hostsKv, response.validUntilTime, response.ipCountry)
     }
 
     /**
@@ -116,6 +170,69 @@ class SteamContent : ClientMsgHandler() {
         val message = contentService.getCDNAuthToken(request).await()
 
         return@async CDNAuthToken(message)
+    }
+
+    /**
+     * TODO kdoc
+     * @param remoteClientId
+     * @param steamId
+     * @param serverRemoteClientId
+     * @param appId
+     * @param currentBuildId
+     * @return A [RequestPeerContentServer]
+     */
+    fun requestPeerContentServer(
+        remoteClientId: Long,
+        steamId: Long,
+        serverRemoteClientId: Long,
+        appId: Int,
+        currentBuildId: Int = 0,
+        parentScope: CoroutineScope,
+    ): Deferred<RequestPeerContentServer> = parentScope.async {
+        val request = CContentServerDirectory_RequestPeerContentServer_Request.newBuilder().apply {
+            this.remoteClientId = remoteClientId
+            this.steamid = steamId
+            this.serverRemoteClientId = serverRemoteClientId
+            this.appId = appId
+            this.currentBuildId = currentBuildId
+        }.build()
+
+        val message = contentService.requestPeerContentServer(request).await()
+        val response = message.body.build()
+
+        return@async RequestPeerContentServer(
+            serverPort = response.serverPort,
+            installedDepots = response.installedDepotsList,
+            accessToken = response.accessToken,
+        )
+    }
+
+    /**
+     * TODO kdoc
+     * @param remoteClientId
+     * @param steamId
+     * @param serverRemoteClientId
+     * @return A [GetPeerContentInfo]
+     */
+    fun getPeerContentInfo(
+        remoteClientId: Long,
+        steamId: Long,
+        serverRemoteClientId: Long,
+        parentScope: CoroutineScope,
+    ): Deferred<GetPeerContentInfo> = parentScope.async {
+        val request = CContentServerDirectory_GetPeerContentInfo_Request.newBuilder().apply {
+            this.remoteClientId = remoteClientId
+            this.steamid = steamId
+            this.serverRemoteClientId = serverRemoteClientId
+        }.build()
+
+        val message = contentService.getPeerContentInfo(request).await()
+        val response = message.body.build()
+
+        return@async GetPeerContentInfo(
+            appIds = response.appidsList,
+            ipPublic = response.ipPublic,
+        )
     }
 
     /**
