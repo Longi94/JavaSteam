@@ -1,21 +1,13 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
-import `in`.dragonbra.javasteam.util.JavaSteamAddition
-
 /**
- * TODO kdoc
- * @param sessions
- * @param refetchIntervalSec
+ * Logon information for a specific Steam client.
+ * @param protocolVersion Protocol version of the client.
+ * @param os Operating system name.
+ * @param machineName Name of the client machine.
  */
-@JavaSteamAddition
 data class ClientLogonInfo(
-    val sessions: List<ClientLogonInfoSession>,
-    val refetchIntervalSec: Int,
-) {
-    override fun toString(): String = """
-           ClientLogonInfo(
-            sessions=$sessions,
-            refetchIntervalSec=$refetchIntervalSec
-           )
-    """.trimIndent()
-}
+    val protocolVersion: Int,
+    val os: String,
+    val machineName: String,
+)

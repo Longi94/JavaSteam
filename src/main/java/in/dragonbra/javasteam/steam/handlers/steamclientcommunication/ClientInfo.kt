@@ -3,17 +3,17 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
- * TODO kdoc
- * @param packageVersion
- * @param os
- * @param machineName
- * @param ipPublic
- * @param ipPrivate
- * @param bytesAvailable
- * @param runningGames
- * @param protocolVersion
- * @param clientCommVersion
- * @param localUsers
+ * Information about a Steam client machine and its current state.
+ * @param packageVersion The Steam client package version.
+ * @param os The operating system of the client.
+ * @param machineName The name of the client machine.
+ * @param ipPublic The client's public IP address.
+ * @param ipPrivate The client's private/local IP address.
+ * @param bytesAvailable Available disk space in bytes.
+ * @param runningGames List of games currently running on the client.
+ * @param protocolVersion The protocol version being used.
+ * @param clientCommVersion The client communication protocol version.
+ * @param localUsers List of local user IDs logged into the client.
  */
 @JavaSteamAddition
 data class ClientInfo(

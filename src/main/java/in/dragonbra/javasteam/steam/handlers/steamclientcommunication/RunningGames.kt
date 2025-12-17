@@ -3,10 +3,10 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
- * TODO kdoc
- * @param appId
- * @param extraInfo
- * @param timeRunningSec
+ * Information about a game currently running on a Steam client.
+ * @param appId The application ID of the running game.
+ * @param extraInfo Additional information about the running game.
+ * @param timeRunningSec Duration in seconds that the game has been running.
  */
 @JavaSteamAddition
 data class RunningGames(

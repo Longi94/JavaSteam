@@ -3,10 +3,10 @@ package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
- * TODO kdoc
- * @param appId
- * @param app
- * @param installed
+ * Information about a DLC (Downloadable Content) associated with an application.
+ * @param appId The DLC's application ID.
+ * @param app The DLC's name.
+ * @param installed Installation status (0 = not installed, non-zero = installed).
  */
 @JavaSteamAddition
 data class ClientAppListDlcData(

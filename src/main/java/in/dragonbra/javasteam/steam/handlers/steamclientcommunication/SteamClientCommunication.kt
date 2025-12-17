@@ -1,10 +1,15 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamclientcommunication
 
 import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EGamingDeviceType
+import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EResult
+import `in`.dragonbra.javasteam.enums.ESteamRealm
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_EnableOrDisableDownloads_Request
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_GetAllClientLogonInfo_Request
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_GetClientAppList_Request
+import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_GetClientInfo_Request
+import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_GetClientLogonInfo_Request
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_InstallClientApp_Request
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_LaunchClientApp_Request
 import `in`.dragonbra.javasteam.protobufs.webui.ServiceClientcomm.CClientComm_SetClientAppUpdateState_Request
@@ -19,6 +24,7 @@ import kotlinx.coroutines.async
 /**
  * Allows controlling of other running Steam clients.
  */
+@Suppress("unused")
 @JavaSteamAddition
 class SteamClientCommunication : ClientMsgHandler() {
 
@@ -29,25 +35,26 @@ class SteamClientCommunication : ClientMsgHandler() {
     }
 
     /**
-     * Return the list of active devices that are running any Steam client and connected to the network.
-     * Note: this will return all connected clients. Filter the results based on OS or device type.
+     * Retrieves information about all active Steam clients connected to the network.
+     * Note: This returns all connected clients. Filter the results based on OS or device type as needed.
+     * @return Information about all active client sessions with recommended refetch interval.
      */
-    fun getAllClientLogonInfo(): Deferred<ClientLogonInfo> = client.defaultScope.async {
+    fun getAllClientLogonInfo(): Deferred<AllClientLogonInfo> = client.defaultScope.async {
         val request = CClientComm_GetAllClientLogonInfo_Request.newBuilder().build()
 
         val message = clientComm.getAllClientLogonInfo(request).await()
         val response = message.body.build()
 
-        return@async ClientLogonInfo(
+        return@async AllClientLogonInfo(
             sessions = response.sessionsList.map {
-                ClientLogonInfoSession(
+                AllClientLogonInfoSession(
                     clientInstanceId = it.clientInstanceid,
                     protocolVersion = it.protocolVersion,
                     osName = it.osName,
                     machineName = it.machineName,
-                    osType = it.osType,
-                    deviceType = it.deviceType,
-                    realm = it.realm,
+                    osType = EOSType.from(it.osType),
+                    deviceType = EGamingDeviceType.from(it.deviceType),
+                    realm = ESteamRealm.from(it.realm),
                 )
             },
             refetchIntervalSec = response.refetchIntervalSec,
@@ -57,9 +64,9 @@ class SteamClientCommunication : ClientMsgHandler() {
     /**
      * Return the list of applications of the remote device.
      * This is not the list of downloaded apps, but the whole "available" list with a flag indicating about it being downloaded.
-     * @param remoteId remote session ID
-     * @param filters filters
-     * @param language language
+     * @param remoteId The remote session ID of the client to query.
+     * @param filters filters to choose, see [InstalledAppsFilter].
+     * @param language language for localized app names (e.g., "english", "french").
      */
     @JvmOverloads
     fun getClientAppList(
@@ -145,9 +152,9 @@ class SteamClientCommunication : ClientMsgHandler() {
 
     /**
      * Adds the application to the remote installation queue.
-     * @param remoteId
-     * @param appId
-     * @return **true** if successfully, otherwise false.
+     * @param remoteId The remote session ID of the client to query.
+     * @param appId Application ID to install.
+     * @return **true** if successful, otherwise false.
      */
     fun installClientApp(remoteId: Long, appId: Int): Deferred<Boolean> = client.defaultScope.async {
         val request = CClientComm_InstallClientApp_Request.newBuilder().apply {
@@ -164,12 +171,17 @@ class SteamClientCommunication : ClientMsgHandler() {
     /**
      * Sets the update state of an app in remote installation queue.
      * Action set to true will move the requested app to the top of the queue.
-     * @param remoteId
-     * @param appId
-     * @param action
-     * @return **true** if successfully, otherwise false.
+     * @param remoteId The remote session ID of the client to query
+     * @param appId Application ID to update.
+     * @param action true to prioritize (move to top of queue), false otherwise.
+     * @return **true** if successful, otherwise false.
      */
-    fun setClientAppUpdateState(remoteId: Long, appId: Int, action: Boolean): Deferred<Boolean> =
+    @JvmOverloads
+    fun setClientAppUpdateState(
+        remoteId: Long,
+        appId: Int,
+        action: Boolean = false,
+    ): Deferred<Boolean> =
         client.defaultScope.async {
             val request = CClientComm_SetClientAppUpdateState_Request.newBuilder().apply {
                 this.clientInstanceid = remoteId
@@ -185,11 +197,14 @@ class SteamClientCommunication : ClientMsgHandler() {
 
     /**
      * Requests to uninstall the app from the device.
-     * @param remoteId
-     * @param appId
-     * @return **true** if successfully, otherwise false.
+     * @param remoteId The remote session ID of the client to query.
+     * @param appId Application ID to uninstall.
+     * @return **true** if successful, otherwise false.
      */
-    fun uninstallClientApp(remoteId: Long, appId: Int): Deferred<Boolean> = client.defaultScope.async {
+    fun uninstallClientApp(
+        remoteId: Long,
+        appId: Int,
+    ): Deferred<Boolean> = client.defaultScope.async {
         val request = CClientComm_UninstallClientApp_Request.newBuilder().apply {
             this.clientInstanceid = remoteId
             this.appid = appId
@@ -202,12 +217,15 @@ class SteamClientCommunication : ClientMsgHandler() {
     }
 
     /**
-     * Pauses or resumes active download - the first item in the queue.
-     * @param remoteId
-     * @param enable
-     * @return **true** if successfully, otherwise false.
+     * Pauses or resumes downloads on the remote client.
+     * @param remoteId The remote session ID of the client to query.
+     * @param enable true to resume downloads, false to pause.
+     * @return **true** if successful, otherwise false.
      */
-    fun enableOrDisableDownloads(remoteId: Long, enable: Boolean): Deferred<Boolean> = client.defaultScope.async {
+    fun enableOrDisableDownloads(
+        remoteId: Long,
+        enable: Boolean,
+    ): Deferred<Boolean> = client.defaultScope.async {
         val request = CClientComm_EnableOrDisableDownloads_Request.newBuilder().apply {
             this.clientInstanceid = remoteId
             this.enable = enable
@@ -221,28 +239,81 @@ class SteamClientCommunication : ClientMsgHandler() {
 
     /**
      * Launches the application on the remote device.
-     * @param remoteId
-     * @param appId
-     * @param parameters
-     * @return **true** if successfully, otherwise false.
+     * @param remoteId The remote session ID of the client to query.
+     * @param appId application ID to launch.
+     * @param parameters Optional launch parameters/query string (e.g., command line arguments).
+     * @return **true** if successful, otherwise false.
      */
-    fun launchClientApp(remoteId: Long, appId: Int, parameters: String? = null): Deferred<Boolean> =
-        client.defaultScope.async {
-            val request = CClientComm_LaunchClientApp_Request.newBuilder().apply {
-                this.clientInstanceid = remoteId
-                this.appid = appId
-                this.queryParams = parameters.orEmpty()
-            }.build()
+    @JvmOverloads
+    fun launchClientApp(
+        remoteId: Long,
+        appId: Int,
+        parameters: String? = null,
+    ): Deferred<Boolean> = client.defaultScope.async {
+        val request = CClientComm_LaunchClientApp_Request.newBuilder().apply {
+            this.clientInstanceid = remoteId
+            this.appid = appId
+            this.queryParams = parameters.orEmpty()
+        }.build()
 
-            val message = clientComm.launchClientApp(request).await()
-            // Request has empty response.
+        val message = clientComm.launchClientApp(request).await()
+        // Request has empty response.
 
-            return@async message.result == EResult.OK
-        }
+        return@async message.result == EResult.OK
+    }
 
-    // TODO: GetClientLogonInfo()
+    /**
+     * Retrieves logon information for a specific Steam client.
+     * @param remoteId The remote session ID of the client to query.
+     * @return Client logon information including protocol version, OS, and machine name.
+     */
+    fun getClientLogonInfo(remoteId: Long): Deferred<ClientLogonInfo> = client.defaultScope.async {
+        val request = CClientComm_GetClientLogonInfo_Request.newBuilder().apply {
+            this.clientInstanceid = remoteId
+        }.build()
 
-    // TODO: GetClientInfo()
+        val message = clientComm.getClientLogonInfo(request).await()
+        val response = message.body.build()
+
+        return@async ClientLogonInfo(
+            protocolVersion = response.protocolVersion,
+            os = response.os,
+            machineName = response.machineName
+        )
+    }
+
+    /**
+     * Retrieves detailed information about a specific Steam client, including system info and running games.
+     * @param remoteId The remote session ID of the client to query.
+     * @return Detailed client information including hardware, network, and active games.
+     */
+    fun getClientInfo(remoteId: Long): Deferred<ClientInfo> = client.defaultScope.async {
+        val request = CClientComm_GetClientInfo_Request.newBuilder().apply {
+            this.clientInstanceid = remoteId
+        }.build()
+
+        val message = clientComm.getClientInfo(request).await()
+        val response = message.body.build()
+
+        return@async ClientInfo(
+            packageVersion = response.clientInfo.packageVersion,
+            os = response.clientInfo.os,
+            machineName = response.clientInfo.machineName,
+            ipPublic = response.clientInfo.ipPublic,
+            ipPrivate = response.clientInfo.ipPrivate,
+            bytesAvailable = response.clientInfo.bytesAvailable,
+            runningGames = response.clientInfo.runningGamesList.map { game ->
+                RunningGames(
+                    appId = game.appid,
+                    extraInfo = game.extraInfo,
+                    timeRunningSec = game.timeRunningSec,
+                )
+            },
+            protocolVersion = response.clientInfo.protocolVersion,
+            clientCommVersion = response.clientInfo.clientcommVersion,
+            localUsers = response.clientInfo.localUsersList,
+        )
+    }
 
     /**
      * Handles a client message. This should not be called directly.

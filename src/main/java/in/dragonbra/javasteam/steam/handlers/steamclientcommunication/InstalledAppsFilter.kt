@@ -10,7 +10,7 @@ enum class InstalledAppsFilter {
     None,
 
     /**
-     * Return only apps that are "in progress" - downloading, updated, scheduled
+     * Return only apps that are "in progress" - downloading, updating, scheduled
      */
     Changing,
 }
