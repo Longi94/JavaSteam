@@ -1,8 +1,8 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 
 import `in`.dragonbra.javasteam.base.IPacketMsg
+import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetCDNAuthToken_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetClientUpdateHosts_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetDepotPatchInfo_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetManifestRequestCode_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesContentsystemSteamclient.CContentServerDirectory_GetPeerContentInfo_Request
@@ -14,6 +14,8 @@ import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
 import `in`.dragonbra.javasteam.steam.webapi.ContentServerDirectoryService
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -21,7 +23,13 @@ import kotlinx.coroutines.async
 /**
  * This handler is used for interacting with content server directory on the Steam network.
  */
+@Suppress("unused")
 class SteamContent : ClientMsgHandler() {
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(SteamContent::class.java)
+    }
+
     private val contentService: ContentServerDirectory by lazy {
         val unifiedMessages = client.getHandler(SteamUnifiedMessages::class.java)
             ?: throw NullPointerException("Unable to get SteamUnifiedMessages handler")
@@ -80,6 +88,10 @@ class SteamContent : ClientMsgHandler() {
         val message = contentService.getDepotPatchInfo(request).await()
         val response = message.body.build()
 
+        if (message.result != EResult.OK) {
+            logger.error("getDepotPatchInfo got ${message.result}")
+        }
+
         return@async DepotPatchInfo(
             isAvailable = response.isAvailable,
             patchSize = response.patchSize,
@@ -87,25 +99,7 @@ class SteamContent : ClientMsgHandler() {
         )
     }
 
-    /**
-     * TODO kdoc
-     * @param cachedSignature
-     * @return A [ClientUpdateHosts]
-     */
-    @JavaSteamAddition
-    fun getClientUpdateHosts(
-        cachedSignature: String,
-        parentScope: CoroutineScope,
-    ): Deferred<ClientUpdateHosts> = parentScope.async {
-        val request = CContentServerDirectory_GetClientUpdateHosts_Request.newBuilder().apply {
-            this.cachedSignature = cachedSignature
-        }.build()
-
-        val message = contentService.getClientUpdateHosts(request).await()
-        val response = message.body.build()
-
-        return@async ClientUpdateHosts(response.hostsKv, response.validUntilTime, response.ipCountry)
-    }
+    // RPC getClientUpdateHosts() is not applicable for JavaSteam. This is used for Steam's own updating stuff.
 
     /**
      * Request the manifest request code for the specified arguments.
@@ -187,13 +181,14 @@ class SteamContent : ClientMsgHandler() {
      * @return A [RequestPeerContentServer]
      */
     @JavaSteamAddition
+    @JvmOverloads
     fun requestPeerContentServer(
         remoteClientId: Long,
         steamId: Long,
         serverRemoteClientId: Long,
         appId: Int,
         currentBuildId: Int = 0,
-        parentScope: CoroutineScope,
+        parentScope: CoroutineScope = client.defaultScope,
     ): Deferred<RequestPeerContentServer> = parentScope.async {
         val request = CContentServerDirectory_RequestPeerContentServer_Request.newBuilder().apply {
             this.remoteClientId = remoteClientId
@@ -205,6 +200,10 @@ class SteamContent : ClientMsgHandler() {
 
         val message = contentService.requestPeerContentServer(request).await()
         val response = message.body.build()
+
+        if (message.result != EResult.OK) {
+            logger.error("requestPeerContentServer got ${message.result}")
+        }
 
         return@async RequestPeerContentServer(
             serverPort = response.serverPort,
@@ -221,11 +220,12 @@ class SteamContent : ClientMsgHandler() {
      * @return A [GetPeerContentInfo]
      */
     @JavaSteamAddition
+    @JvmOverloads
     fun getPeerContentInfo(
         remoteClientId: Long,
         steamId: Long,
         serverRemoteClientId: Long,
-        parentScope: CoroutineScope,
+        parentScope: CoroutineScope = client.defaultScope,
     ): Deferred<GetPeerContentInfo> = parentScope.async {
         val request = CContentServerDirectory_GetPeerContentInfo_Request.newBuilder().apply {
             this.remoteClientId = remoteClientId
@@ -235,6 +235,10 @@ class SteamContent : ClientMsgHandler() {
 
         val message = contentService.getPeerContentInfo(request).await()
         val response = message.body.build()
+
+        if (message.result != EResult.OK) {
+            logger.error("getPeerContentInfo got ${message.result}")
+        }
 
         return@async GetPeerContentInfo(
             appIds = response.appidsList,

@@ -13,4 +13,12 @@ data class RequestPeerContentServer(
     val serverPort: Int,
     val installedDepots: List<Int>,
     val accessToken: Long,
-)
+) {
+    override fun toString(): String = """
+            RequestPeerContentServer(
+                serverPort=$serverPort,
+                installedDepots=$installedDepots,
+                accessToken=$accessToken
+            )
+    """.trimIndent()
+}
