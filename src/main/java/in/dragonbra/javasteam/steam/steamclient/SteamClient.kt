@@ -85,6 +85,7 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(SteamContent())
         addHandlerCore(SteamAuthTicket())
         addHandlerCore(SteamNotifications()) // JavaSteam Addition
+        // addHandlerCore(SteamClientCommunication()) // JavaSteam Addition, not enabled by default
 
         if (handlers.size != HANDLERS_COUNT) {
             logger.error("Handlers size didnt match handlers count (${handlers.size}) when initializing")
@@ -109,9 +110,28 @@ class SteamClient @JvmOverloads constructor(
         addHandlerCore(handler)
     }
 
+    /**
+     * Kotlin Helper:
+     * Adds a new handler to the internal list of message handlers.
+     * @param T The handler to add.
+     */
+    inline fun <reified T : ClientMsgHandler> addHandler() {
+        val handler = T::class.java.getDeclaredConstructor().newInstance()
+        addHandler(handler)
+    }
+
     private fun addHandlerCore(handler: ClientMsgHandler) {
         handler.setup(this)
         handlers[handler.javaClass] = handler
+    }
+
+    /**
+     * Kotlin Helper:
+     * Removes a registered handler by name.
+     * @param T The handler name to remove.
+     */
+    inline fun <reified T : ClientMsgHandler> removeHandler() {
+        removeHandler(T::class.java)
     }
 
     /**

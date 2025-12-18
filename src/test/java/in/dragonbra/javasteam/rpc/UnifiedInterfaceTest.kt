@@ -45,7 +45,11 @@ class UnifiedInterfaceTest {
         /**
          * Any changes to then number of interfaces would need to reflect here. Otherwise, the test should fail.
          */
-        val knownServiceTypes = arrayOf(
+        val webuiServices = arrayOf(
+            "ClientComm.kt"
+        )
+
+        val standardServices = arrayOf(
             // "AccountLinking.kt",
             "Authentication.kt",
             "AuthenticationSupport.kt",
@@ -81,5 +85,7 @@ class UnifiedInterfaceTest {
             "PublishedFile.kt",
             "PublishedFileClient.kt",
         )
+
+        val knownServiceTypes = webuiServices + standardServices
     }
 }
