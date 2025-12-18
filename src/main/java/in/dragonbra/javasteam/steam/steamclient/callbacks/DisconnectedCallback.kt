@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.steam.steamclient.callbacks
 
+import `in`.dragonbra.javasteam.steam.CMClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**

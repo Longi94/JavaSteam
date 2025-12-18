@@ -93,7 +93,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
 
         val msg = ClientMsgProtobuf<TRequest>(message::class.java, eMsg).apply {
             sourceJobID = client.getNextJobID()
-            header.proto.targetJobName = name
+            header!!.proto.targetJobName = name
             body.mergeFrom(message)
         }
 
@@ -120,7 +120,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
             EMsg.ServiceMethodCallFromClient
         }
         val msg = ClientMsgProtobuf<TRequest>(message::class.java, eMsg).apply {
-            header.proto.targetJobName = name
+            header!!.proto.targetJobName = name
             body.mergeFrom(message)
         }
 
@@ -146,7 +146,7 @@ class SteamUnifiedMessages : ClientMsgHandler() {
         val hash = jobName.lastIndexOf('#')
         if (dot < 0 || hash < 0) return
 
-        val serviceName = jobName.substring(0, dot)
+        val serviceName = jobName.take(dot)
         val handler = handlers[serviceName] ?: return
         val methodName = jobName.substring(dot + 1, hash)
 

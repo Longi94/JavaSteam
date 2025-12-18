@@ -7,7 +7,6 @@ import in.dragonbra.javasteam.util.compat.Consumer;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

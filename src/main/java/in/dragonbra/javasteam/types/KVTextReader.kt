@@ -54,8 +54,8 @@ internal constructor(
         }
 
     init {
-        val wasQuoted = Passable<Boolean>(false)
-        val wasConditional = Passable<Boolean>(false)
+        val wasQuoted = Passable(false)
+        val wasConditional = Passable(false)
 
         var currentKey: KeyValue? = kv
 
@@ -175,7 +175,7 @@ internal constructor(
                     read()
 
                     val escapedChar = read().toChar()
-                    var replacedChar = ESCAPED_MAPPING[escapedChar] ?: escapedChar
+                    val replacedChar = ESCAPED_MAPPING[escapedChar] ?: escapedChar
 
                     sb.append(replacedChar)
 

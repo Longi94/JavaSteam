@@ -9,6 +9,7 @@ import java.io.OutputStream
  * @constructor Initializes a new instance of the [MessageObject] class, using the provided KeyValues object.
  * @param keyValues The KeyValue backing store for this message object.
  */
+@Suppress("unused")
 open class MessageObject @JvmOverloads constructor(
     protected var keyValues: KeyValue = KeyValue("MessageObject"),
 ) {

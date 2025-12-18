@@ -34,6 +34,7 @@ import `in`.dragonbra.javasteam.util.NetHelpers
 /**
  * This handler handles all user log on/log off related actions and callbacks.
  */
+@Suppress("unused")
 class SteamUser : ClientMsgHandler() {
 
     val steamID: SteamID?

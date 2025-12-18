@@ -1,6 +1,6 @@
 package in.dragonbra.javasteamsamples._030_counterstrikegc;
 
-import in.dragonbra.javasteam.base.ClientGCMsgProtobuf;
+import in.dragonbra.javasteam.base.gc.ClientGCMsgProtobuf;
 import in.dragonbra.javasteam.base.ClientMsgProtobuf;
 import in.dragonbra.javasteam.enums.EAccountType;
 import in.dragonbra.javasteam.enums.EMsg;

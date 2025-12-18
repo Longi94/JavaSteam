@@ -12,7 +12,7 @@ import java.util.*
  * This callback is received in response to calling [SteamWorkshop.enumeratePublishedFilesByUserAction].
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-class UserActionPublishedFilesCallback(packetMsg: IPacketMsg?) : CallbackMsg() {
+class UserActionPublishedFilesCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
      * Gets the result.

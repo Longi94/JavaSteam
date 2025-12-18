@@ -1,0 +1,45 @@
+package `in`.dragonbra.javasteam.base
+
+import `in`.dragonbra.javasteam.util.log.LogManager
+import `in`.dragonbra.javasteam.util.log.Logger
+import java.lang.reflect.InvocationTargetException
+
+/**
+ * This is the abstract base class for all available client messages.
+ * It's used to maintain packet payloads and provide a header for all client messages.
+ * @constructor Initializes a new instance of the [MsgBase] class.
+ * @param clazz The type of the header.
+ * @param payloadReserve The number of bytes to initialize the payload capacity to.
+ * @param HdrType The header type for this message.
+ */
+@Suppress("unused")
+abstract class MsgBase<HdrType : ISteamSerializable> @JvmOverloads constructor(
+    clazz: Class<HdrType>,
+    payloadReserve: Int = 0,
+) : AbstractMsgBase(payloadReserve),
+    IClientMsg {
+
+    companion object {
+        private val logger: Logger = LogManager.getLogger(MsgBase::class.java)
+    }
+
+    /**
+     * Gets the header for this message type.
+     */
+    lateinit var header: HdrType
+        private set
+
+    init {
+        try {
+            header = clazz.getDeclaredConstructor().newInstance()
+        } catch (e: NoSuchMethodException) {
+            logger.error(e)
+        } catch (e: InstantiationException) {
+            logger.error(e)
+        } catch (e: IllegalAccessException) {
+            logger.error(e)
+        } catch (e: InvocationTargetException) {
+            logger.error(e)
+        }
+    }
+}

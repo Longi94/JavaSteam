@@ -7,10 +7,12 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.EncryptedAppTicketOuterCla
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CMsgClientRequestEncryptedAppTicketResponse
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
  * This callback is received in response to calling [SteamApps.requestEncryptedAppTicket]
  */
+@JavaSteamAddition
 class EncryptedAppTicketCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**

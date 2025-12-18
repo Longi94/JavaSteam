@@ -82,7 +82,9 @@ open class AuthSession(
 
             var pollLoop = false
             when (preferredConfirmation.confirmationType) {
-                EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit // No steam guard
+                EAuthSessionGuardType.k_EAuthSessionGuardType_None -> Unit
+
+                // No steam guard
                 EAuthSessionGuardType.k_EAuthSessionGuardType_EmailCode,
                 EAuthSessionGuardType.k_EAuthSessionGuardType_DeviceCode,
                 -> {
@@ -94,6 +96,7 @@ open class AuthSession(
                     // This is a prompt that appears in the Steam mobile app
                     pollLoop = true
                 }
+
                 // SessionGuardType.k_EAuthSessionGuardType_EmailConfirmation -> Unit // Unknown
                 // SessionGuardType.k_EAuthSessionGuardType_MachineToken -> Unit // Unknown
                 else -> throw AuthenticationException(
