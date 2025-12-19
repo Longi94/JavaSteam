@@ -104,6 +104,7 @@ import kotlin.text.toLongOrNull
  * @param maxDecompress Number of concurrent chunk decompress. Default: 8
  * @param maxFileWrites Number of concurrent files being written. Default: 1
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
+ * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
  *
  * @author Oxters
  * @author Lossy
@@ -120,6 +121,7 @@ class DepotDownloader @JvmOverloads constructor(
     private var maxDecompress: Int = 8,
     private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
+    private val parentJob: Job? = null,
 ) : Closeable {
 
     companion object {
@@ -153,7 +155,7 @@ class DepotDownloader @JvmOverloads constructor(
 
     private val progressUpdateInterval = 500L // ms
 
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob(parentJob))
 
     private var cdnClientPool: CDNClientPool? = null
 
