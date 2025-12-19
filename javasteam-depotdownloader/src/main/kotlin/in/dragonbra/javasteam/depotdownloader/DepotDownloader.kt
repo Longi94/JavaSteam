@@ -1467,7 +1467,7 @@ class DepotDownloader @JvmOverloads constructor(
         file: FileData,
         fileStreamData: FileStreamData,
         chunk: ChunkData,
-    ): DecompressItem? = withContext(Dispatchers.Default) {
+    ): DecompressItem? = withContext(Dispatchers.IO) {
         ensureActive()
 
         val depot = depotFilesData.depotDownloadInfo
