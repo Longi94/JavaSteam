@@ -140,7 +140,7 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public synchronized int available() {
+    public int available() {
         return length - position;
     }
 
@@ -159,12 +159,12 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public synchronized void reset() {
+    public void reset() {
         position = mark;
     }
 
     @Override
-    public synchronized int read() {
+    public int read() {
         if (position >= length)
             return -1;
 
@@ -172,7 +172,7 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public synchronized int read(byte[] b, int off, int len) {
+    public int read(byte[] b, int off, int len) {
         if (len == 0)
             return 0;
         if (position >= length)
@@ -187,7 +187,7 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public synchronized long skip(long n) {
+    public long skip(long n) {
         int previousPosition = position;
         long newPosition = seek(n, SeekOrigin.CURRENT);
         return newPosition - previousPosition;
@@ -383,7 +383,7 @@ public class MemoryStream extends InputStream implements Closeable {
     }
 
     @Override
-    public byte @NotNull [] readAllBytes()  {
+    public byte @NotNull [] readAllBytes() {
         return toByteArray();
     }
 

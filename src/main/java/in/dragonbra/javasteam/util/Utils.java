@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 /**
  * @author lngtr
@@ -173,7 +172,7 @@ public class Utils {
     }
 
     /**
-     * Convenience method for calculating the CRC2 checksum of a string.
+     * Convenience method for calculating the CRC32 checksum of a string.
      *
      * @param s the string
      * @return long value of the CRC32
@@ -183,14 +182,26 @@ public class Utils {
     }
 
     /**
-     * Convenience method for calculating the CRC2 checksum of a byte array.
+     * Convenience method for calculating the CRC32 checksum of a byte array.
      *
      * @param bytes the byte array
      * @return long value of the CRC32
      */
     public static long crc32(byte[] bytes) {
-        Checksum checksum = new CRC32();
-        checksum.update(bytes, 0, bytes.length);
+        return crc32(bytes, 0, bytes.length);
+    }
+
+    /**
+     * Convenience method for calculating the CRC32 checksum of a byte array with offset and length.
+     *
+     * @param bytes  the byte array
+     * @param offset the offset to start from
+     * @param length the number of bytes to checksum
+     * @return long value of the CRC32
+     */
+    public static long crc32(byte[] bytes, int offset, int length) {
+        var checksum = new CRC32();
+        checksum.update(bytes, offset, length);
         return checksum.getValue();
     }
 

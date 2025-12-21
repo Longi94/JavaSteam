@@ -1,17 +1,12 @@
 package `in`.dragonbra.javasteam.util
 
 import `in`.dragonbra.javasteam.util.compat.readNBytesCompat
-import `in`.dragonbra.javasteam.util.crypto.CryptoHelper
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
-import `in`.dragonbra.javasteam.util.stream.BinaryWriter
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import `in`.dragonbra.javasteam.util.stream.SeekOrigin
-import org.tukaani.xz.LZMA2Options
 import org.tukaani.xz.LZMAInputStream
-import org.tukaani.xz.LZMAOutputStream
-import java.io.ByteArrayOutputStream
-import java.util.zip.DataFormatException
+import java.util.zip.*
 import kotlin.math.max
 
 @Suppress("SpellCheckingInspection", "unused")
@@ -25,6 +20,11 @@ object VZipUtil {
     private const val FOOTER_LENGTH = 10 // crc + decompressed size + magic
 
     private const val VERSION: Byte = 'a'.code.toByte()
+
+    // Thread-local window buffer pool to avoid repeated allocations
+    private val windowBufferPool = ThreadLocal.withInitial {
+        ByteArray(1 shl 23) // 8MB max size
+    }
 
     @JvmStatic
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
@@ -67,7 +67,12 @@ object VZipUtil {
 
                 // If the value of dictionary size in properties is smaller than (1 << 12),
                 // the LZMA decoder must set the dictionary size variable to (1 << 12).
-                val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
+                val windowSize = max(1 shl 12, dictionarySize)
+                val windowBuffer = if (windowSize <= (1 shl 23)) {
+                    windowBufferPool.get() // Reuse thread-local buffer
+                } else {
+                    ByteArray(windowSize) // Fallback for unusually large windows
+                }
                 val bytesRead = LZMAInputStream(
                     ms,
                     sizeDecompressed.toLong(),
@@ -78,8 +83,11 @@ object VZipUtil {
                     lzmaInput.readNBytesCompat(destination, 0, sizeDecompressed)
                 }
 
-                if (verifyChecksum && Utils.crc32(destination).toInt() != outputCrc) {
-                    throw DataFormatException("CRC does not match decompressed data. VZip data may be corrupted.")
+                if (verifyChecksum) {
+                    val actualCrc = Utils.crc32(destination, 0, bytesRead).toInt()
+                    if (actualCrc != outputCrc) {
+                        throw DataFormatException("CRC does not match decompressed data. VZip data may be corrupted.")
+                    }
                 }
 
                 return bytesRead
@@ -93,46 +101,16 @@ object VZipUtil {
         }
     }
 
-    /**
-     * Ported from SteamKit2 and is untested, use at your own risk
-     */
     @JvmStatic
     fun compress(buffer: ByteArray): ByteArray {
-        try {
-            ByteArrayOutputStream().use { ms ->
-                BinaryWriter(ms).use { writer ->
-                    val crc = CryptoHelper.crcHash(buffer)
-                    writer.writeShort(VZIP_HEADER)
-                    writer.writeByte(VERSION)
-                    writer.write(crc)
-
-                    // Configure LZMA options to match SteamKit2's settings
-                    val options = LZMA2Options().apply {
-                        dictSize = 1 shl 23 // 8MB dictionary
-                        setPreset(2) // Algorithm setting
-                        niceLen = 128 // numFastBytes equivalent
-                        matchFinder = LZMA2Options.MF_BT4
-                        mode = LZMA2Options.MODE_NORMAL
-                    }
-
-                    // Write LZMA-compressed data
-                    LZMAOutputStream(ms, options, false).use { lzmaStream ->
-                        lzmaStream.write(buffer)
-                    }
-
-                    writer.write(crc)
-                    writer.writeInt(buffer.size)
-                    writer.writeShort(VZIP_FOOTER)
-
-                    return ms.toByteArray()
-                }
-            }
-        } catch (e: NoClassDefFoundError) {
-            logger.error("Missing implementation of org.tukaani:xz")
-            throw e
-        } catch (e: ClassNotFoundException) {
-            logger.error("Missing implementation of org.tukaani:xz")
-            throw e
-        }
+        throw Exception("VZipUtil.compress is not implemented.")
+        // try {
+        // } catch (e: NoClassDefFoundError) {
+        //     logger.error("Missing implementation of org.tukaani:xz")
+        //     throw e
+        // } catch (e: ClassNotFoundException) {
+        //     logger.error("Missing implementation of org.tukaani:xz")
+        //     throw e
+        // }
     }
 }
