@@ -16,6 +16,7 @@ import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.security.MessageDigest
 import java.time.Instant
 import java.util.*
 import javax.crypto.Cipher
@@ -46,11 +47,7 @@ class DepotManifest {
          * @param stream  Raw depot manifest stream to deserialize.
          */
         @JvmStatic
-        fun deserialize(stream: InputStream): DepotManifest {
-            val manifest = DepotManifest()
-            manifest.internalDeserialize(stream)
-            return manifest
-        }
+        fun deserialize(stream: InputStream): DepotManifest = DepotManifest().apply { internalDeserialize(stream) }
 
         /**
          * Initializes a new instance of the [DepotManifest] class.
@@ -58,12 +55,7 @@ class DepotManifest {
          * @param data Raw depot manifest data to deserialize.
          */
         @JvmStatic
-        fun deserialize(data: ByteArray): DepotManifest {
-            val ms = MemoryStream(data)
-            val manifest = deserialize(ms)
-            ms.close()
-            return manifest
-        }
+        fun deserialize(data: ByteArray): DepotManifest = MemoryStream(data).use { deserialize(it) }
 
         /**
          * Loads binary manifest from a file and deserializes it.
@@ -311,8 +303,8 @@ class DepotManifest {
         }
 
         if (payload != null && metadata != null && signature != null) {
-            parseProtobufManifestMetadata(metadata!!)
-            parseProtobufManifestPayload(payload!!)
+            parseProtobufManifestMetadata(metadata)
+            parseProtobufManifestPayload(payload)
         } else {
             throw NoSuchElementException("Missing ContentManifest sections required for parsing depot manifest")
         }
@@ -419,6 +411,9 @@ class DepotManifest {
                 get() = items.size
         }
 
+        // Reuse instance.
+        val sha1Digest = MessageDigest.getInstance("SHA-1", CryptoHelper.SEC_PROV)
+
         files.forEach { file ->
             val protofile = ContentManifestPayload.FileMapping.newBuilder().apply {
                 this.size = file.totalSize
@@ -433,6 +428,7 @@ class DepotManifest {
                 protofile.filename = file.fileName.replace('/', '\\')
                 protofile.shaFilename = ByteString.copyFrom(
                     CryptoHelper.shaHash(
+                        sha1Digest,
                         file.fileName
                             .replace('/', '\\')
                             .lowercase(Locale.getDefault())

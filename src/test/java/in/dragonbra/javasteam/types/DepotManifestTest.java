@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -193,10 +194,14 @@ public class DepotManifestTest extends TestBase {
         );
 
         for (var file : depotManifest.getFiles()) {
-            Assertions.assertArrayEquals(
-                    file.getFileNameHash(),
-                    CryptoHelper.shaHash(file.getFileName().replace('/', '\\').getBytes())
-            );
+            try {
+                Assertions.assertArrayEquals(
+                        file.getFileNameHash(),
+                        CryptoHelper.shaHash(file.getFileName().replace('/', '\\').getBytes())
+                );
+            } catch (NoSuchProviderException e) {
+                Assertions.fail(e);
+            }
             Assertions.assertNotNull(file.getLinkTarget());
             Assertions.assertEquals(1, file.getChunks().size());
         }
