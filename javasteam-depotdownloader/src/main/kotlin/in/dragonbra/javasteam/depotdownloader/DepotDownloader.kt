@@ -186,6 +186,7 @@ class DepotDownloader @JvmOverloads constructor(
         val totalChunksForFile: Int,
     )
 
+    @Suppress("ArrayInDataClass")
     private data class DecompressItem(
         val depot: DepotDownloadInfo,
         val depotDownloadCounter: DepotDownloadCounter,
@@ -197,6 +198,7 @@ class DepotDownloader @JvmOverloads constructor(
         val chunkBuffer: ByteArray,
     )
 
+    @Suppress("ArrayInDataClass")
     private data class FileWriteItem(
         val depot: DepotDownloadInfo,
         val depotDownloadCounter: DepotDownloadCounter,
@@ -250,8 +252,8 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private fun createChunkProcessingFlow(): kotlinx.coroutines.flow.Flow<Unit> = networkChunkFlow
-        .flatMapMerge<NetworkChunkItem, DecompressItem>(concurrency = maxDownloads) { item ->
-            flow<DecompressItem> {
+        .flatMapMerge(concurrency = maxDownloads) { item ->
+            flow {
                 try {
                     val result = downloadSteam3DepotFileChunk(
                         downloadCounter = item.downloadCounter,
@@ -268,8 +270,8 @@ class DepotDownloader @JvmOverloads constructor(
                 }
             }.flowOn(Dispatchers.IO)
         }
-        .flatMapMerge<DecompressItem, FileWriteItem>(concurrency = maxDecompress) { item ->
-            flow<FileWriteItem> {
+        .flatMapMerge(concurrency = maxDecompress) { item ->
+            flow {
                 try {
                     val result = processFileDecompress(item)
                     if (result != null) {
@@ -280,8 +282,8 @@ class DepotDownloader @JvmOverloads constructor(
                 }
             }.flowOn(Dispatchers.Default)
         }
-        .flatMapMerge<FileWriteItem, Unit>(concurrency = maxFileWrites) { item ->
-            flow<Unit> {
+        .flatMapMerge(concurrency = maxFileWrites) { item ->
+            flow {
                 try {
                     processFileWrites(item)
                     pendingChunks.decrementAndGet()
@@ -1469,7 +1471,7 @@ class DepotDownloader @JvmOverloads constructor(
         file: FileData,
         fileStreamData: FileStreamData,
         chunk: ChunkData,
-    ): DecompressItem? = withContext(Dispatchers.IO) {
+    ): DecompressItem = withContext(Dispatchers.IO) {
         ensureActive()
 
         val depot = depotFilesData.depotDownloadInfo
@@ -1777,7 +1779,7 @@ class DepotDownloader @JvmOverloads constructor(
         }
     }
 
-    private suspend fun processFileDecompress(item: DecompressItem): FileWriteItem? = withContext(Dispatchers.Default) {
+    private suspend fun processFileDecompress(item: DecompressItem): FileWriteItem = withContext(Dispatchers.Default) {
         // Throw the cancellation exception if requested so that this task is marked failed
         ensureActive()
 

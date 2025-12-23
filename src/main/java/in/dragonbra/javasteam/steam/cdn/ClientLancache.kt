@@ -66,6 +66,7 @@ object ClientLancache {
 
             return when (firstOctet) {
                 10 -> true
+
                 172 -> {
                     val secondOctet = bytes[1].toInt() and 0xFF
                     secondOctet in 16..<32
