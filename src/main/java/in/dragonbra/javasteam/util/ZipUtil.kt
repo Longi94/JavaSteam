@@ -24,7 +24,7 @@ object ZipUtil {
                 throw IllegalArgumentException("Given stream should only contain one zip entry")
             }
 
-            if (verifyChecksum && Utils.crc32(destination.sliceArray(0 until sizeDecompressed)) != entry.crc) {
+            if (verifyChecksum && Utils.crc32(destination, 0, bytesRead) != entry.crc) {
                 throw Exception("Checksum validation failed for decompressed file")
             }
 

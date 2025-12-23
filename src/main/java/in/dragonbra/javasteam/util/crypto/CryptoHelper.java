@@ -58,12 +58,42 @@ public class CryptoHelper {
         logger.debug("Using security provider: " + SEC_PROV);
     }
 
-    public static byte[] shaHash(byte[] input) throws NoSuchAlgorithmException {
+    /**
+     * Computes SHA-1 hash of the input using the provided MessageDigest instance.
+     * The digest will be reset before use.
+     *
+     * @param digest MessageDigest instance to reuse (will be reset)
+     * @param input  array to hash
+     * @return the hashed result
+     * @throws IllegalArgumentException if input or digest is null
+     */
+    public static byte[] shaHash(MessageDigest digest, byte[] input) {
         if (input == null) {
             throw new IllegalArgumentException("input is null");
         }
 
-        MessageDigest sha = MessageDigest.getInstance("SHA-1");
+        if (digest == null) {
+            throw new IllegalArgumentException("digest is null");
+        }
+
+        digest.reset();
+        return digest.digest(input);
+    }
+
+    /**
+     * Computes SHA-1 hash of the input by creating a new MessageDigest instance.
+     *
+     * @param input array to hash
+     * @return the hashed result
+     * @throws NoSuchAlgorithmException if SHA-1 algorithm is not available
+     * @throws NoSuchProviderException  if the security provider is not available
+     */
+    public static byte[] shaHash(byte[] input) throws NoSuchAlgorithmException, NoSuchProviderException {
+        if (input == null) {
+            throw new IllegalArgumentException("input is null");
+        }
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-1", SEC_PROV);
         return sha.digest(input);
     }
 

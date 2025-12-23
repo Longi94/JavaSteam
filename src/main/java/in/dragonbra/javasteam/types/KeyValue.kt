@@ -34,7 +34,7 @@ class KeyValue @JvmOverloads constructor(
     /**
      * Gets the children of this instance.
      */
-    var children: MutableList<KeyValue> = mutableListOf()
+    var children: MutableList<KeyValue> = ArrayList(4) // Give an initial capacity for optimization.
 
     /**
      * Gets the child [KeyValue] with the specified key.
@@ -42,15 +42,9 @@ class KeyValue @JvmOverloads constructor(
      * @param key key
      * @return the child [KeyValue]
      */
-    operator fun get(key: String): KeyValue {
-        children.forEach { c ->
-            if (c.name?.equals(key, ignoreCase = true) == true) {
-                return c
-            }
-        }
-
-        return INVALID
-    }
+    operator fun get(key: String): KeyValue = children.find {
+        it.name?.equals(key, ignoreCase = true) == true
+    } ?: INVALID
 
     /**
      * Sets the child [KeyValue] with the specified key.
@@ -329,7 +323,7 @@ class KeyValue @JvmOverloads constructor(
      * @param asBinary If set to <c>true</c>, saves this instance as binary.
      */
     fun saveToFile(file: File, asBinary: Boolean) {
-        FileOutputStream(file, false).use { f -> saveToStream(f, asBinary) }
+        FileOutputStream(file, false).buffered().use { f -> saveToStream(f, asBinary) }
     }
 
     /**
@@ -338,7 +332,7 @@ class KeyValue @JvmOverloads constructor(
      * @param asBinary If set to <c>true</c>, saves this instance as binary.
      */
     fun saveToFile(path: String, asBinary: Boolean) {
-        FileOutputStream(path, false).use { f -> saveToStream(f, asBinary) }
+        FileOutputStream(path, false).buffered().use { f -> saveToStream(f, asBinary) }
     }
 
     /**
@@ -479,7 +473,7 @@ class KeyValue @JvmOverloads constructor(
             }
 
             try {
-                FileInputStream(file).use { input ->
+                FileInputStream(file).buffered(8192).use { input ->
                     val kv = KeyValue()
 
                     if (asBinary) {
