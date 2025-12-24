@@ -82,6 +82,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+            artifact(javadocJar)
             pom {
                 name = "JavaSteam-depotdownloader"
                 packaging = "jar"
