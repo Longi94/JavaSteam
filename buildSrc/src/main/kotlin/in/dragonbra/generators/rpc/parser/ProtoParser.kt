@@ -14,6 +14,7 @@ class ProtoParser(private val outputDir: File) {
         private val suppressAnnotation = AnnotationSpec
             .builder(Suppress::class)
             .addMember("%S", "KDocUnresolvedReference") // IntelliJ's seems to get confused with canonical names
+            .addMember("%S", "RemoveRedundantQualifierName") // Full Qualifier names are fine
             .addMember("%S", "RedundantVisibilityModifier") // KotlinPoet is an explicit API generator
             .addMember("%S", "unused") // All methods could be used.
             .build()
@@ -85,6 +86,8 @@ class ProtoParser(private val outputDir: File) {
     private fun buildClass(file: File, service: Service) {
         val protoFileName = transformProtoFileName(file.name)
 
+        val parentPathName = file.parentFile.name
+
         // Class Builder
         val steamUnifiedMessagesClassName = ClassName(
             "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages",
@@ -129,7 +132,7 @@ class ProtoParser(private val outputDir: File) {
                 // HAS Response
                 numResponse++
                 val className = ClassName(
-                    packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                    packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
                     method.responseType
                 )
                 responseBlock.addStatement(
@@ -141,7 +144,7 @@ class ProtoParser(private val outputDir: File) {
                 // NO Response
                 numNotification++
                 val className = ClassName(
-                    packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                    packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
                     method.requestType
                 )
                 notificationBlock.addStatement(
@@ -192,7 +195,7 @@ class ProtoParser(private val outputDir: File) {
                     .addParameter(
                         "request",
                         ClassName(
-                            packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                            packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
                             method.requestType
                         )
                     )
@@ -207,14 +210,14 @@ class ProtoParser(private val outputDir: File) {
                             packageName = "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
                             "ServiceMethodResponse"
                         ).parameterizedBy(
-                            ClassName.bestGuess("in.dragonbra.javasteam.protobufs.steamclient.$protoFileName.${method.responseType}.Builder")
+                            ClassName.bestGuess("in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName.${method.responseType}.Builder")
                         )
                     )
                 )
                 funcBuilder.addStatement(
                     format = "return unifiedMessages!!.sendMessage(\n%T.Builder::class.java,\n%S,\nrequest\n)",
                     ClassName(
-                        packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                        packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
                         method.responseType
                     ),
                     "${service.name}.${method.methodName}#1"
@@ -223,7 +226,7 @@ class ProtoParser(private val outputDir: File) {
                 funcBuilder.addStatement(
                     format = "unifiedMessages!!.sendNotification<%T.Builder>(\n%S,\nrequest\n)",
                     ClassName(
-                        packageName = "in.dragonbra.javasteam.protobufs.steamclient.$protoFileName",
+                        packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
                         method.requestType
                     ),
                     "${service.name}.${method.methodName}#1"

@@ -14,12 +14,13 @@ java {
 dependencies {
     implementation(rootProject)
     implementation(project(":javasteam-cs"))
+    implementation(project(":javasteam-depotdownloader"))
 
     implementation(libs.bouncyCastle)
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(libs.okHttp)
-    implementation(libs.protobuf.java) // To access protobufs directly as shown in Sample #2
+    implementation(libs.protobuf.java) // Protobuf access
     implementation(libs.qrCode)
     implementation(libs.zstd) // Content Downloading.
     implementation(libs.xz) // Content Downloading.

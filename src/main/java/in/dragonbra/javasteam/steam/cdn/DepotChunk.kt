@@ -51,15 +51,16 @@ object DepotChunk {
 
         require(iv.size == ivBytesRead) { "Failed to decrypt depot chunk iv (${iv.size} != $ivBytesRead)" }
 
+        val aes = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
+        aes.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(iv))
+
         // With CBC and padding, the decrypted size will always be smaller
         val buffer = ByteArray(data.size - iv.size)
-        val cbcCipher = Cipher.getInstance("AES/CBC/PKCS7Padding", CryptoHelper.SEC_PROV)
-        cbcCipher.init(Cipher.DECRYPT_MODE, keySpec, IvParameterSpec(iv))
 
         val writtenDecompressed: Int
 
         try {
-            val written = cbcCipher.doFinal(data, iv.size, data.size - iv.size, buffer)
+            val written = aes.doFinal(data, iv.size, data.size - iv.size, buffer)
 
             // Per SK:
             //  Steam client checks for like 20 bytes for pkzip, and 22 bytes for vzip,

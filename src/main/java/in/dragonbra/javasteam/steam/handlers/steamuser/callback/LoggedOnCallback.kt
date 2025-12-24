@@ -136,6 +136,13 @@ class LoggedOnCallback : CallbackMsg {
     var familyGroupId: Long = 0L
         private set
 
+    /**
+     * Gets the client instance ID.
+     * This is used for P2P content sharing operations.
+     */
+    var clientInstanceId: Long = 0L
+        private set
+
     constructor(packetMsg: IPacketMsg) {
         if (!packetMsg.isProto) {
             handleNonProtoLogon(packetMsg)
@@ -185,6 +192,8 @@ class LoggedOnCallback : CallbackMsg {
         }
 
         familyGroupId = resp.familyGroupId
+
+        clientInstanceId = resp.clientInstanceId
     }
 
     constructor(result: EResult) {

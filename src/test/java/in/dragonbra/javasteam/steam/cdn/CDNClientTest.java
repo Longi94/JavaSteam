@@ -42,7 +42,7 @@ public class CDNClientTest {
         var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
         var steam = new SteamClient(configuration);
         try (var client = new Client(steam)) {
-            var server = new Server(Server.ConnectionProtocol.HTTP, "localhost", "localhost", 80);
+            var server = Server.fromHostAndPort("localhost", 80);
 
             // JVM will throw ExecutionException
             Exception exception = Assertions.assertThrows(ExecutionException.class, () ->
@@ -64,7 +64,7 @@ public class CDNClientTest {
         var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
         var steam = new SteamClient(configuration);
         try (var client = new Client(steam)) {
-            var server = new Server(Server.ConnectionProtocol.HTTP, "localhost", "localhost", 80);
+            var server = Server.fromHostAndPort("localhost", 80);
             var chunk = new ChunkData(new byte[]{(byte) 0xFF}, 0, 0L, 0, 0);
 
             // JVM will throw ExecutionException
@@ -87,7 +87,7 @@ public class CDNClientTest {
         var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
         var steam = new SteamClient(configuration);
         try (var client = new Client(steam)) {
-            var server = new Server(Server.ConnectionProtocol.HTTP, "localhost", "localhost", 80);
+            var server = Server.fromHostAndPort("localhost", 80);
             var chunk = new ChunkData();
 
             // JVM will throw ExecutionException
@@ -111,7 +111,7 @@ public class CDNClientTest {
         var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
         var steam = new SteamClient(configuration);
         try (var client = new Client(steam)) {
-            var server = new Server(Server.ConnectionProtocol.HTTP, "localhost", "localhost", 80);
+            var server = Server.fromHostAndPort("localhost", 80);
             var chunk = new ChunkData(new byte[]{(byte) 0xFF}, 0, 0, 32, 64);
 
             // JVM will throw ExecutionException
@@ -135,7 +135,7 @@ public class CDNClientTest {
         var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
         var steam = new SteamClient(configuration);
         try (var client = new Client(steam)) {
-            var server = new Server(Server.ConnectionProtocol.HTTP, "localhost", "localhost", 80);
+            var server = Server.fromHostAndPort("localhost", 80);
             var chunk = new ChunkData(new byte[]{(byte) 0xFF}, 0, 0, 32, 64);
 
             // JVM will throw ExecutionException

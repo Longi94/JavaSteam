@@ -1,6 +1,7 @@
 rootProject.name = "javasteam"
-include(":javasteam-samples")
 include(":javasteam-cs")
+include(":javasteam-deadlock")
+include(":javasteam-depotdownloader")
+include(":javasteam-dota2")
+include(":javasteam-samples")
 include(":javasteam-tf")
-include("javasteam-deadlock")
-include("javasteam-dota2")

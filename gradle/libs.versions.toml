@@ -21,6 +21,10 @@ publishPlugin = "2.0.0" # https://mvnrepository.com/artifact/io.github.gradle-ne
 xz = "1.11" # https://mvnrepository.com/artifact/org.tukaani/xz
 zstd = "1.5.7-6" # https://search.maven.org/artifact/com.github.luben/zstd-jni
 
+# Depot Downloader
+kotlin-serialization-json = "1.9.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
+okio = "3.16.0" # https://mvnrepository.com/artifact/com.squareup.okio/okio
+
 # Testing Lib versions
 commons-io = "2.21.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commonsCodec = "1.20.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
@@ -41,10 +45,15 @@ ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
+okHttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 zstd = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
+
+# Depot Downloader
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json"}
+okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
 
 # Tests
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
@@ -65,6 +74,7 @@ qrCode = { module = "pro.leaco.qrcode:console-qrcode", version.ref = "qrCode" }
 kotlin-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-kotlinter = { id = "org.jmailen.kotlinter", version.ref = "kotlinter" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 maven-publish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "publishPlugin" }
 protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" }
 
@@ -85,4 +95,9 @@ ktor = [
     "ktor-client-core",
     "ktor-client-cio",
     "ktor-client-websocket",
+]
+
+okHttp = [
+    "okHttp",
+    "okHttp-coroutines",
 ]
