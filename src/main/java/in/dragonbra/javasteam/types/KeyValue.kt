@@ -323,7 +323,7 @@ class KeyValue @JvmOverloads constructor(
      * @param asBinary If set to <c>true</c>, saves this instance as binary.
      */
     fun saveToFile(file: File, asBinary: Boolean) {
-        FileOutputStream(file, false).use { f -> saveToStream(f, asBinary) }
+        FileOutputStream(file, false).buffered().use { f -> saveToStream(f, asBinary) }
     }
 
     /**
@@ -332,7 +332,7 @@ class KeyValue @JvmOverloads constructor(
      * @param asBinary If set to <c>true</c>, saves this instance as binary.
      */
     fun saveToFile(path: String, asBinary: Boolean) {
-        FileOutputStream(path, false).use { f -> saveToStream(f, asBinary) }
+        FileOutputStream(path, false).buffered().use { f -> saveToStream(f, asBinary) }
     }
 
     /**
@@ -473,7 +473,7 @@ class KeyValue @JvmOverloads constructor(
             }
 
             try {
-                FileInputStream(file).use { input ->
+                FileInputStream(file).buffered(8192).use { input ->
                     val kv = KeyValue()
 
                     if (asBinary) {
