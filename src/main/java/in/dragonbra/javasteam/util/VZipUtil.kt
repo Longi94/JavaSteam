@@ -6,7 +6,7 @@ import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import `in`.dragonbra.javasteam.util.stream.SeekOrigin
 import org.tukaani.xz.LZMAInputStream
-import java.util.zip.*
+import java.util.zip.DataFormatException
 import kotlin.math.max
 
 @Suppress("SpellCheckingInspection", "unused")
@@ -20,11 +20,6 @@ object VZipUtil {
     private const val FOOTER_LENGTH = 10 // crc + decompressed size + magic
 
     private const val VERSION: Byte = 'a'.code.toByte()
-
-    // Thread-local window buffer pool to avoid repeated allocations
-    private val windowBufferPool = ThreadLocal.withInitial {
-        ByteArray(1 shl 23) // 8MB max size
-    }
 
     @JvmStatic
     fun decompress(ms: MemoryStream, destination: ByteArray, verifyChecksum: Boolean = true): Int {
@@ -67,12 +62,7 @@ object VZipUtil {
 
                 // If the value of dictionary size in properties is smaller than (1 << 12),
                 // the LZMA decoder must set the dictionary size variable to (1 << 12).
-                val windowSize = max(1 shl 12, dictionarySize)
-                val windowBuffer = if (windowSize <= (1 shl 23)) {
-                    windowBufferPool.get() // Reuse thread-local buffer
-                } else {
-                    ByteArray(windowSize) // Fallback for unusually large windows
-                }
+                val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
                 val bytesRead = LZMAInputStream(
                     ms,
                     sizeDecompressed.toLong(),
