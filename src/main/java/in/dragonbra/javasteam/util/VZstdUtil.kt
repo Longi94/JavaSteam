@@ -1,7 +1,8 @@
 package `in`.dragonbra.javasteam.util
 
-import com.github.luben.zstd.Zstd
+import com.github.luben.zstd.ZstdInputStream
 import `in`.dragonbra.javasteam.util.log.LogManager
+import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -9,6 +10,7 @@ import java.nio.ByteOrder
 object VZstdUtil {
 
     private const val VZSTD_HEADER: Int = 0x615A5356
+    private const val STREAM_CHUNK_SIZE = 64 * 1024 // 64KB chunks
     private const val HEADER_SIZE = 8
     private const val FOOTER_SIZE = 15
 
@@ -53,13 +55,31 @@ object VZstdUtil {
             throw IllegalArgumentException("The destination buffer is smaller than the decompressed data size.")
         }
 
-        val compressedData = buffer.copyOfRange(HEADER_SIZE, buffer.size - FOOTER_SIZE) // :( allocations
-
         try {
-            val bytesDecompressed = Zstd.decompress(destination, compressedData)
+            // Use streaming decompression to avoid long JNI critical locks
+            var totalDecompressed = 0
 
-            if (bytesDecompressed != sizeDecompressed.toLong()) {
-                throw IOException("Failed to decompress Zstd (expected $sizeDecompressed bytes, got $bytesDecompressed).")
+            // Use direct ByteArrayInputStream with offset to avoid copying compressed data
+            ByteArrayInputStream(buffer, HEADER_SIZE, buffer.size - FOOTER_SIZE).use { byteStream ->
+                ZstdInputStream(byteStream).use { zstdStream ->
+                    var bytesRead: Int
+                    var offset = 0
+
+                    // Read in chunks to break up JNI locks
+                    while (offset < sizeDecompressed) {
+                        val toRead = minOf(STREAM_CHUNK_SIZE, sizeDecompressed - offset)
+                        bytesRead = zstdStream.read(destination, offset, toRead)
+
+                        if (bytesRead == -1) break
+
+                        offset += bytesRead
+                        totalDecompressed += bytesRead
+                    }
+                }
+            }
+
+            if (totalDecompressed != sizeDecompressed) {
+                throw IOException("Failed to decompress Zstd (expected $sizeDecompressed bytes, got $totalDecompressed).")
             }
 
             if (verifyChecksum) {
