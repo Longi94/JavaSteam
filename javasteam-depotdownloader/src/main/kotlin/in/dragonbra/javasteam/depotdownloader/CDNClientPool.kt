@@ -29,7 +29,7 @@ class CDNClientPool(
     private val steamSession: Steam3Session,
     private val appId: Int,
     private val scope: CoroutineScope,
-    debug: Boolean = false,
+    private val debug: Boolean = false,
 ) : AutoCloseable {
 
     private var logger: Logger? = null
@@ -49,13 +49,11 @@ class CDNClientPool(
     init {
         cdnClient = Client(steamSession.steamClient)
 
-        if (debug) {
-            logger = LogManager.getLogger(CDNClientPool::class.java)
-        }
+        logger = LogManager.getLogger(CDNClientPool::class.java)
     }
 
     override fun close() {
-        logger?.debug("Closing...")
+        if (debug) logger?.debug("Closing...")
 
         servers.set(emptyList())
 
@@ -89,7 +87,7 @@ class CDNClientPool(
         nextServer.set(0)
 
         // servers.joinToString(separator = "\n", prefix = "Servers:\n") { "- $it" }
-        logger?.debug("Found ${weightedCdnServers.size} Servers")
+        if (debug) logger?.debug("Found ${weightedCdnServers.size} Servers")
 
         if (weightedCdnServers.isEmpty()) {
             throw Exception("Failed to retrieve any download servers.")
@@ -102,7 +100,7 @@ class CDNClientPool(
         val index = nextServer.getAndIncrement()
         val server = servers[index % servers.size]
 
-        logger?.debug("Getting connection $server")
+        if (debug) logger?.debug("Getting connection $server")
 
         return server
     }
@@ -113,7 +111,7 @@ class CDNClientPool(
             return
         }
 
-        logger?.debug("Returning connection: $server")
+        if (debug) logger?.debug("Returning connection: $server")
 
         // (SK) nothing to do, maybe remove from ContentServerPenalty?
     }
@@ -124,7 +122,7 @@ class CDNClientPool(
             return
         }
 
-        logger?.debug("Returning broken connection: $server")
+        if (debug) logger?.debug("Returning broken connection: $server")
 
         val servers = servers.get()
         val currentIndex = nextServer.get()

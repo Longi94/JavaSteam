@@ -49,6 +49,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
@@ -238,7 +239,8 @@ class DepotDownloader @JvmOverloads constructor(
 
         steam3 = Steam3Session(steamClient, debug)
 
-        logger?.debug("DepotDownloader launched with ${licenses.size} for account")
+        if (debug) logger?.debug("DepotDownloader launched with ${licenses.size} for account")
+
         licenses.forEach { license ->
             if (license.accessToken.toULong() > 0UL) {
                 steam3!!.packageTokens[license.packageID] = license.accessToken
@@ -398,14 +400,14 @@ class DepotDownloader @JvmOverloads constructor(
         filesystem.createDirectories(fileStagingPath.parent!!)
 
         httpClient.getClient().use { client ->
-            logger?.debug("Starting download of $fileName...")
+            if (debug) logger?.debug("Starting download of $fileName...")
 
             val response = client.get(url)
             val channel = response.bodyAsChannel()
 
             val totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
 
-            logger?.debug("File size: ${totalBytes?.let { Util.formatBytes(it) } ?: "Unknown"}")
+            if (debug) logger?.debug("File size: ${totalBytes?.let { Util.formatBytes(it) } ?: "Unknown"}")
 
             filesystem.sink(fileStagingPath).buffer().use { sink ->
                 val buffer = Buffer()
@@ -423,17 +425,17 @@ class DepotDownloader @JvmOverloads constructor(
                 }
             }
 
-            logger?.debug("Download completed.")
+            if (debug) logger?.debug("Download completed.")
         }
 
         if (filesystem.exists(fileFinalPath)) {
-            logger?.debug("Deleting $fileFinalPath")
+            if (debug) logger?.debug("Deleting $fileFinalPath")
             filesystem.delete(fileFinalPath)
         }
 
         try {
             filesystem.atomicMove(fileStagingPath, fileFinalPath)
-            logger?.debug("File '$fileStagingPath' moved to final location: $fileFinalPath")
+            if (debug) logger?.debug("File '$fileStagingPath' moved to final location: $fileFinalPath")
         } catch (e: IOException) {
             logger?.error("Failed to move files", e)
             throw e
@@ -470,7 +472,7 @@ class DepotDownloader @JvmOverloads constructor(
 
         if (!accountHasAccess(appId, appId)) {
             if (steamUser.steamID!!.accountType != EAccountType.AnonUser && steam3!!.requestFreeAppLicense(appId)) {
-                logger?.debug("Obtained FreeOnDemand license for app $appId")
+                if (debug) logger?.debug("Obtained FreeOnDemand license for app $appId")
 
                 // Fetch app info again in case we didn't get it fully without a license.
                 steam3!!.requestAppInfo(appId, true)
@@ -494,7 +496,7 @@ class DepotDownloader @JvmOverloads constructor(
 
             depotIdsFound.addAll(depotIdsExpected)
         } else {
-            logger?.debug("Using app branch: $branch")
+            if (debug) logger?.debug("Using app branch: $branch")
 
             depots?.children?.forEach { depotSection ->
                 if (depotSection.children.isEmpty()) {
@@ -946,10 +948,12 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        logger?.debug(
-            "Total downloaded: ${downloadCounter.totalBytesCompressed} bytes " +
-                "(${downloadCounter.totalBytesUncompressed} bytes uncompressed) from ${depots.size} depots"
-        )
+        if (debug) {
+            logger?.debug(
+                "Total downloaded: ${downloadCounter.totalBytesCompressed} bytes " +
+                    "(${downloadCounter.totalBytesUncompressed} bytes uncompressed) from ${depots.size} depots"
+            )
+        }
     }
 
     private suspend fun processDepotManifestAndFiles(
@@ -958,7 +962,7 @@ class DepotDownloader @JvmOverloads constructor(
     ): DepotFilesData? = withContext(Dispatchers.IO) {
         val depotCounter = DepotDownloadCounter()
 
-        logger?.debug("Processing depot ${depot.depotId}")
+        if (debug) logger?.debug("Processing depot ${depot.depotId}")
 
         var oldManifest: DepotManifest? = null
 
@@ -983,14 +987,14 @@ class DepotDownloader @JvmOverloads constructor(
 
         if (lastManifestId == depot.manifestId && oldManifest != null) {
             newManifest = oldManifest
-            logger?.debug("Already have manifest ${depot.manifestId} for depot ${depot.depotId}.")
+            if (debug) logger?.debug("Already have manifest ${depot.manifestId} for depot ${depot.depotId}.")
         } else {
             newManifest = Util.loadManifestFromFile(configDir, depot.depotId, depot.manifestId, true)
 
             if (newManifest != null) {
-                logger?.debug("Already have manifest ${depot.manifestId} for depot ${depot.depotId}.")
+                if (debug) logger?.debug("Already have manifest ${depot.manifestId} for depot ${depot.depotId}.")
             } else {
-                logger?.debug("Downloading depot ${depot.depotId} manifest")
+                if (debug) logger?.debug("Downloading depot ${depot.depotId} manifest")
                 notifyListeners { it.onStatusUpdate("Downloading manifest for depot ${depot.depotId}") }
 
                 var manifestRequestCode: ULong = 0U
@@ -1040,7 +1044,7 @@ class DepotDownloader @JvmOverloads constructor(
                             }
                         }
 
-                        logger?.debug("Downloading manifest ${depot.manifestId} from $connection with ${cdnClientPool!!.proxyServer ?: "no proxy"}")
+                        if (debug) logger?.debug("Downloading manifest ${depot.manifestId} from $connection with ${cdnClientPool!!.proxyServer ?: "no proxy"}")
 
                         newManifest = cdnClientPool!!.cdnClient!!.downloadManifest(
                             depotId = depot.depotId,
@@ -1100,7 +1104,7 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        logger?.debug("Manifest ${depot.manifestId} (${newManifest.creationTime})")
+        if (debug) logger?.debug("Manifest ${depot.manifestId} (${newManifest.creationTime})")
 
         if (config.downloadManifestOnly) {
             Util.dumpManifestToTextFile(depot, newManifest)
@@ -1162,7 +1166,7 @@ class DepotDownloader @JvmOverloads constructor(
         val depot = depotFilesData.depotDownloadInfo
         val depotCounter = depotFilesData.depotCounter
 
-        logger?.debug("Downloading depot ${depot.depotId}")
+        if (debug) logger?.debug("Downloading depot ${depot.depotId}")
 
         val files = depotFilesData.filteredFiles.filter { !it.flags.contains(EDepotFileFlag.Directory) }
 
@@ -1185,19 +1189,19 @@ class DepotDownloader @JvmOverloads constructor(
             }
         } finally {
             if (isLastDepot) {
-                logger?.debug("Waiting for ${pendingChunks.get()} pending chunks to complete for depot ${depot.depotId}")
+                if (debug) logger?.debug("Waiting for ${pendingChunks.get()} pending chunks to complete for depot ${depot.depotId}")
 
                 // Wait for all pending chunks to complete processing
                 while (pendingChunks.get() > 0) {
-                    kotlinx.coroutines.delay(100)
+                    delay(100)
                 }
 
-                logger?.debug("All chunks completed, canceling processing job for depot ${depot.depotId}")
+                if (debug) logger?.debug("All chunks completed, canceling processing job for depot ${depot.depotId}")
 
                 // Cancel the continuous flow job since no more chunks will be added
                 chunkProcessingJob?.cancel()
 
-                logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
+                logger?.error("Canceled chunk processing job for depot ${depot.depotId}")
             }
         }
 
@@ -1225,7 +1229,7 @@ class DepotDownloader @JvmOverloads constructor(
                 }
 
                 filesystem.delete(fileFinalPath)
-                logger?.debug("Deleted $fileFinalPath")
+                if (debug) logger?.debug("Deleted $fileFinalPath")
             }
         }
 
@@ -1241,7 +1245,7 @@ class DepotDownloader @JvmOverloads constructor(
             )
         }
 
-        logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
+        if (debug) logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
 
         if (isLastDepot) {
             finishDepotDownload(mainAppId)
@@ -1276,7 +1280,8 @@ class DepotDownloader @JvmOverloads constructor(
         var neededChunks: MutableList<ChunkData>? = null
         val fileDidExist = filesystem.exists(fileFinalPath)
         if (!fileDidExist) {
-            logger?.debug("Pre-allocating: $fileFinalPath")
+            if (debug) logger?.debug("Pre-allocating: $fileFinalPath")
+
             notifyListeners { it.onStatusUpdate("Allocating file: ${file.fileName}") }
 
             // create new file. need all chunks
@@ -1299,7 +1304,7 @@ class DepotDownloader @JvmOverloads constructor(
                 if (config.verifyAll || !hashMatches) {
                     // we have a version of this file, but it doesn't fully match what we want
                     if (config.verifyAll) {
-                        logger?.debug("Validating: $fileFinalPath")
+                        if (debug) logger?.debug("Validating: $fileFinalPath")
                     }
 
                     val matchingChunks = arrayListOf<ChunkMatch>()
@@ -1396,7 +1401,8 @@ class DepotDownloader @JvmOverloads constructor(
                 }
 
                 filesystem.openReadWrite(fileFinalPath).use { handle ->
-                    logger?.debug("Validating $fileFinalPath")
+                    if (debug) logger?.debug("Validating $fileFinalPath")
+
                     notifyListeners { it.onStatusUpdate("Validating: ${file.fileName}") }
 
                     neededChunks = Util.validateSteam3FileChecksums(
@@ -1412,7 +1418,8 @@ class DepotDownloader @JvmOverloads constructor(
 
                     val percentage =
                         (depotDownloadCounter.sizeDownloaded / depotDownloadCounter.completeDownloadSize.toFloat()) * 100.0f
-                    logger?.debug("%.2f%% %s".format(percentage, fileFinalPath))
+
+                    if (debug) logger?.debug("%.2f%% %s".format(percentage, fileFinalPath))
                 }
 
                 synchronized(downloadCounter) {
@@ -1503,7 +1510,7 @@ class DepotDownloader @JvmOverloads constructor(
                     }
                 }
 
-                logger?.debug("Downloading chunk $chunkID from $connection with ${cdnClientPool!!.proxyServer ?: "no proxy"}")
+                if (debug) logger?.debug("Downloading chunk $chunkID from $connection with ${cdnClientPool!!.proxyServer ?: "no proxy"}")
 
                 downloaded = cdnClientPool!!.cdnClient!!.downloadDepotChunk(
                     depotId = depot.depotId,
@@ -1700,13 +1707,13 @@ class DepotDownloader @JvmOverloads constructor(
 
                 when (item) {
                     is PubFileItem -> {
-                        logger?.debug("Downloading PUB File for ${item.appId}")
+                        if (debug) logger?.debug("Downloading PUB File for ${item.appId}")
                         notifyListeners { it.onDownloadStarted(item) }
                         downloadPubFile(item.appId, item.pubFile)
                     }
 
                     is UgcItem -> {
-                        logger?.debug("Downloading UGC File for ${item.appId}")
+                        if (debug) logger?.debug("Downloading UGC File for ${item.appId}")
                         notifyListeners { it.onDownloadStarted(item) }
                         downloadUGC(item.appId, item.ugcId)
                     }
@@ -1758,8 +1765,10 @@ class DepotDownloader @JvmOverloads constructor(
                             depotManifestIds.addAll(depotIdList.map { it to INVALID_MANIFEST_ID })
                         }
 
-                        logger?.debug("Downloading App for ${item.appId}")
+                        if (debug) logger?.debug("Downloading App for ${item.appId}")
+
                         notifyListeners { it.onDownloadStarted(item) }
+
                         downloadApp(
                             appId = item.appId,
                             depotManifestIds = depotManifestIds,
@@ -1863,7 +1872,7 @@ class DepotDownloader @JvmOverloads constructor(
                 )
             }
 
-            logger?.debug("%.2f%% %s".format(depotPercentage, fileFinalPath))
+            if (debug) logger?.debug("%.2f%% %s".format(depotPercentage, fileFinalPath))
         } else {
             // Update counters and notify on chunk completion
             val sizeDownloaded: Long

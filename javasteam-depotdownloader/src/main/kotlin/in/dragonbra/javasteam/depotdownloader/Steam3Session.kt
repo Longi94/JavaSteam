@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class Steam3Session(
     internal val steamClient: SteamClient,
-    debug: Boolean,
+    private val debug: Boolean,
 ) : Closeable {
 
     private var logger: Logger? = null
@@ -67,9 +67,7 @@ class Steam3Session(
     internal data class Optional<T>(val value: T?)
 
     init {
-        if (debug) {
-            logger = LogManager.getLogger(Steam3Session::class.java)
-        }
+        logger = LogManager.getLogger(Steam3Session::class.java)
 
         unifiedMessages = requireNotNull(steamClient.getHandler<SteamUnifiedMessages>())
         steamApps = requireNotNull(steamClient.getHandler<SteamApps>())
@@ -80,7 +78,7 @@ class Steam3Session(
     }
 
     override fun close() {
-        logger?.debug("Closing...")
+        if (debug) logger?.debug("Closing...")
 
         unifiedMessages = null
         steamUser = null
@@ -107,7 +105,7 @@ class Steam3Session(
 
     suspend fun requestAppInfo(appId: Int, bForce: Boolean = false) {
         if ((appInfo.containsKey(appId) && !bForce) || isAborted) {
-            logger?.debug("requestAppInfo already has $appId or is aborting")
+            if (debug) logger?.debug("requestAppInfo already has $appId or is aborting")
             return
         }
 
@@ -129,14 +127,16 @@ class Steam3Session(
 
         val appInfoMultiple = steamApps!!.picsGetProductInfo(request).await()
 
-        logger?.debug(
-            "requestAppInfo($appId, $bForce) with \n" +
-                "${appTokens.appTokens.size} appTokens, \n" +
-                "${appTokens.appTokensDenied.size} appTokensDenied, \n" +
-                "${appTokens.packageTokens.size} packageTokens, and \n" +
-                "${appTokens.packageTokensDenied} packageTokensDenied. \n" +
-                "picsGetProductInfo result size: ${appInfoMultiple.results.size}"
-        )
+        if (debug) {
+            logger?.debug(
+                "requestAppInfo($appId, $bForce) with \n" +
+                    "${appTokens.appTokens.size} appTokens, \n" +
+                    "${appTokens.appTokensDenied.size} appTokensDenied, \n" +
+                    "${appTokens.packageTokens.size} packageTokens, and \n" +
+                    "${appTokens.packageTokensDenied} packageTokensDenied. \n" +
+                    "picsGetProductInfo result size: ${appInfoMultiple.results.size}"
+            )
+        }
 
         appInfoMultiple.results.forEach { appInfo ->
             appInfo.apps.forEach { appValue ->
@@ -153,7 +153,7 @@ class Steam3Session(
     private val packageInfoMutex = Mutex()
     suspend fun requestPackageInfo(packageIds: List<Int>) {
         packageInfoMutex.withLock {
-            logger?.debug("requestPackageInfo() invoked with ${packageIds.size} packageIds")
+            if (debug) logger?.debug("requestPackageInfo() invoked with ${packageIds.size} packageIds")
 
             // I have a silly race condition???
             val packages = packageIds.filter { !packageInfo.containsKey(it) }
@@ -176,7 +176,7 @@ class Steam3Session(
 
             val packageInfoMultiple = steamApps!!.picsGetProductInfo(emptyList(), packageRequests).await()
 
-            logger?.debug("requestPackageInfo() picsGetProductInfo result size: ${packageInfoMultiple.results.size} ")
+            if (debug) logger?.debug("requestPackageInfo() picsGetProductInfo result size: ${packageInfoMultiple.results.size} ")
 
             packageInfoMultiple.results.forEach { pkgInfo ->
                 pkgInfo.packages.forEach { pkgValue ->
@@ -194,7 +194,7 @@ class Steam3Session(
         try {
             val resultInfo = steamApps!!.requestFreeLicense(appId).await()
 
-            logger?.debug("requestFreeAppLicense($appId) has result ${resultInfo.result}")
+            if (debug) logger?.debug("requestFreeAppLicense($appId) has result ${resultInfo.result}")
 
             return resultInfo.grantedApps.contains(appId)
         } catch (e: Exception) {
@@ -205,16 +205,18 @@ class Steam3Session(
 
     suspend fun requestDepotKey(depotId: Int, appId: Int = 0) {
         if (depotKeys.containsKey(depotId) || isAborted) {
-            logger?.debug("requestDepotKey already has $depotId or is aborting.")
+            if (debug) logger?.debug("requestDepotKey already has $depotId or is aborting.")
             return
         }
 
         val depotKey = steamApps!!.getDepotDecryptionKey(depotId, appId).await()
 
-        logger?.debug(
-            "requestDepotKey($depotId, $appId) " +
-                "Got depot key for ${depotKey.depotID} result: ${depotKey.result}"
-        )
+        if (debug) {
+            logger?.debug(
+                "requestDepotKey($depotId, $appId) " +
+                    "Got depot key for ${depotKey.depotID} result: ${depotKey.result}"
+            )
+        }
 
         if (depotKey.result != EResult.OK) {
             logger?.error("requestDepotKey result was ${depotKey.result}")
@@ -248,16 +250,18 @@ class Steam3Session(
             logger?.error("No manifest request code was returned for depot $depotId from app $appId, manifest $manifestId")
 
             if (steamClient.isDisconnected) {
-                logger?.debug("Suggestion: Try logging in with a username as old manifests may not be available for anonymous accounts.")
+                logger?.error("Suggestion: Try logging in with a username as old manifests may not be available for anonymous accounts.")
             }
         } else {
-            logger?.debug("Got manifest request code for depot $depotId from app $appId, manifest $manifestId, result: $requestCode")
+            if (debug) logger?.debug("Got manifest request code for depot $depotId from app $appId, manifest $manifestId, result: $requestCode")
         }
 
-        logger?.debug(
-            "getDepotManifestRequestCode($depotId, $appId, $manifestId, $branch) " +
-                "got request code $requestCode"
-        )
+        if (debug) {
+            logger?.debug(
+                "getDepotManifestRequestCode($depotId, $appId, $manifestId, $branch) " +
+                    "got request code $requestCode"
+            )
+        }
 
         return@withContext requestCode
     }
@@ -266,22 +270,22 @@ class Steam3Session(
         val cdnKey = depotId to server.host!!
 
         if (cdnAuthTokens.containsKey(cdnKey)) {
-            logger?.debug("requestCDNAuthToken already has $cdnKey")
+            if (debug) logger?.debug("requestCDNAuthToken already has $cdnKey")
             return@withContext
         }
 
         val completion = CompletableDeferred<CDNAuthToken>()
 
         if (isAborted || cdnAuthTokens.putIfAbsent(cdnKey, completion) != null) {
-            logger?.debug("requestCDNAuthToken is aborting or unable to map $cdnKey")
+            if (debug) logger?.debug("requestCDNAuthToken is aborting or unable to map $cdnKey")
             return@withContext
         }
 
-        logger?.debug("Requesting CDN auth token for ${server.host}")
+        if (debug) logger?.debug("Requesting CDN auth token for ${server.host}")
 
         val cdnAuth = steamContent!!.getCDNAuthToken(appId, depotId, server.host!!, this).await()
 
-        logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
+        if (debug) logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
 
         if (cdnAuth.result != EResult.OK) {
             logger?.error("requestCDNAuthToken result was ${cdnAuth.result}")
@@ -294,10 +298,12 @@ class Steam3Session(
     suspend fun checkAppBetaPassword(appId: Int, password: String) {
         val appPassword = steamApps!!.checkAppBetaPassword(appId, password).await()
 
-        logger?.debug(
-            "checkAppBetaPassword($appId, <password>)," +
-                "retrieved ${appPassword.betaPasswords.size} beta keys with result: ${appPassword.result}"
-        )
+        if (debug) {
+            logger?.debug(
+                "checkAppBetaPassword($appId, <password>)," +
+                    "retrieved ${appPassword.betaPasswords.size} beta keys with result: ${appPassword.result}"
+            )
+        }
 
         appPassword.betaPasswords.forEach { entry ->
             this.appBetaPasswords[entry.key] = entry.value
@@ -313,7 +319,7 @@ class Steam3Session(
 
         val privateBeta = steamApps!!.picsGetPrivateBeta(appId, accessToken, branch, branchPassword).await()
 
-        logger?.debug("getPrivateBetaDepotSection($appId, $branch) result: ${privateBeta.result}")
+        if (debug) logger?.debug("getPrivateBetaDepotSection($appId, $branch) result: ${privateBeta.result}")
 
         return privateBeta.depotSection
     }
@@ -332,7 +338,7 @@ class Steam3Session(
 
         val details = steamPublishedFile!!.getDetails(pubFileRequest).await()
 
-        logger?.debug("requestUGCDetails($appId, $pubFile) result: ${details.result}")
+        if (debug) logger?.debug("requestUGCDetails($appId, $pubFile) result: ${details.result}")
 
         if (details.result == EResult.OK) {
             return details.body.publishedfiledetailsBuilderList.firstOrNull()?.build()
@@ -344,7 +350,7 @@ class Steam3Session(
     suspend fun getUGCDetails(ugcHandle: UGCHandle): UGCDetailsCallback? {
         val callback = steamCloud!!.requestUGCDetails(ugcHandle).await()
 
-        logger?.debug("requestUGCDetails($ugcHandle) result: ${callback.result}")
+        if (debug) logger?.debug("requestUGCDetails($ugcHandle) result: ${callback.result}")
 
         if (callback.result == EResult.OK) {
             return callback
