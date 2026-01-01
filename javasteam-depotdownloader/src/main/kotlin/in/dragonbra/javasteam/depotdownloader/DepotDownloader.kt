@@ -1199,7 +1199,7 @@ class DepotDownloader @JvmOverloads constructor(
                 // Cancel the continuous flow job since no more chunks will be added
                 chunkProcessingJob?.cancel()
 
-                logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
+                if (debug) logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
             }
         }
 
