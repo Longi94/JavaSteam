@@ -1600,7 +1600,18 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun finishDepotDownload(mainAppId: Int) {
         val appItem = processingItemsMap[mainAppId]
         if (appItem != null) {
+            if (debug) {
+                logger?.debug("Notifying onDownloadCompleted")
+            }
             notifyListeners { it.onDownloadCompleted(appItem) }
+        } else {
+            if (debug) {
+                logger?.error("AppItem not found, cannot notify onDownloadCompleted")
+            }
+        }
+
+        if (debug) {
+            logger?.debug("Complete the completionFuture.")
         }
 
         completionFuture.complete(null)
@@ -1619,7 +1630,7 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private fun notifyListeners(action: (IDownloadListener) -> Unit) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(Dispatchers.Main) {
             listeners.forEach { listener -> action(listener) }
         }
     }
