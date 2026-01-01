@@ -233,9 +233,7 @@ class DepotDownloader @JvmOverloads constructor(
     // endregion
 
     init {
-        if (debug) {
-            logger = LogManager.getLogger(DepotDownloader::class.java)
-        }
+        logger = LogManager.getLogger(DepotDownloader::class.java)
 
         steam3 = Steam3Session(steamClient, debug)
 
