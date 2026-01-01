@@ -244,7 +244,9 @@ class DepotDownloader @JvmOverloads constructor(
                 steam3!!.packageTokens[license.packageID] = license.accessToken
             }
         }
+    }
 
+    fun startDownloading() {
         // Launch the processing loop
         scope.launch {
             processItems()
@@ -952,6 +954,8 @@ class DepotDownloader @JvmOverloads constructor(
                     "(${downloadCounter.totalBytesUncompressed} bytes uncompressed) from ${depots.size} depots"
             )
         }
+
+        finishDepotDownload(mainAppId)
     }
 
     private suspend fun processDepotManifestAndFiles(
@@ -1244,10 +1248,6 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         if (debug) logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
-
-        if (isLastDepot) {
-            finishDepotDownload(mainAppId)
-        }
     }
 
     private suspend fun downloadSteam3DepotFile(
