@@ -1630,7 +1630,7 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private fun notifyListeners(action: (IDownloadListener) -> Unit) {
-        scope.launch(Dispatchers.Main) {
+        scope.launch(Dispatchers.IO) {
             listeners.forEach { listener -> action(listener) }
         }
     }
