@@ -306,6 +306,9 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
             // Once all items in queue are done, 'completion' will signal that everything had finished.
             depotDownloader.finishAdding();
 
+            // Start downloading.
+            depotDownloader.startDownloading();
+
             // Block until we're done downloading.
             // Note: If you did not call `finishAdding()` before awaiting, depotDownloader will be expecting
             // more items to be added to queue. It may look like a hang. You could call `close()` to finish too.
