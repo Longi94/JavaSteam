@@ -248,9 +248,7 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         if (autoStartDownload) {
-            scope.launch {
-                processItems()
-            }
+            startDownloading()
         }
     }
 
