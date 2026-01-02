@@ -106,6 +106,7 @@ import kotlin.text.toLongOrNull
  * @param maxFileWrites Number of concurrent files being written. Default: 1
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
+ * @param autoStartDownload Whether to start downloading automatically. If false, you must call [startDownloading] manually.
  *
  * @author Oxters
  * @author Lossy
@@ -123,6 +124,7 @@ class DepotDownloader @JvmOverloads constructor(
     private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
     private val parentJob: Job? = null,
+    private val autoStartDownload: Boolean = true,
 ) : Closeable {
 
     companion object {
@@ -245,6 +247,12 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
+        if (autoStartDownload) {
+            startDownloading()
+        }
+    }
+
+    fun startDownloading() {
         // Launch the processing loop
         scope.launch {
             processItems()
@@ -952,6 +960,8 @@ class DepotDownloader @JvmOverloads constructor(
                     "(${downloadCounter.totalBytesUncompressed} bytes uncompressed) from ${depots.size} depots"
             )
         }
+
+        finishDepotDownload(mainAppId)
     }
 
     private suspend fun processDepotManifestAndFiles(
@@ -1199,7 +1209,7 @@ class DepotDownloader @JvmOverloads constructor(
                 // Cancel the continuous flow job since no more chunks will be added
                 chunkProcessingJob?.cancel()
 
-                logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
+                if (debug) logger?.debug("Canceled chunk processing job for depot ${depot.depotId}")
             }
         }
 
@@ -1244,10 +1254,6 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         if (debug) logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
-
-        if (isLastDepot) {
-            finishDepotDownload(mainAppId)
-        }
     }
 
     private suspend fun downloadSteam3DepotFile(
@@ -1600,7 +1606,18 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun finishDepotDownload(mainAppId: Int) {
         val appItem = processingItemsMap[mainAppId]
         if (appItem != null) {
+            if (debug) {
+                logger?.debug("Notifying onDownloadCompleted")
+            }
             notifyListeners { it.onDownloadCompleted(appItem) }
+        } else {
+            if (debug) {
+                logger?.error("AppItem not found, cannot notify onDownloadCompleted")
+            }
+        }
+
+        if (debug) {
+            logger?.debug("Complete the completionFuture.")
         }
 
         completionFuture.complete(null)
