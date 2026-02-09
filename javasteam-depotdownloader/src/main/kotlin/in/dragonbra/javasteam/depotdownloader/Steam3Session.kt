@@ -342,7 +342,7 @@ class Steam3Session(
     }
 
     suspend fun getUGCDetails(ugcHandle: UGCHandle): UGCDetailsCallback? {
-        val callback = steamCloud!!.requestUGCDetails(ugcHandle).await()
+        val callback = steamCloud!!.requestUGCDetails(ugcHandle)
 
         logger?.debug("requestUGCDetails($ugcHandle) result: ${callback.result}")
 
