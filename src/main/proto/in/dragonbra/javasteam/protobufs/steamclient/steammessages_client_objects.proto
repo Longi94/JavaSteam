@@ -105,6 +105,9 @@ message CMsgNetworkDevicesData {
         optional string user_name = 7;
         optional string password = 8;
         optional int32 strength_raw = 9;
+        optional string band_filter = 10;
+        optional bool has_non_6ghz_channel = 11;
+        optional bool is_saved = 12;
       }
 
       repeated .CMsgNetworkDevicesData.Device.Wireless.AP aps = 1;
@@ -143,15 +146,30 @@ message CMsgNetworkDeviceConnect {
     optional string password = 2;
   }
 
+  message Wireless {
+    optional string band_filter = 1;
+  }
+
   optional uint32 device_id = 1 [default = 0];
   optional .CMsgNetworkDeviceConnect.Credentials credentials = 4;
   optional .CMsgNetworkDeviceIP4Config ip4 = 5;
   optional .CMsgNetworkDeviceIP6Config ip6 = 6;
+  optional .CMsgNetworkDeviceConnect.Wireless wireless = 7;
 
   oneof ap_info {
     .CMsgNetworkDeviceConnect.KnownAP ap_known = 2;
     .CMsgNetworkDeviceConnect.CustomAP ap_custom = 3;
   }
+}
+
+message CMsgNetworkDeviceSetOptions {
+  message Wireless {
+    required uint32 ap_id = 1;
+    optional bool is_autoconnect = 2;
+    optional string band_filter = 3;
+  }
+
+  optional .CMsgNetworkDeviceSetOptions.Wireless wireless = 2;
 }
 
 message CMsgStorageDevicesData {
@@ -260,7 +278,6 @@ message CMsgSystemPerfLimits {
   optional int32 gpu_performance_manual_min_mhz = 5;
   optional int32 gpu_performance_manual_max_mhz = 6;
   optional bool perf_overlay_is_standalone = 7;
-  optional bool is_dynamic_vrs_available = 8;
   optional bool is_manual_display_refresh_rate_available = 9;
   repeated .EGPUPerformanceLevel gpu_performance_levels_available = 10;
   optional int32 display_refresh_manual_hz_min = 11;
@@ -280,7 +297,6 @@ message CMsgSystemPerfLimits {
 
 message CMsgSystemPerfSettingsGlobal {
   optional float diagnostic_update_rate = 1;
-  optional .ESystemServiceState system_trace_service_state = 2 [default = k_ESystemServiceState_Unavailable];
   optional .ESystemServiceState graphics_profiling_service_state = 3 [default = k_ESystemServiceState_Unavailable];
   optional .ESystemServiceState perf_overlay_service_state = 4 [default = k_ESystemServiceState_Unavailable];
   optional .EGraphicsPerfOverlayLevel perf_overlay_level = 5 [default = k_EGraphicsPerfOverlayLevel_Hidden];
@@ -506,9 +522,6 @@ message CMsgSystemDisplayManagerSetMode {
 message CMsgSystemManagerSettings {
   optional float idle_backlight_dim_battery_seconds = 1;
   optional float idle_backlight_dim_ac_seconds = 2;
-  optional float idle_suspend_battery_seconds = 3;
-  optional float idle_suspend_ac_seconds = 4;
-  optional bool idle_suspend_supressed = 5;
   optional bool is_adaptive_brightness_available = 6;
   optional bool display_adaptive_brightness_enabled = 7;
   optional bool display_nightmode_enabled = 10;
