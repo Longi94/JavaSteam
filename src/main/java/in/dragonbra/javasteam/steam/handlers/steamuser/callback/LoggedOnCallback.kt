@@ -108,6 +108,12 @@ class LoggedOnCallback : CallbackMsg {
         private set
 
     /**
+     *  Gets the account country code.
+     */
+    var userCountryCode: String? = null
+        private set
+
+    /**
      * Gets the vanity URL.
      */
     var vanityURL: String? = null
@@ -177,6 +183,7 @@ class LoggedOnCallback : CallbackMsg {
         steam2Ticket = resp.steam2Ticket.toByteArray()
 
         ipCountryCode = resp.ipCountryCode
+        userCountryCode = resp.userCountry
 
         vanityURL = resp.vanityUrl
 

@@ -51,6 +51,9 @@ public abstract class CMClient {
     @Nullable
     private String ipCountryCode;
 
+    @Nullable
+    private String userCountryCode;
+
     private boolean isConnected;
 
     private long sessionToken;
@@ -422,6 +425,7 @@ public abstract class CMClient {
             cellID = logonResp.getBody().getCellId();
             publicIP = NetHelpers.getIPAddress(logonResp.getBody().getPublicIp());
             ipCountryCode = logonResp.getBody().getIpCountryCode();
+            userCountryCode = logonResp.getBody().getUserCountry();
 
             // restart heartbeat
             heartBeatFunc.stop();
@@ -444,6 +448,7 @@ public abstract class CMClient {
         cellID = null;
         publicIP = null;
         ipCountryCode = null;
+        userCountryCode = null;
 
         heartBeatFunc.stop();
 
@@ -536,6 +541,14 @@ public abstract class CMClient {
      */
     public @Nullable String getIpCountryCode() {
         return ipCountryCode;
+    }
+
+    /**
+     * Gets the country code of our account country code. This value is assigned after a logon attempt has succeeded.
+     * This value will be <c>null</c> if the client is logged off of Steam.
+     */
+    public @Nullable String getUserCountryCode() {
+        return userCountryCode;
     }
 
     /**
