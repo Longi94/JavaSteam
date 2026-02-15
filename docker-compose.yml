@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  javasteam-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: javasteam-dev
+    volumes:
+      # Mount source code for live development
+      - .:/workspace
+      # Preserve gradle cache between container restarts
+      - gradle-cache:/root/.gradle
+    environment:
+      # Set Java options if needed
+      - JAVA_OPTS=-Xmx2g
+      # Steam credentials (optional - can be passed at runtime)
+      - STEAM_USER=${STEAM_USER:-}
+      - STEAM_PASS=${STEAM_PASS:-}
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    # Override command for interactive shell
+    command: /bin/bash
+
+volumes:
+  gradle-cache:
+    driver: local

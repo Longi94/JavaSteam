@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    application
 }
 
 repositories {
@@ -24,4 +25,15 @@ dependencies {
     implementation(libs.qrCode)
     implementation(libs.zstd) // Content Downloading.
     implementation(libs.xz) // Content Downloading.
+}
+
+// Allow running samples from command line
+// Usage: ./gradlew :javasteam-samples:run -PmainClass=<fully.qualified.ClassName> --args="username password"
+application {
+    mainClass.set(project.findProperty("mainClass") as String? ?: "in.dragonbra.javasteamsamples._000_authentication.SampleLogonAuthentication")
+}
+
+// Enable stdin for interactive 2FA input
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
 }
