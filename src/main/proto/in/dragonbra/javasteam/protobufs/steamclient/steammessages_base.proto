@@ -62,6 +62,7 @@ enum EProtoClanEventType {
   k_EClanSeasonUpdate = 33;
   k_EClanCrosspostEvent = 34;
   k_EClanInGameEventGeneral = 35;
+  k_EClanCreatorHome = 36;
 }
 
 enum PartnerEventNotificationType {
@@ -329,6 +330,8 @@ message CPackageReservationStatus {
   optional uint32 time_reserved = 8;
   optional uint32 rtime_estimated_notification = 9;
   optional string notificaton_token = 10;
+  optional int32 queue_head_position_at_reservation = 11;
+  optional int32 queue_head_position_now = 12;
 }
 
 message CMsgKeyValuePair {
@@ -347,4 +350,24 @@ message UserContentDescriptorPreferences {
   }
 
   repeated .UserContentDescriptorPreferences.ContentDescriptor content_descriptors_to_exclude = 1;
+}
+
+message UserSystemInformation {
+  optional string manufacturer = 1;
+  optional string model = 2;
+  optional string dx_video_card = 3;
+  optional int32 dx_vendorid = 4;
+  optional int32 dx_deviceid = 5;
+  optional uint32 num_gpu = 6;
+  optional uint64 system_ram = 7;
+  optional string os = 8;
+  optional string cpu_vendor = 9;
+  optional string cpu_name = 10;
+  optional uint32 gaming_device_type = 11;
+  optional string dx_driver_version = 12;
+  optional string dx_driver_name = 13;
+  optional string adapter_description = 14;
+  optional string driver_version = 15;
+  optional string driver_date = 16;
+  optional uint32 vram_size = 17;
 }

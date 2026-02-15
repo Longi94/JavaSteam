@@ -1,18 +1,14 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
 import com.google.protobuf.ByteString
-import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
-import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EPlatformType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.ESteamRealm
 import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.EBluetoothDeviceType
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.CClientMetrics_CloudAppSyncStats_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfo
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetails
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSShareFile
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppExitSyncDone_Notification
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppLaunchIntent_Request
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_BeginAppUploadBatch_Request
@@ -30,13 +26,12 @@ import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCall
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
-import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import java.util.Date
 import java.util.concurrent.CompletableFuture
@@ -63,21 +58,30 @@ class SteamCloud : ClientMsgHandler() {
      * Results are returned in a [UGCDetailsCallback].
      *
      * @param ugcId The unique user generated content id.
-     * @return The Job ID of the request. This can be used to find the appropriate [UGCDetailsCallback].
+     * @return The UGC details.
      */
-    fun requestUGCDetails(ugcId: UGCHandle): AsyncJobSingle<UGCDetailsCallback> {
-        val request = ClientMsgProtobuf<CMsgClientUFSGetUGCDetails.Builder>(
-            CMsgClientUFSGetUGCDetails::class.java,
-            EMsg.ClientUFSGetUGCDetails
-        ).apply {
-            sourceJobID = client.getNextJobID()
+    @JavaSteamAddition
+    @JvmOverloads
+    fun requestUGCDetails(
+        ugcId: UGCHandle,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ): CompletableFuture<UGCDetailsCallback> = parentScope.future { requestUGCDetails(ugcId) }
 
-            body.hcontent = ugcId.value
-        }
+    /**
+     * Requests details for a specific item of user generated content from the Steam servers.
+     * Results are returned in a [UGCDetailsCallback].
+     *
+     * @param ugcId The unique user generated content id.
+     * @return The UGC details.
+     */
+    suspend fun requestUGCDetails(ugcId: UGCHandle): UGCDetailsCallback {
+        val request = SteammessagesCloudSteamclient.CCloud_GetFileDetails_Request.newBuilder().apply {
+            this.ugcid = ugcId.value
+        }.build()
 
-        client.send(request)
+        val response = cloudService.getFileDetails(request).await()
 
-        return AsyncJobSingle(client, request.sourceJobID)
+        return UGCDetailsCallback(response)
     }
 
     /**
@@ -86,22 +90,33 @@ class SteamCloud : ClientMsgHandler() {
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
-     * @return The Job ID of the request. This can be used to find the appropriate [SingleFileInfoCallback].
+     * @return The file info.
      */
-    fun getSingleFileInfo(appId: Int, filename: String): AsyncJobSingle<SingleFileInfoCallback> {
-        val request = ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfo.Builder>(
-            CMsgClientUFSGetSingleFileInfo::class.java,
-            EMsg.ClientUFSGetSingleFileInfo
-        ).apply {
-            sourceJobID = client.getNextJobID()
+    @JavaSteamAddition
+    @JvmOverloads
+    fun getSingleFileInfo(
+        appId: Int,
+        filename: String,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ): CompletableFuture<SingleFileInfoCallback> = parentScope.future { getSingleFileInfo(appId, filename) }
 
-            body.appId = appId
-            body.fileName = filename
-        }
+    /**
+     * Requests details for a specific file in the user's Cloud storage.
+     * Results are returned in a [SingleFileInfoCallback].
+     *
+     * @param appId    The app id of the game.
+     * @param filename The path to the file being requested.
+     * @return The file info.
+     */
+    suspend fun getSingleFileInfo(appId: Int, filename: String): SingleFileInfoCallback {
+        val request = SteammessagesCloudSteamclient.CCloud_GetSingleFileInfo_Request.newBuilder().apply {
+            this.appId = appId
+            this.fileName = filename
+        }.build()
 
-        client.send(request)
+        val response = cloudService.getSingleFileInfo(request).await()
 
-        return AsyncJobSingle(client, request.sourceJobID)
+        return SingleFileInfoCallback(response)
     }
 
     /**
@@ -110,22 +125,33 @@ class SteamCloud : ClientMsgHandler() {
      *
      * @param appId    The app id of the game.
      * @param filename The path to the file being requested.
-     * @return The Job ID of the request. This can be used to find the appropriate [ShareFileCallback].
+     * @return The share file result.
      */
-    fun shareFile(appId: Int, filename: String): AsyncJobSingle<ShareFileCallback> {
-        val request = ClientMsgProtobuf<CMsgClientUFSShareFile.Builder>(
-            CMsgClientUFSShareFile::class.java,
-            EMsg.ClientUFSShareFile
-        ).apply {
-            sourceJobID = client.getNextJobID()
+    @JavaSteamAddition
+    @JvmOverloads
+    fun shareFile(
+        appId: Int,
+        filename: String,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ): CompletableFuture<ShareFileCallback> = parentScope.future { shareFile(appId, filename) }
 
-            body.appId = appId
-            body.fileName = filename
-        }
+    /**
+     * Commit a Cloud file at the given path to make its UGC handle publicly visible.
+     * Results are returned in a [ShareFileCallback].
+     *
+     * @param appId    The app id of the game.
+     * @param filename The path to the file being requested.
+     * @return The share file result.
+     */
+    suspend fun shareFile(appId: Int, filename: String): ShareFileCallback {
+        val request = SteammessagesCloudSteamclient.CCloud_ShareFile_Request.newBuilder().apply {
+            this.appId = appId
+            this.fileName = filename
+        }.build()
 
-        client.send(request)
+        val response = cloudService.shareFile(request).await()
 
-        return AsyncJobSingle(client, request.sourceJobID)
+        return ShareFileCallback(response)
     }
 
     /**
@@ -529,18 +555,6 @@ class SteamCloud : ClientMsgHandler() {
      * @param packetMsg The packet message that contains the data.
      */
     override fun handleMsg(packetMsg: IPacketMsg) {
-        // ignore messages that we don't have a handler function for
-        val callback = getCallback(packetMsg) ?: return
-
-        client.postCallback(callback)
-    }
-
-    companion object {
-        private fun getCallback(packetMsg: IPacketMsg): CallbackMsg? = when (packetMsg.msgType) {
-            EMsg.ClientUFSGetUGCDetailsResponse -> UGCDetailsCallback(packetMsg)
-            EMsg.ClientUFSGetSingleFileInfoResponse -> SingleFileInfoCallback(packetMsg)
-            EMsg.ClientUFSShareFileResponse -> ShareFileCallback(packetMsg)
-            else -> null
-        }
+        // Not Used.
     }
 }

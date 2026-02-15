@@ -1,28 +1,32 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback
 
-import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
-import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetUGCDetailsResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetFileDetails_Response
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud
-import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import `in`.dragonbra.javasteam.types.SteamID
+import java.util.Date
 
 /**
  * This callback is received in response to calling [SteamCloud.requestUGCDetails].
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class UGCDetailsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+class UGCDetailsCallback(response: ServiceMethodResponse<CCloud_GetFileDetails_Response.Builder>) {
 
     /**
      * Gets the result of the request.
      */
-    val result: EResult
+    val result: EResult = response.result
 
     /**
      * Gets the App ID the UGC is for.
      */
     val appID: Int
+
+    /**
+     * Gets the UGC ID.
+     */
+    val ugcID: Long
 
     /**
      * Gets the SteamID of the UGC's creator.
@@ -44,23 +48,41 @@ class UGCDetailsCallback(packetMsg: IPacketMsg) : CallbackMsg() {
      */
     val fileSize: Int
 
+    /**
+     * Gets the timestamp of the file.
+     */
+    val timestamp: Date
+
+    /**
+     * Gets the SHA hash of the file.
+     */
+    val fileSHA: String
+
+    /**
+     * Gets the compressed size of the file.
+     */
+    val compressedFileSize: Int
+
+    /**
+     * Gets the rangecheck host.
+     */
+    val rangecheckHost: String
+
     init {
-        val infoResponse = ClientMsgProtobuf<CMsgClientUFSGetUGCDetailsResponse.Builder>(
-            CMsgClientUFSGetUGCDetailsResponse::class.java,
-            packetMsg
-        )
-        val msg = infoResponse.body
+        val msg = response.body.details
 
-        jobID = infoResponse.targetJobID
-
-        result = EResult.from(msg.eresult)
-
-        appID = msg.appId
+        appID = msg.appid
+        ugcID = msg.ugcid
         creator = SteamID(msg.steamidCreator)
 
         url = msg.url
 
         fileName = msg.filename
         fileSize = msg.fileSize
+        timestamp = Date(msg.timestamp * 1000L)
+        fileSHA = msg.fileSha
+        compressedFileSize = msg.compressedFileSize
+
+        rangecheckHost = response.body.rangecheckHost
     }
 }

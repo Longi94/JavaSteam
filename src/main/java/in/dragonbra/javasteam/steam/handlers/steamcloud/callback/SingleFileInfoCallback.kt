@@ -1,23 +1,21 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback
 
-import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
-import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EResult
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverUfs.CMsgClientUFSGetSingleFileInfoResponse
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetSingleFileInfo_Response
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud
-import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
+import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.ServiceMethodResponse
 import java.util.*
 
 /**
  * This callback is received in response to calling [SteamCloud.getSingleFileInfo].
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class SingleFileInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
+class SingleFileInfoCallback(response: ServiceMethodResponse<CCloud_GetSingleFileInfo_Response.Builder>) {
 
     /**
      * Gets the result of the request.
      */
-    val result: EResult
+    val result: EResult = response.result
 
     /**
      * Gets the App ID the file is for.
@@ -50,15 +48,7 @@ class SingleFileInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
     val isExplicitDelete: Boolean
 
     init {
-        val infoResponse = ClientMsgProtobuf<CMsgClientUFSGetSingleFileInfoResponse.Builder>(
-            CMsgClientUFSGetSingleFileInfoResponse::class.java,
-            packetMsg
-        )
-        val msg = infoResponse.body
-
-        jobID = infoResponse.targetJobID
-
-        result = EResult.from(msg.eresult)
+        val msg = response.body
 
         appID = msg.appId
         fileName = msg.fileName

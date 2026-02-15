@@ -34,16 +34,6 @@ class AccountInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
      */
     val accountFlags: EnumSet<EAccountFlags>
 
-    /**
-     * Gets the facebook ID of this account if it is linked with facebook.
-     */
-    val facebookID: Long
-
-    /**
-     * Gets the facebook name if this account is linked with facebook.
-     */
-    val facebookName: String
-
     init {
         val accInfo = ClientMsgProtobuf<CMsgClientAccountInfo.Builder>(CMsgClientAccountInfo::class.java, packetMsg)
         val msg = accInfo.body
@@ -54,8 +44,5 @@ class AccountInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
         countAuthedComputers = msg.countAuthedComputers
 
         accountFlags = EAccountFlags.from(msg.accountFlags)
-
-        facebookID = msg.facebookId
-        facebookName = msg.facebookName
     }
 }
