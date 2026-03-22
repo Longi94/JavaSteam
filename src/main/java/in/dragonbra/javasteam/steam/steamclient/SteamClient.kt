@@ -152,7 +152,6 @@ class SteamClient @JvmOverloads constructor(
 
     /**
      * Returns a registered handler.
-     *
      * @param type The type of the handler to cast to. Must derive from ClientMsgHandler.
      * @param T  The type of the handler to cast to. Must derive from ClientMsgHandler.
      * @return A registered handler on success, or null if the handler could not be found.
@@ -163,11 +162,30 @@ class SteamClient @JvmOverloads constructor(
     /**
      * Kotlin Helper:
      * Returns a registered handler.
-     *
      * @param T  The type of the handler to cast to. Must derive from ClientMsgHandler.
      * @return A registered handler on success, or null if the handler could not be found.
      */
     inline fun <reified T : ClientMsgHandler> getHandler(): T? = getHandler(T::class.java)
+
+    /**
+     * Returns a registered handler, throwing if not found.
+     * @param type The type of the handler to cast to. Must derive from ClientMsgHandler.
+     * @return A registered handler.
+     * @throws IllegalArgumentException No handler of type [T] is registered.
+     */
+    @Throws(IllegalArgumentException::class)
+    fun <T : ClientMsgHandler> getRequiredHandler(type: Class<T>): T =
+        getHandler(type) ?: throw IllegalArgumentException("No handler found for type ${type.name}")
+
+    /**
+     * Kotlin Helper:
+     * Returns a registered handler, throwing if not found.
+     * @param T The type of the handler to cast to. Must derive from ClientMsgHandler.
+     * @return A registered handler.
+     * @throws IllegalArgumentException No handler of type [T] is registered.
+     */
+    @Throws(IllegalArgumentException::class)
+    inline fun <reified T : ClientMsgHandler> getRequiredHandler() = getRequiredHandler(T::class.java)
     //endregion
 
     //region Callbacks
