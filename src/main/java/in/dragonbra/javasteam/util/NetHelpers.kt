@@ -12,6 +12,8 @@ import java.net.Socket
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
 
+fun CMsgIPAddress.obfuscatePrivateIP() = NetHelpers.obfuscatePrivateIP(this)
+
 /**
  * @author lngtr
  * @since 2018-02-22

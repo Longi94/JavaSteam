@@ -27,6 +27,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -165,6 +166,7 @@ class SteamClient @JvmOverloads constructor(
      * @param T  The type of the handler to cast to. Must derive from ClientMsgHandler.
      * @return A registered handler on success, or null if the handler could not be found.
      */
+    @JavaSteamAddition
     inline fun <reified T : ClientMsgHandler> getHandler(): T? = getHandler(T::class.java)
 
     /**
@@ -184,6 +186,7 @@ class SteamClient @JvmOverloads constructor(
      * @return A registered handler.
      * @throws IllegalArgumentException No handler of type [T] is registered.
      */
+    @JavaSteamAddition
     @Throws(IllegalArgumentException::class)
     inline fun <reified T : ClientMsgHandler> getRequiredHandler() = getRequiredHandler(T::class.java)
     //endregion

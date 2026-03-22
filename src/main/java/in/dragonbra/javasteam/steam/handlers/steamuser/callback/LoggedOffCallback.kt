@@ -24,9 +24,11 @@ class LoggedOffCallback(packetMsg: IPacketMsg) : CallbackMsg() {
                 SteammessagesClientserverLogin.CMsgClientLoggedOff::class.java,
                 packetMsg
             )
+            jobID = loggedOff.targetJobID
             result = EResult.from(loggedOff.body.eresult)
         } else {
             val loggedOff = ClientMsg(MsgClientLoggedOff::class.java, packetMsg)
+            jobID = loggedOff.targetJobID
             result = loggedOff.body.result
         }
     }
