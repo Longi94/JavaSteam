@@ -9,7 +9,8 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 
 /**
- * This callback is fired in response to [SteamUserStats.getLeaderboardEntries].
+ * This callback is fired in response to [SteamUserStats.getLeaderboardEntries]
+ *  and [SteamUserStats.downloadLeaderboardEntriesForUsers].
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class LeaderboardEntriesCallback(packetMsg: IPacketMsg) : CallbackMsg() {
