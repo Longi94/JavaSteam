@@ -7,7 +7,7 @@ import java.io.Closeable
 @Suppress("unused")
 class Callback<TCall : CallbackMsg> @JvmOverloads constructor(
     override val callbackType: Class<out TCall>,
-    private val onRun: Consumer<TCall>?,
+    val onRun: suspend (TCall) -> Unit,
     private var mgr: CallbackManager? = null,
     val jobID: JobID = JobID.INVALID,
 ) : CallbackBase(),
@@ -23,10 +23,10 @@ class Callback<TCall : CallbackMsg> @JvmOverloads constructor(
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun run(callback: Any) {
-        val cb = callback as TCall
-        if ((cb.jobID == jobID || jobID == JobID.INVALID) && onRun != null) {
-            onRun.accept(cb)
+    override suspend fun run(callback: Any) {
+        val cb = callback as? TCall ?: return
+        if (cb.jobID == jobID || jobID == JobID.INVALID) {
+            onRun(cb)
         }
     }
 }

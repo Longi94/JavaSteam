@@ -27,6 +27,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
+import `in`.dragonbra.javasteam.types.JobID.Companion.toJobID
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
@@ -38,6 +39,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Represents a single client that connects to the Steam3 network.
@@ -218,11 +220,16 @@ class SteamClient @JvmOverloads constructor(
      * @param timeout The length of time to block in ms.
      * @return A callback object from the queue if a callback has been posted, or null if the timeout has elapsed.
      */
-    fun waitForCallback(timeout: Long): CallbackMsg? = runBlocking {
-        withTimeoutOrNull(timeout) {
-            callbackQueue.receive()
+    fun waitForCallback(timeout: Long): CallbackMsg? =
+        if (timeout <= 0L) {
+            callbackQueue.tryReceive().getOrNull()
+        } else {
+            runBlocking {
+                withTimeoutOrNull(timeout.milliseconds) {
+                    callbackQueue.receive()
+                }
+            }
         }
-    }
 
     /**
      * Posts a callback to the queue. This is normally used directly by client message handlers.
@@ -300,7 +307,7 @@ class SteamClient @JvmOverloads constructor(
 
         jobManager.setTimeoutsEnabled(true)
 
-        ConnectedCallback().also(::postCallback)
+        postCallback(ConnectedCallback())
     }
 
     /**
@@ -324,11 +331,11 @@ class SteamClient @JvmOverloads constructor(
     }
 
     private fun handleJobHeartbeat(packetMsg: IPacketMsg) {
-        JobID(packetMsg.targetJobID).let(jobManager::heartbeatJob)
+        jobManager.heartbeatJob(packetMsg.targetJobID.toJobID())
     }
 
     private fun handleJobFailed(packetMsg: IPacketMsg) {
-        JobID(packetMsg.targetJobID).let(jobManager::failJob)
+        jobManager.failJob(packetMsg.targetJobID.toJobID())
     }
 
     companion object {
