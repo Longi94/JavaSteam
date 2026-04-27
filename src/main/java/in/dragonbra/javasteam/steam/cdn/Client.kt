@@ -66,14 +66,8 @@ class Client(steamClient: SteamClient) : Closeable {
                 .addPathSegments(path.trimStart('/'))
 
             query?.let { queryString ->
-                if (queryString.isEmpty()) {
-                    null
-                } else {
-                    queryString.removePrefix("?")
-                }
-            }?.let { queryString ->
                 if (queryString.isNotEmpty()) {
-                    val params = queryString.split("&")
+                    val params = queryString.trimStart('?').split("&")
                     for (param in params) {
                         val keyValue = param.split("=", limit = 2)
                         if (keyValue.size == 2) {
