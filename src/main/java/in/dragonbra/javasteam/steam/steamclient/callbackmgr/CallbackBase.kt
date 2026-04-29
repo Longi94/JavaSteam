@@ -5,6 +5,6 @@ package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
  * This is for internal use only, and shouldn't be used directly.
  */
 abstract class CallbackBase {
-    abstract val callbackType: Class<*>
-    abstract fun run(callback: Any)
+    internal abstract val callbackType: Class<*>
+    internal abstract suspend fun run(callback: Any)
 }

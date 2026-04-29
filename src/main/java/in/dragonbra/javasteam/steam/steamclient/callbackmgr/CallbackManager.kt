@@ -8,17 +8,17 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback.Ser
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.util.compat.Consumer
+import kotlinx.coroutines.runBlocking
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.*
 
 /**
- * This class is a utility for routing callbacks to function calls.
+ * A utility for routing callbacks to function calls.
  * In order to bind callbacks to functions, an instance of this class must be created for the
  * [SteamClient] instance that will be posting callbacks.
  *
- * @constructor Initializes a new instance of the [CallbackManager] class.
- *  @param steamClient The [SteamClient] instance to handle the callbacks of.
+ * @param steamClient The [SteamClient] instance to handle the callbacks of.
  */
 class CallbackManager(private val steamClient: SteamClient) {
 
@@ -27,39 +27,40 @@ class CallbackManager(private val steamClient: SteamClient) {
     private val steamUnifiedMessages: SteamUnifiedMessages = steamClient.getHandler(SteamUnifiedMessages::class.java)!!
 
     /**
-     * Runs a single queued callback.
-     * If no callback is queued, this method will instantly return.
+     * Runs a single queued callback. Returns immediately if no callback is queued.
      *
-     * @return true if a callback has been run, false otherwise.
+     * @return `true` if a callback was run, `false` otherwise.
      */
     fun runCallbacks(): Boolean {
         val call = steamClient.getCallback() ?: return false
-
         handle(call)
         return true
     }
 
     /**
      * Blocks the current thread to run a single queued callback.
-     * If no callback is queued, the method will block for the given timeout or until a callback becomes available.
+     * If no callback is queued, blocks for up to [timeout] milliseconds or until one becomes available.
      *
-     * @param timeout The length of time to block.
-     * @return true if a callback has been run, false otherwise.
+     * If any asynchronous callbacks are registered, they will be blocked on synchronously.
+     * Use [runWaitCallbackAsync] to properly await asynchronous callbacks.
+     *
+     * @param timeout The length of time to block in milliseconds.
+     * @return `true` if a callback was run, `false` if the timeout elapsed.
      */
-    // TODO: Add Kotlin coroutines version.
     fun runWaitCallbacks(timeout: Long): Boolean {
         val call = steamClient.waitForCallback(timeout) ?: return false
-
         handle(call)
         return true
     }
 
     /**
-     * Blocks the current thread to run all queued callbacks.
-     * If no callback is queued, the method will block for the given timeout or until a callback becomes available.
-     * This method returns once the queue has been emptied.
+     * Blocks the current thread to run all queued callbacks, then returns once the queue is empty.
+     * If no callback is queued, blocks for up to [timeout] milliseconds or until one becomes available.
      *
-     * @param timeout The length of time to block.
+     * If any asynchronous callbacks are registered, they will be blocked on synchronously.
+     * Use [runWaitCallbackAsync] to properly await asynchronous callbacks.
+     *
+     * @param timeout The length of time to block in milliseconds.
      */
     fun runWaitAllCallbacks(timeout: Long) {
         if (!runWaitCallbacks(timeout)) {
@@ -73,7 +74,10 @@ class CallbackManager(private val steamClient: SteamClient) {
 
     /**
      * Blocks the current thread to run a single queued callback.
-     * If no callback is queued, the method will block until one becomes available.
+     * If no callback is queued, blocks indefinitely until one becomes available.
+     *
+     * If any asynchronous callbacks are registered, they will be blocked on synchronously.
+     * Use [runWaitCallbackAsync] to properly await asynchronous callbacks.
      */
     fun runWaitCallbacks() {
         val call = steamClient.waitForCallback()
@@ -81,40 +85,38 @@ class CallbackManager(private val steamClient: SteamClient) {
     }
 
     /**
-     *
+     * Asynchronously awaits a single queued callback.
+     * If no callback is queued, suspends until one becomes available.
      */
     @Suppress("unused")
     suspend fun runWaitCallbackAsync() {
         val call = steamClient.waitForCallbackAsync()
-        handle(call)
+        handleAsync(call)
     }
 
     /**
-     * Registers the provided [Consumer] to receive callbacks of type [TCallback]
+     * Subscribes to callbacks of type [TCallback] with an optional [JobID] filter.
      *
-     * @param TCallback  The type of callback to subscribe to.
-     *  If this is [JobID.INVALID],  all callbacks of type [TCallback]  will be received.
-     * @param callbackType The type of the callback
-     * @param jobID The [JobID]  of the callbacks that should be subscribed to.
-     * @param callbackFunc The function to invoke with the callback.
-     * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc .
+     * @param TCallback The type of callback to subscribe to.
+     * @param callbackType The class of the callback type.
+     * @param jobID Only callbacks matching this [JobID] will be received.
+     *   Use [JobID.INVALID] to receive all callbacks of this type.
+     * @param callbackFunc The function to invoke when a matching callback is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
      */
     fun <TCallback : CallbackMsg> subscribe(
         callbackType: Class<out TCallback>,
         jobID: JobID,
         callbackFunc: Consumer<TCallback>,
-    ): Closeable {
-        val callback = Callback(callbackType, callbackFunc, this, jobID)
-        return callback
-    }
+    ): Closeable = Callback(callbackType, callbackFunc::accept, this, jobID)
 
     /**
-     * Registers the provided [Consumer] to receive callbacks of type [TCallback]
+     * Subscribes to all callbacks of type [TCallback].
      *
-     * @param TCallback  The type of callback to subscribe to.
-     * @param callbackType type of the callback
-     * @param callbackFunc The function to invoke with the callback.
-     * @return An [Closeable]. Disposing of the return value will unsubscribe the callbackFunc.
+     * @param TCallback The type of callback to subscribe to.
+     * @param callbackType The class of the callback type.
+     * @param callbackFunc The function to invoke when a matching callback is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
      */
     fun <TCallback : CallbackMsg> subscribe(
         callbackType: Class<out TCallback>,
@@ -122,32 +124,47 @@ class CallbackManager(private val steamClient: SteamClient) {
     ): Closeable = subscribe(callbackType, JobID.INVALID, callbackFunc)
 
     /**
-     * Registers a callback to receive service notifications from Steam's unified messaging system.
+     * Subscribes to callbacks of type [TCallback] with a suspending callback and an optional [JobID] filter.
      *
-     * This method creates a service subscription that listens for specific notifications from a Steam service.
-     * When a notification arrives, it validates the notification type and forwards it to the provided callback
-     * function if the types match.
+     * Use [runWaitCallbackAsync] to properly await the suspending [callbackFunc].
      *
-     * @param TService The type of Steam service to subscribe to (e.g., GameNotificationsClient)
-     * @param TNotification The type of notification message to receive (e.g., CGameNotifications_OnNotificationsRequested_Notification.Builder)
-     * @param serviceClass The class object representing the Steam service
-     * @param notificationClass The class object representing the notification type
-     * @param callbackFunc The callback function to be invoked when matching notifications are received
-     * @return A [Closeable] subscription. Call [Closeable.close] to unsubscribe and clean up resources
+     * @param TCallback The type of callback to subscribe to.
+     * @param callbackType The class of the callback type.
+     * @param jobID Only callbacks matching this [JobID] will be received.
+     *   Use [JobID.INVALID] to receive all callbacks of this type.
+     * @param callbackFunc The suspending function to invoke when a matching callback is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
+     */
+    fun <TCallback : CallbackMsg> subscribe(
+        callbackType: Class<out TCallback>,
+        jobID: JobID,
+        callbackFunc: suspend (TCallback) -> Unit,
+    ): Closeable = Callback(callbackType, callbackFunc, this, jobID)
+
+    /**
+     * Subscribes to all callbacks of type [TCallback] with a suspending callback.
      *
-     * Example usage in Kotlin:
-     * val subscription = manager.subscribeServiceNotification(
-     *     GameNotificationsClient::class.java,
-     *     CGameNotifications_OnNotificationsRequested_Notification.Builder::class.java,
-     *     this::onGameStartedNotification
-     * )
+     * Use [runWaitCallbackAsync] to properly await the suspending [callbackFunc].
      *
-     * Example usage in Java:
-     * manager.subscribeServiceNotification(
-     *     GameNotificationsClient.class,
-     *     CGameNotifications_OnNotificationsRequested_Notification.Builder.class,
-     *     notification -> onGameStartedNotification(notification)
-     * );
+     * @param TCallback The type of callback to subscribe to.
+     * @param callbackType The class of the callback type.
+     * @param callbackFunc The suspending function to invoke when a matching callback is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
+     */
+    fun <TCallback : CallbackMsg> subscribe(
+        callbackType: Class<out TCallback>,
+        callbackFunc: suspend (TCallback) -> Unit,
+    ): Closeable = subscribe(callbackType, JobID.INVALID, callbackFunc)
+
+    /**
+     * Subscribes to service notifications of type [TNotification] from the [TService] Steam unified service.
+     *
+     * @param TService The unified service type to subscribe to.
+     * @param TNotification The notification message type to receive.
+     * @param serviceClass The class of the unified service.
+     * @param notificationClass The class of the notification type.
+     * @param callbackFunc The function to invoke when a matching notification is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
      */
     @Suppress("UNCHECKED_CAST")
     fun <TService : UnifiedService, TNotification : GeneratedMessage.Builder<TNotification>> subscribeServiceNotification(
@@ -165,50 +182,23 @@ class CallbackManager(private val steamClient: SteamClient) {
             }
         }
 
-        val callback = Callback(
+        return Callback(
             callbackType = ServiceMethodNotification::class.java as Class<out ServiceMethodNotification<TNotification>>,
-            onRun = wrappedCallback,
+            onRun = wrappedCallback::accept,
             mgr = this,
             jobID = JobID.INVALID
         )
-
-        return callback
     }
 
     /**
-     * Registers a callback to receive service responses from Steam's unified messaging system.
+     * Subscribes to service responses of type [TNotification] from the [TService] Steam unified service.
      *
-     * This method creates a service subscription that listens for specific responses from a Steam service.
-     * When a response is received, it validates the response type and forwards it to the provided callback
-     * function if the types match. Unlike notifications, responses are typically used for request-response
-     * patterns in the Steam API.
-     *
-     * @param TService The type of Steam service to subscribe to (e.g., GameNotificationsClient)
-     * @param TNotification The type of response message to receive
-     * @param serviceClass The class object representing the Steam service
-     * @param notificationClass The class object representing the response type
-     * @param callbackFunc The callback function to be invoked when matching responses are received
-     * @return A [Closeable] subscription. Call [Closeable.close] to unsubscribe and clean up resources
-     *
-     * @see ServiceMethodResponse
-     * @see UnifiedService
-     *
-     * Example usage in Kotlin:
-     * val subscription = manager.subscribeServiceResponse(
-     *     Player::class.java,
-     *     CPlayer_GetGameBadgeLevels_Response.Builder::class.java
-     * ) { response ->
-     *     println("Badge level: ${response.body.playerLevel}")
-     * }
-     *
-     * Example usage in Java:
-     * Closeable subscription = manager.subscribeServiceResponse(
-     *     Player.class,
-     *     CPlayer_GetGameBadgeLevels_Response.Builder.class,
-     *     response -> {
-     *         System.out.println("Badge level: " + response.getBody().getPlayerLevel());
-     *     }
-     * );
+     * @param TService The unified service type to subscribe to.
+     * @param TNotification The response message type to receive.
+     * @param serviceClass The class of the unified service.
+     * @param notificationClass The class of the response type.
+     * @param callbackFunc The function to invoke when a matching response is received.
+     * @return A [Closeable] that unsubscribes [callbackFunc] when closed.
      */
     @Suppress("UNCHECKED_CAST")
     fun <TService : UnifiedService, TNotification : GeneratedMessage.Builder<TNotification>> subscribeServiceResponse(
@@ -226,21 +216,26 @@ class CallbackManager(private val steamClient: SteamClient) {
             }
         }
 
-        val callback = Callback(
+        return Callback(
             callbackType = ServiceMethodResponse::class.java as Class<out ServiceMethodResponse<TNotification>>,
-            onRun = wrappedCallback,
+            onRun = wrappedCallback::accept,
             mgr = this,
             jobID = JobID.INVALID,
         )
-
-        return callback
     }
 
     //region Kotlin-Helpers
+
+    // @JvmSynthetic
+    // inline fun <reified TCallback : CallbackMsg> subscribe(
+    //     jobID: JobID = JobID.INVALID,
+    //     noinline callbackFunc: (TCallback) -> Unit,
+    // ): Closeable = subscribe(TCallback::class.java, jobID, callbackFunc)
+
     @JvmSynthetic
     inline fun <reified TCallback : CallbackMsg> subscribe(
         jobID: JobID = JobID.INVALID,
-        noinline callbackFunc: (TCallback) -> Unit,
+        noinline callbackFunc: suspend (TCallback) -> Unit,
     ): Closeable = subscribe(TCallback::class.java, jobID, callbackFunc)
 
     @JvmSynthetic
@@ -276,8 +271,16 @@ class CallbackManager(private val steamClient: SteamClient) {
     private fun handle(call: CallbackMsg) {
         val callbacks = registeredCallbacks
         val type = call.javaClass
+        callbacks.forEach { callback ->
+            if (callback.callbackType.isAssignableFrom(type)) {
+                runBlocking { callback.run(call) }
+            }
+        }
+    }
 
-        // find handlers interested in this callback
+    private suspend fun handleAsync(call: CallbackMsg) {
+        val callbacks = registeredCallbacks
+        val type = call.javaClass
         callbacks.forEach { callback ->
             if (callback.callbackType.isAssignableFrom(type)) {
                 callback.run(call)

@@ -70,6 +70,12 @@ public abstract class HandlerTestBase<T extends ClientMsgHandler> extends TestBa
         return (C) callback;
     }
 
+    protected CallbackMsg getCallback() {
+        ArgumentCaptor<CallbackMsg> callbackCaptor = ArgumentCaptor.forClass(CallbackMsg.class);
+        verify(steamClient, atLeast(1)).postCallback(callbackCaptor.capture());
+        return callbackCaptor.getValue();
+    }
+
     protected IPacketMsg getPacket(EMsg msgType, boolean isProto) {
         return CMClient.getPacketMsg(TestPackets.getPacket(msgType, isProto));
     }
