@@ -176,4 +176,21 @@ public class CDNClientTest {
         boolean result = ClientLancache.isPrivateAddress(address);
         Assertions.assertEquals(expected, result);
     }
+
+    @ParameterizedTest
+    @CsvSource({
+            "token=abc,          token,  ",          // normal, no change
+            "?token=abc,         token,  ?token",    // leading ? stripped
+            "??token=abc,        token,  ??token",   // multiple leading ? stripped
+            "?token=abc&foo=bar, token,  ?token",    // leading ? with multiple params
+    })
+    public void buildCommandStripsLeadingQuestionMarkFromQueryString(String query, String expectedKey, String unexpectedKey) {
+        var server = Server.fromHostAndPort("localhost", 80);
+        HttpUrl url = Client.buildCommand(server, "depot/731/manifest", query, null);
+
+        Assertions.assertNotNull(url.queryParameter(expectedKey));
+        if (unexpectedKey != null) {
+            Assertions.assertNull(url.queryParameter(unexpectedKey));
+        }
+    }
 }
