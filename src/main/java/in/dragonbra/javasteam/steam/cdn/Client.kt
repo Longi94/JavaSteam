@@ -67,7 +67,7 @@ class Client(steamClient: SteamClient) : Closeable {
 
             query?.let { queryString ->
                 if (queryString.isNotEmpty()) {
-                    val params = queryString.split("&")
+                    val params = queryString.trimStart('?').split("&")
                     for (param in params) {
                         val keyValue = param.split("=", limit = 2)
                         if (keyValue.size == 2) {
