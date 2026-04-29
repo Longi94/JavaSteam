@@ -38,7 +38,8 @@ class Client(steamClient: SteamClient) : Closeable {
 
         private val logger: Logger = LogManager.getLogger(Client::class.java)
 
-        private fun buildCommand(
+        @JvmStatic
+        fun buildCommand(
             server: Server,
             command: String,
             query: String? = null,
