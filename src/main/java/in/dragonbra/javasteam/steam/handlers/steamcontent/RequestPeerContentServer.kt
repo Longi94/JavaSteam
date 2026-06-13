@@ -3,10 +3,10 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
- * TODO kdoc
- * @param serverPort
- * @param installedDepots
- * @param accessToken
+ * Represents the response from [SteamContent.requestPeerContentServer].
+ * @param serverPort The port the peer content server is listening on.
+ * @param installedDepots List of depot IDs installed on the remote client and available for transfer.
+ * @param accessToken Token used to authenticate with the peer content server.
  */
 @JavaSteamAddition
 data class RequestPeerContentServer(

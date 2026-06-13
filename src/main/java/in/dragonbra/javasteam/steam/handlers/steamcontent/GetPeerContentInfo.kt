@@ -3,9 +3,9 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcontent
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 
 /**
- * TODO kdoc
- * @param appIds
- * @param ipPublic
+ * Represents the response from [SteamContent.getPeerContentInfo].
+ * @param appIds list of app IDs for which peer content is available on the remote client.
+ * @param ipPublic public IP address of the remote peer content server.
  */
 @JavaSteamAddition
 data class GetPeerContentInfo(
