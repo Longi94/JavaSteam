@@ -135,7 +135,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
 
         endpointList = listOfNotNull(
             ServerRecord.createWebSocketServer(defaultServerWebSocket),
-            ServerRecord.tryCreateSocketServer(defaultServerNetFilter), // TODO 'tryCreateSocketServer' can return null
+            ServerRecord.tryCreateSocketServer(defaultServerNetFilter),
         )
 
         replaceList(endpointList, writeProvider = false, Instant.MIN)
