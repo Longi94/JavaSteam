@@ -1,5 +1,5 @@
-package in.dragonbra.javasteam.util.event;
+package `in`.dragonbra.javasteam.util.event
 
-public interface EventHandler<T extends EventArgs> {
-    void handleEvent(Object sender, T e);
+fun interface EventHandler<T : EventArgs> {
+    fun handleEvent(sender: Any, e: T)
 }

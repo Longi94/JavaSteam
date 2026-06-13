@@ -32,7 +32,7 @@ public abstract class Connection {
     }
 
     protected void onConnected() {
-        connected.handleEvent(this, null);
+        connected.handleEvent(this, EventArgs.EMPTY);
     }
 
     protected void onDisconnected(boolean e) {

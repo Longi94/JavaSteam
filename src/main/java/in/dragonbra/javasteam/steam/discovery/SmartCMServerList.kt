@@ -53,6 +53,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     @Suppress("MemberVisibilityCanBePrivate")
     var badConnectionMemoryTimeSpan: Duration = Duration.ofMinutes(5)
 
+    @Synchronized
     @Throws(IOException::class)
     private fun startFetchingServers() {
         if (servers.isNotEmpty()) {
@@ -67,6 +68,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
         }
     }
 
+    @Synchronized
     @Throws(IOException::class)
     private fun resolveServerList(forceRefresh: Boolean = false) {
         var forcedRefresh = forceRefresh
@@ -145,6 +147,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * Resets the scores of all servers which has a last bad connection more than [SmartCMServerList.badConnectionMemoryTimeSpan] ago.
      */
     @Suppress("MemberVisibilityCanBePrivate")
+    @Synchronized
     fun resetOldScores() {
         val cutoff = Instant.now().minus(badConnectionMemoryTimeSpan)
 
@@ -165,6 +168,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * @param serversTime The time when the provided server list has been updated.
      */
     @JvmOverloads
+    @Synchronized
     fun replaceList(endpointList: List<ServerRecord>, writeProvider: Boolean = true, serversTime: Instant? = null) {
         val distinctEndPoints = endpointList.distinct()
 
@@ -188,15 +192,18 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     /**
      * Explicitly resets the known state of all servers.
      */
+    @Synchronized
     fun resetBadServers() {
         servers.forEach { serverInfo ->
             serverInfo.lastBadConnectionTimeUtc = null
         }
     }
 
+    @Synchronized
     fun tryMark(endPoint: InetSocketAddress?, protocolTypes: ProtocolTypes?, quality: ServerQuality): Boolean =
         tryMark(endPoint, protocolTypes?.let { EnumSet.of(it) }, quality)
 
+    @Synchronized
     fun tryMark(endPoint: InetSocketAddress?, protocolTypes: EnumSet<ProtocolTypes>?, quality: ServerQuality): Boolean {
         if (endPoint == null || protocolTypes == null) {
             logger.error("Couldn't mark an endpoint ${quality.name}, skipping it")
@@ -242,6 +249,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
+    @Synchronized
     private fun getNextServerCandidateInternal(supportedProtocolTypes: EnumSet<ProtocolTypes>): ServerRecord? {
         resetOldScores()
 
@@ -267,6 +275,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
+    @Synchronized
     fun getNextServerCandidate(supportedProtocolTypes: EnumSet<ProtocolTypes>): ServerRecord? {
         return runCatching {
             startFetchingServers()
@@ -287,6 +296,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
+    @Synchronized
     fun getNextServerCandidate(supportedProtocolTypes: ProtocolTypes): ServerRecord? =
         getNextServerCandidate(EnumSet.of(supportedProtocolTypes))
 
@@ -294,6 +304,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * Gets the [ServerRecords][ServerRecord] of all servers in the server list.
      * @return An [List] array contains the [InetSocketAddress] of the servers in the list
      */
+    @Synchronized
     fun getAllEndPoints(): List<ServerRecord> = runCatching {
         startFetchingServers()
     }.fold(
@@ -309,6 +320,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * and then fallback to the server list provider.
      * @return whether the refresh was successful or not.
      **/
+    @Synchronized
     fun forceRefreshServerList(): Boolean = runCatching {
         resolveServerList(forceRefresh = true)
     }.fold(

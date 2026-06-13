@@ -42,8 +42,11 @@ class WebSocketConnection : Connection() {
     private val lastFrameTime = AtomicLong(0L)
 
     @Volatile private var client: HttpClient? = null
+
     @Volatile private var session: WebSocketSession? = null
+
     @Volatile private var connectionJob: Job? = null
+
     @Volatile private var endpoint: InetSocketAddress? = null
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
@@ -84,9 +87,13 @@ class WebSocketConnection : Connection() {
                             lastFrameTime.set(System.currentTimeMillis())
                             onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
                         }
+
                         is Frame.Close -> doDisconnect(false)
+
                         is Frame.Ping -> logger.debug("Received ping")
+
                         is Frame.Pong -> logger.debug("Received pong")
+
                         is Frame.Text -> logger.debug("Received text: ${frame.readText()}")
                     }
                 }
@@ -111,21 +118,22 @@ class WebSocketConnection : Connection() {
 
         scope.launch {
             val currentJob = connectionJob
+            val currentSession = session
+            val currentClient = client
             connectionJob = null
+            session = null
+            client = null
 
             try {
-                session?.close()
+                currentSession?.close()
             } catch (e: Exception) {
                 logger.debug("Error closing WebSocket session: ${e.message}")
             }
             try {
-                client?.close()
+                currentClient?.close()
             } catch (e: Exception) {
                 logger.debug("Error closing HTTP client: ${e.message}")
             }
-
-            session = null
-            client = null
 
             currentJob?.cancel()
             currentJob?.join()
@@ -145,8 +153,11 @@ class WebSocketConnection : Connection() {
                     doDisconnect(false)
                     return
                 }
+
                 elapsed > 25_000 -> logger.debug("Watchdog: No response for 25 seconds")
+
                 elapsed > 20_000 -> logger.debug("Watchdog: No response for 20 seconds")
+
                 elapsed > 15_000 -> logger.debug("Watchdog: No response for 15 seconds")
             }
         }

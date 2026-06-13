@@ -125,7 +125,6 @@ public class HardwareUtils {
     }
 
     private static BufferedReader read(String command) {
-
         Runtime runtime = Runtime.getRuntime();
         Process process;
         try {
@@ -134,14 +133,23 @@ public class HardwareUtils {
             return null;
         }
 
-        var os = process.getOutputStream();
-
         try {
-            os.close();
+            process.getOutputStream().close();
         } catch (IOException ignored) {
         }
 
-        return new BufferedReader(new InputStreamReader(process.getInputStream()));
+        try (var br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            return new BufferedReader(new StringReader(sb.toString()));
+        } catch (IOException e) {
+            return null;
+        } finally {
+            process.destroy();
+        }
     }
 
     private static String readDmidecode() {
