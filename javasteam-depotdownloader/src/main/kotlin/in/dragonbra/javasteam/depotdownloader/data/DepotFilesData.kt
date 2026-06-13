@@ -29,4 +29,5 @@ data class DepotFilesData(
     val previousManifest: DepotManifest?,
     val filteredFiles: MutableList<FileData>,
     val allFileNames: HashSet<String>,
+    val previousManifestIndex: Map<String, FileData>?,
 )

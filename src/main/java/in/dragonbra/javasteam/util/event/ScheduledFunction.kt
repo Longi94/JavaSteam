@@ -11,9 +11,13 @@ class ScheduledFunction(private val func: Runnable, var delay: Long) {
     fun start() {
         if (!started) {
             timer = Timer().also {
-                it.scheduleAtFixedRate(object : TimerTask() {
-                    override fun run() = func.run()
-                }, 0L, delay)
+                it.scheduleAtFixedRate(
+                    object : TimerTask() {
+                        override fun run() = func.run()
+                    },
+                    0L,
+                    delay
+                )
             }
             started = true
         }

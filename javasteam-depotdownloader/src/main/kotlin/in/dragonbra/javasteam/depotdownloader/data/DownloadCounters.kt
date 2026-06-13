@@ -1,11 +1,13 @@
 package `in`.dragonbra.javasteam.depotdownloader.data
 
+import java.util.concurrent.atomic.AtomicLong
+
 // https://kotlinlang.org/docs/coding-conventions.html#source-file-organization
 
 /**
  * Tracks cumulative download statistics across all depots in a download session.
- * Used for overall progress reporting and final download summary. All fields are
- * accessed under synchronization to ensure thread-safe updates from concurrent downloads.
+ * Used for overall progress reporting and final download summary. Fields are AtomicLong
+ * so parallel depot manifest fetches can update them concurrently without locking.
  *
  * @property completeDownloadSize Total bytes expected to download across all depots. Adjusted during validation when existing chunks are reused.
  * @property totalBytesCompressed Total compressed bytes transferred from CDN servers
@@ -15,11 +17,11 @@ package `in`.dragonbra.javasteam.depotdownloader.data
  * @author Lossy
  * @since Oct 29, 2024
  */
-data class GlobalDownloadCounter(
-    var completeDownloadSize: Long = 0,
-    var totalBytesCompressed: Long = 0,
-    var totalBytesUncompressed: Long = 0,
-)
+class GlobalDownloadCounter {
+    val completeDownloadSize = AtomicLong(0)
+    val totalBytesCompressed = AtomicLong(0)
+    val totalBytesUncompressed = AtomicLong(0)
+}
 
 /**
  * Tracks download statistics for a single depot.
