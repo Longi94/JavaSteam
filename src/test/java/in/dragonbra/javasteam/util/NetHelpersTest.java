@@ -77,6 +77,26 @@ public class NetHelpersTest extends TestBase {
     }
 
     @Test
+    public void obfuscatePrivateIPv6_isOwnInverse() throws UnknownHostException {
+        var v6Addr = NetHelpers.getMsgIPAddress(InetAddress.getByName("2001:db8::1"));
+        var obfuscated = NetHelpers.obfuscatePrivateIP(v6Addr);
+        var restored = NetHelpers.obfuscatePrivateIP(obfuscated);
+        Assertions.assertArrayEquals(v6Addr.getV6().toByteArray(), restored.getV6().toByteArray());
+    }
+
+    @Test
+    public void obfuscatePrivateIPv6_allZerosProducesMask() throws UnknownHostException {
+        var v6Addr = NetHelpers.getMsgIPAddress(InetAddress.getByName("::"));
+        byte[] expected = {
+                (byte) 0x0D, (byte) 0xF0, (byte) 0xAD, (byte) 0xBA,
+                (byte) 0x0D, (byte) 0xF0, (byte) 0xAD, (byte) 0xBA,
+                (byte) 0x0D, (byte) 0xF0, (byte) 0xAD, (byte) 0xBA,
+                (byte) 0x0D, (byte) 0xF0, (byte) 0xAD, (byte) 0xBA
+        };
+        Assertions.assertArrayEquals(expected, NetHelpers.obfuscatePrivateIP(v6Addr).getV6().toByteArray());
+    }
+
+    @Test
     public void tryParseIPEndPoint() throws UnknownHostException {
         var v4Addr = NetHelpers.tryParseIPEndPoint("127.0.0.1:1337");
         Assertions.assertNotNull(v4Addr);

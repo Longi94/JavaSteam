@@ -81,7 +81,6 @@ object NetHelpers {
         val localIp = msgIpAddress.toBuilder()
 
         if (localIp.hasV6()) {
-            // TODO v6 validation
             val v6Bytes = msgIpAddress.v6.toByteArray()
             for (i in 0..15 step 4) {
                 v6Bytes[i] = (v6Bytes[i].toInt() xor 0x0D).toByte()
