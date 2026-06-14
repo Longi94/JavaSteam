@@ -88,9 +88,18 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         // Anything pertaining to this sample will be commented.
 
         // Depot chunks are downloaded using OKHttp, it's best to set some timeouts.
+        // OkHttp's default dispatcher uses non-daemon threads with a 60s idle keepalive, which
+        // would prevent JVM exit after the download completes. Daemon threads exit with the app.
+        var dispatcher = new okhttp3.Dispatcher(java.util.concurrent.Executors.newCachedThreadPool(r -> {
+            var t = new Thread(r, "OkHttp Dispatcher");
+            t.setDaemon(true);
+            return t;
+        }));
+
         var config = SteamConfiguration.create(builder -> {
             builder.withHttpClient(
                     new OkHttpClient.Builder()
+                            .dispatcher(dispatcher)
                             .connectTimeout(10, TimeUnit.SECONDS)   // Time to establish connection
                             .readTimeout(60, TimeUnit.SECONDS)      // Max inactivity between reads
                             .writeTimeout(30, TimeUnit.SECONDS)     // Time for writes
@@ -194,7 +203,7 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     private void onDisconnected(DisconnectedCallback callback) {
         System.out.println("Disconnected from Steam, UserInitiated: " + callback.isUserInitiated());
 
-        if (callback.isUserInitiated()) {
+        if (callback.isUserInitiated() || !isRunning) {
             isRunning = false;
         } else {
             try {
@@ -252,47 +261,43 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
     private void downloadApp() {
         // Initiate the DepotDownloader, it is a Closable so it can be cleaned up when no longer used.
         // You will need to subscribe to LicenseListCallback to obtain your app licenses.
-        try (var depotDownloader = new DepotDownloader(steamClient, licenseList, true)) {
+        try (var depotDownloader = new DepotDownloader(
+                steamClient,
+                licenseList,
+                false,  // debug
+                false,  // useLanCache
+                50,     // maxDownloads: concurrent chunk downloads from CDN. Higher = faster on good connections,
+                        //   but increases memory usage and may overwhelm slow or metered connections.
+                20      // maxFileWrites: concurrent file write operations. Higher = better throughput on SSDs,
+                        //   but diminishing returns on HDDs where concurrent writes cause seek thrashing.
+        )) {
 
             // Add this class as a listener of IDownloadListener
             depotDownloader.addListener(this);
 
-            var pubItem = new PubFileItem(
-                    /* (Required) appId */ 0,
-                    /* (Required) pubFile */ 0,
-                    /* (Optional) installToGameNameDirectory */ false,
-                    /* (Optional) installDirectory */ null,
-                    /* (Optional) verify */ false,
-                    /* (Optional) downloadManifestOnly */ false
-            );
+            // PubFileItem downloads a Steam Workshop item by its published file ID.
+            // The published file ID appears in the Workshop item's URL, e.g.:
+            // "steamcommunity.com/sharedfiles/filedetails/?id=123456789" -> pubFile = 123456789
+            var pubItem = new PubFileItem.Builder(0, 0)
+                    .build();
 
-            var ugcItem = new UgcItem(
-                    /* (Required) appId */0,
-                    /* (Required) ugcId */ 0,
-                    /* (Optional) installToGameNameDirectory */ false,
-                    /* (Optional) installDirectory */ null,
-                    /* (Optional) verify */ false,
-                    /* (Optional) downloadManifestOnly */ false
-            );
+            // UgcItem downloads a UGC (User Generated Content) asset by its UGC handle.
+            // UGC handles are lower-level than published file IDs and are typically obtained
+            // programmatically (e.g. from GetUGCDetails), not from a URL.
+            var ugcItem = new UgcItem.Builder(0, 0)
+                    .build();
 
-            var appItem = new AppItem(
-                    /* (Required) appId */ 1303350,
-                    /* (Optional) installToGameNameDirectory */ true,
-                    /* (Optional) installDirectory */ "steamapps",
-                    /* (Optional) branch */ "public",
-                    /* (Optional) branchPassword */ "",
-                    /* (Optional) downloadAllPlatforms */ false,
-                    /* (Optional) os */ "windows",
-                    /* (Optional) downloadAllArchs */ false,
-                    /* (Optional) osArch */ "64",
-                    /* (Optional) downloadAllLanguages */ false,
-                    /* (Optional) language */ "english",
-                    /* (Optional) lowViolence */ false,
-                    /* (Optional) depot */ List.of(),
-                    /* (Optional) manifest */ List.of(),
-                    /* (Optional) verify */ false,
-                    /* (Optional) downloadManifestOnly */ false
-            );
+            // AppItem downloads a Steam application's depot content by app ID.
+            // The app ID appears in the store URL, e.g.:
+            // "store.steampowered.com/app/12210/Grand_Theft_Auto_IV/" -> appId = 12210
+            var appItem = new AppItem.Builder(1303350)
+                    .installToGameNameDirectory(true)
+                    .installDirectory("steamapps")
+                    .branch("public")
+                    .os("windows")
+                    .osArch("64")
+                    .language("english")
+                    .build();
 
             // Items added are downloaded automatically in a FIFO (First-In, First-Out) queue.
 

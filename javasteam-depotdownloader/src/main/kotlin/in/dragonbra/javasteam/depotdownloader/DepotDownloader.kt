@@ -62,8 +62,7 @@ import java.util.concurrent.atomic.*
  * @param licenses User's license list from [LicenseListCallback]. Required to determine which depots the account has access to.
  * @param debug Enables detailed logging of all operations via [LogManager]
  * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
- * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8
- * @param maxDecompress Number of concurrent chunk decompress. Default: 8
+ * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8. Higher is better
  * @param maxFileWrites Number of concurrent files being written. Default: 1
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
@@ -80,7 +79,6 @@ class DepotDownloader @JvmOverloads constructor(
     private val debug: Boolean = false,
     private val useLanCache: Boolean = false,
     private var maxDownloads: Int = 8,
-    private var maxDecompress: Int = 8,
     private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
     private val parentJob: Job? = null,
@@ -129,6 +127,9 @@ class DepotDownloader @JvmOverloads constructor(
 
     // Bounded channel — send() suspends producers when full, creating backpressure through the pipeline.
     private val networkChunkChannel = Channel<NetworkChunkItem>(64)
+
+    // Half of available processors, clamped to at least 1. Leaves remaining cores for the OS and app.
+    private val maxDecompress: Int = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
 
     private val pendingChunks = AtomicInteger(0)
 
@@ -221,7 +222,7 @@ class DepotDownloader @JvmOverloads constructor(
         }
     }
 
-    private fun createChunkProcessingFlow(): kotlinx.coroutines.flow.Flow<Unit> = networkChunkChannel.receiveAsFlow()
+    private fun createChunkProcessingFlow() = networkChunkChannel.receiveAsFlow()
         .flatMapMerge(concurrency = maxDownloads) { item ->
             flow {
                 try {
@@ -234,6 +235,8 @@ class DepotDownloader @JvmOverloads constructor(
                             chunk = item.chunk
                         )
                     )
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     logger?.error("Error downloading chunk: ${e.message}", e)
                 }
@@ -243,6 +246,8 @@ class DepotDownloader @JvmOverloads constructor(
             flow {
                 try {
                     emit(processFileDecompress(item))
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     logger?.error("Error decompressing chunk: ${e.message}", e)
                 }
@@ -250,14 +255,18 @@ class DepotDownloader @JvmOverloads constructor(
         }
         .flatMapMerge(concurrency = maxFileWrites) { item ->
             flow {
+                var rethrow: CancellationException? = null
                 try {
                     processFileWrites(item)
+                } catch (e: CancellationException) {
+                    rethrow = e
                 } catch (e: Exception) {
                     logger?.error("Error writing file: ${e.message}", e)
                 }
                 if (pendingChunks.decrementAndGet() == 0) {
                     downloadCompletion?.complete(Unit)
                 }
+                rethrow?.let { throw it }
                 emit(Unit)
             }.flowOn(Dispatchers.IO)
         }
@@ -863,8 +872,7 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private suspend fun downloadSteam3(mainAppId: Int, depots: List<DepotDownloadInfo>): Unit = coroutineScope {
-        val maxNumServers = maxDownloads.coerceIn(20, 64) // Hard clamp at 64. Not sure how high we can go.
-        cdnClientPool?.updateServerList(maxNumServers)
+        cdnClientPool?.updateServerList(maxDownloads)
 
         val downloadCounter = GlobalDownloadCounter()
         val depotsToDownload = ArrayList<DepotFilesData>(depots.size)
@@ -1028,7 +1036,7 @@ class DepotDownloader @JvmOverloads constructor(
                             continue
                         }
 
-                        cdnClientPool!!.returnBrokenConnection(connection)
+                        cdnClientPool!!.skipConnection(connection)
 
                         // Unauthorized || Forbidden
                         if (e.statusCode == 401 || e.statusCode == 403) {
@@ -1044,8 +1052,13 @@ class DepotDownloader @JvmOverloads constructor(
 
                         logger?.error("Encountered error downloading depot manifest ${depot.depotId} ${depot.manifestId}: ${e.statusCode}")
                     } catch (e: Exception) {
-                        cdnClientPool!!.returnBrokenConnection(connection)
+                        if (e is java.net.UnknownHostException || e.cause is java.net.UnknownHostException) {
+                            cdnClientPool!!.returnBrokenConnection(connection)
+                        } else {
+                            cdnClientPool!!.skipConnection(connection)
+                        }
                         logger?.error("Encountered error downloading manifest for depot ${depot.depotId} ${depot.manifestId}: ${e.message}")
+                        if (!cdnClientPool!!.hasServers()) break
                     }
                 } while (newManifest == null)
 
@@ -1451,7 +1464,7 @@ class DepotDownloader @JvmOverloads constructor(
 
                 break
             } catch (e: CancellationException) {
-                logger?.error("Cancellation exception in download depot file chunk", e)
+                throw e
             } catch (e: SteamKitWebRequestException) {
                 // If the CDN returned 403, attempt to get a cdn auth if we didn't yet,
                 // if auth task already exists, make sure it didn't complete yet, so that it gets awaited above
@@ -1468,7 +1481,7 @@ class DepotDownloader @JvmOverloads constructor(
                     continue
                 }
 
-                cdnClientPool!!.returnBrokenConnection(connection)
+                cdnClientPool!!.skipConnection(connection)
 
                 // Unauthorized || Forbidden
                 if (e.statusCode == 401 || e.statusCode == 403) {
@@ -1478,8 +1491,13 @@ class DepotDownloader @JvmOverloads constructor(
 
                 logger?.error("Encountered error downloading chunk $chunkID: ${e.statusCode}")
             } catch (e: Exception) {
-                cdnClientPool!!.returnBrokenConnection(connection)
+                if (e is java.net.UnknownHostException || e.cause is java.net.UnknownHostException) {
+                    cdnClientPool!!.returnBrokenConnection(connection)
+                } else {
+                    cdnClientPool!!.skipConnection(connection)
+                }
                 logger?.error("Encountered unexpected error downloading chunk $chunkID", e)
+                if (!cdnClientPool!!.hasServers()) break
             }
         } while (downloaded == 0)
 
@@ -1528,8 +1546,6 @@ class DepotDownloader @JvmOverloads constructor(
         if (appItem != null) {
             notifyListeners { it.onDownloadCompleted(appItem) }
         }
-
-        completionFuture.complete(null)
     }
 
     // endregion
@@ -1614,97 +1630,102 @@ class DepotDownloader @JvmOverloads constructor(
             createChunkProcessingFlow().collect()
         }
 
-        for (item in processingChannel) {
-            try {
-                ensureActive()
+        try {
+            for (item in processingChannel) {
+                try {
+                    ensureActive()
 
-                // Set configuration values
-                config = config.copy(
-                    downloadManifestOnly = item.downloadManifestOnly,
-                    installPath = item.installDirectory?.toPath(),
-                    installToGameNameDirectory = item.installToGameNameDirectory,
-                )
+                    // Set configuration values
+                    config = config.copy(
+                        downloadManifestOnly = item.downloadManifestOnly,
+                        installPath = item.installDirectory?.toPath(),
+                        installToGameNameDirectory = item.installToGameNameDirectory,
+                        verifyAll = item.verify,
+                    )
 
-                processingItemsMap[item.appId] = item
+                    processingItemsMap[item.appId] = item
 
-                when (item) {
-                    is PubFileItem -> {
-                        logger?.debug("Downloading PUB File for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item) }
-                        downloadPubFile(item.appId, item.pubFile)
-                    }
-
-                    is UgcItem -> {
-                        logger?.debug("Downloading UGC File for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item) }
-                        downloadUGC(item.appId, item.ugcId)
-                    }
-
-                    is AppItem -> {
-                        val branch = item.branch ?: DEFAULT_BRANCH
-                        config = config.copy(betaPassword = item.branchPassword)
-
-                        if (!config.betaPassword.isNullOrBlank() && branch.isBlank()) {
-                            logger?.error("Error: Cannot specify 'branchpassword' when 'branch' is not specified.")
-                            continue
+                    when (item) {
+                        is PubFileItem -> {
+                            logger?.debug("Downloading PUB File for ${item.appId}")
+                            notifyListeners { it.onDownloadStarted(item) }
+                            downloadPubFile(item.appId, item.pubFile)
                         }
 
-                        config = config.copy(downloadAllPlatforms = item.downloadAllPlatforms)
-                        val os = item.os
-
-                        if (config.downloadAllPlatforms && !os.isNullOrBlank()) {
-                            logger?.error("Error: Cannot specify `os` when `all-platforms` is specified.")
-                            continue
+                        is UgcItem -> {
+                            logger?.debug("Downloading UGC File for ${item.appId}")
+                            notifyListeners { it.onDownloadStarted(item) }
+                            downloadUGC(item.appId, item.ugcId)
                         }
 
-                        config = config.copy(downloadAllArchs = item.downloadAllArchs)
-                        val arch = item.osArch
+                        is AppItem -> {
+                            val branch = item.branch ?: DEFAULT_BRANCH
+                            config = config.copy(betaPassword = item.branchPassword)
 
-                        if (config.downloadAllArchs && !arch.isNullOrBlank()) {
-                            logger?.error("Error: Cannot specify `osarch` when `all-archs` is specified.")
-                            continue
-                        }
-
-                        config = config.copy(downloadAllLanguages = item.downloadAllLanguages)
-                        val language = item.language
-
-                        if (config.downloadAllLanguages && !language.isNullOrBlank()) {
-                            logger?.error("Error: Cannot specify `language` when `all-languages` is specified.")
-                            continue
-                        }
-
-                        val depotManifestIds = mutableListOf<Pair<Int, Long>>()
-                        val depotIdList = item.depot
-                        val manifestIdList = item.manifest
-
-                        if (manifestIdList.isNotEmpty()) {
-                            if (depotIdList.size != manifestIdList.size) {
-                                logger?.error("Error: `manifest` requires one id for every `depot` specified")
+                            if (!config.betaPassword.isNullOrBlank() && branch.isBlank()) {
+                                logger?.error("Error: Cannot specify 'branchpassword' when 'branch' is not specified.")
                                 continue
                             }
-                            depotManifestIds.addAll(depotIdList.zip(manifestIdList))
-                        } else {
-                            depotManifestIds.addAll(depotIdList.map { it to INVALID_MANIFEST_ID })
-                        }
 
-                        logger?.debug("Downloading App for ${item.appId}")
-                        notifyListeners { it.onDownloadStarted(item) }
-                        downloadApp(
-                            appId = item.appId,
-                            depotManifestIds = depotManifestIds,
-                            branch = branch,
-                            os = os,
-                            arch = arch,
-                            language = language,
-                            lv = item.lowViolence,
-                            isUgc = false,
-                        )
+                            config = config.copy(downloadAllPlatforms = item.downloadAllPlatforms)
+                            val os = item.os
+
+                            if (config.downloadAllPlatforms && !os.isNullOrBlank()) {
+                                logger?.error("Error: Cannot specify `os` when `all-platforms` is specified.")
+                                continue
+                            }
+
+                            config = config.copy(downloadAllArchs = item.downloadAllArchs)
+                            val arch = item.osArch
+
+                            if (config.downloadAllArchs && !arch.isNullOrBlank()) {
+                                logger?.error("Error: Cannot specify `osarch` when `all-archs` is specified.")
+                                continue
+                            }
+
+                            config = config.copy(downloadAllLanguages = item.downloadAllLanguages)
+                            val language = item.language
+
+                            if (config.downloadAllLanguages && !language.isNullOrBlank()) {
+                                logger?.error("Error: Cannot specify `language` when `all-languages` is specified.")
+                                continue
+                            }
+
+                            val depotManifestIds = mutableListOf<Pair<Int, Long>>()
+                            val depotIdList = item.depot
+                            val manifestIdList = item.manifest
+
+                            if (manifestIdList.isNotEmpty()) {
+                                if (depotIdList.size != manifestIdList.size) {
+                                    logger?.error("Error: `manifest` requires one id for every `depot` specified")
+                                    continue
+                                }
+                                depotManifestIds.addAll(depotIdList.zip(manifestIdList))
+                            } else {
+                                depotManifestIds.addAll(depotIdList.map { it to INVALID_MANIFEST_ID })
+                            }
+
+                            logger?.debug("Downloading App for ${item.appId}")
+                            notifyListeners { it.onDownloadStarted(item) }
+                            downloadApp(
+                                appId = item.appId,
+                                depotManifestIds = depotManifestIds,
+                                branch = branch,
+                                os = os,
+                                arch = arch,
+                                language = language,
+                                lv = item.lowViolence,
+                                isUgc = false,
+                            )
+                        }
                     }
+                } catch (e: Exception) {
+                    logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
+                    notifyListeners { it.onDownloadFailed(item, e) }
                 }
-            } catch (e: Exception) {
-                logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
-                notifyListeners { it.onDownloadFailed(item, e) }
             }
+        } finally {
+            completionFuture.complete(null)
         }
     }
 

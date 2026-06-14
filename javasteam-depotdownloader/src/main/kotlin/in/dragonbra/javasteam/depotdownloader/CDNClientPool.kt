@@ -54,6 +54,10 @@ class CDNClientPool(
         }
     }
 
+    /**
+     * Releases all resources held by this pool. Clears the server list and nulls out the CDN client.
+     * After closing, [getConnection] will throw [IllegalStateException].
+     */
     override fun close() {
         logger?.debug("Closing...")
 
@@ -65,6 +69,13 @@ class CDNClientPool(
         logger = null
     }
 
+    /**
+     * Fetches the current CDN server list from Steam and resets the round-robin index.
+     * Servers are filtered to those eligible for [appId] and sorted by weighted load.
+     * Must be called before [getConnection]. Throws if no servers are returned.
+     * @param maxNumServers Optional cap on the number of servers to request. Null requests the default amount.
+     * @throws Exception if Steam returns an empty server list.
+     */
     @Throws(Exception::class)
     suspend fun updateServerList(maxNumServers: Int? = null) = mutex.withLock {
         val serversForSteamPipe = steamSession.steamContent!!.getServersForSteamPipe(
@@ -96,8 +107,17 @@ class CDNClientPool(
         }
     }
 
+    /** Returns true if the pool contains at least one server. */
+    fun hasServers(): Boolean = servers.get().isNotEmpty()
+
+    /**
+     * Returns the next server in round-robin order.
+     * @throws IllegalStateException if the server list is empty.
+     */
     fun getConnection(): Server {
         val servers = servers.get()
+
+        if (servers.isEmpty()) throw IllegalStateException("No CDN servers available")
 
         val index = nextServer.getAndIncrement()
         val server = servers[index % servers.size]
@@ -107,6 +127,10 @@ class CDNClientPool(
         return server
     }
 
+    /**
+     * Returns a successfully used [server] to the pool.
+     * Call this after a chunk or manifest download completes without error.
+     */
     fun returnConnection(server: Server?) {
         if (server == null) {
             logger?.error("null server returned to cdn pool.")
@@ -118,6 +142,22 @@ class CDNClientPool(
         // (SK) nothing to do, maybe remove from ContentServerPenalty?
     }
 
+    /**
+     * Transiently skips [server] by advancing the round-robin index.
+     * Use for recoverable failures (HTTP 5xx, timeouts) where the server may succeed later.
+     */
+    fun skipConnection(server: Server?) {
+        if (server == null) return
+
+        logger?.debug("Skipping connection: $server")
+
+        nextServer.incrementAndGet()
+    }
+
+    /**
+     * Permanently removes [server] from the pool.
+     * Use only for unrecoverable failures (e.g. DNS resolution failure) where the host is unreachable.
+     */
     fun returnBrokenConnection(server: Server?) {
         if (server == null) {
             logger?.error("null broken server returned to pool")
@@ -126,13 +166,11 @@ class CDNClientPool(
 
         logger?.debug("Returning broken connection: $server")
 
-        val servers = servers.get()
-        val currentIndex = nextServer.get()
-
-        if (servers.isNotEmpty() && servers[currentIndex % servers.size] == server) {
-            nextServer.incrementAndGet()
-
-            // TODO: (SK) Add server to ContentServerPenalty
+        val updated = servers.updateAndGet { it.filter { s -> s != server } }
+        if (updated.isEmpty()) {
+            logger?.error("No CDN servers remaining after removing broken connection: $server")
         }
+
+        // TODO: (SK) Add server to ContentServerPenalty
     }
 }
