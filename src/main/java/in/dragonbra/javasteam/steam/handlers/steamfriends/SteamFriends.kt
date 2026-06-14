@@ -91,6 +91,7 @@ class SteamFriends : ClientMsgHandler() {
      *
      * @return a list of [User]
      */
+    @JavaSteamAddition
     fun getCachedUsers(): List<User> = cache.users.getList()
 
     /**
@@ -98,6 +99,7 @@ class SteamFriends : ClientMsgHandler() {
      *
      * @return a list of [Clan]
      */
+    @JavaSteamAddition
     fun getCachedClans(): List<Clan> = cache.clans.getList()
 
     /**
@@ -106,6 +108,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID the steam ID of the local logged-in user
      * @return true if the account is the local user, otherwise false.
      */
+    @JavaSteamAddition
     @JvmOverloads
     fun isLocalUser(steamID: SteamID? = null): Boolean = cache.isLocalUser(steamID ?: client.steamID)
 
@@ -115,6 +118,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID the steam ID to check the cache.
      * @return The [SteamID] of the cached user.
      */
+    @JavaSteamAddition
     fun getFriendSteamID(steamID: SteamID): SteamID = cache.getUser(steamID).steamID // Why not...
 
     /**
@@ -123,6 +127,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID the steam ID to check the cache.
      * @return The [SteamID] of the cached clan.
      */
+    @JavaSteamAddition
     fun getClanSteamID(steamID: SteamID): SteamID = cache.clans.getAccount(steamID).steamID // Why not...
 
     /**
@@ -138,6 +143,7 @@ class SteamFriends : ClientMsgHandler() {
      *
      * @return The avatar hash.
      */
+    @JavaSteamAddition
     fun getPersonaAvatar(): ByteArray? = cache.localUser.avatarHash
 
     /**
@@ -288,6 +294,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID The steam id.
      * @return and [EnumSet] of [EPersonaStateFlag]
      */
+    @JavaSteamAddition
     fun getFriendPersonaStateFlags(steamID: SteamID): EnumSet<EPersonaStateFlag>? =
         cache.getUser(steamID).personaStateFlags
 
@@ -297,6 +304,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID The steam id.
      * @return the game app id or 0 if not playing.
      */
+    @JavaSteamAddition
     fun getFriendGameAppId(steamID: SteamID): Int = cache.getUser(steamID).gameAppID
 
     /**
@@ -648,6 +656,7 @@ class SteamFriends : ClientMsgHandler() {
      * @param nickname the nickname to set to
      * @return The Job ID of the request. This can be used to find the appropriate [NicknameCallback].
      */
+    @JavaSteamAddition
     fun setFriendNickname(friendID: SteamID, nickname: String): JobID {
         val jobID: JobID = client.getNextJobID()
         val request = ClientMsgProtobuf<CMsgClientSetPlayerNickname.Builder>(
@@ -672,7 +681,8 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamID the steam id
      * @return The Job ID of the request. This can be used to find the appropriate [AliasHistoryCallback].
      */
-    fun requestAliasHistory(steamID: SteamID): JobID = requestAliasHistory(listOf(steamID))
+    @JavaSteamAddition
+    fun requestAliasHistory(steamID: SteamID): AsyncJobSingle<AliasHistoryCallback> = requestAliasHistory(listOf(steamID))
 
     /**
      * Request the alias history of the accounts of the given steam ids.
@@ -681,7 +691,8 @@ class SteamFriends : ClientMsgHandler() {
      * @param steamIDs the steam ids
      * @return The Job ID of the request. This can be used to find the appropriate [AliasHistoryCallback].
      */
-    fun requestAliasHistory(steamIDs: List<SteamID>): JobID {
+    @JavaSteamAddition
+    fun requestAliasHistory(steamIDs: List<SteamID>): AsyncJobSingle<AliasHistoryCallback> {
         val jobID: JobID = client.getNextJobID()
         val request = ClientMsgProtobuf<CMsgClientAMGetPersonaNameHistory.Builder>(
             CMsgClientAMGetPersonaNameHistory::class.java,
@@ -700,7 +711,7 @@ class SteamFriends : ClientMsgHandler() {
 
         client.send(request)
 
-        return jobID
+        return AsyncJobSingle(client, request.sourceJobID)
     }
 
     private fun fixChatID(steamIdChat: SteamID): SteamID {
@@ -738,55 +749,23 @@ class SteamFriends : ClientMsgHandler() {
         }
     }
 
-    private fun handlePersonaState(packetMsg: IPacketMsg) {
-        val perState = ClientMsgProtobuf<CMsgClientPersonaState.Builder>(
-            CMsgClientPersonaState::class.java,
+    private fun handleAccountInfo(packetMsg: IPacketMsg) {
+        val accInfo = ClientMsgProtobuf<SteammessagesClientserverLogin.CMsgClientAccountInfo.Builder>(
+            SteammessagesClientserverLogin.CMsgClientAccountInfo::class.java,
             packetMsg
         )
 
-        val flags = EClientPersonaStateFlag.from(perState.body.statusFlags)
+        // cache off our local name
+        cache.localUser.name = accInfo.body.personaName
+    }
 
-        perState.body.friendsList.forEach { friend ->
-            val friendID = SteamID(friend.friendid)
+    private fun handleFriendMessageHistoryResponse(packetMsg: IPacketMsg) {
+        val historyResponse = ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistoryResponse.Builder>(
+            CMsgClientChatGetFriendMessageHistoryResponse::class.java,
+            packetMsg
+        )
 
-            if (friendID.isIndividualAccount) {
-                val cacheFriend = cache.getUser(friendID)
-
-                if (EClientPersonaStateFlag.PlayerName in flags) {
-                    cacheFriend.name = friend.playerName
-                }
-
-                if (EClientPersonaStateFlag.Presence in flags) {
-                    cacheFriend.avatarHash = friend.avatarHash.toByteArray()
-                    cacheFriend.personaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
-                    cacheFriend.personaStateFlags = EPersonaStateFlag.from(friend.personaStateFlags)
-                }
-
-                if (EClientPersonaStateFlag.GameDataBlob in flags) {
-                    cacheFriend.gameName = friend.gameName
-                    cacheFriend.gameID = GameID(friend.gameid)
-                    cacheFriend.gameAppID = friend.gamePlayedAppId
-                }
-            } else if (friendID.isClanAccount) {
-                val cacheClan = cache.clans.getAccount(friendID)
-
-                if (EClientPersonaStateFlag.PlayerName in flags) {
-                    cacheClan.name = friend.playerName
-                }
-
-                if (EClientPersonaStateFlag.Presence in flags) {
-                    cacheClan.avatarHash = friend.avatarHash.toByteArray()
-                }
-            } else {
-                logger.debug("Unknown item in handlePersonaState(): $friendID")
-            }
-
-            // todo: (SK) cache other details/account types?
-        }
-
-        perState.body.friendsList.forEach { friend ->
-            PersonaStateCallback(friend, flags).also(client::postCallback)
-        }
+        FriendMsgHistoryCallback(historyResponse.body, client.universe).also(client::postCallback)
     }
 
     private fun handleFriendsList(packetMsg: IPacketMsg) {
@@ -866,23 +845,55 @@ class SteamFriends : ClientMsgHandler() {
         FriendsListCallback(list.body).also(client::postCallback)
     }
 
-    private fun handleFriendMessageHistoryResponse(packetMsg: IPacketMsg) {
-        val historyResponse = ClientMsgProtobuf<CMsgClientChatGetFriendMessageHistoryResponse.Builder>(
-            CMsgClientChatGetFriendMessageHistoryResponse::class.java,
+    private fun handlePersonaState(packetMsg: IPacketMsg) {
+        val perState = ClientMsgProtobuf<CMsgClientPersonaState.Builder>(
+            CMsgClientPersonaState::class.java,
             packetMsg
         )
 
-        FriendMsgHistoryCallback(historyResponse.body, client.universe).also(client::postCallback)
-    }
+        val flags = EClientPersonaStateFlag.from(perState.body.statusFlags)
 
-    private fun handleAccountInfo(packetMsg: IPacketMsg) {
-        val accInfo = ClientMsgProtobuf<SteammessagesClientserverLogin.CMsgClientAccountInfo.Builder>(
-            SteammessagesClientserverLogin.CMsgClientAccountInfo::class.java,
-            packetMsg
-        )
+        perState.body.friendsList.forEach { friend ->
+            val friendID = SteamID(friend.friendid)
 
-        // cache off our local name
-        cache.localUser.name = accInfo.body.personaName
+            if (friendID.isIndividualAccount) {
+                val cacheFriend = cache.getUser(friendID)
+
+                if (EClientPersonaStateFlag.PlayerName in flags) {
+                    cacheFriend.name = friend.playerName
+                }
+
+                if (EClientPersonaStateFlag.Presence in flags) {
+                    cacheFriend.avatarHash = friend.avatarHash.toByteArray()
+                    cacheFriend.personaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
+                    cacheFriend.personaStateFlags = EPersonaStateFlag.from(friend.personaStateFlags)
+                }
+
+                if (EClientPersonaStateFlag.GameDataBlob in flags) {
+                    cacheFriend.gameName = friend.gameName
+                    cacheFriend.gameID = GameID(friend.gameid)
+                    cacheFriend.gameAppID = friend.gamePlayedAppId
+                }
+            } else if (friendID.isClanAccount) {
+                val cacheClan = cache.clans.getAccount(friendID)
+
+                if (EClientPersonaStateFlag.PlayerName in flags) {
+                    cacheClan.name = friend.playerName
+                }
+
+                if (EClientPersonaStateFlag.Presence in flags) {
+                    cacheClan.avatarHash = friend.avatarHash.toByteArray()
+                }
+            } else {
+                logger.debug("Unknown item in handlePersonaState(): $friendID")
+            }
+
+            // todo: (SK) cache other details/account types?
+        }
+
+        perState.body.friendsList.forEach { friend ->
+            PersonaStateCallback(friend, flags).also(client::postCallback)
+        }
     }
 
     private fun handlePersonaChangeResponse(packetMsg: IPacketMsg) {
