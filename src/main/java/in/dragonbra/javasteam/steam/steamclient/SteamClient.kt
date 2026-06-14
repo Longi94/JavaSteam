@@ -27,18 +27,15 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
-import `in`.dragonbra.javasteam.types.JobID.Companion.toJobID
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
+import java.io.Closeable
 import java.util.*
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.*
+import java.util.concurrent.atomic.*
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -52,7 +49,8 @@ import kotlin.time.Duration.Companion.milliseconds
 class SteamClient @JvmOverloads constructor(
     configuration: SteamConfiguration? = SteamConfiguration.createDefault(),
     internal val defaultScope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
-) : CMClient(configuration) {
+) : CMClient(configuration),
+    Closeable {
 
     private val handlers = HashMap<Class<out ClientMsgHandler>, ClientMsgHandler>(HANDLERS_COUNT)
 
@@ -202,12 +200,48 @@ class SteamClient @JvmOverloads constructor(
     fun getCallback(): CallbackMsg? = callbackQueue.tryReceive().getOrNull()
 
     /**
+     * Returns a [CompletableFuture] that completes with the next callback posted to the queue.
+     * The future completes on whichever coroutine thread delivers the callback — no calling thread is blocked.
+     * Java callers can chain [CompletableFuture.thenAccept] for non-blocking handling, or call
+     * [CompletableFuture.get] to block.
+     * @return A future that resolves to the next callback in the queue.
+     */
+    fun waitForCallbackFuture(): CompletableFuture<CallbackMsg> {
+        val future = CompletableFuture<CallbackMsg>()
+        defaultScope.launch {
+            try {
+                future.complete(callbackQueue.receive())
+            } catch (e: Exception) {
+                future.completeExceptionally(e)
+            }
+        }
+        return future
+    }
+
+    /**
+     * Returns a [CompletableFuture] that completes with the next callback posted to the queue,
+     * or null if [timeout] milliseconds elapse first. No calling thread is blocked.
+     * @param timeout The maximum time to wait in milliseconds.
+     * @return A future that resolves to the next callback, or null on timeout.
+     */
+    fun waitForCallbackFuture(timeout: Long): CompletableFuture<CallbackMsg?> {
+        val future = CompletableFuture<CallbackMsg?>()
+        defaultScope.launch {
+            try {
+                future.complete(withTimeoutOrNull(timeout.milliseconds) { callbackQueue.receive() })
+            } catch (e: Exception) {
+                future.completeExceptionally(e)
+            }
+        }
+        return future
+    }
+
+    /**
      * Blocks the calling thread until a callback object is posted to the queue, and removes it.
+     * Prefer [waitForCallbackAsync] from Kotlin coroutines, or [waitForCallbackFuture] for non-blocking Java use.
      * @return The callback object from the queue.
      */
-    fun waitForCallback(): CallbackMsg = runBlocking(Dispatchers.Default) {
-        callbackQueue.receive()
-    }
+    fun waitForCallback(): CallbackMsg = waitForCallbackFuture().getUnwrapped()
 
     /**
      * Asynchronously awaits until a callback object is posted to the queue, and removes it.
@@ -217,19 +251,11 @@ class SteamClient @JvmOverloads constructor(
 
     /**
      * Blocks the calling thread until a callback object is posted to the queue, or null after the timeout has elapsed.
+     * Prefer [waitForCallbackAsync] from Kotlin coroutines, or [waitForCallbackFuture] for non-blocking Java use.
      * @param timeout The length of time to block in ms.
      * @return A callback object from the queue if a callback has been posted, or null if the timeout has elapsed.
      */
-    fun waitForCallback(timeout: Long): CallbackMsg? =
-        if (timeout <= 0L) {
-            callbackQueue.tryReceive().getOrNull()
-        } else {
-            runBlocking {
-                withTimeoutOrNull(timeout.milliseconds) {
-                    callbackQueue.receive()
-                }
-            }
-        }
+    fun waitForCallback(timeout: Long): CallbackMsg? = waitForCallbackFuture(timeout).getUnwrapped()
 
     /**
      * Posts a callback to the queue. This is normally used directly by client message handlers.
@@ -336,6 +362,28 @@ class SteamClient @JvmOverloads constructor(
 
     private fun handleJobFailed(packetMsg: IPacketMsg) {
         jobManager.failJob(packetMsg.targetJobID.toJobID())
+    }
+
+    /**
+     * Shuts down this client. Disconnects from Steam, cancels all pending coroutines launched in
+     * [defaultScope] (including any blocked [waitForCallback] / [waitForCallbackFuture] calls and
+     * any in-flight handler coroutines), and closes the callback channel.
+     * After calling [close], this instance must not be reused. To reconnect, create a new [SteamClient].
+     */
+    override fun close() {
+        disconnect()
+        defaultScope.cancel()
+        callbackQueue.close()
+    }
+
+    @JavaSteamAddition
+    private fun <T> CompletableFuture<T>.getUnwrapped(): T = try {
+        get()
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    } catch (e: InterruptedException) {
+        Thread.currentThread().interrupt()
+        throw RuntimeException("Interrupted while waiting for callback", e)
     }
 
     companion object {

@@ -1,268 +1,118 @@
-package in.dragonbra.javasteam.util;
+package `in`.dragonbra.javasteam.util
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
-
-import java.io.*;
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Scanner;
+import org.apache.commons.lang3.SystemUtils
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.StringReader
+import java.net.InetAddress
+import java.util.Scanner
 
 /**
  * @author lngtr
  * @since 2018-02-24
  */
-public class HardwareUtils {
+// https://stackoverflow.com/questions/1986732/how-to-get-a-unique-computer-identifier-in-java-like-disk-id-or-motherboard-id
+object HardwareUtils {
 
-    // Everything taken from here
-    // https://stackoverflow.com/questions/1986732/how-to-get-a-unique-computer-identifier-in-java-like-disk-id-or-motherboard-id
-    private static String SERIAL_NUMBER;
-    private static String MACHINE_NAME;
-
-    public static byte[] getMachineID() {
-        // the aug 25th 2015 CM update made well-formed machine MessageObjects required for logon
-        // this was flipped off shortly after the update rolled out, likely due to linux steamclients running on distros without a way to build a machineid
-        // so while a valid MO isn't currently (as of aug 25th) required, they could be in the future and we'll abide by The Valve Law now
-
-        if (SERIAL_NUMBER != null) {
-            return SERIAL_NUMBER.getBytes();
-        }
-
-        if (SystemUtils.IS_OS_WINDOWS) {
-            SERIAL_NUMBER = getSerialNumberWin();
-        }
-        if (SystemUtils.IS_OS_MAC) {
-            SERIAL_NUMBER = getSerialNumberMac();
-        }
-        if (SystemUtils.IS_OS_LINUX) {
-            SERIAL_NUMBER = getSerialNumberUnix();
-        }
-
-        // if SERIAL_NUMBER still was null
-        if (SERIAL_NUMBER == null) {
-            SERIAL_NUMBER = "JavaSteam-SerialNumber";
-        }
-
-        return SERIAL_NUMBER.getBytes();
+    private val serialNumber: String by lazy {
+        when {
+            SystemUtils.IS_OS_WINDOWS -> getSerialNumberWin()
+            SystemUtils.IS_OS_MAC -> getSerialNumberMac()
+            SystemUtils.IS_OS_LINUX -> getSerialNumberUnix()
+            else -> null
+        } ?: "JavaSteam-SerialNumber"
     }
 
-    private static String getSerialNumberWin() {
-        String sn = null;
+    private val resolvedMachineName: String by lazy {
+        val name = if (SystemUtils.IS_OS_ANDROID) getAndroidDeviceName() else getDeviceName()
+        name.takeUnless { it.isNullOrBlank() } ?: "Unknown"
+    }
 
-        Runtime runtime = Runtime.getRuntime();
-        Process process;
+    // the aug 25th 2015 CM update made well-formed machine MessageObjects required for logon
+    // this was flipped off shortly after the update rolled out, likely due to linux steamclients running on distros without a way to build a machineid
+    // so while a valid MO isn't currently (as of aug 25th) required, they could be in the future and we'll abide by The Valve Law now
+    @JvmStatic
+    fun getMachineID(): ByteArray = serialNumber.toByteArray()
 
-        try {
-            process = runtime.exec(new String[]{"wmic", "bios", "get", "serialnumber"});
-        } catch (IOException e) {
-            return null;
-        }
+    @JvmStatic
+    @JvmOverloads
+    fun getMachineName(addTag: Boolean = false): String =
+        if (addTag || resolvedMachineName.contains("Unknown")) "$resolvedMachineName (JavaSteam)" else resolvedMachineName
 
-        var os = process.getOutputStream();
-
-        try {
-            os.close();
-        } catch (IOException ignored) {
-        }
-
-        try (var sc = new Scanner(process.getInputStream())) {
+    private fun getSerialNumberWin(): String? = runCatching {
+        val process = Runtime.getRuntime().exec(arrayOf("wmic", "bios", "get", "serialnumber"))
+        runCatching { process.outputStream.close() }
+        Scanner(process.inputStream).use { sc ->
             while (sc.hasNext()) {
-                String next = sc.next();
-                if ("SerialNumber".equals(next)) {
-                    sn = sc.next().trim();
-                    break;
-                }
+                if (sc.next() == "SerialNumber") return@runCatching sc.next().trim()
             }
+            null
         }
+    }.getOrNull()
 
-        return sn;
-    }
-
-    private static String getSerialNumberMac() {
-        String sn = null;
-
-        Runtime runtime = Runtime.getRuntime();
-        Process process;
-
-        try {
-            process = runtime.exec(new String[]{"/usr/sbin/system_profiler", "SPHardwareDataType"});
-        } catch (IOException e) {
-            return null;
+    private fun getSerialNumberMac(): String? = runCatching {
+        val process = Runtime.getRuntime().exec(arrayOf("/usr/sbin/system_profiler", "SPHardwareDataType"))
+        runCatching { process.outputStream.close() }
+        BufferedReader(InputStreamReader(process.inputStream)).use { br ->
+            br.lineSequence()
+                .firstOrNull { it.contains("Serial Number") }
+                ?.substringAfter(":")
+                ?.trim()
         }
+    }.getOrNull()
 
-        var os = process.getOutputStream();
+    private fun getSerialNumberUnix(): String? = readDmidecode() ?: readLshal()
 
-        try {
-            os.close();
-        } catch (IOException ignored) {
-        }
+    private fun read(command: String): BufferedReader? {
+        val process = runCatching {
+            Runtime.getRuntime().exec(command.split(" ").toTypedArray())
+        }.getOrNull() ?: return null
 
-        String line;
-        String marker = "Serial Number";
-        try (var br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            while ((line = br.readLine()) != null) {
-                if (line.contains(marker)) {
-                    sn = line.split(":")[1].trim();
-                    break;
-                }
+        runCatching { process.outputStream.close() }
+
+        return runCatching {
+            BufferedReader(InputStreamReader(process.inputStream)).use { br ->
+                BufferedReader(StringReader(br.readText()))
             }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return sn;
+        }.also {
+            process.destroy()
+        }.getOrNull()
     }
 
-    private static String getSerialNumberUnix() {
-        String sn = readDmidecode();
-
-        if (sn == null) {
-            sn = readLshal();
+    private fun readDmidecode(): String? =
+        read("dmidecode -t system")?.use { br ->
+            br.lineSequence()
+                .firstOrNull { it.contains("Serial Number:") }
+                ?.substringAfter("Serial Number:")
+                ?.trim()
         }
 
-        return sn;
+    private fun readLshal(): String? =
+        read("lshal")?.use { br ->
+            br.lineSequence()
+                .firstOrNull { it.contains("system.hardware.serial =") }
+                ?.substringAfter("system.hardware.serial =")
+                ?.replace("(string)", "")
+                ?.replace("'", "")
+                ?.trim()
+        }
+
+    private fun getDeviceName(): String? {
+        val hostname = SystemUtils.getHostName()
+        if (!hostname.isNullOrBlank()) return hostname
+        return runCatching { InetAddress.getLocalHost().hostName }.getOrNull()
     }
 
-    private static BufferedReader read(String command) {
-        Runtime runtime = Runtime.getRuntime();
-        Process process;
-        try {
-            process = runtime.exec(command.split(" "));
-        } catch (IOException e) {
-            return null;
-        }
-
-        try {
-            process.getOutputStream().close();
-        } catch (IOException ignored) {
-        }
-
-        try (var br = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append('\n');
-            }
-            return new BufferedReader(new StringReader(sb.toString()));
-        } catch (IOException e) {
-            return null;
-        } finally {
-            process.destroy();
-        }
+    private fun getAndroidDeviceName(): String? {
+        val manufacturer = getAndroidSystemProperty("ro.product.manufacturer")
+        val model = getAndroidSystemProperty("ro.product.model")
+        if (manufacturer == null || model == null) return "Android Device"
+        return if (model.startsWith(manufacturer)) model else "$manufacturer $model"
     }
 
-    private static String readDmidecode() {
-
-        String sn = null;
-
-        String line;
-        String marker = "Serial Number:";
-
-        try (var br = read("dmidecode -t system")) {
-            if (br == null) {
-                return null;
-            }
-
-            while ((line = br.readLine()) != null) {
-                if (line.contains(marker)) {
-                    sn = line.split(marker)[1].trim();
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return sn;
-    }
-
-    private static String readLshal() {
-        String sn = null;
-
-        String line;
-        String marker = "system.hardware.serial =";
-
-        try (var br = read("lshal")) {
-            if (br == null) {
-                return null;
-            }
-            while ((line = br.readLine()) != null) {
-                if (line.contains(marker)) {
-                    //noinspection RegExpRedundantEscape
-                    sn = line.split(marker)[1].replaceAll("\\(string\\)|(\\')", "").trim();
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return sn;
-    }
-
-    public static String getMachineName() {
-        return getMachineName(false);
-    }
-
-    public static String getMachineName(boolean addTag) {
-        if (MACHINE_NAME != null) {
-            return MACHINE_NAME;
-        }
-
-
-        if (SystemUtils.IS_OS_ANDROID) {
-            MACHINE_NAME = getAndroidDeviceName();
-        } else {
-            MACHINE_NAME = getDeviceName();
-        }
-
-        if (StringUtils.isBlank(MACHINE_NAME)) {
-            MACHINE_NAME = "Unknown";
-        }
-
-        if (addTag || MACHINE_NAME.contains("Unknown")) {
-            return MACHINE_NAME + " (JavaSteam)";
-        } else {
-            return MACHINE_NAME;
-        }
-    }
-
-    private static String getDeviceName() {
-        var hostname = SystemUtils.getHostName();
-        if (StringUtils.isBlank(hostname)) {
-            try {
-                // Last fallback.
-                hostname = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException e) {
-                hostname = null;
-            }
-        }
-
-        return hostname;
-    }
-
-    private static String getAndroidDeviceName() {
-        String manufacturer = getAndroidSystemProperty("ro.product.manufacturer");
-        String model = getAndroidSystemProperty("ro.product.model");
-
-        if (manufacturer == null || model == null) {
-            return "Android Device";
-        }
-
-        if (model.startsWith(manufacturer)) {
-            return model;
-        }
-        return manufacturer + " " + model;
-    }
-
-    private static String getAndroidSystemProperty(String key) {
-        try {
-            Class<?> systemProperties = Class.forName("android.os.SystemProperties");
-            Method get = systemProperties.getMethod("get", String.class);
-            return (String) get.invoke(null, key);
-        } catch (Exception e) {
-            return null;
-        }
-    }
+    private fun getAndroidSystemProperty(key: String): String? = runCatching {
+        val systemProperties = Class.forName("android.os.SystemProperties")
+        val get = systemProperties.getMethod("get", String::class.java)
+        get.invoke(null, key) as? String
+    }.getOrNull()
 }

@@ -46,36 +46,36 @@ public abstract class CMClient {
     private final SteamConfiguration configuration;
 
     @Nullable
-    private InetAddress publicIP;
+    private volatile InetAddress publicIP;
 
     @Nullable
-    private String ipCountryCode;
+    private volatile String ipCountryCode;
 
     @Nullable
-    private String userCountryCode;
-
-    private boolean isConnected;
-
-    private long sessionToken;
+    private volatile String userCountryCode;
 
     @Nullable
-    private Integer cellID;
+    private volatile Integer cellID;
 
     @Nullable
-    private Integer sessionID;
+    private volatile Integer sessionID;
 
     @Nullable
-    private SteamID steamID;
+    private volatile SteamID steamID;
 
-    private IDebugNetworkListener debugNetworkListener;
+    @Nullable
+    private volatile Connection connection;
 
-    private boolean expectDisconnection;
+    private volatile boolean isConnected;
+
+    private volatile long sessionToken;
+
+    private volatile IDebugNetworkListener debugNetworkListener;
+
+    private volatile boolean expectDisconnection;
 
     // connection lock around the setup and tear down of the connection task
     private final Object connectionLock = new Object();
-
-    @Nullable
-    private Connection connection;
 
     private final ScheduledFunction heartBeatFunc;
 
@@ -104,16 +104,19 @@ public abstract class CMClient {
 
             isConnected = false;
 
-            if (!e.isUserInitiated() && !expectDisconnection) {
-                getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.BAD);
+            var conn = connection;
+            if (conn != null) {
+                if (!e.isUserInitiated() && !expectDisconnection) {
+                    getServers().tryMark(conn.getCurrentEndPoint(), conn.getProtocolTypes(), ServerQuality.BAD);
+                }
+
+                conn.getNetMsgReceived().removeEventHandler(netMsgReceived);
+                conn.getConnected().removeEventHandler(connected);
+                conn.getDisconnected().removeEventHandler(this);
             }
 
             sessionID = null;
             steamID = null;
-
-            connection.getNetMsgReceived().removeEventHandler(netMsgReceived);
-            connection.getConnected().removeEventHandler(connected);
-            connection.getDisconnected().removeEventHandler(this);
             connection = null;
 
             heartBeatFunc.stop();
@@ -247,8 +250,9 @@ public abstract class CMClient {
         }
 
         try {
-            if (debugNetworkListener != null) {
-                debugNetworkListener.onOutgoingNetworkMessage(msg.getMsgType(), msg.serialize());
+            var listener = debugNetworkListener;
+            if (listener != null) {
+                listener.onOutgoingNetworkMessage(msg.getMsgType(), msg.serialize());
             }
         } catch (Exception e) {
             logger.debug("DebugNetworkListener threw an exception", e);
@@ -258,8 +262,9 @@ public abstract class CMClient {
         // on the network thread, and that will lead to a disconnect callback
         // down the line
 
-        if (connection != null) {
-            connection.send(msg.serialize());
+        var conn = connection;
+        if (conn != null) {
+            conn.send(msg.serialize());
         }
     }
 
@@ -273,8 +278,9 @@ public abstract class CMClient {
         // Multi message gets logged down the line after it's decompressed
         if (packetMsg.getMsgType() != EMsg.Multi) {
             try {
-                if (debugNetworkListener != null) {
-                    debugNetworkListener.onIncomingNetworkMessage(packetMsg.getMsgType(), packetMsg.getData());
+                var listener = debugNetworkListener;
+                if (listener != null) {
+                    listener.onIncomingNetworkMessage(packetMsg.getMsgType(), packetMsg.getData());
                 }
             } catch (Exception e) {
                 logger.debug("debugNetworkListener threw an exception", e);

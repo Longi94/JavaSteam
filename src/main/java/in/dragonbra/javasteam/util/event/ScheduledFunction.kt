@@ -1,34 +1,32 @@
 package `in`.dragonbra.javasteam.util.event
 
-import java.util.Timer
-import java.util.TimerTask
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class ScheduledFunction(private val func: Runnable, var delay: Long) {
-    private var timer: Timer? = null
-    private var started = false
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var job: Job? = null
 
     @Synchronized
     fun start() {
-        if (!started) {
-            timer = Timer().also {
-                it.scheduleAtFixedRate(
-                    object : TimerTask() {
-                        override fun run() = func.run()
-                    },
-                    0L,
-                    delay
-                )
+        if (job?.isActive == true) return
+        job = scope.launch {
+            while (isActive) {
+                func.run()
+                delay(delay.milliseconds)
             }
-            started = true
         }
     }
 
     @Synchronized
     fun stop() {
-        if (started) {
-            timer?.cancel()
-            timer = null
-            started = false
-        }
+        job?.cancel()
+        job = null
     }
 }

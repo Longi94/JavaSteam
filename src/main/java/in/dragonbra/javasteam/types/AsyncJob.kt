@@ -13,9 +13,9 @@ import java.time.Instant
  */
 abstract class AsyncJob(val client: SteamClient, val jobID: JobID) {
 
-    private var jobStart = Instant.now()
+    @Volatile private var jobStart = Instant.now()
 
-    var timeout: Long = 10000 // 10 Seconds
+    @Volatile var timeout: Long = 10000 // 10 Seconds
 
     val isTimedOut: Boolean
         get() = Instant.now() >= jobStart.plusMillis(timeout)

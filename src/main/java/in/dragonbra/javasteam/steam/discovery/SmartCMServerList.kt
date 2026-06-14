@@ -10,6 +10,8 @@ import java.net.InetSocketAddress
 import java.time.Duration
 import java.time.Instant
 import java.util.EnumSet
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Smart list of CM servers.
@@ -41,6 +43,12 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     private val servers: MutableList<ServerInfo> = mutableListOf()
     private var serversLastRefresh: Instant = Instant.MIN
 
+    // Protects servers and serversLastRefresh
+    private val listLock = ReentrantLock()
+
+    // Serializes concurrent network fetches so at most one thread calls SteamDirectory.load() at a time.
+    private val fetchLock = ReentrantLock()
+
     /**
      * Determines how long the server list cache is used as-is before attempting to refresh from the Steam Directory.
      */
@@ -53,22 +61,28 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     @Suppress("MemberVisibilityCanBePrivate")
     var badConnectionMemoryTimeSpan: Duration = Duration.ofMinutes(5)
 
-    @Synchronized
     @Throws(IOException::class)
     private fun startFetchingServers() {
-        if (servers.isNotEmpty()) {
-            // if the server list has been populated, no need to perform any additional work
-            if (Duration.between(serversLastRefresh, Instant.now()) >= serverListBeforeRefreshTimeSpan) {
-                resolveServerList(forceRefresh = true)
-            } else {
-                // no work needs to be done
+        val (isEmpty, needsRefresh) = listLock.withLock {
+            val empty = servers.isEmpty()
+            val stale = Duration.between(serversLastRefresh, Instant.now()) >= serverListBeforeRefreshTimeSpan
+            empty to stale
+        }
+
+        if (!isEmpty && !needsRefresh) return
+
+        fetchLock.withLock {
+            val (isEmptyNow, needsRefreshNow) = listLock.withLock {
+                val empty = servers.isEmpty()
+                val stale = Duration.between(serversLastRefresh, Instant.now()) >= serverListBeforeRefreshTimeSpan
+                empty to stale
             }
-        } else {
-            resolveServerList()
+            if (!isEmptyNow && !needsRefreshNow) return
+
+            resolveServerList(forceRefresh = !isEmptyNow)
         }
     }
 
-    @Synchronized
     @Throws(IOException::class)
     private fun resolveServerList(forceRefresh: Boolean = false) {
         var forcedRefresh = forceRefresh
@@ -147,8 +161,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * Resets the scores of all servers which has a last bad connection more than [SmartCMServerList.badConnectionMemoryTimeSpan] ago.
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    @Synchronized
-    fun resetOldScores() {
+    fun resetOldScores() = listLock.withLock {
         val cutoff = Instant.now().minus(badConnectionMemoryTimeSpan)
 
         servers.forEach { serverInfo ->
@@ -162,20 +175,19 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
 
     /**
      * Replace the list with a new list of servers provided to us by the Steam servers.
-     *
      * @param endpointList The [ServerRecord] to use for this [SmartCMServerList].
      * @param writeProvider If true, the replaced list will be updated in the server list provider.
      * @param serversTime The time when the provided server list has been updated.
      */
     @JvmOverloads
-    @Synchronized
     fun replaceList(endpointList: List<ServerRecord>, writeProvider: Boolean = true, serversTime: Instant? = null) {
         val distinctEndPoints = endpointList.distinct()
 
-        serversLastRefresh = serversTime ?: Instant.now()
-        servers.clear()
-
-        distinctEndPoints.forEach(::addCore)
+        listLock.withLock {
+            serversLastRefresh = serversTime ?: Instant.now()
+            servers.clear()
+            distinctEndPoints.forEach(::addCore)
+        }
 
         if (writeProvider) {
             configuration.serverListProvider.updateServerList(distinctEndPoints)
@@ -192,40 +204,35 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
     /**
      * Explicitly resets the known state of all servers.
      */
-    @Synchronized
-    fun resetBadServers() {
+    fun resetBadServers(): Unit = listLock.withLock {
         servers.forEach { serverInfo ->
             serverInfo.lastBadConnectionTimeUtc = null
         }
     }
 
-    @Synchronized
     fun tryMark(endPoint: InetSocketAddress?, protocolTypes: ProtocolTypes?, quality: ServerQuality): Boolean =
         tryMark(endPoint, protocolTypes?.let { EnumSet.of(it) }, quality)
 
-    @Synchronized
-    fun tryMark(endPoint: InetSocketAddress?, protocolTypes: EnumSet<ProtocolTypes>?, quality: ServerQuality): Boolean {
+    fun tryMark(
+        endPoint: InetSocketAddress?,
+        protocolTypes: EnumSet<ProtocolTypes>?,
+        quality: ServerQuality,
+    ): Boolean = listLock.withLock {
         if (endPoint == null || protocolTypes == null) {
             logger.error("Couldn't mark an endpoint ${quality.name}, skipping it")
-            return false
+            return@withLock false
         }
 
-        val serverInfos: List<ServerInfo>
-
-        if (quality == ServerQuality.GOOD) {
-            serverInfos = servers.filter { x ->
-                x.record.endpoint == endPoint && protocolTypes.contains(x.protocol)
-            }
+        val serverInfos: List<ServerInfo> = if (quality == ServerQuality.GOOD) {
+            servers.filter { x -> x.record.endpoint == endPoint && protocolTypes.contains(x.protocol) }
         } else {
             // If we're marking this server for any failure, mark all endpoints for the host at the same time
             val host = endPoint.hostString
-            serverInfos = servers.filter { x ->
-                x.record.host == host
-            }
+            servers.filter { x -> x.record.host == host }
         }
 
         if (serverInfos.isEmpty()) {
-            return false
+            return@withLock false
         }
 
         for (serverInfo in serverInfos) {
@@ -233,7 +240,7 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
             markServerCore(serverInfo, quality)
         }
 
-        return true
+        true
     }
 
     private fun markServerCore(serverInfo: ServerInfo, quality: ServerQuality) {
@@ -245,12 +252,12 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
 
     /**
      * Perform the actual score lookup of the server list and return the candidate.
-     *
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
-    @Synchronized
-    private fun getNextServerCandidateInternal(supportedProtocolTypes: EnumSet<ProtocolTypes>): ServerRecord? {
+    private fun getNextServerCandidateInternal(
+        supportedProtocolTypes: EnumSet<ProtocolTypes>,
+    ): ServerRecord? = listLock.withLock {
         resetOldScores()
 
         val result = servers
@@ -260,22 +267,17 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
             .sortedWith(compareBy({ it.first.lastBadConnectionTimeUtc ?: Instant.EPOCH }, { it.second }))
             .map { it.first }
             .firstOrNull()
-
-        if (result == null) {
-            return null
-        }
+            ?: return@withLock null
 
         logger.debug("Next server candidate: ${result.record.endpoint} (${result.protocol})")
-        return ServerRecord(result.record.endpoint, result.protocol)
+        ServerRecord(result.record.endpoint, result.protocol)
     }
 
     /**
      * Get the next server in the list.
-     *
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
-    @Synchronized
     fun getNextServerCandidate(supportedProtocolTypes: EnumSet<ProtocolTypes>): ServerRecord? {
         return runCatching {
             startFetchingServers()
@@ -292,11 +294,9 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
 
     /**
      * Get the next server in the list.
-     *
      * @param supportedProtocolTypes The minimum supported [ProtocolTypes] of the server to return.
      * @return An [ServerRecord], or null if the list is empty.
      */
-    @Synchronized
     fun getNextServerCandidate(supportedProtocolTypes: ProtocolTypes): ServerRecord? =
         getNextServerCandidate(EnumSet.of(supportedProtocolTypes))
 
@@ -304,11 +304,10 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * Gets the [ServerRecords][ServerRecord] of all servers in the server list.
      * @return An [List] array contains the [InetSocketAddress] of the servers in the list
      */
-    @Synchronized
     fun getAllEndPoints(): List<ServerRecord> = runCatching {
         startFetchingServers()
     }.fold(
-        onSuccess = { servers.map { s -> s.record }.distinct() },
+        onSuccess = { listLock.withLock { servers.map { s -> s.record }.distinct() } },
         onFailure = { error ->
             logger.error("Failed to fetch end points", error)
             emptyList()
@@ -320,9 +319,8 @@ class SmartCMServerList(private val configuration: SteamConfiguration) {
      * and then fallback to the server list provider.
      * @return whether the refresh was successful or not.
      **/
-    @Synchronized
     fun forceRefreshServerList(): Boolean = runCatching {
-        resolveServerList(forceRefresh = true)
+        fetchLock.withLock { resolveServerList(forceRefresh = true) }
     }.fold(
         onSuccess = { true },
         onFailure = { error ->
