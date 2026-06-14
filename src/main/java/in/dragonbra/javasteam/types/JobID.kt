@@ -11,6 +11,9 @@ class JobID : GlobalID {
          */
         @JvmField
         val INVALID: JobID = JobID()
+
+        @JvmSynthetic
+        fun Long.toJobID() = JobID(this)
     }
 
     /**

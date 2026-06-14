@@ -28,6 +28,7 @@ okio = "3.16.0" # https://mvnrepository.com/artifact/com.squareup.okio/okio
 # Testing Lib versions
 commons-io = "2.21.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commonsCodec = "1.20.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
+coroutinesTest = "1.10.2" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test
 junit5 = "5.13.4" # https://mvnrepository.com/artifact/org.junit/junit-bom
 mockWebServer = "5.1.0" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
 mockitoVersion = "5.18.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
@@ -52,8 +53,8 @@ xz = { module = "org.tukaani:xz", version.ref = "xz" }
 zstd = { module = "com.github.luben:zstd-jni", version.ref = "zstd" }
 
 # Depot Downloader
-kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json"}
-okio = { module = "com.squareup.okio:okio", version.ref = "okio"}
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization-json" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 # Tests
 test-commons-codec = { module = "commons-codec:commons-codec", version.ref = "commonsCodec" }
@@ -61,6 +62,7 @@ test-commons-io = { module = "commons-io:commons-io", version.ref = "commons-io"
 test-mock-core = { module = "org.mockito:mockito-core", version.ref = "mockitoVersion" }
 test-mock-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockitoVersion" }
 test-mock-webserver3 = { module = "com.squareup.okhttp3:mockwebserver3-junit5", version.ref = "mockWebServer" }
+tests-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 tests-junit-bom = { module = "org.junit:junit-bom", version.ref = "junit5" }
 tests-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 tests-junit-platform = { module = "org.junit.platform:junit-platform-launcher" }
@@ -81,14 +83,15 @@ protobuf-gradle = { id = "com.google.protobuf", version.ref = "protobuf-gradle" 
 [bundles]
 testing = [
     "bouncyCastle",
-    "zstd",
-    "xz",
     "test-commons-codec",
     "test-commons-io",
     "test-mock-core",
     "test-mock-jupiter",
     "test-mock-webserver3",
+    "tests-coroutines",
     "tests-junit-jupiter",
+    "xz",
+    "zstd",
 ]
 
 ktor = [

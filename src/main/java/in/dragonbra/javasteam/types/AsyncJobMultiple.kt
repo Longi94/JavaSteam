@@ -4,7 +4,8 @@ import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.future.asCompletableFuture
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -24,20 +25,19 @@ class AsyncJobMultiple<T : CallbackMsg>(
         var results: List<T> = listOf(),
     )
 
-    private val future = CompletableFuture<ResultSet<T>>()
+    private val deferred = CompletableDeferred<ResultSet<T>>()
 
-    private val results = mutableListOf<T>()
+    private val results = Collections.synchronizedList(mutableListOf<T>())
 
     init {
         registerJob(client)
     }
 
-    @Deprecated("Use toFuture() instead", ReplaceWith("toFuture()"))
-    fun toDeferred(): CompletableFuture<ResultSet<T>> = toFuture()
+    // Kotlin
+    suspend fun await(): ResultSet<T> = deferred.await()
 
-    fun toFuture(): CompletableFuture<ResultSet<T>> = future
-
-    suspend fun await(): ResultSet<T> = future.await()
+    // Java interop
+    fun toFuture(): CompletableFuture<ResultSet<T>> = deferred.asCompletableFuture()
 
     @Suppress("unused")
     @Throws(CancellationException::class)
@@ -51,7 +51,12 @@ class AsyncJobMultiple<T : CallbackMsg>(
         results.add(callbackMsg)
 
         return if (finishCondition(callbackMsg) == true) {
-            future.complete(ResultSet(complete = true, failed = false, results = Collections.unmodifiableList(results)))
+            val result = ResultSet(
+                complete = true,
+                failed = false,
+                results = Collections.unmodifiableList(results)
+            )
+            deferred.complete(result)
             true
         } else {
             heartbeat()
@@ -64,14 +69,18 @@ class AsyncJobMultiple<T : CallbackMsg>(
             // if we have zero callbacks in our result set, we cancel this task
             if (dueToRemoteFailure) {
                 // if we're canceling with a remote failure, post a job failure exception
-                future.completeExceptionally(AsyncJobFailedException())
+                deferred.completeExceptionally(AsyncJobFailedException())
             } else {
                 // otherwise, normal task cancellation for timeouts
-                future.cancel(true)
+                deferred.cancel()
             }
         } else {
-            val resultSet = ResultSet(false, dueToRemoteFailure, Collections.unmodifiableList(results))
-            future.complete(resultSet)
+            val result = ResultSet(
+                complete = false,
+                failed = dueToRemoteFailure,
+                results = Collections.unmodifiableList(results)
+            )
+            deferred.complete(result)
         }
     }
 }

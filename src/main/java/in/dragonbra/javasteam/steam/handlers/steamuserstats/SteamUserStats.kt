@@ -152,6 +152,43 @@ class SteamUserStats : ClientMsgHandler() {
     }
 
     /**
+     * Asks the Steam back-end for a set of rows for the specified users in the leaderboard.
+     * Results are returned in a [LeaderboardEntriesCallback].
+     * The returned [AsyncJobSingle] can also be awaited to retrieve the callback result.
+     * @param appId The AppID to request leaderboard rows for.
+     * @param id ID of the leaderboard to view.
+     * @param users The IDs of each user to request leaderboard rows for.
+     * @return The Job ID of the request. This can be used to find the appropriate [LeaderboardEntriesCallback].
+     */
+    fun downloadLeaderboardEntriesForUsers(
+        appId: Int,
+        id: Int,
+        users: List<SteamID>,
+    ): AsyncJobSingle<LeaderboardEntriesCallback> {
+        val msg = ClientMsgProtobuf<CMsgClientLBSGetLBEntries.Builder>(
+            CMsgClientLBSGetLBEntries::class.java,
+            EMsg.ClientLBSGetLBEntries
+        ).apply {
+            sourceJobID = client.getNextJobID()
+
+            // routing_appid has to be set correctly to receive a response
+            protoHeader.routingAppid = appId
+
+            body.appId = appId
+            body.leaderboardId = id
+            body.leaderboardDataRequest = ELeaderboardDataRequest.Users.code()
+
+            users.forEach { steamID ->
+                body.addSteamids(steamID.convertToUInt64())
+            }
+        }
+
+        client.send(msg)
+
+        return AsyncJobSingle(client, msg.sourceJobID)
+    }
+
+    /**
      * Gets the Stats-Schema for the specified app. This schema includes Global Achievements and Stats,
      * @param appId The appID of the game.
      * @param steamID The [SteamID] that owns the game. Note the SteamID user has to have a public profile.
