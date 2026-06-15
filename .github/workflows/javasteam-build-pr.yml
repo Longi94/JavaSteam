@@ -35,4 +35,4 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build with Gradle, skip signing
-        run: ./gradlew  build -x signMavenJavaPublication
+        run: ./gradlew  build -x signMavenJavaPublication --build-cache
