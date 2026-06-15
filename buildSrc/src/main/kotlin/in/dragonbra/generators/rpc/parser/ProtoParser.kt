@@ -180,18 +180,24 @@ class ProtoParser(private val outputDir: File) {
         }.build()
         cBuilder.addFunction(funcHandleNotificationMsg)
 
+        val asyncJobSingleClass = ClassName(
+            packageName = "in.dragonbra.javasteam.types",
+            "AsyncJobSingle"
+        )
+        val serviceMethodResponseClass = ClassName(
+            packageName = "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
+            "ServiceMethodResponse"
+        )
+        val noResponseClass = ClassName(
+            packageName = "in.dragonbra.javasteam.protobufs.steamclient.SteammessagesUnifiedBaseSteamclient",
+            "NoResponse"
+        )
+
         // Public Methods
         service.methods.forEach { method ->
             val funcBuilder =
                 FunSpec.builder(method.methodName.replaceFirstChar { it.lowercase(Locale.getDefault()) })
                     .addModifiers(KModifier.PUBLIC)
-                    .addKdoc(
-                        """
-                    |@param request The request.
-                    |@see [${method.requestType}]
-                    |@returns [AsyncJobSingle]<[ServiceMethodResponse]<[${method.responseType}]>>
-                """.trimMargin() // wow
-                    )
                     .addParameter(
                         "request",
                         ClassName(
@@ -201,15 +207,15 @@ class ProtoParser(private val outputDir: File) {
                     )
 
             if (method.responseType != "NoResponse") {
+                // I can't find a way to suppress or fix dokka warnings for this.
+                //funcBuilder.addKdoc(
+                //    "@param request The request.\n@see [${method.requestType}]\n@returns [%T]<[%T]<[${method.responseType}]>>\n",
+                //    asyncJobSingleClass,
+                //    serviceMethodResponseClass
+                //)
                 funcBuilder.returns(
-                    ClassName(
-                        packageName = "in.dragonbra.javasteam.types",
-                        "AsyncJobSingle"
-                    ).parameterizedBy(
-                        ClassName(
-                            packageName = "in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.callback",
-                            "ServiceMethodResponse"
-                        ).parameterizedBy(
+                    asyncJobSingleClass.parameterizedBy(
+                        serviceMethodResponseClass.parameterizedBy(
                             ClassName.bestGuess("in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName.${method.responseType}.Builder")
                         )
                     )
@@ -223,6 +229,12 @@ class ProtoParser(private val outputDir: File) {
                     "${service.name}.${method.methodName}#1"
                 )
             } else {
+                funcBuilder.addKdoc(
+                    "@param request The request.\n@returns [%T]<[%T]<[%T]>>\n",
+                    asyncJobSingleClass,
+                    serviceMethodResponseClass,
+                    noResponseClass
+                )
                 funcBuilder.addStatement(
                     format = "unifiedMessages!!.sendNotification<%T.Builder>(\n%S,\nrequest\n)",
                     ClassName(
