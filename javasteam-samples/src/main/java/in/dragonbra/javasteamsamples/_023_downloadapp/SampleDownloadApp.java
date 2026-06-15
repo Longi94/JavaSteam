@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -90,22 +91,20 @@ public class SampleDownloadApp implements Runnable, IDownloadListener {
         // Depot chunks are downloaded using OKHttp, it's best to set some timeouts.
         // OkHttp's default dispatcher uses non-daemon threads with a 60s idle keepalive, which
         // would prevent JVM exit after the download completes. Daemon threads exit with the app.
-        var dispatcher = new okhttp3.Dispatcher(java.util.concurrent.Executors.newCachedThreadPool(r -> {
+        var dispatcher = new okhttp3.Dispatcher(Executors.newCachedThreadPool(r -> {
             var t = new Thread(r, "OkHttp Dispatcher");
             t.setDaemon(true);
             return t;
         }));
 
-        var config = SteamConfiguration.create(builder -> {
-            builder.withHttpClient(
-                    new OkHttpClient.Builder()
-                            .dispatcher(dispatcher)
-                            .connectTimeout(10, TimeUnit.SECONDS)   // Time to establish connection
-                            .readTimeout(60, TimeUnit.SECONDS)      // Max inactivity between reads
-                            .writeTimeout(30, TimeUnit.SECONDS)     // Time for writes
-                            .build()
-            );
-        });
+        var config = SteamConfiguration.create(builder -> builder.withHttpClient(
+                new OkHttpClient.Builder()
+                        .dispatcher(dispatcher)
+                        .connectTimeout(10, TimeUnit.SECONDS)   // Time to establish connection
+                        .readTimeout(60, TimeUnit.SECONDS)      // Max inactivity between reads
+                        .writeTimeout(30, TimeUnit.SECONDS)     // Time for writes
+                        .build()
+        ));
 
         steamClient = new SteamClient(config);
 
