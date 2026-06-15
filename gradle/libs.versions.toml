@@ -29,9 +29,9 @@ okio = "3.17.0" # https://mvnrepository.com/artifact/com.squareup.okio/okio
 commons-io = "2.22.0" # https://mvnrepository.com/artifact/commons-io/commons-io
 commonsCodec = "1.22.0" # https://mvnrepository.com/artifact/commons-codec/commons-codec
 coroutinesTest = "1.11.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test
-junit5 = "5.13.4" # https://mvnrepository.com/artifact/org.junit/junit-bom
+junit5 = "5.13.4" # https://mvnrepository.com/artifact/org.junit/junit-bom # Cant Update until we target Java 17
 mockWebServer = "5.4.0" # https://mvnrepository.com/artifact/com.squareup.okhttp3/mockwebserver3-junit5
-mockitoVersion = "5.18.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
+mockitoVersion = "5.23.0" # https://mvnrepository.com/artifact/org.mockito/mockito-core
 
 # Samples
 bouncyCastle = "1.84" # https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
