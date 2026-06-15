@@ -27,6 +27,7 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
 import `in`.dragonbra.javasteam.steam.steamclient.configuration.SteamConfiguration
 import `in`.dragonbra.javasteam.types.AsyncJob
 import `in`.dragonbra.javasteam.types.JobID
+import `in`.dragonbra.javasteam.types.JobID.Companion.toJobID
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
@@ -225,6 +226,9 @@ class SteamClient @JvmOverloads constructor(
      * @return A future that resolves to the next callback, or null on timeout.
      */
     fun waitForCallbackFuture(timeout: Long): CompletableFuture<CallbackMsg?> {
+        if (timeout <= 0L) {
+            return CompletableFuture.completedFuture(callbackQueue.tryReceive().getOrNull())
+        }
         val future = CompletableFuture<CallbackMsg?>()
         defaultScope.launch {
             try {
