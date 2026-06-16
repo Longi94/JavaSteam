@@ -18,4 +18,18 @@ public class UtilsTest {
         long result = Utils.crc32("test_string");
         Assertions.assertEquals(0x0967B587, result);
     }
+
+    @Test
+    public void crc32WithByteArray() {
+        byte[] input = "test_string".getBytes();
+        long result = Utils.crc32(input);
+        Assertions.assertEquals(0x0967B587, result);
+    }
+
+    @Test
+    public void crc32WithOffsetAndLength() {
+        byte[] input = "xxtest_stringxx".getBytes();
+        long result = Utils.crc32(input, 2, "test_string".length());
+        Assertions.assertEquals(0x0967B587, result);
+    }
 }

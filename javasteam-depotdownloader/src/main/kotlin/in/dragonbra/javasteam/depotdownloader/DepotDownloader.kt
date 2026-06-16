@@ -1422,7 +1422,8 @@ class DepotDownloader @JvmOverloads constructor(
         val depot = depotFilesData.depotDownloadInfo
         val depotDownloadCounter = depotFilesData.depotCounter
 
-        val chunkID = Strings.toHex(chunk.chunkID)
+        val chunkIdBytes = requireNotNull(chunk.chunkID) { "Chunk must have a ChunkID." }
+        val chunkID = Strings.toHex(chunkIdBytes)
 
         var downloaded = 0
         val chunkBuffer = ByteArray(chunk.compressedLength)

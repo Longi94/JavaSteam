@@ -1,68 +1,64 @@
-package in.dragonbra.javasteam.util;
+package `in`.dragonbra.javasteam.util
 
-import in.dragonbra.javasteam.enums.EMsg;
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicLong;
+import `in`.dragonbra.javasteam.enums.EMsg
+import `in`.dragonbra.javasteam.util.log.LogManager
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Dump any network messages sent to and received from the Steam server that the client is connected to.
  * These messages are dumped to file, and can be analyzed further with NetHookAnalyzer, a hex editor, or your own purpose-built tools.
- * <p>
  * Be careful with this, sensitive data may be written to the disk (such as your Steam password).
  */
-public class NetHookNetworkListener implements IDebugNetworkListener {
-    private static final Logger logger = LogManager.getLogger(NetHookNetworkListener.class);
+class NetHookNetworkListener @JvmOverloads constructor(path: String = "netlogs") : IDebugNetworkListener {
 
-    private static final SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy_MM_dd_H_m_s_S");
+    companion object {
+        private val logger = LogManager.getLogger<NetHookNetworkListener>()
 
-    private final AtomicLong messageNumber = new AtomicLong(0L);
-
-    private final File logDirectory;
-
-    public NetHookNetworkListener() {
-        this("netlogs");
+        private val FORMAT = SimpleDateFormat("yyyy_MM_dd_H_m_s_S")
     }
 
-    public NetHookNetworkListener(String path) {
+    private val messageNumber = AtomicLong(0L)
 
-        File dir = new File(path);
-        dir.mkdir();
+    private val logDirectory: File
 
-        logDirectory = new File(dir, FORMAT.format(new Date()));
-        logDirectory.mkdir();
+    init {
+        val dir = File(path)
+        dir.mkdir()
+
+        logDirectory = File(dir, FORMAT.format(Date()))
+        logDirectory.mkdir()
     }
 
-    @Override
-    public void onIncomingNetworkMessage(EMsg msgType, byte[] data) {
-        logger.debug(String.format("<- Recv'd EMsg: %s (%d)", msgType, msgType.code()));
+    override fun onIncomingNetworkMessage(msgType: EMsg, data: ByteArray) {
+        logger.debug("<- Recv'd EMsg: $msgType (${msgType.code()})")
 
         try {
-            Files.write(Paths.get(new File(logDirectory, getFile("in", msgType)).getAbsolutePath()), data);
-        } catch (IOException e) {
-            logger.debug(e);
+            val file = File(logDirectory, getFile("in", msgType))
+            val path = Paths.get(file.absolutePath)
+            Files.write(path, data)
+        } catch (e: IOException) {
+            logger.debug(e)
         }
     }
 
-    @Override
-    public void onOutgoingNetworkMessage(EMsg msgType, byte[] data) {
-        logger.debug(String.format("Sent -> EMsg: %s", msgType));
+    override fun onOutgoingNetworkMessage(msgType: EMsg, data: ByteArray) {
+        logger.debug("Sent -> EMsg: $msgType")
 
         try {
-            Files.write(Paths.get(new File(logDirectory, getFile("out", msgType)).getAbsolutePath()), data);
-        } catch (IOException e) {
-            logger.debug(e);
+            val file = File(logDirectory, getFile("out", msgType))
+            val path = Paths.get(file.absolutePath)
+            Files.write(path, data)
+        } catch (e: IOException) {
+            logger.debug(e)
         }
     }
 
-    private String getFile(String direction, EMsg msgType) {
-        return String.format("%d_%s_%d_k_EMsg%s.bin", messageNumber.getAndIncrement(), direction, msgType.code(), msgType);
-    }
+    private fun getFile(direction: String, msgType: EMsg): String =
+        "${messageNumber.getAndIncrement()}_${direction}_${msgType.code()}_k_EMsg$msgType.bin"
 }

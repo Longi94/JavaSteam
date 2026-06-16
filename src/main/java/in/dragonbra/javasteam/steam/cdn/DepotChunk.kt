@@ -115,7 +115,8 @@ object DepotChunk {
                 )
             }
         } catch (e: Exception) {
-            throw IOException("Failed to decompress chunk ${Strings.toHex(info.chunkID)}: $e\n${e.stackTraceToString()}")
+            val chunkID = info.chunkID?.let { Strings.toHex(it) } ?: "unknown"
+            throw IOException("Failed to decompress chunk $chunkID: $e\n${e.stackTraceToString()}")
         } finally {
             buffer.fill(0)
         }
