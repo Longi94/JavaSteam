@@ -24,7 +24,6 @@ class AsyncJobManager {
 
     /**
      * Tracks a job with this manager.
-     *
      * @param asyncJob The asynchronous job to track
      */
     fun startJob(asyncJob: AsyncJob) {
@@ -34,7 +33,6 @@ class AsyncJobManager {
     /**
      * Passes a callback to a pending async job.
      * If the given callback completes the job, the job is removed from this manager.
-     *
      * @param jobID    the job.
      * @param callback the callback.
      */
@@ -54,7 +52,6 @@ class AsyncJobManager {
 
     /**
      * Extends the lifetime of a job.
-     *
      * @param jobID The job identifier.
      */
     fun heartbeatJob(jobID: JobID) {
@@ -66,7 +63,6 @@ class AsyncJobManager {
 
     /**
      * Marks a certain job as remotely failed.
-     *
      * @param jobID The job identifier.
      */
     fun failJob(jobID: JobID) {
@@ -91,7 +87,6 @@ class AsyncJobManager {
 
     /**
      * Enables or disables periodic checks for job timeouts.
-     *
      * @param enable Whether the job timeout checks should be enabled.
      */
     fun setTimeoutsEnabled(enable: Boolean) {
@@ -116,23 +111,10 @@ class AsyncJobManager {
 
     /**
      * Retrieves a job from this manager, and optionally removes it from tracking.
-     *
      * @param jobID     the job id.
      * @param andRemove If set to <c>true</c>, this job is removed from tracking.
-     * @return .
+     * @return The [AsyncJob] for the given [jobID], or null if not tracked.
      */
-    private fun getJob(jobID: JobID, andRemove: Boolean = false): AsyncJob? {
-        val asyncJob: AsyncJob?
-        val foundJob: Boolean
-
-        if (andRemove) {
-            asyncJob = asyncJobs[jobID]
-            foundJob = asyncJobs.remove(jobID, asyncJobs[jobID])
-        } else {
-            asyncJob = asyncJobs[jobID]
-            foundJob = asyncJob != null
-        }
-
-        return if (foundJob) asyncJob else null
-    }
+    private fun getJob(jobID: JobID, andRemove: Boolean = false): AsyncJob? =
+        if (andRemove) asyncJobs.remove(jobID) else asyncJobs[jobID]
 }

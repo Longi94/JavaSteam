@@ -69,6 +69,7 @@ class PICSProductInfo : CallbackMsg {
                 return null
             }
 
+            val shaHash = shaHash ?: return null
             val shaString = Strings.toHex(shaHash).replace("-", "").lowercase(Locale.getDefault())
             val uriString = String.format("https://%s/appinfo/%d/sha/%s.txt.gz", httpHost, id, shaString)
             return URI.create(uriString)

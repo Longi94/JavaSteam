@@ -172,13 +172,13 @@ class SteamContent : ClientMsgHandler() {
     }
 
     /**
-     * TODO kdoc
-     * @param remoteClientId
-     * @param steamId
-     * @param serverRemoteClientId
-     * @param appId
-     * @param currentBuildId
-     * @return A [RequestPeerContentServer]
+     * Requests that a remote Steam client act as a peer content server for the specified app.
+     * @param remoteClientId The remote client ID of the peer to request content from.
+     * @param steamId The Steam ID of the user on the remote client.
+     * @param serverRemoteClientId The remote client ID that will serve the content.
+     * @param appId The app ID to request peer content for.
+     * @param currentBuildId The currently installed build ID of the app, used to determine what needs to be transferred.
+     * @return A [RequestPeerContentServer] containing the server port, installed depots, and an access token.
      */
     @JavaSteamAddition
     @JvmOverloads
@@ -213,11 +213,11 @@ class SteamContent : ClientMsgHandler() {
     }
 
     /**
-     * TODO kdoc
-     * @param remoteClientId
-     * @param steamId
-     * @param serverRemoteClientId
-     * @return A [GetPeerContentInfo]
+     * Retrieves content information about what a remote peer has available to serve.
+     * @param remoteClientId The remote client ID of the peer to query.
+     * @param steamId The Steam ID of the user on the remote client.
+     * @param serverRemoteClientId The remote client ID acting as the content server.
+     * @return A [GetPeerContentInfo] containing the app IDs available on the peer and its public IP address.
      */
     @JavaSteamAddition
     @JvmOverloads

@@ -144,8 +144,7 @@ class Client(steamClient: SteamClient) : Closeable {
             }
 
             return@withContext response.use { resp ->
-                val responseBody = resp.body?.bytes()
-                    ?: throw SteamKitWebRequestException("Response body is null")
+                val responseBody = resp.body.bytes()
 
                 if (responseBody.isEmpty()) {
                     throw SteamKitWebRequestException("Response is empty")
@@ -201,13 +200,13 @@ class Client(steamClient: SteamClient) : Closeable {
         proxyServer: Server? = null,
         cdnAuthToken: String? = null,
     ): Int = withContext(Dispatchers.IO) {
-        require(chunk.chunkID != null) { "Chunk must have a ChunkID." }
+        val chunkIdBytes = requireNotNull(chunk.chunkID) { "Chunk must have a ChunkID." }
 
         if (destination.size != chunk.compressedLength) {
             throw IllegalArgumentException("The destination buffer must be the same size as the chunk CompressedLength (Since we take out decompression step from download")
         }
 
-        val chunkID = Strings.toHex(chunk.chunkID)
+        val chunkID = Strings.toHex(chunkIdBytes)
         val url = "depot/$depotId/chunk/$chunkID"
 
         val request = if (ClientLancache.useLanCacheServer) {

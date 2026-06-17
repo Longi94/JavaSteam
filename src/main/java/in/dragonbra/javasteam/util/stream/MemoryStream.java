@@ -286,6 +286,9 @@ public class MemoryStream extends InputStream implements Closeable {
      * @param value The new position within the stream.
      */
     public void setPosition(long value) {
+        if (value < 0 || value > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("value out of range: " + value);
+        }
         position = origin + (int) value;
     }
 
@@ -314,6 +317,9 @@ public class MemoryStream extends InputStream implements Closeable {
                 throw new IllegalArgumentException("loc");
         }
 
+        if (offset < Integer.MIN_VALUE || offset > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("offset out of range: " + offset);
+        }
         position = reference + (int) offset;
         return position;
     }

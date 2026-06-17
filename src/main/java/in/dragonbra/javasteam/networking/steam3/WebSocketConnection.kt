@@ -18,51 +18,55 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import kotlin.coroutines.CoroutineContext
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-class WebSocketConnection :
-    Connection(),
-    CoroutineScope {
+class WebSocketConnection : Connection() {
 
     companion object {
         private val logger = LogManager.getLogger<WebSocketConnection>()
+        private const val WATCHDOG_TIMEOUT_MS = 30_000L
+        private val PING_INTERVAL = 30.toDuration(DurationUnit.SECONDS)
+        private val WATCHDOG_POLL = 5.toDuration(DurationUnit.SECONDS)
     }
 
-    private val job: Job = SupervisorJob()
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val disconnecting = AtomicBoolean(false)
+    private val lastFrameTime = AtomicLong(0L)
 
-    private var client: HttpClient? = null
+    @Volatile private var client: HttpClient? = null
 
-    private var session: WebSocketSession? = null
+    @Volatile private var session: WebSocketSession? = null
 
-    private var endpoint: InetSocketAddress? = null
+    @Volatile private var connectionJob: Job? = null
 
-    private var lastFrameTime = System.currentTimeMillis()
-
-    override val coroutineContext: CoroutineContext = Dispatchers.IO + job
+    @Volatile private var endpoint: InetSocketAddress? = null
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
-        launch {
+        disconnecting.set(false)
+        connectionJob?.cancel()
+
+        connectionJob = scope.launch {
             logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
+            endpoint = endPoint
+            lastFrameTime.set(System.currentTimeMillis())
 
             try {
-                endpoint = endPoint
-
-                client = HttpClient(CIO) {
+                val newClient = HttpClient(CIO) {
                     install(WebSockets) {
-                        pingInterval = timeout.toDuration(DurationUnit.SECONDS)
+                        pingInterval = PING_INTERVAL
                     }
                 }
+                client = newClient
 
-                val session = client?.webSocketSession {
+                val newSession = newClient.webSocketSession {
                     url {
                         host = endPoint.hostName
                         port = endPoint.port
@@ -70,75 +74,102 @@ class WebSocketConnection :
                         path("cmsocket/")
                     }
                 }
-
-                this@WebSocketConnection.session = session
-
-                startConnectionMonitoring()
-
-                launch {
-                    try {
-                        session?.incoming?.consumeEach { frame ->
-                            when (frame) {
-                                is Frame.Binary -> {
-                                    // logger.debug("on Binary ${frame.data.size}")
-                                    lastFrameTime = System.currentTimeMillis()
-                                    onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
-                                }
-
-                                is Frame.Close -> disconnect(false)
-
-                                is Frame.Ping -> logger.debug("Received pong")
-
-                                // Never Used.
-                                is Frame.Pong -> logger.debug("Received pong")
-
-                                // Never Used.
-                                is Frame.Text -> logger.debug("Received plain text ${frame.readText()}")
-                            }
-                        }
-                    } catch (e: CancellationException) {
-                        // This won't print most times.
-                        logger.debug("Websocket cancelling: ${e.message}")
-                    } catch (e: Exception) {
-                        logger.error("An error occurred while receiving data", e)
-                        disconnect(false)
-                    }
-                }
+                session = newSession
 
                 logger.debug("Connected to ${endPoint.hostName}:${endPoint.port}")
                 onConnected()
+
+                launch { runWatchdog() }
+
+                newSession.incoming.consumeEach { frame ->
+                    when (frame) {
+                        is Frame.Binary -> {
+                            lastFrameTime.set(System.currentTimeMillis())
+                            onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
+                        }
+
+                        is Frame.Close -> doDisconnect(false)
+
+                        is Frame.Ping -> logger.debug("Received ping")
+
+                        is Frame.Pong -> logger.debug("Received pong")
+
+                        is Frame.Text -> logger.debug("Received text: ${frame.readText()}")
+                    }
+                }
+
+                // Session ended without a Close frame
+                doDisconnect(false)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                logger.error("An error occurred setting up the web socket client", e)
-                disconnect(false)
+                logger.error("An error occurred with the WebSocket connection", e)
+                doDisconnect(false)
             }
         }
     }
 
     override fun disconnect(userInitiated: Boolean) {
-        logger.debug("Disconnect called: $userInitiated")
-        launch {
-            try {
-                session?.close()
-                client?.close()
-            } finally {
-                session = null
-                client = null
+        doDisconnect(userInitiated)
+    }
 
-                job.cancelChildren()
+    private fun doDisconnect(userInitiated: Boolean) {
+        if (!disconnecting.compareAndSet(false, true)) return
+
+        scope.launch {
+            val currentJob = connectionJob
+            val currentSession = session
+            val currentClient = client
+            connectionJob = null
+            session = null
+            client = null
+
+            try {
+                currentSession?.close()
+            } catch (e: Exception) {
+                logger.debug("Error closing WebSocket session: ${e.message}")
             }
+            try {
+                currentClient?.close()
+            } catch (e: Exception) {
+                logger.debug("Error closing HTTP client: ${e.message}")
+            }
+
+            currentJob?.cancel()
+            currentJob?.join()
 
             onDisconnected(userInitiated)
         }
     }
 
+    private suspend fun runWatchdog() {
+        while (true) {
+            delay(WATCHDOG_POLL)
+
+            val elapsed = System.currentTimeMillis() - lastFrameTime.get()
+            when {
+                elapsed > WATCHDOG_TIMEOUT_MS -> {
+                    logger.error("Watchdog: No response for ${WATCHDOG_TIMEOUT_MS / 1000} seconds, disconnecting")
+                    doDisconnect(false)
+                    return
+                }
+
+                elapsed > 25_000 -> logger.debug("Watchdog: No response for 25 seconds")
+
+                elapsed > 20_000 -> logger.debug("Watchdog: No response for 20 seconds")
+
+                elapsed > 15_000 -> logger.debug("Watchdog: No response for 15 seconds")
+            }
+        }
+    }
+
     override fun send(data: ByteArray) {
-        launch {
+        scope.launch {
             try {
-                val frame = Frame.Binary(true, data)
-                session?.send(frame)
+                session?.send(Frame.Binary(true, data))
             } catch (e: Exception) {
                 logger.error("An error occurred while sending data", e)
-                disconnect(false)
+                doDisconnect(false)
             }
         }
     }
@@ -148,37 +179,4 @@ class WebSocketConnection :
     override fun getCurrentEndPoint(): InetSocketAddress? = endpoint
 
     override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
-
-    /**
-     * Rudimentary watchdog
-     */
-    private fun startConnectionMonitoring() {
-        launch {
-            while (isActive) {
-                if (client?.isActive == false || session?.isActive == false) {
-                    logger.error("Client or Session is no longer active")
-                    disconnect(userInitiated = false)
-                }
-
-                val timeSinceLastFrame = System.currentTimeMillis() - lastFrameTime
-
-                // logger.debug("Watchdog status: $timeSinceLastFrame")
-                when {
-                    timeSinceLastFrame > 30000 -> {
-                        logger.error("Watchdog: No response for 30 seconds. Disconnecting from steam")
-                        disconnect(userInitiated = false)
-                        break
-                    }
-
-                    timeSinceLastFrame > 25000 -> logger.debug("Watchdog: No response for 25 seconds")
-
-                    timeSinceLastFrame > 20000 -> logger.debug("Watchdog: No response for 20 seconds")
-
-                    timeSinceLastFrame > 15000 -> logger.debug("Watchdog: No response for 15 seconds")
-                }
-
-                delay(5000)
-            }
-        }
-    }
 }

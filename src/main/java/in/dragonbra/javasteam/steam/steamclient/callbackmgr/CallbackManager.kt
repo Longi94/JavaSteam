@@ -174,17 +174,11 @@ class CallbackManager(private val steamClient: SteamClient) {
     ): Closeable {
         steamUnifiedMessages.createService(serviceClass)
 
-        // wrappedCallback checks that the notification body matches the expected type
-        // before passing it to callbackFunc, preventing ClassCastException due to type erasure.
-        val wrappedCallback = Consumer<ServiceMethodNotification<TNotification>> { notification ->
-            if (notification.body::class.java == notificationClass) {
-                callbackFunc.accept(notification as ServiceMethodNotification<TNotification>)
-            }
-        }
-
+        // All ServiceMethodNotification<*> erase to the same class at runtime, so without this
+        // check every subscriber would fire for every notification regardless of body type.
         return Callback(
             callbackType = ServiceMethodNotification::class.java as Class<out ServiceMethodNotification<TNotification>>,
-            onRun = wrappedCallback::accept,
+            onRun = { notification -> if (notificationClass.isInstance(notification.body)) callbackFunc.accept(notification) },
             mgr = this,
             jobID = JobID.INVALID
         )
@@ -208,17 +202,11 @@ class CallbackManager(private val steamClient: SteamClient) {
     ): Closeable {
         steamUnifiedMessages.createService(serviceClass)
 
-        // wrappedCallback checks that the notification body matches the expected type
-        // before passing it to callbackFunc, preventing ClassCastException due to type erasure.
-        val wrappedCallback = Consumer<ServiceMethodResponse<TNotification>> { notification ->
-            if (notification.body::class.java == notificationClass) {
-                callbackFunc.accept(notification as ServiceMethodResponse<TNotification>)
-            }
-        }
-
+        // All ServiceMethodResponse<*> erase to the same class at runtime, so without this
+        // check every subscriber would fire for every response regardless of body type.
         return Callback(
             callbackType = ServiceMethodResponse::class.java as Class<out ServiceMethodResponse<TNotification>>,
-            onRun = wrappedCallback::accept,
+            onRun = { notification -> if (notificationClass.isInstance(notification.body)) callbackFunc.accept(notification) },
             mgr = this,
             jobID = JobID.INVALID,
         )
