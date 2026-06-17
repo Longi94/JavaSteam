@@ -12,6 +12,7 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetrics
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.ClientMetrics
 import `in`.dragonbra.javasteam.rpc.service.Cloud
+import `in`.dragonbra.javasteam.steam.authentication.AuthPollResult
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback
@@ -21,10 +22,21 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
+import `in`.dragonbra.javasteam.util.Versions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.*
+import kotlinx.serialization.json.Json
+import okhttp3.FormBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.coroutines.executeAsync
+import java.io.IOException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.*
 import java.util.concurrent.*
+import kotlin.random.Random
 
 /**
  * This handler is used for interacting with remote storage and user generated content.
@@ -538,6 +550,194 @@ class SteamCloud : ClientMsgHandler() {
         }
 
         cloudService.externalStorageTransferReport(request.build())
+    }
+
+    /**
+     * Uploads an image to a Steam friend's direct message chat.
+     * The upload is a three-step process: begin > CDN PUT > commit.
+     * The access token from [AuthPollResult.accessToken] is used to authenticate the community web requests.
+     * Referenced from: https://github.com/Gobot1234/steam.py/blob/main/steam/http.py
+     * @param accessToken The access token obtained after login.
+     * @param friendSteamId The 64-bit SteamID of the friend to send the image to.
+     * @param imageBytes The raw image bytes.
+     * @param fileName The file name (e.g. "image.jpg").
+     * @param fileType The image type without a dot (e.g. "jpeg", "png").
+     * @param imageWidth The width of the image in pixels.
+     * @param imageHeight The height of the image in pixels.
+     * @param spoiler Whether the image should be marked as a spoiler.
+     * @return The UGC ID assigned to the uploaded file.
+     */
+    @JavaSteamAddition
+    @JvmOverloads
+    fun uploadChatMediaToUser(
+        accessToken: String,
+        friendSteamId: Long,
+        imageBytes: ByteArray,
+        fileName: String,
+        fileType: String,
+        imageWidth: Int,
+        imageHeight: Int,
+        spoiler: Boolean = false,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ): CompletableFuture<Long> = parentScope.future {
+        uploadChatMedia(
+            accessToken = accessToken,
+            imageBytes = imageBytes,
+            fileName = fileName,
+            fileType = fileType,
+            imageWidth = imageWidth,
+            imageHeight = imageHeight,
+            spoiler = spoiler,
+            destinationParams = mapOf("friend_steamid" to friendSteamId.toString()),
+        )
+    }
+
+    /**
+     * Uploads an image to a Steam chat room channel.
+     * The upload is a three-step process: begin > CDN PUT > commit.
+     * The access token from [AuthPollResult.accessToken] is used to authenticate the community web requests.
+     * @param accessToken The access token obtained after login.
+     * @param chatGroupId The chat group (lobby) ID.
+     * @param chatId The chat channel ID within the group.
+     * @param imageBytes The raw image bytes.
+     * @param fileName The file name (e.g. "image.jpg").
+     * @param fileType The image type without a dot (e.g. "jpeg", "png").
+     * @param imageWidth The width of the image in pixels.
+     * @param imageHeight The height of the image in pixels.
+     * @param spoiler Whether the image should be marked as a spoiler.
+     * @return The UGC ID assigned to the uploaded file.
+     */
+    @JavaSteamAddition
+    @JvmOverloads
+    fun uploadChatMediaToChatRoom(
+        accessToken: String,
+        chatGroupId: Long,
+        chatId: Long,
+        imageBytes: ByteArray,
+        fileName: String,
+        fileType: String,
+        imageWidth: Int,
+        imageHeight: Int,
+        spoiler: Boolean = false,
+        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    ): CompletableFuture<Long> = parentScope.future {
+        uploadChatMedia(
+            accessToken = accessToken,
+            imageBytes = imageBytes,
+            fileName = fileName,
+            fileType = fileType,
+            imageWidth = imageWidth,
+            imageHeight = imageHeight,
+            spoiler = spoiler,
+            destinationParams = mapOf(
+                "chat_group_id" to chatGroupId.toString(),
+                "chat_id" to chatId.toString(),
+            ),
+        )
+    }
+
+    @JavaSteamAddition
+    private suspend fun uploadChatMedia(
+        accessToken: String,
+        imageBytes: ByteArray,
+        fileName: String,
+        fileType: String,
+        imageWidth: Int,
+        imageHeight: Int,
+        spoiler: Boolean,
+        destinationParams: Map<String, String>,
+    ): Long {
+        val httpClient = client.configuration.httpClient
+        val steamId = requireNotNull(client.steamID?.convertToUInt64()) { "No SteamID. (Not logged in)" }
+
+        val sessionId = Random.nextBytes(16)
+            .joinToString("") { "%02x".format(it) }
+        val fileSha = MessageDigest.getInstance("SHA-1")
+            .digest(imageBytes)
+            .joinToString("") { "%02x".format(it) }
+
+        val loginSecure = URLEncoder.encode("$steamId||$accessToken", StandardCharsets.UTF_8)
+        val cookieHeader = "steamLoginSecure=$loginSecure; sessionid=$sessionId"
+        val userAgent = "JavaSteam-${Versions.getVersion()}"
+
+        // beginfileupload - get cdn upload url and headers
+        val beginBody = FormBody.Builder()
+            .add("sessionid", sessionId)
+            .add("l", "english")
+            .add("file_size", imageBytes.size.toString())
+            .add("file_name", fileName)
+            .add("file_sha", fileSha)
+            .add("file_image_width", imageWidth.toString())
+            .add("file_image_height", imageHeight.toString())
+            .add("file_type", fileType)
+            .build()
+
+        val beginRequest = Request.Builder()
+            .url("https://steamcommunity.com/chat/beginfileupload")
+            .header("User-Agent", userAgent)
+            .header("Cookie", cookieHeader)
+            .post(beginBody)
+            .build()
+
+        val beginJson = httpClient.newCall(beginRequest).executeAsync().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("beginfileupload failed: HTTP ${response.code}")
+            }
+            response.body.string()
+        }
+
+        val beginResult = Json.decodeFromString<BeginFileUploadResponse>(beginJson)
+
+        // PUT the image bytes directly to the CDN
+        val protocol = if (beginResult.result.useHttps) "https" else "http"
+        val uploadUrl = "$protocol://${beginResult.result.urlHost}${beginResult.result.urlPath}"
+
+        val putBuilder = Request.Builder()
+            .url(uploadUrl)
+            .header("User-Agent", userAgent)
+            .put(imageBytes.toRequestBody())
+
+        beginResult.result.requestHeaders.forEach { putBuilder.header(it.name, it.value) }
+
+        httpClient.newCall(putBuilder.build()).executeAsync().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("CDN upload failed: HTTP ${response.code}")
+            }
+        }
+
+        // commitfileupload - deliver the image to the target chat
+        val commitBodyBuilder = FormBody.Builder()
+            .add("sessionid", sessionId)
+            .add("l", "english")
+            .add("file_size", imageBytes.size.toString())
+            .add("file_name", fileName)
+            .add("file_sha", fileSha)
+            .add("file_image_width", imageWidth.toString())
+            .add("file_image_height", imageHeight.toString())
+            .add("file_type", fileType)
+            .add("success", "1")
+            .add("ugcid", beginResult.result.ugcid)
+            .add("timestamp", beginResult.result.timestamp)
+            .add("hmac", beginResult.hmac)
+            .add("spoiler", if (spoiler) "1" else "0")
+
+        destinationParams.forEach { (k, v) -> commitBodyBuilder.add(k, v) }
+
+        val body = commitBodyBuilder.build()
+        val commitRequest = Request.Builder()
+            .url("https://steamcommunity.com/chat/commitfileupload")
+            .header("User-Agent", userAgent)
+            .header("Cookie", cookieHeader)
+            .post(body)
+            .build()
+
+        httpClient.newCall(commitRequest).executeAsync().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("commitfileupload failed: HTTP ${response.code}")
+            }
+        }
+
+        return beginResult.result.ugcid.toLong()
     }
 
     /**
