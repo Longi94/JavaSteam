@@ -27,11 +27,17 @@ public class RSACryptoTest {
         var encrypted = rsaCrypto.encrypt(input);
 
         Assertions.assertNotNull(encrypted);
+        Assertions.assertEquals(128, encrypted.length); // 1024-bit
     }
 
     @Test
     public void cipherInstance() throws NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException {
         var cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", CryptoHelper.SEC_PROV);
         Assertions.assertNotNull(cipher);
+    }
+
+    @Test
+    public void encryptNullKeyThrows() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new RSACrypto(null));
     }
 }

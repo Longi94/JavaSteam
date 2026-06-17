@@ -1,72 +1,41 @@
-package in.dragonbra.javasteam.util.crypto;
+package `in`.dragonbra.javasteam.util.crypto
 
-import in.dragonbra.javasteam.util.log.LogManager;
-import in.dragonbra.javasteam.util.log.Logger;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.ArrayList;
-import java.util.List;
+import `in`.dragonbra.javasteam.util.log.LogManager.getLogger
+import java.security.GeneralSecurityException
+import java.security.KeyFactory
+import java.security.spec.RSAPublicKeySpec
+import javax.crypto.Cipher
 
 /**
  * Handles encrypting and decrypting using the RSA public key encryption algorithm.
  */
-public class RSACrypto {
+class RSACrypto(key: ByteArray?) {
 
-    private static final Logger logger = LogManager.getLogger(RSACrypto.class);
-
-    private Cipher cipher;
-
-    public RSACrypto(byte[] key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        try {
-            final List<Byte> list = new ArrayList<>();
-            for (final byte b : key) {
-                list.add(b);
-            }
-            final AsnKeyParser keyParser = new AsnKeyParser(list);
-            final BigInteger[] keys = keyParser.parseRSAPublicKey();
-            init(keys[0], keys[1]);
-        } catch (final BerDecodeException e) {
-            logger.error(e);
-        }
+    companion object {
+        private val logger = getLogger(RSACrypto::class.java)
     }
 
-    private void init(BigInteger mod, BigInteger exp) {
-        try {
-            final RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(mod, exp);
-
-            final KeyFactory factory = KeyFactory.getInstance("RSA");
-            RSAPublicKey rsaKey = (RSAPublicKey) factory.generatePublic(publicKeySpec);
-
-            cipher = Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", CryptoHelper.SEC_PROV);
-            cipher.init(Cipher.ENCRYPT_MODE, rsaKey);
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidKeySpecException
-                       | NoSuchProviderException e) {
-            logger.debug(e);
+    private val cipher: Cipher? = try {
+        requireNotNull(key) { "key is null" }
+        val keys = AsnKeyParser(key.asList()).parseRSAPublicKey()
+        val publicKeySpec = RSAPublicKeySpec(keys[0], keys[1])
+        val factory = KeyFactory.getInstance("RSA")
+        val rsaKey = factory.generatePublic(publicKeySpec)
+        Cipher.getInstance("RSA/None/OAEPWithSHA1AndMGF1Padding", CryptoHelper.SEC_PROV).also {
+            it.init(Cipher.ENCRYPT_MODE, rsaKey)
         }
+    } catch (e: BerDecodeException) {
+        logger.error(e)
+        null
+    } catch (e: GeneralSecurityException) {
+        logger.debug(e)
+        null
     }
 
-    public byte[] encrypt(byte[] input) {
-        try {
-            return cipher.doFinal(input);
-        } catch (final IllegalBlockSizeException | BadPaddingException e) {
-            logger.debug(e);
-        }
-
-        return null;
+    fun encrypt(input: ByteArray): ByteArray? = try {
+        cipher?.doFinal(input)
+    } catch (e: GeneralSecurityException) {
+        logger.debug(e)
+        null
     }
 }
