@@ -1,13 +1,11 @@
-package in.dragonbra.javasteam.util.compat;
-
-import java.util.Objects;
+package `in`.dragonbra.javasteam.util.compat
 
 /**
+ * Compatibility for [java.util.Objects] for Android, which requires API 19+.
  * @author steev
  * @since 2018-03-21
  */
-public class ObjectsCompat {
-    public static boolean equals(Object a, Object b) {
-        return Objects.equals(a, b);
-    }
+object ObjectsCompat {
+    @JvmStatic
+    fun equals(a: Any?, b: Any?): Boolean = a == b
 }

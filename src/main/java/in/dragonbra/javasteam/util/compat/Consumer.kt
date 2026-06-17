@@ -1,5 +1,5 @@
-package in.dragonbra.javasteam.util.compat;
+package `in`.dragonbra.javasteam.util.compat
 
-public interface Consumer<T> {
-    void accept(T t);
+fun interface Consumer<T> {
+    fun accept(t: T)
 }
