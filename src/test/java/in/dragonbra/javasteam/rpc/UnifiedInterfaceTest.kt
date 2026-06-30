@@ -82,7 +82,9 @@ class UnifiedInterfaceTest {
             "PublishedFileClient.kt",
 
             // WebUI
-            "ClientComm.kt"
+            "ClientComm.kt",
+            "CloudConfigStore.kt",
+            "CloudConfigStoreClient.kt",
         )
     }
 }
