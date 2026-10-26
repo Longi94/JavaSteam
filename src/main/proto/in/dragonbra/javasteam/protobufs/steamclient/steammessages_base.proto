@@ -129,6 +129,14 @@ message CMsgProtoBufHeader {
   optional fixed64 admin_request_spoofing_steamid = 43;
   optional bool is_valveds = 44;
   optional fixed64 trace_tag = 45;
+  optional uint32 wg_msg_trace_flags = 46;
+  optional uint32 wg_msg_trace_instance = 47;
+  optional uint32 wg_msg_trace_gid = 48;
+  optional string wg_msg_trace_token = 49;
+  optional fixed64 wg_msg_trace_steamid = 50;
+  optional string wg_msg_trace_status = 51;
+  optional uint32 trace_flags = 52;
+  optional string browserapi_site = 53;
 
   oneof ip_addr {
     uint32 ip = 15;
@@ -211,7 +219,6 @@ message CMsgAppRights {
 }
 
 message CCuratorPreferences {
-  optional uint32 supported_languages = 1;
   optional bool platform_windows = 2;
   optional bool platform_mac = 3;
   optional bool platform_linux = 4;
@@ -304,6 +311,7 @@ message CClanEventData {
   optional uint32 build_id = 29;
   optional string build_branch = 30;
   optional bool unlisted = 31;
+  optional uint32 rtime_created = 32;
 }
 
 message CBilling_Address {
@@ -332,6 +340,11 @@ message CPackageReservationStatus {
   optional string notificaton_token = 10;
   optional int32 queue_head_position_at_reservation = 11;
   optional int32 queue_head_position_now = 12;
+  optional bool position_is_waitlist = 13;
+  optional string user_waitlist_token = 14;
+  optional bool queue_in_waitlist = 15;
+  optional string queue_waitlist_token = 16;
+  optional uint32 collection_time_active = 17;
 }
 
 message CMsgKeyValuePair {
@@ -365,9 +378,26 @@ message UserSystemInformation {
   optional string cpu_name = 10;
   optional uint32 gaming_device_type = 11;
   optional string dx_driver_version = 12;
-  optional string dx_driver_name = 13;
   optional string adapter_description = 14;
   optional string driver_version = 15;
   optional string driver_date = 16;
   optional uint32 vram_size = 17;
+  optional uint32 screen_width = 18;
+  optional uint32 screen_height = 19;
+  optional bool precise_frame_rate = 20;
+}
+
+message GamePerformanceSettings {
+  enum EGamePerformanceSetting {
+    k_EGamePerformanceSetting_NotSet = 0;
+    k_EGamePerformanceSetting_Low = 1;
+    k_EGamePerformanceSetting_Medium = 2;
+    k_EGamePerformanceSetting_High = 3;
+    k_EGamePerformanceSetting_Ultra = 4;
+    k_EGamePerformanceSetting_Custom = 5;
+  }
+
+  optional .GamePerformanceSettings.EGamePerformanceSetting setting = 1 [default = k_EGamePerformanceSetting_NotSet];
+  optional uint32 game_resolution_width = 2;
+  optional uint32 game_resolution_height = 3;
 }

@@ -2,6 +2,7 @@ import "in/dragonbra/javasteam/protobufs/deadlock/steammessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/econ_shared_enums.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/gcsdk_gcmessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/base_gcmessages.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.deadlock";
 
@@ -442,7 +443,18 @@ message CMsgDevNewItemRequest {
 }
 
 message CMsgDevNewItemRequestResponse {
-  optional bool success = 1;
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eUnknownItemDef = 6;
+    k_eItemDefNotAllowed = 7;
+  }
+
+  optional .CMsgDevNewItemRequestResponse.EResponse result = 1 [default = k_eInternalError];
 }
 
 message CMsgDevUnlockAllItemStyles {
@@ -872,7 +884,6 @@ message CMsgProcessTransactionOrder {
 
   optional uint64 txn_id = 1;
   optional uint64 steam_txn_id = 2;
-  optional uint64 partner_txn_id = 3;
   optional fixed64 steam_id = 4;
   optional uint32 time_stamp = 5;
   optional uint64 watermark = 6;

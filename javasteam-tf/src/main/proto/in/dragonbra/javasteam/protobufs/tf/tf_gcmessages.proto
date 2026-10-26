@@ -1,4 +1,3 @@
-import "in/dragonbra/javasteam/protobufs/tf/tf_proto_def_messages.proto";
 import "in/dragonbra/javasteam/protobufs/tf/steammessages.proto";
 import "in/dragonbra/javasteam/protobufs/tf/base_gcmessages.proto";
 

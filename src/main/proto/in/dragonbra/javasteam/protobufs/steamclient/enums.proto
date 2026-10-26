@@ -1,5 +1,3 @@
-import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_base.proto";
-
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 
 option optimize_for = SPEED;
@@ -28,6 +26,8 @@ enum EPublishedFileQueryType {
   k_PublishedFileQueryType_RankedByInappropriateContentRating = 19;
   k_PublishedFileQueryType_RankedByBanContentCheck = 20;
   k_PublishedFileQueryType_RankedByLastUpdatedDate = 21;
+  k_PublishedFileQueryType_RankedByNumParentItems = 22;
+  k_PublishedFileQueryType_RankedByNumParentCollections = 23;
 }
 
 enum EPublishedFileInappropriateProvider {
@@ -134,14 +134,6 @@ enum ESystemFanControlMode {
   k_SystemFanControlMode_Default = 2;
 }
 
-enum EStartupMovieVariant {
-  k_EStartupMovieVariant_Invalid = 0;
-  k_EStartupMovieVariant_Generic = 1;
-  k_EStartupMovieVariant_DeckBlue = 2;
-  k_EStartupMovieVariant_DeckOrange = 3;
-  k_EStartupMovieVariant_Machine = 4;
-}
-
 enum EColorGamutLabelSet {
   k_ColorGamutLabelSet_Default = 0;
   k_ColorGamutLabelSet_sRGB_Native = 1;
@@ -167,6 +159,14 @@ enum EBluetoothDeviceType {
   k_BluetoothDeviceType_Joystick = 9;
   k_BluetoothDeviceType_Gamepad = 10;
   k_BluetoothDeviceType_Keyboard = 11;
+}
+
+enum ESpeakerConfiguration {
+  k_ESpeakerConfiguration_Other = 0;
+  k_ESpeakerConfiguration_Stereo = 1;
+  k_ESpeakerConfiguration_51 = 2;
+  k_ESpeakerConfiguration_71 = 3;
+  k_ESpeakerConfiguration_51_Ac3 = 4;
 }
 
 enum ESystemAudioDirection {
@@ -206,6 +206,11 @@ enum ESystemServiceState {
   k_ESystemServiceState_Unavailable = 0;
   k_ESystemServiceState_Disabled = 1;
   k_ESystemServiceState_Enabled = 2;
+}
+
+enum EBluetoothAudioPreference {
+  k_EBluetoothAudioPreference_Quality = 0;
+  k_EBluetoothAudioPreference_Latency = 1;
 }
 
 enum EGraphicsPerfOverlayLevel {
@@ -479,6 +484,15 @@ enum EProvideDeckFeedbackPreference {
   k_EProvideDeckFeedbackPreference_No = 2;
 }
 
+enum EHardwareCompatibilityFeedbackDetails {
+  k_EHardwareCompatibilityFeedbackDetails_Unset = 0;
+  k_EHardwareCompatibilityFeedbackDetails_Performance = 1;
+  k_EHardwareCompatibilityFeedbackDetails_Stability = 2;
+  k_EHardwareCompatibilityFeedbackDetails_Legibility = 4;
+  k_EHardwareCompatibilityFeedbackDetails_Input = 8;
+  k_EHardwareCompatibilityFeedbackDetails_Other = 16;
+}
+
 enum EGameFrameRateReportingPreference {
   k_EGameFrameRateReportingPreference_Unset = 0;
   k_EGameFrameRateReportingPreference_No = 1;
@@ -581,6 +595,7 @@ enum ECompromiseDetectionType {
   k_ECompromiseDetectionType_MaliciousRefund = 5;
   k_ECompromiseDetectionType_Move2FA = 6;
   k_ECompromiseDetectionType_DeviceType = 7;
+  k_ECompromiseDetectionType_LeakedCredentialList = 8;
 }
 
 enum EAsyncGameSessionUserState {
@@ -639,10 +654,15 @@ enum EProtoAppType {
   k_EAppTypeDepotOnly = -2147483648;
 }
 
-enum EChildProcessQueryCommand {
-  k_EChildProcessQueryCommand_Invalid = 0;
-  k_EChildProcessQueryCommand_GpuTopology = 1;
-  k_EChildProcessQueryCommand_Max = 2;
+enum EAppTestType {
+  k_EAppTestType_BuildReview = 0;
+  k_EAppTestType_StorePageReview = 1;
+  k_EAppTestType_SteamChina_BuildReview = 2;
+  k_EAppTestType_SteamChina_StorePageReview = 3;
+  k_EAppTestType_SteamChinaPlatformOperator_StorePageReview = 4;
+  k_EAppTestType_SteamChinaPlatformOperator_BuildReview = 5;
+  k_EAppTestType_SteamDeckCompatibilityReview = 6;
+  k_EAppTestType_SteamFrameCompatibilityReview = 7;
 }
 
 enum EChildProcessQueryExitCode {
@@ -668,6 +688,16 @@ enum EWindowsUpdateRebootBehavior {
   k_EWindowsUpdateRebootBehavior_MightNeedReboot = 2;
 }
 
+enum EWindowsUpdateOperationResult {
+  k_EWindowsUpdateOperationResult_Unknown = -1;
+  k_EWindowsUpdateOperationResult_NotStarted = 0;
+  k_EWindowsUpdateOperationResult_InProgress = 1;
+  k_EWindowsUpdateOperationResult_Succeeded = 2;
+  k_EWindowsUpdateOperationResult_SucceededWithErrors = 3;
+  k_EWindowsUpdateOperationResult_Failed = 4;
+  k_EWindowsUpdateOperationResult_Aborted = 5;
+}
+
 enum EExternalSaleEventType {
   k_EExternalSaleEventType_Unknown = 0;
   k_EExternalSaleEventType_Publisher = 1;
@@ -687,7 +717,7 @@ enum EEnhancedMarketAppearanceStatus {
 enum EContentReportSubjectType {
   k_EContentReportSubjectType_Invalid = 0;
   k_EContentReportSubjectType_ForumPost = 1;
-  k_EContentReportSubjectType_Unused = 2;
+  k_EContentReportSubjectType_CommentThread = 2;
   k_EContentReportSubjectType_UGCFile = 3;
   k_EContentReportSubjectType_FriendChatMsg = 4;
   k_EContentReportSubjectType_ChatRoomMsg = 5;
@@ -726,7 +756,8 @@ enum EContentReportResolution {
   k_EContentReportResolution_RemoveAndKick = 13;
   k_EContentReportResolution_Sanctioned = 14;
   k_EContentReportResolution_Sustained = 15;
-  k_EContentReportResolution_MAX = 16;
+  k_EContentReportResolution_Broken = 16;
+  k_EContentReportResolution_MAX = 17;
 }
 
 enum EContentModerationSanction {
@@ -738,7 +769,13 @@ enum EContentModerationSanction {
   k_EContentModerationSanction_CommentHistoryDeleted = 5;
   k_EContentModerationSanction_Relabelled = 6;
   k_EContentModerationSanction_MarkAsSuspicious = 7;
-  k_EContentModerationSanction_MAX = 8;
+  k_EContentModerationSanction_Warned = 8;
+  k_EContentModerationSanction_KickedFromGroup = 9;
+  k_EContentModerationSanction_HarassmentBanned = 10;
+  k_EContentModerationSanction_HarassmentStrike = 11;
+  k_EContentModerationSanction_Escalate = 12;
+  k_EContentModerationSanction_MarkedIncompatible = 13;
+  k_EContentModerationSanction_MAX = 14;
 }
 
 enum EContentReportSubjectAction {
@@ -750,7 +787,7 @@ enum EContentReportSubjectAction {
   k_EContentReportSubjectAction_Updated = 5;
   k_EContentReportSubjectAction_Escalated = 6;
   k_EContentReportSubjectAction_Disputed = 7;
-  k_EContentReportSubjectAction_SustainedOnDispute = 8;
+  k_EContentReportSubjectAction_Sustained = 8;
   k_EContentReportSubjectAction_Locked = 9;
   k_EContentReportSubjectAction_Unlocked = 10;
   k_EContentReportSubjectAction_Deleted = 11;
@@ -765,6 +802,7 @@ enum EContentReportSubjectAction {
   k_EContentReportSubjectAction_Claimed = 20;
   k_EContentReportSubjectAction_Released = 21;
   k_EContentReportSubjectAction_PrivateMessaged = 22;
+  k_EContentReportSubjectAction_OwnerDisputed = 23;
 }
 
 enum EContentReportReason {
@@ -832,7 +870,13 @@ enum EContentReportReason {
   k_EContentReportReason_NegativeEffectonDiscourseOrElections = 61;
   k_EContentReportReason_QuotesModeratedContent = 62;
   k_EContentReportReason_CredibleThreatOfViolence = 63;
-  k_EContentReportReason_MAX = 64;
+  k_EContentReportReason_AutoCreatedOnModeration = 64;
+  k_EContentReportReason_Piracy = 65;
+  k_EContentReportReason_ToSViolation = 66;
+  k_EContentReportReason_Miscategorized = 67;
+  k_EContentReportReason_BypassingProfanityFilter = 68;
+  k_EContentReportReason_BulkDeletion = 69;
+  k_EContentReportReason_MAX = 70;
 }
 
 enum EResolutionAutomation {
@@ -850,5 +894,37 @@ enum EPressOutletAction {
   k_EPressOutletAction_Updated = 4;
   k_EPressOutletAction_Deleted = 5;
   k_EPressOutletAction_Undeleted = 6;
-  k_EPressOutletAction_MAX = 7;
+  k_EPressOutletAction_StagedAdd = 7;
+  k_EPressOutletAction_StagedDelete = 8;
+  k_EPressOutletAction_EnterStaging = 9;
+  k_EPressOutletAction_ExitStaging = 10;
+  k_EPressOutletAction_ReverseStagedAdd = 11;
+  k_EPressOutletAction_ReverseStagedDelete = 12;
+  k_EPressOutletAction_MAX = 13;
+}
+
+enum EPressOutletMemberPendingState {
+  k_EPressOutletMemberPendingState_Member = 0;
+  k_EPressOutletMemberPendingState_StagedDelete = 1;
+  k_EPressOutletMemberPendingState_StagedAdd = 2;
+  k_EPressOutletMemberPendingState_MAX = 3;
+}
+
+enum ECommentDeleteReason {
+  k_ECommentDeleteReason_Invalid = 0;
+  k_ECommentDeleteReason_User = 1;
+  k_ECommentDeleteReason_ThreadOwner = 2;
+  k_ECommentDeleteReason_Moderator = 3;
+  k_ECommentDeleteReason_Support = 4;
+  k_ECommentDeleteReason_Spam = 5;
+  k_ECommentDeleteReason_AccountDeletion = 6;
+}
+
+enum EDLCHighlightReason {
+  k_EDLCHighlightReason_None = 0;
+  k_EDLCHighlightReason_New = 1;
+  k_EDLCHighlightReason_ComingSoon = 2;
+  k_EDLCHighlightReason_PlayerFavorite = 3;
+  k_EDLCHighlightReason_Recommended = 4;
+  k_EDLCHighlightReason_NewPlayers = 5;
 }

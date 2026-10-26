@@ -18,6 +18,7 @@ enum EStoreItemType {
   k_EStoreItemType_Tag = 4;
   k_EStoreItemType_Creator = 5;
   k_EStoreItemType_HubCategory = 6;
+  k_EStoreItemType_SalePage = 7;
 }
 
 enum EStoreAppType {
@@ -99,6 +100,19 @@ enum EStoreLinkType {
   k_EStoreLinkType_MAX = 25;
 }
 
+enum EStoreAppDocumentType {
+  k_EStoreAppDocumentType_None = 0;
+  k_EStoreAppDocumentType_Manual = 1;
+  k_EStoreAppDocumentType_QuickRef = 2;
+  k_EStoreAppDocumentType_Map = 3;
+  k_EStoreAppDocumentType_GettingStarted = 4;
+  k_EStoreAppDocumentType_ReadMe = 5;
+  k_EStoreAppDocumentType_TechTree = 6;
+  k_EStoreAppDocumentType_Keybindings = 7;
+  k_EStoreAppDocumentType_Warranty = 8;
+  k_EStoreAppDocumentType_MAX = 9;
+}
+
 enum EStoreCategoryType {
   k_EStoreCategoryType_Category = 0;
   k_EStoreCategoryType_SupportedPlayers = 1;
@@ -115,6 +129,7 @@ message StoreItemID {
   optional uint32 tagid = 4;
   optional uint32 creatorid = 5;
   optional uint32 hubcategoryid = 6;
+  optional fixed64 salepagegid = 7;
 }
 
 message StoreBrowseContext {
@@ -141,6 +156,9 @@ message StoreBrowseItemDataRequest {
   optional bool include_assets_without_overrides = 15;
   optional bool apply_user_filters = 16;
   optional bool include_links = 17;
+  optional bool include_extra_details = 18;
+  optional bool include_best_purchase_option = 19 [default = true];
+  optional bool include_optin_registration_tags = 20;
 }
 
 message CStoreBrowse_GetItems_Request {
@@ -175,12 +193,14 @@ message StoreItem {
     repeated .StoreItem.Demo standalone_demos = 5;
     repeated .StoreItem.Playtest playtests = 6;
     optional .StoreItem.RelatedF2P related_f2p = 7;
+    repeated uint32 dlc_parent_appids = 9;
   }
 
   message IncludedItems {
     repeated .StoreItem included_apps = 1;
     repeated .StoreItem included_packages = 2;
     repeated .StoreItem included_bundles = 3;
+    repeated .StoreItem included_creators = 4;
   }
 
   message Categories {
@@ -241,6 +261,8 @@ message StoreItem {
     optional string page_background_path = 15;
     optional string raw_page_background = 16;
     optional string edition_comparison = 17;
+    optional uint32 last_modified = 21;
+    optional string creator_home_background = 22;
   }
 
   message ReleaseInfo {
@@ -265,6 +287,7 @@ message StoreItem {
     message VRSupport {
       optional bool vrhmd = 1;
       optional bool vrhmd_only = 2;
+      optional bool show_optional_vr_mode_notice = 3;
       optional bool htc_vive = 40;
       optional bool oculus_rift = 41;
       optional bool windows_mr = 42;
@@ -278,6 +301,7 @@ message StoreItem {
     optional .ESteamDeckCompatibilityCategory steam_deck_compat_category = 11 [default = k_ESteamDeckCompatibilityCategory_Unknown];
     optional .ESteamOSCompatibilityCategory steam_os_compat_category = 12 [default = k_ESteamOSCompatibilityCategory_Unknown];
     optional .ESteamDeckCompatibilityCategory steam_frame_compat_category = 13 [default = k_ESteamDeckCompatibilityCategory_Unknown];
+    optional .ESteamDeckCompatibilityCategory steam_machine_compat_category = 14 [default = k_ESteamDeckCompatibilityCategory_Unknown];
   }
 
   message PurchaseOption {
@@ -327,6 +351,7 @@ message StoreItem {
     optional int64 price_to_base_discount_on = 53;
     optional uint32 free_with_master_sub_appid = 54;
     optional string formatted_lowest_recent_price = 55;
+    optional bool is_free_license = 56;
   }
 
   message Screenshots {
@@ -379,6 +404,7 @@ message StoreItem {
     optional uint32 start_time = 1;
     optional uint32 end_time = 2;
     optional string text = 3;
+    optional uint32 appid = 4;
   }
 
   message Link {
@@ -400,13 +426,221 @@ message StoreItem {
     optional string dropdown_description_bbcode = 5;
   }
 
+  message ExtraDetails {
+    message Anticheat {
+      optional bool kernel_mode = 1;
+      optional bool uninstall_completely = 2;
+      optional bool boot_protection = 3;
+      optional string boot_protection_name = 4;
+      optional string name = 5;
+      optional string name_loc = 6;
+    }
+
+    message Eula {
+      optional string name = 1;
+      optional string url = 2;
+    }
+
+    message AIGeneratedContentService {
+      optional string name = 1;
+      optional string url = 2;
+    }
+
+    message PageSection {
+      enum EPageSectionBanner {
+        k_EPageSectionBanner_None = 0;
+        k_EPageSectionBanner_Workshop = 1;
+        k_EPageSectionBanner_Follow = 2;
+        k_EPageSectionBanner_MachineController = 3;
+      }
+
+      optional string label = 1;
+      optional string content_bbcode = 2;
+      optional .StoreItem.ExtraDetails.PageSection.EPageSectionBanner banner = 3 [default = k_EPageSectionBanner_None];
+    }
+
+    message PressReview {
+      optional string quote = 1;
+      optional string score = 2;
+      optional string site = 3;
+      optional string url = 4;
+    }
+
+    message EarlyAccess {
+      optional string why_bbcode = 1;
+      optional string how_long_bbcode = 2;
+      optional string full_version_bbcode = 3;
+      optional string current_state_bbcode = 4;
+      optional string pricing_bbcode = 5;
+      optional string community_bbcode = 6;
+      optional string description_bbcode = 7;
+    }
+
+    message LinksAndInfo {
+      optional string website = 1;
+      optional string stats_url = 2;
+      optional string online_manual_url = 3;
+      optional string health_warning_url = 4;
+      optional string privacy_policy_url = 5;
+      repeated .EStoreAppDocumentType available_documents = 6;
+      repeated uint32 genreids = 7;
+      repeated string manufacturers = 8;
+      optional bool achievements_visible = 9;
+      optional uint32 achievement_count = 10;
+    }
+
+    message Metacritic {
+      optional uint32 score = 1;
+      optional string url = 2;
+      optional bool always_show = 3;
+    }
+
+    message CastAndCrew {
+      repeated string directors = 1;
+      repeated string producers = 2;
+      repeated string writers = 3;
+      repeated string music = 4;
+      repeated string actors = 5;
+    }
+
+    message SystemRequirements {
+      message Size {
+        optional string amount = 1;
+        optional string units = 2;
+      }
+
+      message Requirements {
+        optional string os_version = 1;
+        optional bool os_version_unsupported = 2;
+        optional string processor = 3;
+        optional .StoreItem.ExtraDetails.SystemRequirements.Size memory = 4;
+        optional string graphics = 5;
+        optional string directx = 6;
+        optional bool broadband = 7;
+        optional .StoreItem.ExtraDetails.SystemRequirements.Size storage = 8;
+        optional .StoreItem.ExtraDetails.SystemRequirements.Size storage_hq = 9;
+        optional string sound_card = 10;
+        optional string vr_support = 11;
+        optional string notes = 12;
+        optional string legacy_bbcode = 13;
+      }
+
+      message PlatformRequirements {
+        optional .StoreItem.ExtraDetails.SystemRequirements.ESysReqPlatform platform = 1 [default = k_ESysReqPlatform_Unknown];
+        optional .StoreItem.ExtraDetails.SystemRequirements.Requirements minimum = 2;
+        optional .StoreItem.ExtraDetails.SystemRequirements.Requirements recommended = 3;
+        optional bool requires_64bit = 4;
+        optional bool requires_apple_silicon = 5;
+        optional .StoreItem.ExtraDetails.SystemRequirements.EUnsupportedOSNote unsupported_os_note = 6 [default = k_EUnsupportedOSNote_None];
+      }
+
+      enum EUnsupportedOSNote {
+        k_EUnsupportedOSNote_None = 0;
+        k_EUnsupportedOSNote_Windows = 1;
+        k_EUnsupportedOSNote_Mac = 2;
+      }
+
+      enum ESysReqPlatform {
+        k_ESysReqPlatform_Unknown = 0;
+        k_ESysReqPlatform_Windows = 1;
+        k_ESysReqPlatform_Mac = 2;
+        k_ESysReqPlatform_Linux = 3;
+        k_ESysReqPlatform_Android = 4;
+      }
+
+      repeated .StoreItem.ExtraDetails.SystemRequirements.PlatformRequirements platforms = 1;
+    }
+
+    message Episode {
+      enum EEpisodeType {
+        k_EEpisodeType_Unknown = 0;
+        k_EEpisodeType_Episode = 1;
+        k_EEpisodeType_Chapter = 2;
+        k_EEpisodeType_Bonus = 3;
+        k_EEpisodeType_BehindTheScenes = 4;
+        k_EEpisodeType_Deleted = 5;
+      }
+
+      optional string number = 1;
+      optional .StoreItem.ExtraDetails.Episode.EEpisodeType type = 2 [default = k_EEpisodeType_Unknown];
+      optional bool hide_details = 3;
+    }
+
+    message Season {
+      optional int32 index = 1;
+      optional string name = 2;
+      repeated uint32 episode_appids = 3;
+    }
+
+    enum EVideoExtrasNote {
+      k_EVideoExtrasNote_Purchase = 0;
+      k_EVideoExtrasNote_Rental = 1;
+      k_EVideoExtrasNote_PurchaseRental = 2;
+      k_EVideoExtrasNote_PurchaseSpecialEdition = 3;
+      k_EVideoExtrasNote_PurchaseDeluxeEdition = 4;
+    }
+
+    repeated .SteamAward steam_award = 1;
+    optional bool vetted = 2;
+    optional bool no_mouse_keyboard_support = 3;
+    optional bool controller_wizard_complete = 4;
+    optional string drm_third_party_type = 5;
+    optional string drm_activation_limit = 6;
+    optional string user_account_third_party = 7;
+    optional bool user_account_third_party_link_to_steam = 8;
+    optional .StoreItem.ExtraDetails.Anticheat anticheat = 9;
+    repeated .StoreItem.ExtraDetails.Eula eula = 10;
+    optional .StoreItem.ExtraDetails.AIGeneratedContentService ai_generation_service = 11;
+    optional bool refund_checks_ea_playtime = 12;
+    repeated .StoreItem.ExtraDetails.PageSection section = 13;
+    optional string legal_notice_bbcode = 14;
+    repeated .EInteractiveElement interactive_elements = 15;
+    optional string content_survey_notes = 16;
+    optional string content_survey_ai_notes = 17;
+    repeated .StoreItem.ExtraDetails.PressReview press_review = 18;
+    optional string partner_awards_bbcode = 19;
+    optional .StoreItem.ExtraDetails.EarlyAccess early_access = 20;
+    optional .CSeasonPass season_pass = 21;
+    optional .StoreItem.ExtraDetails.LinksAndInfo links_and_info = 22;
+    optional bool item_store_eligible = 23;
+    optional bool points_shop_eligible = 24;
+    optional .StoreItem.ExtraDetails.Metacritic metacritic = 26;
+    optional .StoreItem.ExtraDetails.CastAndCrew cast_and_crew = 27;
+    optional .StoreItem.ExtraDetails.SystemRequirements system_requirements = 28;
+    optional uint32 running_time_minutes = 29;
+    optional .StoreItem.ExtraDetails.Episode episode = 30;
+    repeated .StoreItem.ExtraDetails.Season seasons = 31;
+    optional .StoreItem.ExtraDetails.EVideoExtrasNote video_extras_note = 32 [default = k_EVideoExtrasNote_Purchase];
+  }
+
+  message OptInRegistrationTags {
+    optional string optin_name = 1;
+    repeated string values = 2;
+  }
+
+  message PurchaseNote {
+    enum EPurchaseNoteType {
+      k_EPurchaseNoteType_None = 0;
+      k_EPurchaseNoteType_Notice = 1;
+      k_EPurchaseNoteType_LowViolence = 2;
+      k_EPurchaseNoteType_CreditCardRequired = 3;
+      k_EPurchaseNoteType_SystemRequirements = 4;
+    }
+
+    optional .StoreItem.PurchaseNote.EPurchaseNoteType type = 1 [default = k_EPurchaseNoteType_None];
+    optional bool highlighted = 2;
+    optional string text_bbcode = 3;
+  }
+
   optional .EStoreItemType item_type = 1 [default = k_EStoreItemType_Invalid];
   optional uint32 id = 2;
+  optional fixed64 gid = 76;
   optional uint32 success = 3;
   optional bool visible = 4;
   optional bool unvailable_for_country_restriction = 5;
   optional string name = 6;
   optional string store_url_path = 7;
+  optional string store_url_slug = 8;
   optional uint32 appid = 9;
   optional .EStoreAppType type = 10 [default = k_EStoreAppType_Game];
   repeated .EStoreAppType included_types = 11;
@@ -444,6 +678,9 @@ message StoreItem {
   repeated .StoreItem.Link links = 71;
   optional string purchase_description_bbcode = 72;
   repeated .StoreItem.PackageGroup package_groups = 74;
+  optional .StoreItem.ExtraDetails extra_details = 75;
+  repeated .StoreItem.OptInRegistrationTags optin_registration_tags = 77;
+  repeated .StoreItem.PurchaseNote purchase_notes = 78;
 }
 
 message StoreGameRating {
@@ -451,8 +688,15 @@ message StoreGameRating {
   optional string rating = 2;
   repeated string descriptors = 3;
   optional string interactive_elements = 4;
+  optional .ERatingAgency agency = 5 [default = k_ERatingAgency_Invalid];
+  optional bool banned = 6;
+  optional bool esrb_online_music_not_rated = 7;
+  optional bool esrb_online_interactions_not_rated = 8;
+  repeated .EInteractiveElement survey_interactive_elements = 9;
   optional int32 required_age = 10;
   optional bool use_age_gate = 11;
+  repeated .ERatingDescriptorImage descriptor_images = 12;
+  optional string content_survey_notes = 13;
   optional string image_url = 20;
   optional string image_target = 21;
 }
@@ -612,6 +856,7 @@ message CHardwarePackageDetails {
   optional string queue_waitlist_token = 25;
   optional uint32 collection_time_active = 26;
   optional bool reservation_not_allowed = 27;
+  optional bool requires_signature = 28;
 }
 
 message CStoreBrowse_GetHardwareItems_Response {

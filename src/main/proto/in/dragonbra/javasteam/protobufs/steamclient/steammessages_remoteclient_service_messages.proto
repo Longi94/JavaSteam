@@ -53,6 +53,10 @@ message CRemoteClient_CancelPairing_Request {
 message CRemoteClient_CancelPairing_Response {
 }
 
+message CRemoteClient_CancelPairing_Notification {
+  optional fixed64 session_id = 1;
+}
+
 message CRemoteClient_RegisterStatusUpdate_Notification {
   optional fixed64 session_id = 1;
   optional fixed64 steamid = 2;
@@ -168,6 +172,12 @@ message CRemoteClient_AllocateSDR_Request {
 }
 
 message CRemoteClient_AllocateSDR_Response {
+}
+
+message CRemoteClient_EnableSteamBroadcast_Notification {
+}
+
+message CRemoteClient_DisableSteamBroadcast_Notification {
 }
 
 message CRemoteClient_SteamBroadcast_Notification {

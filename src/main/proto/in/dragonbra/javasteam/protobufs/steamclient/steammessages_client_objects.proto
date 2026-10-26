@@ -13,6 +13,12 @@ enum ECloudPendingRemoteOperation {
   k_ECloudPendingRemoteOperationAppSessionSuspended = 4;
 }
 
+enum EDisplayManagerRGBRange {
+  k_EDisplayManagerRGBRange_Automatic = 0;
+  k_EDisplayManagerRGBRange_Full = 1;
+  k_EDisplayManagerRGBRange_Limited = 2;
+}
+
 enum ESteamDeckKeyboardLayout {
   k_ESteamDeckKeyboardLayout_QWERTY = 0;
   k_ESteamDeckKeyboardLayout_Bulgarian = 1;
@@ -74,7 +80,7 @@ message CMsgNetworkDeviceIP4Config {
 }
 
 message CMsgNetworkDeviceIP6Address {
-  optional string ip = 1;
+  optional string ip = 1 [default = ""];
 }
 
 message CMsgNetworkDeviceIP6Config {
@@ -275,11 +281,8 @@ message CMsgSystemPerfLimits {
   optional int32 cpu_governor_manual_max_mhz = 2;
   optional int32 fsr_sharpness_min = 3;
   optional int32 fsr_sharpness_max = 4;
-  optional int32 gpu_performance_manual_min_mhz = 5;
-  optional int32 gpu_performance_manual_max_mhz = 6;
   optional bool perf_overlay_is_standalone = 7;
   optional bool is_manual_display_refresh_rate_available = 9;
-  repeated .EGPUPerformanceLevel gpu_performance_levels_available = 10;
   optional int32 display_refresh_manual_hz_min = 11;
   optional int32 display_refresh_manual_hz_max = 12;
   repeated int32 fps_limit_options = 13;
@@ -311,7 +314,6 @@ message CMsgSystemPerfSettingsGlobal {
 }
 
 message CMsgSystemPerfSettingsPerApp {
-  optional int32 gpu_performance_manual_mhz = 1;
   optional int32 fps_limit = 2;
   optional bool is_variable_resolution_enabled = 3;
   optional bool is_dynamic_refresh_rate_enabled = 4;
@@ -325,7 +327,6 @@ message CMsgSystemPerfSettingsPerApp {
   optional bool is_low_latency_mode_enabled = 12;
   optional int32 display_refresh_manual_hz = 13;
   optional bool is_game_perf_profile_enabled = 14;
-  optional .EGPUPerformanceLevel gpu_performance_level = 15 [default = k_EGPUPerformanceLevel_Invalid];
   optional int32 display_external_refresh_manual_hz = 17;
   optional int32 fps_limit_external = 18;
   optional bool is_tearing_enabled = 19;
@@ -506,17 +507,26 @@ message CMsgSystemDisplay {
   optional bool is_hdr_capable = 16;
   optional bool is_hdr_output_active = 17;
   repeated int32 supported_refresh_rates = 18;
+  optional .EDisplayManagerRGBRange rgb_range = 19 [default = k_EDisplayManagerRGBRange_Automatic];
+}
+
+message CMsgSystemDisplayManagerGameResolution {
+  optional uint32 width = 1;
+  optional uint32 height = 2;
 }
 
 message CMsgSystemDisplayManagerState {
   repeated .CMsgSystemDisplay displays = 1;
   optional bool is_mode_switching_supported = 2;
   optional .ESystemDisplayCompatibilityMode compatibility_mode = 3 [default = k_ESystemDisplayCompatibilityMode_Invalid];
+  optional .CMsgSystemDisplayManagerGameResolution game_resolution_override_native = 4;
+  optional .CMsgSystemDisplayManagerGameResolution game_resolution_override_default = 5;
 }
 
 message CMsgSystemDisplayManagerSetMode {
   optional int32 display_id = 1;
   optional int32 mode_id = 2;
+  optional .EDisplayManagerRGBRange rgb_range = 3 [default = k_EDisplayManagerRGBRange_Automatic];
 }
 
 message CMsgSystemManagerSettings {
@@ -540,7 +550,6 @@ message CMsgSystemManagerSettings {
   optional float display_backlight_raw = 23;
   optional float display_brightness_adaptivemin = 24;
   optional float display_brightness_adaptivemax = 25;
-  optional bool is_wifi_powersave_enabled = 26;
   optional bool is_fan_control_available = 27;
   optional .ESystemFanControlMode fan_control_mode = 28 [default = k_SystemFanControlMode_Invalid];
   optional bool is_display_brightness_available = 29;
@@ -561,9 +570,10 @@ message CMsgSelectOSBranchParams {
 }
 
 message CMsgSystemUpdateProgress {
-  optional float stage_progress = 1;
+  optional float total_progress = 1;
   optional int64 stage_size_bytes = 2;
   optional fixed32 rtime_estimated_completion = 3;
+  optional int64 stage_bytes_downloaded = 4;
 }
 
 message CMsgSystemUpdateCheckResult {
@@ -578,6 +588,7 @@ message CMsgSystemUpdateCheckResult {
 
 message CMsgSystemUpdateApplyParams {
   repeated .EUpdaterType apply_types = 1;
+  repeated .EUpdaterType recheck_types = 2;
 }
 
 message CMsgSystemUpdateApplyResult {
@@ -646,7 +657,7 @@ message CMsgMonitorInfo {
     required string monitor_display_name = 2;
   }
 
-  required string selected_display_name = 1;
+  required string selected_device_name = 1;
   repeated .CMsgMonitorInfo.MonitorInfo monitors = 2;
 }
 

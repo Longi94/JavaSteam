@@ -57,4 +57,3 @@ service CloudConfigStore {
 service CloudConfigStoreClient {
   rpc NotifyChange (CCloudConfigStore_Change_Notification) returns (NoResponse);
 }
-

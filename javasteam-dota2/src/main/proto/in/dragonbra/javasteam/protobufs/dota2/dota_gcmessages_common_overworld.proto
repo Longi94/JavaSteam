@@ -3,6 +3,7 @@ import "in/dragonbra/javasteam/protobufs/dota2/dota_shared_enums.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_gcmessages_common.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_gcmessages_common_survivors.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/gcsdk_gcmessages.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.dota2";
 
@@ -39,6 +40,14 @@ enum EOverworldAuditAction {
   k_eOverworldAuditAction_EncounterRewardTokenReward = 14;
   k_eOverworldAuditAction_SupportGrantTokens = 16;
   k_eOverworldAuditAction_TokenGiftSent = 17;
+  k_eOverworldAuditAction_DevSetFortune = 18;
+  k_eOverworldAuditAction_DevClearFortune = 19;
+  k_eOverworldAuditAction_RequestFortune = 20;
+  k_eOverworldAuditAction_ClaimFortuneReward = 21;
+  k_eOverworldAuditAction_DevGrantFortuneTellerCoin = 22;
+  k_eOverworldAuditAction_ClaimFortuneTellerStoryNodeReward = 23;
+  k_eOverworldAuditAction_MatchRewardsAbilityDraft = 24;
+  k_eOverworldAuditAction_MatchRewardsCoopBotMatch = 25;
 }
 
 enum EOverworldMinigameAction {
@@ -124,17 +133,34 @@ message CMsgOverworldMinigameUserData {
   optional .CMsgOverworldMinigameCustomData custom_data = 3;
 }
 
-message CMsgOverworldUserData {
-  message MinigameDataEntry {
-    optional uint32 key = 1;
-    optional .CMsgOverworldMinigameUserData value = 2;
+message CMsgOverworldFortune {
+  message CMsgFortuneCount {
+    optional uint32 fortune = 1;
+    optional uint32 count = 2;
   }
 
+  optional uint32 fortune = 1;
+  optional uint32 timestamp = 4;
+  optional uint32 times_completed = 5;
+  optional bool reward_claimed = 7;
+  optional uint32 fortune_count = 8;
+  repeated .CMsgOverworldFortune.CMsgFortuneCount fortune_counts = 9;
+}
+
+message CMsgLobbyOverworldFortuneList {
+  repeated uint32 account_id = 1;
+  repeated .CMsgOverworldFortune fortune = 2;
+}
+
+message CMsgOverworldUserData {
   optional .CMsgOverworldTokenQuantity token_inventory = 1;
   repeated .CMsgOverworldNode overworld_nodes = 2;
   repeated .CMsgOverworldPath overworld_paths = 3;
   optional uint32 current_node_id = 4;
-  repeated .CMsgOverworldUserData.MinigameDataEntry minigame_data = 5;
+  map<uint32, .CMsgOverworldMinigameUserData> minigame_data = 5;
+  optional .CMsgOverworldFortune current_fortune = 6;
+  optional int32 last_related_hero_id = 7;
+  optional uint32 overworld_version = 8;
 }
 
 message CMsgOverworldMatchRewards {
@@ -173,6 +199,8 @@ message CMsgGCToClientOverworldUserDataUpdated {
 message CMsgClientToGCOverworldCompletePath {
   optional uint32 overworld_id = 1;
   optional uint32 path_id = 2;
+  optional bool use_path_unlocker = 3;
+  optional bool dev_ignore_release_schedule = 4;
 }
 
 message CMsgClientToGCOverworldCompletePathResponse {
@@ -188,6 +216,7 @@ message CMsgClientToGCOverworldCompletePathResponse {
     k_ePathIsLocked = 8;
     k_ePathAlreadyUnlocked = 9;
     k_eEventExpired = 10;
+    k_eNodeNotReleased = 11;
   }
 
   optional .CMsgClientToGCOverworldCompletePathResponse.EResponse response = 1 [default = k_eInternalError];
@@ -431,6 +460,125 @@ message CMsgClientToGCOverworldDevClearInventoryResponse {
   optional .CMsgClientToGCOverworldDevClearInventoryResponse.EResponse response = 1 [default = k_eInternalError];
 }
 
+message CMsgClientToGCOverworldDevSetFortune {
+  optional uint32 overworld_id = 1;
+  optional uint32 fortune_id = 2;
+}
+
+message CMsgClientToGCOverworldDevSetFortuneResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+  }
+
+  optional .CMsgClientToGCOverworldDevSetFortuneResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCOverworldDevClearFortune {
+  optional uint32 overworld_id = 1;
+  optional uint32 fortune_id = 2;
+}
+
+message CMsgClientToGCOverworldDevClearFortuneResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+  }
+
+  optional .CMsgClientToGCOverworldDevClearFortuneResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCOverworldDevGrantFortuneTellerCoin {
+  optional uint32 overworld_id = 1;
+}
+
+message CMsgClientToGCOverworldDevGrantFortuneTellerCoinResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+  }
+
+  optional .CMsgClientToGCOverworldDevGrantFortuneTellerCoinResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCOverworldRequestFortune {
+  optional uint32 overworld_id = 1;
+}
+
+message CMsgClientToGCOverworldRequestFortuneResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+    k_eNotEnoughPoints = 7;
+    k_ePendingRewardAvailable = 8;
+  }
+
+  optional .CMsgClientToGCOverworldRequestFortuneResponse.EResponse response = 1 [default = k_eInternalError];
+  optional .CMsgDOTAClaimEventActionResponse claim_response = 2;
+}
+
+message CMsgClientToGCOverworldClaimFortuneReward {
+  optional uint32 overworld_id = 1;
+}
+
+message CMsgClientToGCOverworldClaimFortuneRewardResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+    k_eNoFortuneRewardAvailable = 7;
+  }
+
+  optional .CMsgClientToGCOverworldClaimFortuneRewardResponse.EResponse response = 1 [default = k_eInternalError];
+  optional .CMsgOverworldTokenQuantity token_quantity = 2;
+  optional .CMsgDOTAClaimEventActionResponse claim_response = 3;
+}
+
+message CMsgClientToGCOverworldClaimFortunePermanentReward {
+  optional uint32 overworld_id = 1;
+  optional uint32 fortune_id = 2;
+}
+
+message CMsgClientToGCOverworldClaimFortunePermanentRewardResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+    k_eRewardAlreadyClaimed = 7;
+  }
+
+  optional .CMsgClientToGCOverworldClaimFortunePermanentRewardResponse.EResponse response = 1 [default = k_eInternalError];
+  optional .CMsgDOTAClaimEventActionResponse claim_response = 2;
+}
+
 message CMsgClientToGCOverworldFeedback {
   optional uint32 language = 1;
   optional uint32 overworld_id = 2;
@@ -501,4 +649,26 @@ message CMsgClientToGCOverworldMinigameActionResponse {
   }
 
   optional .CMsgClientToGCOverworldMinigameActionResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCOverworldClaimFortuneTellerStoryNode {
+  optional uint32 overworld_id = 1;
+  optional uint32 story_node_id = 2;
+}
+
+message CMsgClientToGCOverworldClaimFortuneTellerStoryNodeResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNotAllowed = 5;
+    k_eInvalidOverworld = 6;
+    k_eRewardAlreadyClaimed = 7;
+    k_eInsufficientFortuneCount = 8;
+  }
+
+  optional .CMsgClientToGCOverworldClaimFortuneTellerStoryNodeResponse.EResponse response = 1 [default = k_eInternalError];
+  optional .CMsgDOTAClaimEventActionResponse claim_response = 2;
 }

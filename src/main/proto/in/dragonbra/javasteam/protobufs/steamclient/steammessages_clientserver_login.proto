@@ -85,9 +85,6 @@ message CMsgClientLogon {
   optional bool disable_partner_autogrants = 106;
   optional string access_token = 108;
   optional bool is_chrome_os = 109;
-  optional bool is_steam_box_deprecated = 99;
-  optional bool is_steam_deck_deprecated = 107;
-  optional bool is_tesla_deprecated = 110;
   optional uint32 gaming_device_type = 111;
 }
 

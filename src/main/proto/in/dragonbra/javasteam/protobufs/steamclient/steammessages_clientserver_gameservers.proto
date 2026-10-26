@@ -96,7 +96,7 @@ message CMsgGMSClientServerQueryResponse {
     optional uint32 query_port = 2;
     optional uint32 auth_players = 3;
     optional .CMsgIPAddress server_ip = 4;
-    optional fixed64 steam_id = 6;
+    optional fixed64 steam_id = 6 [(allow_field_named_steam_id) = true];
     optional uint32 revision = 7;
     optional uint32 players = 8;
     optional uint32 game_port = 9;
@@ -121,6 +121,10 @@ message CMsgGMSClientServerQueryResponse {
     optional uint32 gametype_strindex = 27;
     optional string spectator_name_str = 30;
     optional uint32 spectator_name_strindex = 31;
+    repeated fixed64 friends = 33;
+    optional uint32 friends_count = 34;
+    optional uint32 friends_count_connected = 35;
+    optional uint32 ping_estimate = 36;
   }
 
   enum EFlags {
