@@ -1,4 +1,5 @@
 import "in/dragonbra/javasteam/protobufs/dota2/steammessages.proto";
+import "in/dragonbra/javasteam/protobufs/dota2/event_gcmessages_common.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_shared_enums.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_gcmessages_common.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_gcmessages_webapi.proto";

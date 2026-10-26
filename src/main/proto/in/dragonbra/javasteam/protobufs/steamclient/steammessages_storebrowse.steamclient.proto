@@ -2,6 +2,9 @@ import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_base.proto";
 import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_unified_base.steamclient.proto";
 import "in/dragonbra/javasteam/protobufs/steamclient/enums_productinfo.proto";
 import "in/dragonbra/javasteam/protobufs/steamclient/enums.proto";
+import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_appratings_types.proto";
+import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_steamawards_types.proto";
+import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_seasonpass_types.proto";
 import "in/dragonbra/javasteam/protobufs/steamclient/contenthubs.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";

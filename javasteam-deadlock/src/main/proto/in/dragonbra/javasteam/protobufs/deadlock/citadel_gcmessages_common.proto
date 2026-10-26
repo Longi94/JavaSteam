@@ -2,6 +2,7 @@ import "in/dragonbra/javasteam/protobufs/deadlock/steammessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/gcsdk_gcmessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/base_gcmessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/valveextensions.proto";
+import "in/dragonbra/javasteam/protobufs/deadlock/networkbasetypes.proto";
 import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.deadlock";

@@ -51,6 +51,9 @@ steammessages_storebrowse.steamclient.proto
 steammessages_twofactor.steamclient.proto
 steammessages_unified_base.steamclient.proto
 steammessages_useraccount.steamclient.proto
+steammessages_seasonpass_types.proto
+steammessages_steamawards_types.proto
+steammessages_appratings_types.proto
 
 [webui]
 common.proto
@@ -71,6 +74,7 @@ network_connection.proto
 networkbasetypes.proto
 source2_steam_stats.proto
 steammessages.proto
+valveextensions.proto
 
 [dota2]
 base_gcmessages.proto
@@ -110,6 +114,8 @@ steammessages_oauth.steamworkssdk.proto
 steammessages_steamlearn.steamworkssdk.proto
 steammessages_unified_base.steamworkssdk.proto
 valveextensions.proto
+events.proto
+event_gcmessages_common.proto
 
 [tf]
 base_gcmessages.proto
@@ -134,4 +140,5 @@ steammessages.proto
 steammessages_steamlearn.steamworkssdk.proto
 steammessages_unified_base.steamworkssdk.proto
 valveextensions.proto
+networkbasetypes.proto
 

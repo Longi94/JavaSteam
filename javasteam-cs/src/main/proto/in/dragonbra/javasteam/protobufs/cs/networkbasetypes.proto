@@ -1,3 +1,4 @@
+import "in/dragonbra/javasteam/protobufs/cs/valveextensions.proto";
 import "google/protobuf/descriptor.proto";
 import "in/dragonbra/javasteam/protobufs/cs/network_connection.proto";
 

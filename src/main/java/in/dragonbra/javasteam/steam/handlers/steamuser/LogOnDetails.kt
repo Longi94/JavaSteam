@@ -35,7 +35,6 @@ import `in`.dragonbra.javasteam.util.Utils
  * @param chatMode Gets or sets the chat mode.
  * @param uiMode Gets or sets the ui mode.
  * @param gamingDeviceType Gets or sets the gaming device type.
- * @param isSteamDeck Gets or sets whether this is Steam Deck login.
  */
 data class LogOnDetails(
     var username: String = "",
@@ -55,5 +54,4 @@ data class LogOnDetails(
     var chatMode: ChatMode = ChatMode.DEFAULT,
     var uiMode: EUIMode = EUIMode.Unknown,
     var gamingDeviceType: EGamingDeviceType = EGamingDeviceType.Unknown,
-    @Deprecated("Use gamingDeviceType instead") var isSteamDeck: Boolean = false,
 )

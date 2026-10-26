@@ -1,3 +1,5 @@
+import public "in/dragonbra/javasteam/protobufs/dota2/events.proto";
+import "in/dragonbra/javasteam/protobufs/dota2/event_gcmessages_common.proto";
 import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.dota2";

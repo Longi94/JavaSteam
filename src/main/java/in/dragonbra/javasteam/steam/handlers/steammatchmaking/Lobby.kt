@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steammatchmaking
 
 import com.google.protobuf.ByteString
 import `in`.dragonbra.javasteam.enums.ELobbyType
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.MMSKeyValuePair
 import `in`.dragonbra.javasteam.types.KeyValue
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
@@ -39,28 +40,40 @@ class Lobby(
 ) {
     companion object {
 
-        internal fun ByteArray.toByteString(): ByteString = ByteString.copyFrom(this)
-
         @JvmStatic
-        internal fun encodeMetadata(metadata: Map<String, String>?): ByteArray {
-            val keyValue = KeyValue("")
-
-            metadata?.forEach { entry ->
-                keyValue[entry.key] = KeyValue(null, entry.value)
+        internal fun encodeMetadata(metadata: Map<String, String>?): List<MMSKeyValuePair> =
+            metadata.orEmpty().map { (key, value) ->
+                MMSKeyValuePair.newBuilder()
+                    .setName(key)
+                    .setValue(value)
+                    .build()
             }
 
-            return MemoryStream().use { ms ->
-                keyValue.saveToStream(ms.asOutputStream(), true)
-                ms.toByteArray()
+        /**
+         * Decodes lobby metadata, preferring the key-value pair list and falling back to the
+         * legacy binary [KeyValue] blob when the list is empty.
+         */
+        @JvmStatic
+        internal fun decodeMetadata(pairs: List<MMSKeyValuePair>, legacyBuffer: ByteString?): Map<String, String> {
+            if (pairs.isEmpty()) {
+                return decodeMetadata(buffer = legacyBuffer)
             }
+
+            val metadata = HashMap<String, String>(pairs.size)
+            pairs.forEach { pair ->
+                if (!pair.hasName()) {
+                    return@forEach
+                }
+
+                metadata[pair.name] = pair.value ?: ""
+            }
+
+            return metadata
         }
 
         @JvmStatic
-        internal fun decodeMetadata(buffer: ByteString?): Map<String, String> = decodeMetadata(buffer?.toByteArray())
-
-        @JvmStatic
-        internal fun decodeMetadata(buffer: ByteArray?): Map<String, String> {
-            if (buffer == null || buffer.isEmpty()) {
+        internal fun decodeMetadata(buffer: ByteString?): Map<String, String> {
+            if (buffer == null || buffer.isEmpty) {
                 return emptyMap()
             }
 
@@ -68,7 +81,7 @@ class Lobby(
 
             MemoryStream(buffer).use { ms ->
                 if (!keyValue.tryReadAsBinary(ms)) {
-                    throw NumberFormatException("Lobby metadata is of an unexpected format")
+                    throw IllegalArgumentException("Lobby metadata is of an unexpected format")
                 }
             }
 
@@ -76,7 +89,7 @@ class Lobby(
 
             keyValue.children.forEach { value ->
                 if (value.name == null || value.value == null) {
-                    return metadata
+                    return@forEach
                 }
 
                 metadata[value.name!!] = value.value!!
