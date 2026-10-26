@@ -56,6 +56,11 @@ dokka {
     moduleName.set("JavaSteam")
     dokkaSourceSets.main {
         suppressGeneratedFiles.set(false) // Allow generated files to be documented.
+        sourceRoots.setFrom(
+            "src/main/java",
+            files(layout.buildDirectory.dir("generated/source/javasteam/main/java")).builtBy("generateRpcMethods"),
+        )
+        classpath.from(tasks.compileJava.map { it.destinationDirectory })
         perPackageOption {
             // Deny most of the generated files.
             matchingRegex.set("in.dragonbra.javasteam.(protobufs|enums|generated).*")
