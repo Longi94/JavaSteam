@@ -32,5 +32,9 @@ gradlePlugin {
             id = "rpcinterfacegen"
             implementationClass = "in.dragonbra.generators.rpc.RpcGenPlugin"
         }
+        create("protosync") {
+            id = "protosync"
+            implementationClass = "in.dragonbra.generators.protosync.ProtoSyncPlugin"
+        }
     }
 }
