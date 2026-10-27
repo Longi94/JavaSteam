@@ -2,6 +2,7 @@ import "in/dragonbra/javasteam/protobufs/dota2/steammessages.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_shared_enums.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/dota_gcmessages_common.proto";
 import "in/dragonbra/javasteam/protobufs/dota2/gcsdk_gcmessages.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.dota2";
 
@@ -51,13 +52,8 @@ message CMsgMonsterHunterHeroCodexEntry {
 }
 
 message CMsgMonsterHunterUserData {
-  message HeroCodexEntry {
-    optional int32 key = 1;
-    optional .CMsgMonsterHunterHeroCodexEntry value = 2;
-  }
-
   optional .CMsgMonsterHunterMaterialQuantity material_inventory = 1;
-  repeated .CMsgMonsterHunterUserData.HeroCodexEntry hero_codex = 2;
+  map<int32, .CMsgMonsterHunterHeroCodexEntry> hero_codex = 2;
   optional int32 unlocked_count = 3;
 }
 

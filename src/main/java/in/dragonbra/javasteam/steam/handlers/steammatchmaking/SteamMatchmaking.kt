@@ -26,7 +26,6 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverM
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverMms.CMsgClientMMSUserLeftLobby
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
-import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.Lobby.Companion.toByteString
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.CreateLobbyCallback
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.GetLobbyListCallback
 import `in`.dragonbra.javasteam.steam.handlers.steammatchmaking.callback.JoinLobbyCallback
@@ -100,13 +99,14 @@ class SteamMatchmaking : ClientMsgHandler() {
             body.lobbyType = lobbyType.code()
             body.maxMembers = maxMembers
             body.lobbyFlags = lobbyFlags
-            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
             body.cellId = client.cellID!!
             body.publicIp = NetHelpers.getMsgIPAddress(client.publicIP!!)
             body.personaNameOwner = personaName
 
             sourceJobID = client.getNextJobID()
         }
+
+        createLobby.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
 
         send(msg = createLobby, appId = appId)
 
@@ -145,10 +145,11 @@ class SteamMatchmaking : ClientMsgHandler() {
             body.lobbyType = lobbyType.code()
             body.maxMembers = maxMembers
             body.lobbyFlags = lobbyFlags
-            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
 
             sourceJobID = client.getNextJobID()
         }
+
+        setLobbyData.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
 
         send(msg = setLobbyData, appId = appId)
 
@@ -181,10 +182,11 @@ class SteamMatchmaking : ClientMsgHandler() {
             body.appId = appId
             body.steamIdLobby = lobbySteamId.convertToUInt64()
             body.steamIdMember = client.steamID!!.convertToUInt64()
-            body.metadata = Lobby.encodeMetadata(metadata).toByteString()
 
             sourceJobID = client.getNextJobID()
         }
+
+        setLobbyData.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
 
         send(msg = setLobbyData, appId = appId)
 
@@ -421,7 +423,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                         lobbyType = ELobbyType.from(createLobby.lobbyType),
                         lobbyFlags = createLobby.lobbyFlags,
                         ownerSteamID = client.steamID,
-                        metadata = Lobby.decodeMetadata(createLobby.metadata),
+                        metadata = Lobby.decodeMetadata(createLobby.metadataList, createLobby.metadataKv),
                         maxMembers = createLobby.maxMembers,
                         numMembers = 1,
                         members = members,
@@ -440,7 +442,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleSetLobbyDataResponse(packetMsg: IPacketMsg) {
+    private fun handleSetLobbyDataResponse(packetMsg: IPacketMsg) {
         val setLobbyDataResponse = ClientMsgProtobuf<CMsgClientMMSSetLobbyDataResponse.Builder>(
             CMsgClientMMSSetLobbyDataResponse::class.java,
             packetMsg
@@ -453,7 +455,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                 val lobby = lobbyCache.getLobby(appId = setLobbyData.appId, lobbySteamId = setLobbyData.steamIdLobby)
 
                 if (lobby != null) {
-                    val metadata = Lobby.decodeMetadata(setLobbyData.metadata)
+                    val metadata = Lobby.decodeMetadata(setLobbyData.metadataList, setLobbyData.metadataKv)
 
                     if (setLobbyData.steamIdMember == 0L) {
                         lobbyCache.cacheLobby(
@@ -494,7 +496,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleSetLobbyOwnerResponse(packetMsg: IPacketMsg) {
+    private fun handleSetLobbyOwnerResponse(packetMsg: IPacketMsg) {
         val setLobbyOwnerResponse = ClientMsgProtobuf<CMsgClientMMSSetLobbyOwnerResponse.Builder>(
             CMsgClientMMSSetLobbyOwnerResponse::class.java,
             packetMsg
@@ -520,7 +522,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleGetLobbyListResponse(packetMsg: IPacketMsg) {
+    private fun handleGetLobbyListResponse(packetMsg: IPacketMsg) {
         val lobbyListResponse = ClientMsgProtobuf<CMsgClientMMSGetLobbyListResponse.Builder>(
             CMsgClientMMSGetLobbyListResponse::class.java,
             packetMsg
@@ -535,7 +537,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                 lobbyType = ELobbyType.from(lobby.lobbyType),
                 lobbyFlags = lobby.lobbyFlags,
                 ownerSteamID = existingLobby?.ownerSteamID,
-                metadata = Lobby.decodeMetadata(lobby.metadata),
+                metadata = Lobby.decodeMetadata(lobby.metadataList, lobby.metadataKv),
                 maxMembers = lobby.maxMembers,
                 numMembers = lobby.numMembers,
                 members = members ?: listOf(),
@@ -556,7 +558,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleJoinLobbyResponse(packetMsg: IPacketMsg) {
+    private fun handleJoinLobbyResponse(packetMsg: IPacketMsg) {
         val joinLobbyResponse = ClientMsgProtobuf<CMsgClientMMSJoinLobbyResponse.Builder>(
             CMsgClientMMSJoinLobbyResponse::class.java,
             packetMsg
@@ -570,7 +572,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                 Member(
                     steamID = SteamID(member.steamId),
                     personaName = member.personaName,
-                    metadata = Lobby.decodeMetadata(member.metadata),
+                    metadata = Lobby.decodeMetadata(member.metadataList, member.metadataKv),
                 )
             }
 
@@ -581,7 +583,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                 lobbyType = ELobbyType.from(body.lobbyType),
                 lobbyFlags = body.lobbyFlags,
                 ownerSteamID = SteamID(body.steamIdOwner),
-                metadata = Lobby.decodeMetadata(body.metadata),
+                metadata = Lobby.decodeMetadata(body.metadataList, body.metadataKv),
                 maxMembers = body.maxMembers,
                 numMembers = members.size,
                 members = members,
@@ -600,7 +602,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleLeaveLobbyResponse(packetMsg: IPacketMsg) {
+    private fun handleLeaveLobbyResponse(packetMsg: IPacketMsg) {
         val leaveLobbyResponse = ClientMsgProtobuf<CMsgClientMMSLeaveLobbyResponse.Builder>(
             CMsgClientMMSLeaveLobbyResponse::class.java,
             packetMsg
@@ -619,7 +621,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleLobbyData(packetMsg: IPacketMsg) {
+    private fun handleLobbyData(packetMsg: IPacketMsg) {
         val lobbyDataResponse = ClientMsgProtobuf<CMsgClientMMSLobbyData.Builder>(
             CMsgClientMMSLobbyData::class.java,
             packetMsg
@@ -634,7 +636,7 @@ class SteamMatchmaking : ClientMsgHandler() {
                 Member(
                     steamID = SteamID(member.steamId),
                     personaName = member.personaName,
-                    metadata = Lobby.decodeMetadata(member.metadata)
+                    metadata = Lobby.decodeMetadata(member.metadataList, member.metadataKv)
                 )
             }
         }
@@ -644,7 +646,7 @@ class SteamMatchmaking : ClientMsgHandler() {
             lobbyType = ELobbyType.from(body.lobbyType),
             lobbyFlags = body.lobbyFlags,
             ownerSteamID = SteamID(body.steamIdOwner),
-            metadata = Lobby.decodeMetadata(body.metadata),
+            metadata = Lobby.decodeMetadata(body.metadataList, body.metadataKv),
             maxMembers = body.maxMembers,
             numMembers = body.numMembers,
             members = members ?: listOf(),
@@ -661,7 +663,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         ).also(client::postCallback)
     }
 
-    fun handleUserJoinedLobby(packetMsg: IPacketMsg) {
+    private fun handleUserJoinedLobby(packetMsg: IPacketMsg) {
         val userJoinedLobby = ClientMsgProtobuf<CMsgClientMMSUserJoinedLobby.Builder>(
             CMsgClientMMSUserJoinedLobby::class.java,
             packetMsg
@@ -688,7 +690,7 @@ class SteamMatchmaking : ClientMsgHandler() {
         }
     }
 
-    fun handleUserLeftLobby(packetMsg: IPacketMsg) {
+    private fun handleUserLeftLobby(packetMsg: IPacketMsg) {
         val userLeftLobby = ClientMsgProtobuf<CMsgClientMMSUserLeftLobby.Builder>(
             CMsgClientMMSUserLeftLobby::class.java,
             packetMsg

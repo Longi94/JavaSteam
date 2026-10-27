@@ -1,4 +1,3 @@
-import "in/dragonbra/javasteam/protobufs/steamclient/steammessages_base.proto";
 import "in/dragonbra/javasteam/protobufs/steamclient/enums.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.steamclient";

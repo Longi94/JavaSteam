@@ -124,11 +124,6 @@ class SteamUser : ClientMsgHandler() {
             logon.body.gamingDeviceType = details.gamingDeviceType.code()
         }
 
-        @Suppress("DEPRECATION")
-        if (details.isSteamDeck) {
-            logon.body.isSteamDeckDeprecated = true
-        }
-
         // steam guard
         if (details.authCode != null) {
             logon.body.authCode = details.authCode

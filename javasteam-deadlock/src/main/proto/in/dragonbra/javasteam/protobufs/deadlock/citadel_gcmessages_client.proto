@@ -1,6 +1,7 @@
 import "in/dragonbra/javasteam/protobufs/deadlock/steammessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/gcsdk_gcmessages.proto";
 import "in/dragonbra/javasteam/protobufs/deadlock/citadel_gcmessages_common.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.deadlock";
 
@@ -24,9 +25,6 @@ enum EGCCitadelClientMessages {
   k_EMsgClientToGCUpdateRoster = 9026;
   k_EMsgClientToGCUpdateRosterResponse = 9027;
   k_EMsgGCToClientProfileCardUpdated = 9028;
-  k_EMsgGCToClientDevAnnouncements = 9029;
-  k_EMsgClientToGCModifyDevAnnouncements = 9030;
-  k_EMsgClientToGCModifyDevAnnouncementsResponse = 9031;
   k_EMsgGCToClientSDRTicket = 9100;
   k_EMsgClientToGCReplacementSDRTicket = 9101;
   k_EMsgClientToGCReplacementSDRTicketResponse = 9102;
@@ -160,6 +158,37 @@ enum EGCCitadelClientMessages {
   k_EMsgGCToClientPartyChatMsg = 9279;
   k_EMsgClientToGCRequestHeroReleaseVoteTally = 9280;
   k_EMsgGCToClientUpdateHeroReleaseVoteTally = 9281;
+  k_EMsgClientToGCSetAccountPrivacySetting = 9282;
+  k_EMsgClientToGCSetAccountPrivacySettingResponse = 9283;
+  k_EMsgClientToGCVariantItemChangeSlotStyles = 9284;
+  k_EMsgClientToGCVariantItemChangeSlotStylesResponse = 9285;
+  k_EMsgClientToGCPartyPlayerTyping = 9286;
+  k_EMsgClientToGCPartyPlayerTypingResponse = 9287;
+  k_EMsgGCToClientPartyPlayerTyping = 9288;
+  k_EMsgClientToGCStartRankedInterval = 9289;
+  k_EMsgClientToGCStartRankedIntervalResponse = 9290;
+  k_EMsgClientToGCGetInternalLeaderboards = 9291;
+  k_EMsgClientToGCGetInternalLeaderboardsResponse = 9292;
+  k_EMsgClientToGCGetLeaderboardStatus = 9293;
+  k_EMsgClientToGCGetLeaderboardStatusResponse = 9294;
+  k_EMsgClientToGCRequestReporterUpdates = 9295;
+  k_EMsgClientToGCRequestReporterUpdatesResponse = 9296;
+  k_EMsgClientToGCAcknowledgeReporterUpdates = 9297;
+  k_EMsgClientToGCCabalCreate = 9298;
+  k_EMsgClientToGCCabalCreateResponse = 9299;
+  k_EMsgClientToGCCabalInviteAccount = 9300;
+  k_EMsgClientToGCCabalInviteAccountResponse = 9301;
+  k_EMsgClientToGCCabalAnswerInvite = 9302;
+  k_EMsgClientToGCCabalAnswerInviteResponse = 9303;
+  k_EMsgClientToGCCabalLeave = 9304;
+  k_EMsgClientToGCCabalLeaveResponse = 9305;
+  k_EMsgClientToGCCabalGetDetails = 9306;
+  k_EMsgClientToGCCabalGetDetailsResponse = 9307;
+  k_EMsgGCToClientCabalUpdated = 9308;
+  k_EMsgClientToGCCabalKickPlayer = 9309;
+  k_EMsgClientToGCCabalKickPlayerResponse = 9310;
+  k_EMsgClientToGCCabalGetMatchHistory = 9311;
+  k_EMsgClientToGCCabalGetMatchHistoryResponse = 9312;
 }
 
 enum ECitadelAccountPermissionFlag {
@@ -170,6 +199,7 @@ enum ECitadelNewPlayerProgressFlag {
   k_eNewPlayerProgress_GettingStarted = 1;
   k_eNewPlayerProgress_HeroTraining = 2;
   k_eNewPlayerProgress_LaneTraining = 3;
+  k_eNewPlayerProgress_CombinedTutorial2026 = 4;
 }
 
 enum EProfileCardSlotType {
@@ -242,7 +272,7 @@ enum ECitadelClientAccountEvent {
   k_eSandboxViaHeroPage = 55;
   k_eViewedSettings_SteamInput = 56;
   k_eViewedSettings_Social = 57;
-  k_eCalibrationMatch = 58;
+  k_eNewPlayerPlacementMatch = 58;
   k_eSandboxViaPlayMenu = 59;
   k_eBotMatch_Medium = 60;
   k_eSandboxViaHideoutTeleport = 61;
@@ -257,6 +287,63 @@ enum ECommendType {
   k_eSkilled = 4;
 }
 
+message CSORankedProgress {
+  optional uint32 account_id = 1 [(key_field) = true];
+  optional .ECitadelRankedType rank_type = 2 [default = k_eCitadelRankedType_Invalid, (key_field) = true];
+  optional uint32 rank_interval = 3 [(key_field) = true];
+  optional uint32 progress = 4;
+  optional uint32 max_progress = 5;
+  optional uint32 rank = 6;
+  optional uint32 max_rank = 7;
+  optional uint32 leaderboard_rank = 8;
+  optional uint32 max_leaderboard_rank = 9;
+  optional uint32 demote_protect_games = 10;
+  optional uint32 calibrate_games = 11;
+  optional uint32 win_bit_mask = 12;
+  optional uint32 match_count = 13;
+  optional uint32 last_match_hero_id = 14;
+  optional .EPlayerMatchOutcome last_match_outcome = 15 [default = k_EPlayerMatchOutcome_Invalid];
+  optional uint32 last_match_kills = 16;
+  optional uint32 last_match_deaths = 17;
+  optional uint32 last_match_assists = 18;
+}
+
+message CSOAccountCabalMembership {
+  optional uint32 account_id = 1 [(key_field) = true];
+  optional uint64 cabal_id = 2 [(key_field) = true];
+  optional uint32 state = 3;
+}
+
+message CMsgCitadelCabal {
+  message MMStats {
+    optional .ECitadelCabalMMTier mm_tier = 1 [default = k_eCabalMMTier_Invalid];
+    optional uint32 wins = 2;
+    optional uint32 matches = 3;
+  }
+
+  message Member {
+    optional uint32 account_id = 1;
+    optional .CMsgCitadelCabal.EMemberState member_state = 2 [default = k_eMemberState_Left];
+    optional uint32 time_stamp = 3;
+    optional uint32 wins = 4;
+    optional uint32 matches = 5;
+    repeated .CMsgCitadelCabal.MMStats mm_stats = 6;
+  }
+
+  enum EMemberState {
+    k_eMemberState_Left = 0;
+    k_eMemberState_Active = 1;
+    k_eMemberState_Invited = 2;
+  }
+
+  optional uint64 cabal_id = 1;
+  optional string cabal_name = 2;
+  optional uint32 created_time = 3;
+  optional uint32 created_by = 4;
+  repeated .CMsgCitadelCabal.Member members = 5;
+  repeated .CMsgCitadelCabal.MMStats mm_stats = 6;
+}
+
 message CSOGameAccountClient {
   enum EFlags {
     k_eDeveloper = 1;
@@ -266,6 +353,12 @@ message CSOGameAccountClient {
     k_eClaimedDiscordLink = 16;
     k_eClaimedForum = 32;
     k_eAccountBanned = 64;
+  }
+
+  enum EPrivacySetting {
+    k_ePrivacy_FriendsOnly = 0;
+    k_ePrivacy_Hidden = 1;
+    k_ePrivacy_Public = 2;
   }
 
   optional uint32 account_id = 1 [(key_field) = true];
@@ -281,13 +374,14 @@ message CSOGameAccountClient {
   optional uint32 comms_ban_until = 11;
   optional uint32 low_priority_games_remaining = 12;
   optional uint32 report_ban_until = 13;
-  optional uint32 ranked_badge_level = 14;
   optional uint32 priority_tokens = 15;
   optional uint32 priority_token_progress = 16;
   optional uint32 priority_tokens_earned = 17;
   optional uint32 brawl_wins = 18;
   optional uint32 brawl_losses = 19;
   optional uint32 brawl_kills = 20;
+  optional uint32 last_mm_match_time = 21;
+  optional .CSOGameAccountClient.EPrivacySetting privacy_setting = 22 [default = k_ePrivacy_FriendsOnly];
 }
 
 message CSOAccountSyncStorage {
@@ -306,10 +400,8 @@ message CSOAccountHeroInfo {
   optional uint32 hero_id = 2;
   optional .CSOAccountHeroInfo.EHeroStatus status = 3 [default = k_eLocked];
   optional uint32 wins = 4;
-  optional uint32 kills = 5;
   optional uint32 hero_xp = 6;
   optional uint32 brawl_wins = 7;
-  optional uint32 brawl_kills = 8;
 }
 
 message CSOAccountChallenge {
@@ -338,6 +430,8 @@ message CSOAccountChallenge {
 }
 
 message CMsgCitadelClientHello {
+  optional bytes pgi_hash = 1;
+  optional bytes pgi_version = 2;
 }
 
 message CMsgClientToGCStartMatchmaking {
@@ -346,6 +440,7 @@ message CMsgClientToGCStartMatchmaking {
   optional .CMsgStartFindingMatchInfo match_info = 3;
   optional .CMsgRegionPingTimesClient ping_times = 4;
   optional .CMsgHeroSelectionMatchInfo heroes = 5;
+  optional bool pgi_verified = 6;
 }
 
 message CMsgClientToGCStartMatchmakingResponse {
@@ -376,6 +471,9 @@ message CMsgClientToGCStartMatchmakingResponse {
     k_EResult_NoHeroLabsWhileInLowPri = 23;
     k_EResult_AccountLocked = 24;
     k_EResult_TooManyLimitedHeroes = 25;
+    k_EResult_UnverifiedPGI = 26;
+    k_EResult_RankedInvalidPartySize = 27;
+    k_EResult_NoBrawlWhileInLowPri = 28;
   }
 
   optional .CMsgClientToGCStartMatchmakingResponse.EResultCode result = 1 [default = k_EResult_OK];
@@ -413,6 +511,7 @@ message CMsgClientWelcomeCitadel {
   repeated .CExtraMsgBlock extra_messages = 2;
   optional uint32 compatibility_version = 3;
   optional .ECitadelRegionMode region_mode = 4 [default = k_ECitadelRegionMode_ROW];
+  optional bool pgi_verified = 5;
 }
 
 message CMsgClientToGCIsInMatchmaking {
@@ -455,6 +554,7 @@ message CMsgDevMatchInfo {
   optional uint32 match_score = 18;
   optional .ECitadelRegionMode region_mode = 19 [default = k_ECitadelRegionMode_ROW];
   optional uint32 compat_version = 20;
+  optional bool low_pri_pool = 21;
   repeated .CMsgDevMatchInfo.Team team_stats = 22;
 }
 
@@ -470,6 +570,17 @@ message CMsgGCToClientDevPlaytestStatus {
     optional .ECitadelGameMode game_mode = 3 [default = k_ECitadelGameMode_Invalid];
   }
 
+  message LeaderboardTier {
+    optional uint32 leaderboard_rank = 1;
+    optional uint32 required_progress = 2;
+  }
+
+  message ActiveRankedMode {
+    optional .ECitadelRankedType rank_type = 1 [default = k_eCitadelRankedType_Invalid];
+    optional uint32 rank_interval = 2;
+    repeated .CMsgGCToClientDevPlaytestStatus.LeaderboardTier leaderboard_tiers = 3;
+  }
+
   repeated .CMsgGCToClientDevPlaytestStatus.DevQueueSize dev_queue_size = 1;
   optional uint32 dev_available_servers = 2;
   optional uint32 coop_bot_max_wait_s = 3;
@@ -482,6 +593,7 @@ message CMsgGCToClientDevPlaytestStatus {
   optional uint32 active_match_count = 21;
   optional uint32 roster_non_limited_heroes = 22;
   optional uint32 matches_per_priority_token = 23;
+  repeated .CMsgGCToClientDevPlaytestStatus.ActiveRankedMode active_ranked_modes = 24;
 }
 
 message CMsgGCToClientSDRTicket {
@@ -532,6 +644,7 @@ message CMsgPartyMMInfo {
   optional .CMsgRegionPingTimesClient ping_times = 2;
   optional uint32 client_version = 3;
   optional .ECitadelRegionMode region_mode = 4 [default = k_ECitadelRegionMode_ROW];
+  optional bool pgi_verified = 5;
 }
 
 message CMsgClientToGCPartyCreate {
@@ -637,6 +750,9 @@ message CMsgClientToGCPartyAction {
     k_eSetDesiresLaningTogether = 23;
     k_eSetMMPreference = 24;
     k_eSetPrivateLobbyGameMode = 25;
+    k_eSetCorruptedItemShopSpawnTime = 26;
+    k_eSetActiveCabal = 27;
+    k_eSetCabalMMTier = 28;
   }
 
   optional fixed64 party_id = 1;
@@ -703,6 +819,12 @@ message CMsgClientToGCPartySetModeResponse {
     k_eNoHeroLabsWhileInLowPri = 23;
     k_eNoHighRangeFiveStack = 24;
     k_eAccountLocked = 25;
+    k_eRankedInCalibration = 26;
+    k_eRankedInvalidPartySize = 27;
+    k_eRankedPartySkillRangeInvalid = 28;
+    k_eRankedMemberInLowPri = 29;
+    k_eRankedMemberCurrentlyBanned = 30;
+    k_eBrawlMemberInLowPri = 31;
   }
 
   optional .CMsgClientToGCPartySetModeResponse.EResponse result = 1 [default = k_eInternalError];
@@ -746,6 +868,7 @@ message CMsgClientToGCPartyStartMatchResponse {
     k_eHeroLabsMMNotOpen = 29;
     k_eHeroLabsNotUnlocked = 30;
     k_eNoHeroLabsWhileInLowPri = 31;
+    k_eUnverifiedPGI = 32;
   }
 
   optional .CMsgClientToGCPartyStartMatchResponse.EResponse result = 1 [default = k_eInternalError];
@@ -778,7 +901,7 @@ message CMsgClientToGCPartyInviteUserResponse {
 }
 
 message CMsgGCToClientPartyEvent {
-  enum EEvent {
+  enum EPartyEvent {
     k_ePlayerKicked = 1;
     k_eJoinedParty = 3;
     k_eMatchCompleted = 4;
@@ -794,7 +917,7 @@ message CMsgGCToClientPartyEvent {
   }
 
   optional fixed64 party_id = 1;
-  optional .CMsgGCToClientPartyEvent.EEvent event = 2 [default = k_ePlayerKicked];
+  optional .CMsgGCToClientPartyEvent.EPartyEvent event = 2 [default = k_ePlayerKicked];
   optional uint32 initiator_account_id = 3;
   optional uint32 target_account_id = 4;
   optional bytes bytes_data = 5;
@@ -853,6 +976,9 @@ message CMsgClientToGCGetMatchHistory {
   optional uint64 continue_cursor = 2;
   optional .ECitadelGameMode game_mode = 4 [default = k_ECitadelGameMode_Invalid];
   optional .ECitadelMatchMode match_mode = 5 [default = k_ECitadelMatchMode_Invalid];
+  optional .ECitadelRankedType ranked_type = 6 [default = k_eCitadelRankedType_Invalid];
+  optional uint32 rank_interval = 7;
+  optional uint64 cabal_id = 8;
 }
 
 message CMsgClientToGCGetMatchHistoryResponse {
@@ -876,11 +1002,16 @@ message CMsgClientToGCGetMatchHistoryResponse {
     optional uint32 abandoned_time_s = 18;
     optional .ECitadelMatchMode match_mode = 19 [default = k_ECitadelMatchMode_Invalid];
     optional .ECitadelGameMode game_mode = 20 [default = k_ECitadelGameMode_Invalid];
-    optional bool not_scored = 21;
     optional uint32 game_mode_version = 22;
     optional uint32 brawl_score_team0 = 23;
     optional uint32 brawl_score_team1 = 24;
     optional uint32 brawl_avg_round_time_s = 25;
+    optional .EPlayerMatchOutcome player_match_outcome = 26 [default = k_EPlayerMatchOutcome_Invalid];
+    optional uint32 ranked_display_badge = 27;
+    optional int32 ranked_delta = 28;
+    optional uint32 ranked_calibration_match = 29;
+    optional bool ranked_used_demotion_protection = 30;
+    optional bool low_pri_pool = 31;
   }
 
   enum EResult {
@@ -992,6 +1123,9 @@ message CMsgClientToGCUpdateRosterResponse {
     k_eMMBusy = 5;
     k_eInvalidHeroSelection = 6;
     k_eHeroesNotUnlocked = 7;
+    k_eNotInMatchmaking = 8;
+    k_eInvalidPartyRoster = 9;
+    k_eInvalidMode = 10;
   }
 
   optional .CMsgClientToGCUpdateRosterResponse.EResponse result = 1 [default = k_eInternalError];
@@ -1042,47 +1176,6 @@ message CMsgClientToGCGetMatchMetaDataResponse {
   optional uint32 replay_valid_through = 4;
   optional uint32 replay_group_id = 5;
   optional uint32 replay_processing_through = 6;
-}
-
-message CMsgGCToClientDevAnnouncements {
-  message Announcement {
-    optional uint32 priority = 1;
-    optional string title = 2;
-    optional string message = 3;
-    optional string url = 4;
-    optional uint32 unique_id = 5;
-    optional uint32 posted_time = 6;
-    optional string patch_version = 7;
-  }
-
-  repeated .CMsgGCToClientDevAnnouncements.Announcement announcements = 1;
-}
-
-message CMsgClientToGCModifyDevAnnouncements {
-  enum EOperation {
-    k_eCreate = 0;
-    k_eUpdate = 1;
-    k_eDelete = 2;
-  }
-
-  optional .CMsgClientToGCModifyDevAnnouncements.EOperation operation = 1 [default = k_eCreate];
-  optional uint32 target_id = 2;
-  optional uint32 priority = 3;
-  optional string title = 4;
-  optional string message = 5;
-  optional string url = 6;
-  optional string patch_version = 7;
-}
-
-message CMsgClientToGCModifyDevAnnouncementsResponse {
-  enum EResult {
-    k_eSuccess = 0;
-    k_eInvalidPermission = 1;
-    k_eInvalidTarget = 2;
-    k_eInternalError = 3;
-  }
-
-  optional .CMsgClientToGCModifyDevAnnouncementsResponse.EResult result = 1 [default = k_eSuccess];
 }
 
 message CMsgClientToGCDevAction {
@@ -1287,6 +1380,14 @@ message CMsgClientToGCUpdateHeroBuildResponse {
   enum EResponse {
     k_eInternalError = 0;
     k_eSuccess = 1;
+    k_eNotAuthor = 2;
+    k_eInvalidBuildID = 3;
+    k_eInvalidName = 4;
+    k_eNameTooLong = 5;
+    k_eDescriptionTooLong = 6;
+    k_eInvalidDetails = 7;
+    k_eStaleVersion = 8;
+    k_eBuildTooLarge = 9;
   }
 
   optional .CMsgClientToGCUpdateHeroBuildResponse.EResponse response = 1 [default = k_eInternalError];
@@ -1319,11 +1420,12 @@ message CMsgClientToGCFindHeroBuildsResponse {
     k_eInternalError = 0;
     k_eSuccess = 1;
     k_eTooBusy = 2;
+    k_eMissingHeroID = 3;
+    k_eInvalidLanguages = 4;
   }
 
   optional .CMsgClientToGCFindHeroBuildsResponse.EResponse response = 1 [default = k_eInternalError];
   repeated .CMsgClientToGCFindHeroBuildsResponse.HeroBuildResult results = 2;
-  optional uint32 build_window_start_time_override = 3;
 }
 
 message CMsgClientToGCUpdateHeroBuildPreference {
@@ -1335,6 +1437,7 @@ message CMsgClientToGCUpdateHeroBuildPreferenceResponse {
   enum EResponse {
     k_eInternalError = 0;
     k_eSuccess = 1;
+    k_eTooBusy = 2;
   }
 
   optional .CMsgClientToGCUpdateHeroBuildPreferenceResponse.EResponse response = 1 [default = k_eInternalError];
@@ -1397,6 +1500,28 @@ message CMsgClientToGCGetAccountMatchReportsResponse {
   optional .CMsgClientToGCGetAccountMatchReportsResponse.EResponse response = 1 [default = k_eInternalError];
   repeated .CMsgClientToGCGetAccountMatchReportsResponse.Report reports = 2;
   repeated .CMsgClientToGCGetAccountMatchReportsResponse.Commend commends = 3;
+}
+
+message CMsgClientToGCRequestReporterUpdates {
+}
+
+message CMsgClientToGCRequestReporterUpdatesResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eRateLimited = 2;
+    k_eDisabled = 4;
+    k_eTooBusy = 7;
+  }
+
+  optional .CMsgClientToGCRequestReporterUpdatesResponse.EResponse response = 1 [default = k_eInternalError];
+  optional .CMsgClientToGCReportPlayerFromMatch.EReportType report_type = 5 [default = k_eReport_None];
+
+  reserved 2, 3, 4;
+}
+
+message CMsgClientToGCAcknowledgeReporterUpdates {
+  reserved 1;
 }
 
 message CMsgClientToGCDeleteHeroBuild {
@@ -1504,6 +1629,8 @@ message CMsgClientToGCCommendPlayerFromMatchResponse {
     k_eTooBusy = 3;
     k_eRateLimited = 4;
     k_eTimeout = 5;
+    k_eEnemyCommendsDisabled = 6;
+    k_eTooLate = 7;
   }
 
   optional .CMsgClientToGCCommendPlayerFromMatchResponse.EResponse result = 1 [default = k_eInternalError];
@@ -1562,6 +1689,7 @@ message CMsgClientToGCGetHeroMMRRankingsResponse {
 message CMsgClientToGCGetLeaderboard {
   optional .ECitadelLeaderboardRegion leaderboard_region = 1 [default = k_ECitadelLeaderboardRegion_None];
   optional uint32 hero_id = 2;
+  optional uint32 leaderboard_id = 3;
 }
 
 message CMsgClientToGCGetLeaderboardResponse {
@@ -1569,7 +1697,6 @@ message CMsgClientToGCGetLeaderboardResponse {
     optional string account_name = 1;
     optional uint32 rank = 2;
     repeated uint32 top_hero_ids = 3;
-    optional uint32 badge_level = 4;
   }
 
   enum EResult {
@@ -1586,6 +1713,7 @@ message CMsgClientToGCGetLeaderboardResponse {
 
 message CMsgClientToGCGetAccountLeaderboards {
   optional uint32 account_id = 1;
+  optional uint32 leaderboard_id = 2;
 }
 
 message CMsgClientToGCGetAccountLeaderboardsResponse {
@@ -1673,6 +1801,11 @@ message CMsgSurveyQuestion {
     k_eHeroPlayAgainst = 3;
     k_eMoreFunHero = 4;
     k_eHeroPower = 5;
+    k_eHeroPlayAs = 6;
+    k_eHeroFrontliner = 7;
+    k_eHeroCarry = 8;
+    k_eHeroDisable = 9;
+    k_eHeroUtility = 10;
   }
 
   optional uint32 question_id = 1;
@@ -1683,6 +1816,7 @@ message CMsgSurveyQuestion {
 }
 
 message CMsgClientToGCGetSurveyQuestion {
+  optional .CMsgSurveyQuestion.EQuestionType dev_force_new_question_type = 1 [default = k_eInvalid];
 }
 
 message CMsgClientToGCGetSurveyQuestionResponse {
@@ -1700,6 +1834,7 @@ message CMsgClientToGCSubmitSurvey {
   optional uint32 question_id = 1;
   optional bool is_skip = 2;
   optional uint32 response_value = 3;
+  optional .CMsgSurveyQuestion.EQuestionType dev_force_new_question_type = 4 [default = k_eInvalid];
 }
 
 message CMsgClientToGCSubmitSurveyResponse {
@@ -1734,15 +1869,11 @@ message CMsgGCToClientRankDataUpdate {
 
 message CMsgClientToGCRequestHeroReleaseVoteTally {
   repeated uint32 vote_rounds = 1 [packed = true];
+  optional bool is_initial_request = 2;
 }
 
 message CMsgGCToClientUpdateHeroReleaseVoteTally {
-  message VoteRoundToTallyEntry {
-    optional uint32 key = 1;
-    optional .CMsgHeroReleaseVoteTally value = 2;
-  }
-
-  repeated .CMsgGCToClientUpdateHeroReleaseVoteTally.VoteRoundToTallyEntry vote_round_to_tally = 1;
+  map<uint32, .CMsgHeroReleaseVoteTally> vote_round_to_tally = 1;
 }
 
 message CMsgClientToGCSubmitHeroReleaseVote {
@@ -1779,6 +1910,11 @@ message CMsgGCToClientPartyChatMsg {
   repeated .CMsgGCToClientPartyChatMsg.ChatLine chat_lines = 2;
 }
 
+message CMsgGCToClientPartyPlayerTyping {
+  optional fixed64 party_id = 1;
+  optional uint32 account_id = 2;
+}
+
 message CMsgPostGameProgressData {
   message PlayerAccolade {
     optional uint32 accolade_id = 1;
@@ -1789,12 +1925,15 @@ message CMsgPostGameProgressData {
   }
 
   message PlayerAward {
-    optional uint32 award_column = 1;
     optional uint32 award_id = 2;
     optional int32 award_value = 3;
     optional uint32 award_rank = 4;
     optional string award_desc = 5;
     optional string award_class = 6;
+  }
+
+  message HeroXPReward {
+    optional .CMsgHeroXPGrant xp_grant = 1;
   }
 
   message PlayerData {
@@ -1805,10 +1944,270 @@ message CMsgPostGameProgressData {
     optional uint32 mvp_rank = 5;
     repeated .CMsgPostGameProgressData.PlayerAccolade accolades = 6;
     repeated .CMsgPostGameProgressData.PlayerAward awards = 7;
+    optional .CMsgPlayerHeroData hero_data = 8;
+    repeated .CMsgPostGameProgressData.HeroXPReward hero_xp_rewards = 9;
+    optional .CMsgMatchPlayerRankData player_rank_data = 10;
+    optional .EPlayerMatchOutcome player_match_outcome = 11 [default = k_EPlayerMatchOutcome_Invalid];
   }
 
   optional uint64 match_id = 1;
   optional .ECitadelLobbyTeam winning_team = 2 [default = k_ECitadelLobbyTeam_Team0];
-  optional .CMsgPostGameProgressData.PlayerData local_player = 3;
-  repeated .CMsgPostGameProgressData.PlayerData mvp_players = 4;
+  optional .ECitadelMatchMode match_mode = 3 [default = k_ECitadelMatchMode_Invalid];
+  optional .ECitadelGameMode game_mode = 4 [default = k_ECitadelGameMode_Invalid];
+  optional .ECitadelRankedType ranked_type = 5 [default = k_eCitadelRankedType_Invalid];
+  optional uint32 rank_interval = 6;
+  optional .CMsgPostGameProgressData.PlayerData local_player = 7;
+  repeated .CMsgPostGameProgressData.PlayerData mvp_players = 8;
+  optional .CMsgMatchHeroReleaseVotes hero_release_votes = 9;
+  repeated .CMsgPostGameProgressData.PlayerData all_players = 10;
+}
+
+message CMsgClientToGCSetAccountPrivacySetting {
+  optional .CSOGameAccountClient.EPrivacySetting privacy_setting = 1 [default = k_ePrivacy_FriendsOnly];
+}
+
+message CMsgClientToGCSetAccountPrivacySettingResponse {
+  enum EResultCode {
+    k_eSuccess = 0;
+    k_eInternalError = 1;
+  }
+
+  optional .CMsgClientToGCSetAccountPrivacySettingResponse.EResultCode result = 1 [default = k_eSuccess];
+}
+
+message CMsgClientToGCVariantItemChangeSlotStyles {
+  message SlotStyleAction {
+    optional uint32 slot_id = 1;
+    optional uint32 style_id = 2;
+    optional .CMsgClientToGCVariantItemChangeSlotStyles.EStyleAction style_action = 3 [default = k_eUnlockStyle];
+  }
+
+  enum EStyleAction {
+    k_eUnlockStyle = 0;
+    k_eEquipStyle = 1;
+    k_eDevUnlockStyle = 2;
+    k_eDevLockStyle = 3;
+  }
+
+  optional uint64 item_id = 1;
+  repeated .CMsgClientToGCVariantItemChangeSlotStyles.SlotStyleAction slot_style_actions = 2;
+}
+
+message CMsgClientToGCVariantItemChangeSlotStylesResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eDisabled = 3;
+    k_eTimeout = 4;
+    k_eNoItem = 5;
+    k_eNoActions = 6;
+    k_eUnknownAction = 8;
+    k_eCantEquipNotOwned = 9;
+    k_eNoPermission = 10;
+    k_eInvalidSlot = 11;
+  }
+
+  optional .CMsgClientToGCVariantItemChangeSlotStylesResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCStartRankedInterval {
+  optional .ECitadelRankedType rank_type = 1 [default = k_eCitadelRankedType_Invalid];
+  optional uint32 interval = 2;
+}
+
+message CMsgClientToGCStartRankedIntervalResponse {
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eIntervalInactive = 2;
+    k_eAlreadyStarted = 3;
+    k_eNotEnoughMatchesPlayed = 4;
+    k_eNotEnoughHeroesUnlocked = 5;
+  }
+
+  optional .CMsgClientToGCStartRankedIntervalResponse.EResponse response = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCGetInternalLeaderboards {
+  optional uint32 account_id = 1;
+}
+
+message CMsgClientToGCGetInternalLeaderboardsResponse {
+  message LeaderboardMatch {
+    optional uint64 match_id = 1;
+    optional uint32 round = 2;
+    optional uint32 duration = 3;
+    optional uint32 timestamp = 4;
+    repeated uint32 account_ids = 5;
+    repeated uint32 hero_ids = 6;
+  }
+
+  enum EResponse {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eAccessDenied = 2;
+  }
+
+  optional .CMsgClientToGCGetInternalLeaderboardsResponse.EResponse response = 1 [default = k_eInternalError];
+  repeated .CMsgClientToGCGetInternalLeaderboardsResponse.LeaderboardMatch matches = 2;
+}
+
+message CMsgClientToGCGetLeaderboardStatus {
+  optional uint32 leaderboard_id = 1;
+}
+
+message CMsgClientToGCGetLeaderboardStatusResponse {
+  message Hero {
+    optional uint32 hero_id = 1;
+    optional uint32 recent_matches = 2;
+    optional .ECitadelLeaderboardRegion region = 3 [default = k_ECitadelLeaderboardRegion_None];
+    optional uint32 lifetime_wins = 4;
+    optional bool is_eligible = 5;
+  }
+
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eRateLimited = 3;
+    k_eInvalidLeaderboard = 4;
+  }
+
+  optional .CMsgClientToGCGetLeaderboardStatusResponse.EResult result = 1 [default = k_eInternalError];
+  optional bool is_eligible = 2;
+  optional uint32 recent_matches = 3;
+  optional uint32 required_recent_matches = 4;
+  optional uint32 required_recent_hero_matches = 5;
+  optional .ECitadelLeaderboardRegion region = 6 [default = k_ECitadelLeaderboardRegion_None];
+  optional bool is_rank_high_enough = 7;
+  optional uint32 lifetime_matches = 8;
+  optional uint32 required_lifetime_matches = 9;
+  optional uint32 required_lifetime_hero_wins = 10;
+  repeated .CMsgClientToGCGetLeaderboardStatusResponse.Hero hero_info = 11;
+  optional uint32 match_history_days = 12;
+}
+
+message CMsgClientToGCCabalCreate {
+}
+
+message CMsgClientToGCCabalCreateResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eRateLimited = 3;
+    k_eAlreadyInMaxCabals = 4;
+  }
+
+  optional .CMsgClientToGCCabalCreateResponse.EResult result = 1 [default = k_eInternalError];
+  optional uint64 cabal_id = 2;
+}
+
+message CMsgClientToGCCabalInviteAccount {
+  optional uint64 cabal_id = 1;
+  optional uint32 account_id = 2;
+  optional bool cancel_invite = 3;
+}
+
+message CMsgClientToGCCabalInviteAccountResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eRateLimited = 3;
+    k_eInvalidPermission = 4;
+    k_eTargetInMaxCabals = 5;
+    k_eTargetAtMaxInvites = 6;
+    k_eTargetAlreadyInvited = 7;
+    k_eCabalAtMaxInvites = 8;
+    k_eCabalAtMaxMembers = 9;
+    k_eInvalidTargetAccount = 10;
+    k_eTargetNotInvited = 11;
+  }
+
+  optional .CMsgClientToGCCabalInviteAccountResponse.EResult result = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCCabalAnswerInvite {
+  optional uint64 cabal_id = 1;
+  optional bool accepted = 2;
+}
+
+message CMsgClientToGCCabalAnswerInviteResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eRateLimited = 3;
+    k_eInvalidPermission = 4;
+    k_eAlreadyInMaxCabals = 5;
+    k_eCabalAtMaxMembers = 6;
+  }
+
+  optional .CMsgClientToGCCabalAnswerInviteResponse.EResult result = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCCabalLeave {
+  optional uint64 cabal_id = 1;
+  optional bool acknowledged_last_member = 2;
+}
+
+message CMsgClientToGCCabalLeaveResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eWasLastMember = 3;
+    k_eNotMember = 4;
+  }
+
+  optional .CMsgClientToGCCabalLeaveResponse.EResult result = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCCabalGetDetails {
+  optional uint64 cabal_id = 1;
+}
+
+message CMsgClientToGCCabalGetDetailsResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eTooBusy = 2;
+    k_eRateLimited = 3;
+    k_eInvalidPermission = 4;
+  }
+
+  optional .CMsgClientToGCCabalGetDetailsResponse.EResult result = 1 [default = k_eInternalError];
+  optional .CMsgCitadelCabal cabal_info = 2;
+}
+
+message CMsgGCToClientCabalUpdated {
+  optional .CMsgCitadelCabal cabal_info = 1;
+}
+
+message CMsgClientToGCCabalKickPlayer {
+  optional uint64 cabal_id = 1;
+  optional uint32 kick_account_id = 2;
+}
+
+message CMsgClientToGCCabalKickPlayerResponse {
+  enum EResult {
+    k_eInternalError = 0;
+    k_eSuccess = 1;
+    k_eInvalidPermission = 4;
+    k_eInvalidTarget = 5;
+  }
+
+  optional .CMsgClientToGCCabalKickPlayerResponse.EResult result = 1 [default = k_eInternalError];
+}
+
+message CMsgClientToGCCabalGetMatchHistory {
+  optional uint64 cabal_id = 1;
+  optional .ECitadelCabalMMTier cabal_mm_tier = 2 [default = k_eCabalMMTier_Invalid];
+  optional uint64 cursor = 3;
+}
+
+message CMsgClientToGCCabalGetMatchHistoryResponse {
+  optional .CMsgClientToGCGetMatchHistoryResponse history_response = 1;
 }

@@ -28,6 +28,70 @@ message CUserAccount_GetAvailableValveDiscountPromotions_Response {
   repeated .CUserAccount_GetAvailableValveDiscountPromotions_Response.ValveDiscountPromotionDetails promotions = 1;
 }
 
+message CUserAccount_GetOptOutEmailOptions_Request {
+  optional string opt_out_token = 1;
+}
+
+message CPerAppEmailOptions {
+  optional uint32 appid = 1;
+  optional bool opt_out_in_library_events = 2 [default = false];
+}
+
+message CPerClanEmailOptions {
+  optional uint32 clanid = 1;
+  optional bool opt_out_in_library_events = 2 [default = false];
+}
+
+message CUserAccount_GetOptOutEmailOptions_Response {
+  optional string email = 1;
+  optional bool opt_out_all = 2;
+  optional bool opt_out_wishlist_sales = 3;
+  optional bool opt_out_seasonal_promo = 4;
+  optional bool opt_out_wishlist_releases = 5;
+  optional bool opt_out_greenlight_releases = 6;
+  optional bool opt_out_curator_connect = 7;
+  optional bool opt_out_creator_home_releases = 8;
+  optional bool opt_out_in_library_events = 9;
+  repeated .CPerAppEmailOptions per_app_opt_outs = 10;
+  repeated .CPerClanEmailOptions per_clan_opt_outs = 11;
+  optional bool opt_out_loyalty_awards_received = 12;
+  optional bool opt_out_partner_messages = 13;
+  optional bool opt_out_year_in_review = 14;
+  optional bool opt_out_wishlist_demo_releases = 15;
+  optional bool opt_out_creator_home_demo_releases = 16;
+  optional bool opt_out_next_fest_starts = 17 [default = true];
+  optional bool opt_out_theme_sale_starts = 18 [default = true];
+  optional bool opt_out_season_pass_ship = 19;
+  optional bool opt_out_roadmap_ship = 20;
+  optional bool is_self = 21;
+}
+
+message CUserAccount_SetOptOutEmailOptions_Request {
+  optional string opt_out_token = 1;
+  optional bool opt_out_all = 2;
+  optional bool opt_out_wishlist_sales = 3;
+  optional bool opt_out_seasonal_promo = 4;
+  optional bool opt_out_wishlist_releases = 5;
+  optional bool opt_out_greenlight_releases = 6;
+  optional bool opt_out_curator_connect = 7;
+  optional bool opt_out_creator_home_releases = 8;
+  optional bool opt_out_in_library_events = 9;
+  repeated .CPerAppEmailOptions per_app_opt_outs = 10;
+  repeated .CPerClanEmailOptions per_clan_opt_outs = 11;
+  optional bool opt_out_loyalty_awards_received = 12;
+  optional bool opt_out_partner_messages = 13;
+  optional bool opt_out_year_in_review = 14;
+  optional bool opt_out_wishlist_demo_releases = 15;
+  optional bool opt_out_creator_home_demo_releases = 16;
+  optional bool opt_out_next_fest_starts = 17;
+  optional bool opt_out_theme_sale_starts = 18;
+  optional bool opt_out_season_pass_ship = 19;
+  optional bool opt_out_roadmap_ship = 20;
+}
+
+message CUserAccount_SetOptOutEmailOptions_Response {
+}
+
 message CUserAccount_GetClientWalletDetails_Request {
   optional bool include_balance_in_usd = 1;
   optional int32 wallet_region = 2 [default = 1];
@@ -154,6 +218,8 @@ message CEmbeddedClient_AuthorizeDevice_Response {
 
 service UserAccount {
   rpc GetAvailableValveDiscountPromotions (.CUserAccount_GetAvailableValveDiscountPromotions_Request) returns (.CUserAccount_GetAvailableValveDiscountPromotions_Response);
+  rpc GetOptOutEmailOptions (.CUserAccount_GetOptOutEmailOptions_Request) returns (.CUserAccount_GetOptOutEmailOptions_Response);
+  rpc SetOptOutEmailOptions (.CUserAccount_SetOptOutEmailOptions_Request) returns (.CUserAccount_SetOptOutEmailOptions_Response);
   rpc GetClientWalletDetails (.CUserAccount_GetClientWalletDetails_Request) returns (.CUserAccount_GetWalletDetails_Response);
   rpc GetAccountLinkStatus (.CUserAccount_GetAccountLinkStatus_Request) returns (.CUserAccount_GetAccountLinkStatus_Response);
   rpc CancelLicenseForApp (.CUserAccount_CancelLicenseForApp_Request) returns (.CUserAccount_CancelLicenseForApp_Response);

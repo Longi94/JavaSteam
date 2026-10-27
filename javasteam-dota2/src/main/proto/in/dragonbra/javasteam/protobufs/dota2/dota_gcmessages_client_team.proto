@@ -1,4 +1,5 @@
 import "in/dragonbra/javasteam/protobufs/dota2/dota_shared_enums.proto";
+import "google/protobuf/descriptor.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.dota2";
 

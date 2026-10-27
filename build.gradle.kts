@@ -16,6 +16,7 @@ plugins {
     projectversiongen
     steamlanguagegen
     rpcinterfacegen
+    protosync
 }
 
 allprojects {

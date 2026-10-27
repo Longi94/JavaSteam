@@ -1,5 +1,4 @@
 import "in/dragonbra/javasteam/protobufs/tf/steammessages.proto";
-import "in/dragonbra/javasteam/protobufs/tf/tf_proto_def_messages.proto";
 
 option java_package = "in.dragonbra.javasteam.protobufs.tf";
 

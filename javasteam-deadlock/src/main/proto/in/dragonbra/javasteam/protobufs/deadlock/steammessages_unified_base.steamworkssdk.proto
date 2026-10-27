@@ -6,27 +6,27 @@ option optimize_for = SPEED;
 option java_generic_services = false;
 
 extend .google.protobuf.FieldOptions {
-	optional string description = 50000;
+  optional string description = 50000;
 }
 
 extend .google.protobuf.ServiceOptions {
-	optional string service_description = 50000;
-	optional .EProtoExecutionSite service_execution_site = 50008 [default = k_EProtoExecutionSiteUnknown];
+  optional string service_description = 50000;
+  optional .EProtoExecutionSite service_execution_site = 50008 [default = k_EProtoExecutionSiteUnknown];
 }
 
 extend .google.protobuf.MethodOptions {
-	optional string method_description = 50000;
+  optional string method_description = 50000;
 }
 
 extend .google.protobuf.EnumOptions {
-	optional string enum_description = 50000;
+  optional string enum_description = 50000;
 }
 
 extend .google.protobuf.EnumValueOptions {
-	optional string enum_value_description = 50000;
+  optional string enum_value_description = 50000;
 }
 
 enum EProtoExecutionSite {
-	k_EProtoExecutionSiteUnknown = 0;
-	k_EProtoExecutionSiteSteamClient = 3;
+  k_EProtoExecutionSiteUnknown = 0;
+  k_EProtoExecutionSiteSteamClient = 3;
 }

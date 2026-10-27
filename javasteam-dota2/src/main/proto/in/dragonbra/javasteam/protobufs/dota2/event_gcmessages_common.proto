@@ -1,0 +1,39 @@
+import "google/protobuf/descriptor.proto";
+
+option java_package = "in.dragonbra.javasteam.protobufs.dota2";
+
+option optimize_for = SPEED;
+option java_generic_services = false;
+
+enum EEventActionScoreMode {
+  k_eEventActionScoreMode_Add = 0;
+  k_eEventActionScoreMode_Min = 1;
+}
+
+message CMsgEventAction {
+  optional uint32 action_id = 1;
+  optional uint32 times_completed = 2 [default = 1];
+}
+
+message CMsgUserEventPoints {
+  optional uint32 account_id = 1;
+  optional uint32 event_id = 2;
+  optional uint32 total_points = 3;
+  optional uint32 total_premium_points = 4;
+  optional uint32 points = 5;
+  optional uint32 premium_points = 6;
+  repeated .CMsgEventAction completed_actions = 7;
+  optional bool owned = 8;
+  optional uint32 active_season_id = 9;
+}
+
+message CMsgPeriodicResourceKey {
+  optional uint32 account_id = 1;
+  optional uint32 periodic_resource_id = 2;
+  optional uint32 timestamp = 3;
+}
+
+message CMsgPeriodicResourceValue {
+  optional uint32 periodic_resource_max = 1;
+  optional uint32 periodic_resource_used = 2;
+}

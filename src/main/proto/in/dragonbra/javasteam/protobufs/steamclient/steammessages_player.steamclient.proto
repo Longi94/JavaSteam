@@ -7,6 +7,12 @@ option java_package = "in.dragonbra.javasteam.protobufs.steamclient";
 option optimize_for = SPEED;
 option java_generic_services = false;
 
+enum EAchievementProgressType {
+  k_EAchievementProgressType_Invalid = 0;
+  k_EAchievementProgressType_Int = 1;
+  k_EAchievementProgressType_Float = 2;
+}
+
 enum EProfileCustomizationStyle {
   k_EProfileCustomizationStyleDefault = 0;
   k_EProfileCustomizationStyleSelected = 1;
@@ -123,6 +129,7 @@ message CPlayer_GetOwnedGames_Request {
   optional bool skip_unvetted_apps = 6 [default = true];
   optional string language = 7;
   optional bool include_extended_appinfo = 8;
+  optional bool include_family_licenses = 9;
 }
 
 message CPlayer_GetOwnedGames_Response {
@@ -146,6 +153,7 @@ message CPlayer_GetOwnedGames_Response {
     optional bool has_leaderboards = 17;
     repeated uint32 content_descriptorids = 18;
     optional int32 playtime_disconnected = 19;
+    optional bool family_shared = 21;
   }
 
   optional uint32 game_count = 1;
@@ -164,6 +172,7 @@ message CPlayer_GetPlayNext_Response {
 
 message CPlayer_GetFriendsGameplayInfo_Request {
   optional uint32 appid = 1;
+  optional bool include_family_licenses = 2;
 }
 
 message CPlayer_GetFriendsGameplayInfo_Response {
@@ -419,6 +428,11 @@ message CPlayer_GetAchievementsProgress_Response {
     optional bool all_unlocked = 5;
     optional uint32 cache_time = 6;
     optional bool vetted = 7;
+    optional uint32 groups_completed_base = 8;
+    optional uint32 groups_total_base = 9;
+    optional uint32 groups_completed_dlc = 10;
+    optional uint32 groups_total_dlc = 11;
+    optional uint32 base_game_total = 12;
   }
 
   repeated .CPlayer_GetAchievementsProgress_Response.AchievementProgress achievement_progress = 1;
@@ -427,6 +441,7 @@ message CPlayer_GetAchievementsProgress_Response {
 message CPlayer_GetGameAchievements_Request {
   optional uint32 appid = 1;
   optional string language = 2;
+  optional bool hash_only = 3;
 }
 
 message CPlayer_GetGameAchievements_Response {
@@ -438,9 +453,107 @@ message CPlayer_GetGameAchievements_Response {
     optional string icon_gray = 5;
     optional bool hidden = 6;
     optional string player_percent_unlocked = 7;
+    optional uint32 internal_key = 8;
+    optional int32 min_progress_int = 9;
+    optional int32 max_progress_int = 10;
+    optional uint32 groupid = 11;
+    optional bool archived = 12;
+    optional .EAchievementProgressType progress_type = 13 [default = k_EAchievementProgressType_Invalid];
+    optional float min_progress_float = 14;
+    optional float max_progress_float = 15;
+  }
+
+  message Group {
+    optional uint32 groupid = 1;
+    optional string localized_name = 2;
+    optional uint32 dlcappid = 3;
+    optional bool archived = 4;
+    optional bool developeronly = 5;
+    optional uint32 order = 6;
+    optional bool ispublic = 7;
+    optional uint32 total_achievements = 8;
+    optional uint32 completion_achievements = 9;
   }
 
   repeated .CPlayer_GetGameAchievements_Response.Achievement achievements = 1;
+  optional int32 schema_version = 2;
+  repeated .CPlayer_GetGameAchievements_Response.Group groups = 3;
+  optional uint32 schema_hash = 4;
+}
+
+message CPlayer_GetUserAchievements_Request {
+  optional uint64 steamid = 1;
+  optional uint32 appid = 2;
+}
+
+message CPlayer_GetUserAchievements_Response {
+  message Achievement {
+    optional uint32 internal_key = 1;
+    optional bool unlocked = 2;
+    optional fixed32 unlock_time = 3;
+    optional int32 progress_int = 4;
+    optional float progress_float = 5;
+  }
+
+  message Group {
+    optional uint32 groupid = 1;
+    optional bool is_achievable = 2;
+    optional uint32 completed_achievements = 3;
+    optional bool is_completed = 4;
+    optional fixed32 time_completed = 9;
+  }
+
+  repeated .CPlayer_GetUserAchievements_Response.Achievement achievements = 1;
+  optional int32 schema_version = 2;
+  optional uint32 schema_hash = 3;
+  repeated .CPlayer_GetUserAchievements_Response.Group groups = 4;
+}
+
+message CPlayer_GetGlobalAchievementPercentages_Request {
+  optional uint32 appid = 1;
+}
+
+message CPlayer_GetGlobalAchievementPercentages_Response {
+  message Achievement {
+    optional uint32 internal_key = 1;
+    optional float player_percent_unlocked = 2;
+  }
+
+  message Group {
+    optional uint32 groupid = 1;
+    optional float player_percent_completed = 2;
+  }
+
+  repeated .CPlayer_GetGlobalAchievementPercentages_Response.Achievement achievements = 1;
+  repeated .CPlayer_GetGlobalAchievementPercentages_Response.Group groups = 2;
+}
+
+message CPlayer_GetUserStats_Request {
+  optional uint64 steamid = 1;
+  optional uint32 appid = 2;
+  optional bytes sha_schema = 3;
+  optional uint32 crc_stats = 4;
+  optional uint32 crc_schema = 5;
+  optional bool app_running = 6;
+}
+
+message CPlayer_GetUserStats_Response {
+  message Unlock_Time {
+    optional uint32 achievement_bit = 1;
+    optional fixed32 unlock_time = 2;
+  }
+
+  message Stats {
+    optional uint32 stat_id = 1;
+    optional uint32 stat_value = 2;
+    repeated .CPlayer_GetUserStats_Response.Unlock_Time unlock_times = 3;
+  }
+
+  optional bytes sha_schema = 1;
+  optional uint32 crc_stats = 2;
+  optional bytes schema = 3;
+  repeated .CPlayer_GetUserStats_Response.Stats stats = 4;
+  optional uint32 crc_schema = 5;
 }
 
 message CPlayer_GetFavoriteBadge_Request {
@@ -881,6 +994,9 @@ service Player {
   rpc GetTopAchievementsForGames (.CPlayer_GetTopAchievementsForGames_Request) returns (.CPlayer_GetTopAchievementsForGames_Response);
   rpc GetAchievementsProgress (.CPlayer_GetAchievementsProgress_Request) returns (.CPlayer_GetAchievementsProgress_Response);
   rpc GetGameAchievements (.CPlayer_GetGameAchievements_Request) returns (.CPlayer_GetGameAchievements_Response);
+  rpc GetUserAchievements (.CPlayer_GetUserAchievements_Request) returns (.CPlayer_GetUserAchievements_Response);
+  rpc GetGlobalAchievementPercentages (.CPlayer_GetGlobalAchievementPercentages_Request) returns (.CPlayer_GetGlobalAchievementPercentages_Response);
+  rpc GetUserStats (.CPlayer_GetUserStats_Request) returns (.CPlayer_GetUserStats_Response);
   rpc GetFavoriteBadge (.CPlayer_GetFavoriteBadge_Request) returns (.CPlayer_GetFavoriteBadge_Response);
   rpc SetFavoriteBadge (.CPlayer_SetFavoriteBadge_Request) returns (.CPlayer_SetFavoriteBadge_Response);
   rpc GetProfileCustomization (.CPlayer_GetProfileCustomization_Request) returns (.CPlayer_GetProfileCustomization_Response);
