@@ -14,11 +14,13 @@ import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamapps.SteamApps
 import `in`.dragonbra.javasteam.steam.handlers.steamauthticket.callback.TicketAcceptedCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamauthticket.callback.TicketAuthCompleteCallback
-import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.util.Utils
+import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryWriter
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.withTimeoutOrNull
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.SecureRandom
@@ -26,9 +28,10 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * This handler generates auth session ticket and handles it's verification by steam.
+ * This handler generates auth session ticket and handles its verification by steam.
  *
  * @constructor Initializes all necessary callbacks.
  *
@@ -39,11 +42,15 @@ import java.util.concurrent.atomic.AtomicInteger
 class SteamAuthTicket : ClientMsgHandler() {
 
     companion object {
+        private val logger = LogManager.getLogger<SteamAuthTicket>()
+
         private val sequence: AtomicInteger = AtomicInteger(0)
 
         // According to https://partner.steamgames.com/doc/api/ISteamUser#GetTicketForWebApiResponse_t
         //  the m_rgubTicket size is 2560 bytes
         private const val WEB_API_TICKET_SIZE: Int = 2560
+
+        private val TICKET_ACK_TIMEOUT = 10.seconds
     }
 
     /**
@@ -74,11 +81,16 @@ class SteamAuthTicket : ClientMsgHandler() {
 
     private val ticketChangeLock = Any()
 
+    // Per-CRC acknowledgement waiters. Steam correlates the auth-list ack by the ticket CRCs it
+    // currently considers active (CMsgClientAuthListAck.ticket_crc), which stays reliable - unlike
+    // the JobID, which Steam stopped echoing on repeated auth lists after its 2025-08 change (SteamKit issue #1567).
+    private val ticketAcks = ConcurrentHashMap<Int, CompletableDeferred<Boolean>>()
+
     /**
      * Performs [session ticket](https://partner.steamgames.com/doc/api/ISteamUser#GetAuthSessionTicket)
      *  generation and validation for specified [appid].
      * @param appid Game to generate ticket for.
-     * @return A task representing the asynchronous operation. The task result contains a <see cref="TicketInfo"/>
+     * @return A task representing the asynchronous operation. The task result contains a [TicketInfo]
      *  object that provides details about the generated valid authentication session ticket.
      */
     fun getAuthSessionTicket(appid: Int): CompletableFuture<TicketInfo> = client.defaultScope.future {
@@ -131,20 +143,26 @@ class SteamAuthTicket : ClientMsgHandler() {
             "str:$identity\u0000".toByteArray(Charsets.UTF_8)
         }
 
-        val (asyncJob, crc) = verifyTicket(appid, authTicket, serverSecret)
-        val ticket = asyncJob.await()
+        val crc = registerAndSendTicket(appid, authTicket, serverSecret)
 
-        // // Verify just in case
-        if (ticket.activeTicketsCRC.any { it == crc.toInt() }) {
-            val tok = combineTickets(
-                authTicket = authTicket,
-                appTicket = appTicket.ticket,
-                padToWebApiSize = ticketType == TicketType.WebApiTicket
+        // Wait for Steam to acknowledge this specific ticket by its CRC. Steam no longer reliably
+        // re-acks repeated auth lists, so a missing ack here is not a failure signal - the ticket is
+        // already submitted and is validated server-side via BeginAuthSession. Log the anomaly on
+        // timeout and return the ticket regardless (see SteamKit issue #1567).
+        if (!waitForTicketAck(crc)) {
+            logger.debug(
+                "Ticket CRC ${crc.toUInt()} for app $appid was not acknowledged by Steam within " +
+                    "${TICKET_ACK_TIMEOUT.inWholeSeconds}s; returning it anyway as it validates server-side " +
+                    "(see SteamKit issue #1567)."
             )
-            return TicketInfo(this@SteamAuthTicket, appid, tok)
-        } else {
-            throw Exception("Ticket verification failed.")
         }
+
+        val tok = combineTickets(
+            authTicket = authTicket,
+            appTicket = appTicket.ticket,
+            padToWebApiSize = ticketType == TicketType.WebApiTicket
+        )
+        return TicketInfo(this@SteamAuthTicket, appid, tok)
     }
 
     internal fun cancelAuthTicket(authTicket: TicketInfo) {
@@ -168,9 +186,9 @@ class SteamAuthTicket : ClientMsgHandler() {
 
         // The WebApiTicket is always 2560 bytes long, but everything after the tickets is just a trash after memory allocation
         if (padToWebApiSize && rawSize < target) {
-            val random = SecureRandom()
-            random.nextBytes(token.sliceArray(rawSize until target))
-            System.arraycopy(token.sliceArray(rawSize until target), 0, token, rawSize, target - rawSize)
+            val padding = ByteArray(target - rawSize)
+            SecureRandom().nextBytes(padding)
+            System.arraycopy(padding, 0, token, rawSize, padding.size)
         }
 
         return token
@@ -209,15 +227,12 @@ class SteamAuthTicket : ClientMsgHandler() {
         }
     }
 
-    // Note:
-    // Since Kotlin doesn't have an `out` like C#, we need both crc and the job returned.
-    // This is a special return case.
-    private fun verifyTicket(
+    private fun registerAndSendTicket(
         appid: Int,
         authToken: ByteArray,
         serverSecret: ByteArray?,
-    ): Pair<AsyncJobSingle<TicketAcceptedCallback>, Long> {
-        val crc = Utils.crc32(authToken)
+    ): Int {
+        val crc = Utils.crc32(authToken).toInt()
 
         synchronized(ticketChangeLock) {
             val items = ticketsByGame.computeIfAbsent(appid) { ArrayList() }
@@ -225,7 +240,7 @@ class SteamAuthTicket : ClientMsgHandler() {
                 SteammessagesBase.CMsgAuthTicket.newBuilder().apply {
                     this.gameid = appid.toLong()
                     this.ticket = ByteString.copyFrom(authToken)
-                    this.ticketCrc = crc.toInt()
+                    this.ticketCrc = crc
                     serverSecret?.let {
                         this.serverSecret = ByteString.copyFrom(it)
                     }
@@ -233,14 +248,24 @@ class SteamAuthTicket : ClientMsgHandler() {
             )
         }
 
-        return sendTickets() to crc
+        // Register the per-CRC ack waiter BEFORE sending, to avoid racing the incoming ack.
+        ticketAcks[crc] = CompletableDeferred()
+        sendTickets()
+        return crc
     }
 
-    /**
-     *
-     */
-    private fun sendTickets(): AsyncJobSingle<TicketAcceptedCallback> {
-        val auth = ClientMsgProtobuf<CMsgClientAuthList.Builder>(
+    private suspend fun waitForTicketAck(crc: Int): Boolean {
+        val deferred = ticketAcks[crc] ?: return false
+
+        return try {
+            withTimeoutOrNull(TICKET_ACK_TIMEOUT) { deferred.await() } ?: false
+        } finally {
+            ticketAcks.remove(crc)
+        }
+    }
+
+    private fun sendTickets() {
+        ClientMsgProtobuf<CMsgClientAuthList.Builder>(
             CMsgClientAuthList::class.java,
             EMsg.ClientAuthList
         ).apply {
@@ -254,8 +279,6 @@ class SteamAuthTicket : ClientMsgHandler() {
 
             sourceJobID = client.getNextJobID()
         }.also(client::send)
-
-        return AsyncJobSingle(client, auth.sourceJobID)
     }
 
     /**
@@ -306,6 +329,13 @@ class SteamAuthTicket : ClientMsgHandler() {
             CMsgClientAuthListAck::class.java,
             packetMsg
         )
+
+        // Complete per-CRC ack waiters: correlate on the acknowledged ticket CRCs rather than the JobID,
+        // which Steam stopped echoing on repeated auth lists after its 2025-08 change (see SteamKit issue #1567).
+        authAck.body.ticketCrcList.forEach { crc ->
+            ticketAcks[crc]?.complete(true)
+        }
+
         val acknowledged = TicketAcceptedCallback(authAck.targetJobID, authAck.body)
         client.postCallback(acknowledged)
     }
