@@ -131,6 +131,12 @@ class Server {
         internal set
 
     /**
+     * Gets the list of bypass proxies.
+     */
+    var bypassProxiesOfType: List<String> = emptyList()
+        internal set
+
+    /**
      * Returns a string that represents this server.
      */
     override fun toString(): String = "$host:$port ($type)"

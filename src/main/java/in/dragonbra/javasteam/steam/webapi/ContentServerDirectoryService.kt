@@ -34,6 +34,7 @@ object ContentServerDirectoryService {
             this.useAsProxy = child.useAsProxy
             this.proxyRequestPathTemplate = child.proxyRequestPathTemplate
             this.allowedAppIds = child.allowedAppIdsList.toIntArray()
+            this.bypassProxiesOfType = child.bypassProxiesOfTypeList
         }
     }
 }
