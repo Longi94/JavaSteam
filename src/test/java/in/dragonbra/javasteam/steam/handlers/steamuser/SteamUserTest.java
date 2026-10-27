@@ -42,7 +42,7 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
         var details = new LogOnDetails();
         details.setUsername("iamauser");
         details.setPassword("lamepassword");
-        var asyncJob = handler.logOn(details);
+        handler.logOn(details);
 
         var callback = getCallback();
         Assertions.assertNotNull(callback);
@@ -50,7 +50,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
 
         var loc = (LoggedOnCallback) callback;
         Assertions.assertEquals(EResult.NoConnection, loc.getResult());
-        Assertions.assertEquals(asyncJob.getJobID(), loc.getJobID());
     }
 
     @Test
@@ -100,7 +99,7 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
     public void logOnAnonymousPostsLoggedOnCallbackWhenNoConnection() {
         Mockito.when(steamClient.isConnected()).thenReturn(false);
 
-        var asyncJob = handler.logOnAnonymous();
+        handler.logOnAnonymous();
 
         var callback = getCallback();
         Assertions.assertNotNull(callback);
@@ -108,7 +107,6 @@ public class SteamUserTest extends HandlerTestBase<SteamUser> {
 
         var loc = (LoggedOnCallback) callback;
         Assertions.assertEquals(EResult.NoConnection, loc.getResult());
-        Assertions.assertEquals(asyncJob.getJobID(), loc.getJobID());
     }
 
     @Test

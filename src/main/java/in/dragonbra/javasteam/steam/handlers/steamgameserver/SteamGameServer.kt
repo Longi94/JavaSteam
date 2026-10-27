@@ -8,7 +8,6 @@ import `in`.dragonbra.javasteam.enums.EMsg
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.EServerFlags
 import `in`.dragonbra.javasteam.generated.MsgClientLogon
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesBase.CMsgIPAddress
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverGameservers.CMsgGSServerType
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogOff
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverLogin.CMsgClientLogon
@@ -18,11 +17,9 @@ import `in`.dragonbra.javasteam.steam.handlers.steamgameserver.callback.TicketAu
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOnCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
-import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.NetHelpers
-import `in`.dragonbra.javasteam.util.NetHelpers.obfuscatePrivateIP
 import `in`.dragonbra.javasteam.util.Utils
 import `in`.dragonbra.javasteam.util.obfuscatePrivateIP
 import java.net.Inet6Address
@@ -38,19 +35,18 @@ class SteamGameServer : ClientMsgHandler() {
      * The client should already have been connected at this point.
      * Results are return in a [LoggedOnCallback].
      * @param details The details to use for logging on.
-     * @return The Job ID of the request. This can be used to fine the appropriate [LoggedOnCallback]
      * @throws IllegalArgumentException token is not set within [details].
      */
     @Throws(IllegalArgumentException::class)
-    fun logOn(details: LogOnDetails): AsyncJobSingle<LoggedOnCallback> {
-        require(!details.token.isBlank()) { "LogOn requires a game server token to be set in 'details'." }
-
-        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogonGameServer)
+    fun logOn(details: LogOnDetails) {
+        require(details.token.isNotBlank()) { "LogOn requires a game server token to be set in 'details'." }
 
         if (!client.isConnected) {
-            client.postCallback(LoggedOnCallback(EResult.NoConnection, logon.sourceJobID))
-            return AsyncJobSingle(client, logon.sourceJobID)
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
+
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogonGameServer)
 
         val gsId = SteamID(0, 0, client.universe, EAccountType.GameServer)
 
@@ -68,8 +64,6 @@ class SteamGameServer : ClientMsgHandler() {
         logon.body.gameServerToken = details.token
 
         client.send(logon)
-
-        return AsyncJobSingle(client, logon.sourceJobID)
     }
 
     /**
@@ -78,16 +72,16 @@ class SteamGameServer : ClientMsgHandler() {
      * Results are return in a [LoggedOnCallback].
      *
      * @param appId The AppID served by this game server, or 0 for the default.
-     * @return The Job ID of the request. This can be used to fine the appropriate [LoggedOnCallback]
      */
     @JvmOverloads
-    fun logOnAnonymous(appId: Int = 0): AsyncJobSingle<LoggedOnCallback> {
-        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogonGameServer)
-
+    fun logOnAnonymous(appId: Int = 0) {
         if (!client.isConnected) {
-            client.postCallback(LoggedOnCallback(EResult.NoConnection, logon.sourceJobID))
-            return AsyncJobSingle(client, logon.sourceJobID)
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
+
+        // Was EMsg.ClientLogonGameServer, changed to match SK.
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
         val gsId = SteamID(0, 0, client.universe, EAccountType.AnonGameServer)
 
@@ -103,8 +97,6 @@ class SteamGameServer : ClientMsgHandler() {
         logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
         client.send(logon)
-
-        return AsyncJobSingle(client, logon.sourceJobID)
     }
 
     /**
