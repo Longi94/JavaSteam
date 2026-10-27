@@ -203,11 +203,20 @@ public class EnvelopeEncryptedConnection extends Connection {
 
     @Override
     public void send(byte[] data) {
-        if (state == EncryptionState.ENCRYPTED) {
-            data = encryption.processOutgoing(data);
+        if (state != EncryptionState.ENCRYPTED) {
+            inner.send(data);
+            return;
         }
 
-        inner.send(data);
+        // A disconnect on the network thread can clear the encryption between the state check and here
+        var currentEncryption = encryption;
+
+        if (currentEncryption == null) {
+            logger.debug("Attempting to send client data when not connected.");
+            return;
+        }
+
+        inner.send(currentEncryption.processOutgoing(data));
     }
 
     @Override
