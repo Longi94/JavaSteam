@@ -36,6 +36,7 @@ data class AchievementBlocks(
      */
     val hasProgress: Boolean
         get() = progressMax != null && progressMax > 0f
+
     /**
      * Returns true if this achievement is unlocked.
      * An achievement is considered unlocked if it has any non-zero unlock time.

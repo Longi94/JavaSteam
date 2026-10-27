@@ -12,7 +12,6 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesParentalObjec
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.SteamUser
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import `in`.dragonbra.javasteam.types.JobID
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.NetHelpers
 import `in`.dragonbra.javasteam.util.log.LogManager
@@ -162,7 +161,6 @@ class LoggedOnCallback : CallbackMsg {
         )
         val resp = loginResp.body
 
-        jobID = loginResp.targetJobID
         result = EResult.from(resp.eresult)
         extendedResult = EResult.from(resp.eresultExtended)
 
@@ -205,16 +203,14 @@ class LoggedOnCallback : CallbackMsg {
         clientInstanceId = resp.clientInstanceId
     }
 
-    constructor(result: EResult, jobID: JobID) {
+    constructor(result: EResult) {
         this.result = result
-        this.jobID = jobID
     }
 
     private fun handleNonProtoLogon(packetMsg: IPacketMsg) {
         val loginResp = ClientMsg(MsgClientLogOnResponse::class.java, packetMsg)
         val resp = loginResp.body
 
-        jobID = loginResp.targetJobID
         result = resp.result
 
         outOfGameSecsPerHeartbeat = resp.outOfGameHeartbeatRateSec

@@ -26,7 +26,6 @@ import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.WalletInfoCall
 import `in`.dragonbra.javasteam.steam.handlers.steamuser.callback.WebAPIUserNonceCallback
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback
-import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
@@ -57,21 +56,20 @@ class SteamUser : ClientMsgHandler() {
      * The client should already have been connected at this point.
      * Results are returned in a [LoggedOnCallback].
      * @param details The details to use for logging on.
-     * @return The Job ID of the request. This can be used to find the appropriate [LoggedOnCallback]/
      * @throws IllegalArgumentException Username or password are not set within [details].
      */
     @Throws(IllegalArgumentException::class)
-    fun logOn(details: LogOnDetails): AsyncJobSingle<LoggedOnCallback> {
+    fun logOn(details: LogOnDetails) {
         if (details.username.isEmpty() || (details.password.isNullOrEmpty() && details.accessToken.isNullOrEmpty())) {
             throw IllegalArgumentException("LogOn requires a username and password or access token to be set in 'details'.")
         }
 
-        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
-
         if (!client.isConnected) {
-            client.postCallback(LoggedOnCallback(EResult.NoConnection, logon.sourceJobID))
-            return AsyncJobSingle(client, logon.sourceJobID)
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
+
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
         val steamID = SteamID(details.accountID, details.accountInstance, client.universe, EAccountType.Individual)
 
@@ -144,8 +142,6 @@ class SteamUser : ClientMsgHandler() {
         }
 
         client.send(logon)
-
-        return AsyncJobSingle(client, logon.sourceJobID)
     }
 
     /**
@@ -153,16 +149,15 @@ class SteamUser : ClientMsgHandler() {
      * The client should already have been connected at this point.
      * Results are returned in a [LoggedOnCallback].
      * @param details The details to use for logging on.
-     * @return The Job ID of the request. This can be used to find the appropriate [LoggedOnCallback]
      */
     @JvmOverloads
-    fun logOnAnonymous(details: AnonymousLogOnDetails = AnonymousLogOnDetails()): AsyncJobSingle<LoggedOnCallback> {
-        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
-
+    fun logOnAnonymous(details: AnonymousLogOnDetails = AnonymousLogOnDetails()) {
         if (!client.isConnected) {
-            client.postCallback(LoggedOnCallback(EResult.NoConnection, logon.sourceJobID))
-            return AsyncJobSingle(client, logon.sourceJobID)
+            client.postCallback(LoggedOnCallback(EResult.NoConnection))
+            return
         }
+
+        val logon = ClientMsgProtobuf<CMsgClientLogon.Builder>(CMsgClientLogon::class.java, EMsg.ClientLogon)
 
         val auId = SteamID(0, 0, client.universe, EAccountType.AnonUser)
 
@@ -177,8 +172,6 @@ class SteamUser : ClientMsgHandler() {
         logon.body.machineId = ByteString.copyFrom(HardwareUtils.getMachineID())
 
         client.send(logon)
-
-        return AsyncJobSingle(client, logon.sourceJobID)
     }
 
     /**
