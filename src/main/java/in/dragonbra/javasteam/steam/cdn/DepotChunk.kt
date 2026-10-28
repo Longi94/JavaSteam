@@ -65,8 +65,8 @@ object DepotChunk {
             // Per SK:
             //  Steam client checks for like 20 bytes for pkzip, and 22 bytes for vzip,
             //  I'm just being safe and checking for a smaller value.
-            if (buffer.size < 16) {
-                throw IOException("Not enough data in the decrypted depot chunk (was ${buffer.size} bytes).")
+            if (written < 16) {
+                throw IOException("Not enough data in the decrypted depot chunk (was $written bytes).")
             }
 
             if (buffer[0] == 'V'.code.toByte() &&
