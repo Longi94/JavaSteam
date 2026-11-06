@@ -5,6 +5,8 @@ import in.dragonbra.javasteam.util.crypto.CryptoHelper;
 import in.dragonbra.javasteam.util.log.LogManager;
 import in.dragonbra.javasteam.util.log.Logger;
 
+import java.io.IOException;
+
 /**
  * @author lngtr
  * @since 2018-02-24
@@ -26,11 +28,16 @@ public class NetFilterEncryptionWithHMAC implements INetFilterEncryption {
     }
 
     @Override
-    public byte[] processIncoming(byte[] data) {
+    public byte[] processIncoming(byte[] data) throws IOException {
+        if (data.length < 16) {
+            throw new IOException("Packet is shorter than the initialization vector.");
+        }
+
         try {
             return CryptoHelper.symmetricDecryptHMACIV(data, sessionKey, hmacSecret);
         } catch (CryptoException e) {
-            throw new IllegalStateException("Unable to decrypt incoming packet", e);
+            // rethrow as an IO exception so it's handled in the network thread
+            throw new IOException("Unable to decrypt incoming packet", e);
         }
     }
 

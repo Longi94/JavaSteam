@@ -49,6 +49,15 @@ class WebSocketConnection : Connection() {
 
     @Volatile private var endpoint: InetSocketAddress? = null
 
+    override val localIP: InetAddress
+        get() = InetAddress.getLocalHost()
+
+    override val currentEndPoint: InetSocketAddress?
+        get() = endpoint
+
+    override val protocolTypes: ProtocolTypes
+        get() = ProtocolTypes.WEB_SOCKET
+
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
         disconnecting.set(false)
         connectionJob?.cancel()
@@ -173,10 +182,4 @@ class WebSocketConnection : Connection() {
             }
         }
     }
-
-    override fun getLocalIP(): InetAddress = InetAddress.getLocalHost()
-
-    override fun getCurrentEndPoint(): InetSocketAddress? = endpoint
-
-    override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
 }

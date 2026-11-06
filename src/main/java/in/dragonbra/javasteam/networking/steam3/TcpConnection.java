@@ -240,19 +240,29 @@ public class TcpConnection extends Connection {
                 byte[] packData;
 
                 try {
+                    // read the packet off the network
                     packData = readPacket();
 
-                    onNetMsgReceived(new NetMsgEventArgs(packData, currentEndPoint));
                 } catch (IOException e) {
                     logger.debug("Socket exception occurred while reading packet", e);
                     break;
                 }
+
+                try {
+                    onNetMsgReceived(new NetMsgEventArgs(packData, currentEndPoint));
+                } catch (Exception e) {
+                    logger.error("Unexpected exception propagated back to NetLoop", e);
+                }
             }
+
+            // Thread is shutting down, ensure socket is shut down and disposed
+            boolean userShutdown = cancelRequested && userRequested;
 
             if (cancelRequested) {
                 shutdown();
             }
-            release(cancelRequested && userRequested);
+
+            release(userShutdown);
         }
     }
 }

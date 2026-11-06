@@ -1,46 +1,45 @@
-package in.dragonbra.javasteam.networking.steam3;
+package `in`.dragonbra.javasteam.networking.steam3
 
-import java.util.EnumSet;
+import java.util.EnumSet
 
 /**
+ * The type of communications protocol to use when communicating with the Steam backend
+ *
  * @author lngtr
  * @since 2018-02-20
  */
-public enum ProtocolTypes {
-
+enum class ProtocolTypes(private val code: Int) {
+    // TCP
     TCP(1),
 
-    UDP(1 << 1),
+    // UDP
+    UDP(1 shl 1),
 
-    WEB_SOCKET(1 << 2);
+    // WebSockets (HTTP / TLS)
+    WEB_SOCKET(1 shl 2),
+    ;
 
-    public static final EnumSet<ProtocolTypes> ALL = EnumSet.of(TCP, UDP, WEB_SOCKET);
+    fun code(): Int = code
 
-    private final int code;
+    companion object {
+        /**
+         * All available protocol types
+         */
+        @JvmField
+        val ALL: EnumSet<ProtocolTypes> = EnumSet.allOf(ProtocolTypes::class.java)
 
-    ProtocolTypes(int code) {
-        this.code = code;
-    }
-
-    public int code() {
-        return this.code;
-    }
-
-    public static EnumSet<ProtocolTypes> from(int code) {
-        EnumSet<ProtocolTypes> set = EnumSet.noneOf(ProtocolTypes.class);
-        for (ProtocolTypes e : ProtocolTypes.values()) {
-            if ((e.code & code) == e.code) {
-                set.add(e);
+        @JvmStatic
+        fun from(code: Int): EnumSet<ProtocolTypes> {
+            val set = EnumSet.noneOf(ProtocolTypes::class.java)
+            for (e in entries) {
+                if ((e.code and code) != 0) {
+                    set.add(e)
+                }
             }
+            return set
         }
-        return set;
-    }
 
-    public static int code(EnumSet<ProtocolTypes> flags) {
-        int code = 0;
-        for (ProtocolTypes flag : flags) {
-            code |= flag.code;
-        }
-        return code;
+        @JvmStatic
+        fun code(flags: EnumSet<ProtocolTypes>): Int = flags.fold(0) { acc, flag -> acc or flag.code }
     }
 }
