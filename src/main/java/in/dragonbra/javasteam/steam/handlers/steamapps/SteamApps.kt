@@ -42,7 +42,6 @@ import `in`.dragonbra.javasteam.types.AsyncJobSingle
 import `in`.dragonbra.javasteam.types.GameID
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.NetHelpers
-import io.ktor.client.request.request
 
 /**
  * This handler is used for interacting with apps and packages on the Steam network.

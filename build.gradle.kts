@@ -151,7 +151,6 @@ tasks.withType<Test> {
 dependencies {
     mockitoAgent(libs.test.mock.core) { isTransitive = false }
 
-    implementation(libs.bundles.ktor)
     implementation(libs.bundles.okHttp)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)

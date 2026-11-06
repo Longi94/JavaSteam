@@ -23,7 +23,7 @@ public interface IConnectionFactory {
                 @Nullable IDebugNetworkListener debugNetworkListener
         ) {
             if (protocol.contains(ProtocolTypes.WEB_SOCKET)) {
-                return new WebSocketConnection();
+                return new WebSocketConnection(configuration.getHttpClient());
             }
             if (protocol.contains(ProtocolTypes.TCP)) {
                 return new EnvelopeEncryptedConnection(new TcpConnection(), configuration.getUniverse(), debugNetworkListener);

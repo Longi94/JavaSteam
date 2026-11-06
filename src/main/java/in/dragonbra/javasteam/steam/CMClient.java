@@ -83,11 +83,22 @@ public abstract class CMClient {
 
     private final ScheduledFunction heartBeatFunc;
 
+    // Steam can stop sending during maintenance without closing the connection or logging off, and sends
+    // still succeed, so silence is the only signal. Heartbeats ask for a reply, so once logged on, a healthy
+    // connection always has incoming traffic.
+    @JavaSteamAddition
+    private final ScheduledFunction watchdogFunc;
+
+    @JavaSteamAddition
+    private volatile long lastMessageTime;
+
     private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> {
         // A released connection can still raise events from its network thread after Disconnected
         if (sender != connection) {
             return;
         }
+
+        lastMessageTime = System.currentTimeMillis();
 
         onClientMsgReceived(getPacketMsg(e.getData()));
     };
@@ -148,6 +159,7 @@ public abstract class CMClient {
             steamID = null;
 
             heartBeatFunc.stop();
+            watchdogFunc.stop();
 
             onClientDisconnected(e.isUserInitiated() || expectDisconnection);
         }
@@ -166,6 +178,41 @@ public abstract class CMClient {
             heartbeat.getBody().setSendReply(true); // Ping Pong
             send(heartbeat);
         }, 5000);
+
+        watchdogFunc = new ScheduledFunction(this::checkWatchdog, watchdogPollInterval(configuration.getWatchdogTimeout()));
+    }
+
+    /**
+     * Starts the watchdog, if enabled. Silence before now doesn't count.
+     */
+    @JavaSteamAddition
+    private void startWatchdog() {
+        if (configuration.getWatchdogTimeout() <= 0) {
+            return;
+        }
+
+        lastMessageTime = System.currentTimeMillis();
+        watchdogFunc.start();
+    }
+
+    @JavaSteamAddition
+    private void checkWatchdog() {
+        var timeout = configuration.getWatchdogTimeout();
+        var elapsed = System.currentTimeMillis() - lastMessageTime;
+
+        if (elapsed > timeout) {
+            logger.error("Watchdog: Nothing received for " + elapsed + " ms, disconnecting");
+            watchdogFunc.stop();
+            disconnect(false);
+        } else if (elapsed > timeout / 2) {
+            logger.debug("Watchdog: Nothing received for " + elapsed + " ms");
+        }
+    }
+
+    // Poll often enough to act close to the deadline, without spinning on short (test) timeouts
+    @JavaSteamAddition
+    private static long watchdogPollInterval(long timeout) {
+        return Math.max(50L, Math.min(timeout / 6, 5_000L));
     }
 
     /**
@@ -257,6 +304,7 @@ public abstract class CMClient {
     private void disconnect(boolean userInitiated) {
         synchronized (connectionLock) {
             heartBeatFunc.stop();
+            watchdogFunc.stop();
 
             if (connection != null) {
                 connection.disconnect(userInitiated);
@@ -475,6 +523,9 @@ public abstract class CMClient {
             heartBeatFunc.stop();
             heartBeatFunc.setDelay(logonResp.getBody().getLegacyOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
+
+            // Heartbeat replies now guarantee traffic, so silence means the connection is dead
+            startWatchdog();
         } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
             var connection = this.connection;
             if (connection != null) {
@@ -495,6 +546,7 @@ public abstract class CMClient {
         userCountryCode = null;
 
         heartBeatFunc.stop();
+        watchdogFunc.stop();
 
         if (packetMsg.isProto()) {
             ClientMsgProtobuf<CMsgClientLoggedOff.Builder> logoffMsg = new ClientMsgProtobuf<>(CMsgClientLoggedOff.class, packetMsg);

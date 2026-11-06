@@ -5,6 +5,7 @@ import `in`.dragonbra.javasteam.enums.EUniverse
 import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import okhttp3.OkHttpClient
 import java.util.*
 
@@ -38,6 +39,18 @@ interface ISteamConfigurationBuilder {
      * @return A builder with modified configuration.
      */
     fun withConnectionTimeout(connectionTimeout: Long): ISteamConfigurationBuilder
+
+    /**
+     * Configures how long a logged on connection may go without receiving anything before it is considered
+     * dead and disconnected. Steam can stop sending during maintenance without closing the connection,
+     * and heartbeat replies are the only traffic guaranteed on a healthy one, so the watchdog only runs
+     * between a successful logon and logging off.
+     *
+     * @param watchdogTimeout The timeout in milliseconds, or 0 to disable the watchdog.
+     * @return A builder with modified configuration.
+     */
+    @JavaSteamAddition
+    fun withWatchdogTimeout(watchdogTimeout: Long): ISteamConfigurationBuilder
 
     /**
      * Configures this [SteamConfiguration] with custom HTTP behaviour.

@@ -52,7 +52,6 @@ class EnvelopeEncryptedConnection(
 
     override val localIP: InetAddress?
         get() = inner.localIP
-
     init {
         inner.netMsgReceived += EventHandler(::handleNetMsgReceived)
         inner.connected += EventHandler(::handleConnected)

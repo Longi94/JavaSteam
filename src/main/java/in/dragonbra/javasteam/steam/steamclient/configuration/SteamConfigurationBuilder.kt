@@ -7,6 +7,7 @@ import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import `in`.dragonbra.javasteam.steam.discovery.MemoryServerListProvider
 import `in`.dragonbra.javasteam.steam.webapi.WebAPI
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import okhttp3.OkHttpClient
 import java.util.*
 
@@ -32,6 +33,13 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
 
     override fun withConnectionTimeout(connectionTimeout: Long): ISteamConfigurationBuilder {
         state.connectionTimeout = connectionTimeout
+        return this
+    }
+
+    @JavaSteamAddition
+    override fun withWatchdogTimeout(watchdogTimeout: Long): ISteamConfigurationBuilder {
+        require(watchdogTimeout >= 0) { "watchdogTimeout must not be negative" }
+        state.watchdogTimeout = watchdogTimeout
         return this
     }
 
@@ -86,6 +94,12 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
     }
 
     companion object {
+        /**
+         * The default for [withWatchdogTimeout], in milliseconds.
+         */
+        @JavaSteamAddition
+        const val DEFAULT_WATCHDOG_TIMEOUT: Long = 30_000L
+
         @JvmStatic
         fun createDefaultState(): SteamConfigurationState = SteamConfigurationState(
             connectionFactory = IConnectionFactory.DEFAULT,
@@ -105,6 +119,7 @@ class SteamConfigurationBuilder : ISteamConfigurationBuilder {
             webAPIBaseAddress = WebAPI.DEFAULT_BASE_ADDRESS,
             cellID = 0,
             webAPIKey = null,
+            watchdogTimeout = DEFAULT_WATCHDOG_TIMEOUT,
         )
     }
 }
