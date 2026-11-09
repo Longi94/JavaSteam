@@ -5,11 +5,22 @@ import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.function.ThrowingSupplier
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 class AsyncJobTest {
 
@@ -57,7 +68,10 @@ class AsyncJobTest {
 
         Assertions.assertTrue(asyncTask.isDone, "Async job should be completed after callback is posted")
         Assertions.assertFalse(asyncTask.isCancelled, "Async job should not be canceled after callback is posted")
-        Assertions.assertFalse(asyncTask.isCompletedExceptionally, "Async job should be faulted when client is disconnected")
+        Assertions.assertFalse(
+            asyncTask.isCompletedExceptionally,
+            "Async job should be faulted when client is disconnected"
+        )
     }
 
     @Test
@@ -288,7 +302,7 @@ class AsyncJobTest {
         val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> true }
         asyncJob.timeout = 1000
 
-        runBlocking { delay(5000) }
+        runBlocking { delay(5.seconds) }
 
         Assertions.assertFalse(
             client.jobManager.asyncJobs.containsKey(asyncJob.jobID),
@@ -312,7 +326,7 @@ class AsyncJobTest {
         val asyncTask = asyncJob.toFuture()
 
         // wait 3 seconds before we post any results to this job at all
-        runBlocking { delay(3000) }
+        runBlocking { delay(3.seconds) }
 
         Assertions.assertFalse(
             asyncTask.isDone,
@@ -336,7 +350,7 @@ class AsyncJobTest {
         )
 
         // delay for what the original timeout would have been
-        runBlocking { delay(5000) }
+        runBlocking { delay(5.seconds) }
 
         // we still shouldn't be completed or canceled (timed out)
         Assertions.assertFalse(
@@ -387,7 +401,7 @@ class AsyncJobTest {
         val asyncTask = asyncJob.toFuture()
 
         runBlocking {
-            delay(5000)
+            delay(5.seconds)
         }
 
         Assertions.assertTrue(
@@ -430,7 +444,7 @@ class AsyncJobTest {
         asyncJob.timeout = 1000
 
         runBlocking {
-            delay(5000)
+            delay(5.seconds)
         }
 
         Assertions.assertTrue(
@@ -454,7 +468,6 @@ class AsyncJobTest {
         Assertions.assertSame(onlyResult, result.results.first())
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun asyncJobMultipleCompletesOnIncompleteResultAndFailure() {
         val client = ConnectedSteamClient.get().apply {
@@ -507,13 +520,254 @@ class AsyncJobTest {
 
         Assertions.assertTrue(asyncTask.isDone, "AsyncJobMultiple should be completed after job failure")
         Assertions.assertFalse(asyncTask.isCancelled, "AsyncJobMultiple should not be canceled after job failure")
-        Assertions.assertTrue(asyncTask.isCompletedExceptionally, "AsyncJobMultiple should be faulted after job failure")
+        Assertions.assertTrue(
+            asyncTask.isCompletedExceptionally,
+            "AsyncJobMultiple should be faulted after job failure"
+        )
         Assertions.assertThrows(AsyncJobFailedException::class.java) { runBlocking { asyncTask.await() } }
     }
 
-//    @Test
-//    fun asyncJobContinuesAsynchronously()
+    @Test
+    fun asyncJobContinuesAsynchronously() = runBlocking {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
 
-//    @Test
-//    fun AsyncJobMultipleContinuesAsynchronously()
+        var continuationThread: Thread? = null
+
+        // UNDISPATCHED runs up to await() on this thread, so the continuation is registered before we complete
+        val continuation = launch(Dispatchers.Default, start = CoroutineStart.UNDISPATCHED) {
+            asyncJob.await()
+            continuationThread = Thread.currentThread()
+        }
+
+        val completionThread = Thread.currentThread()
+        asyncJob.addResult(Callback().apply { jobID = JobID(123) })
+
+        continuation.join()
+
+        Assertions.assertNotNull(continuationThread, "Continuation should have run")
+        Assertions.assertNotSame(
+            completionThread,
+            continuationThread,
+            "Continuation should not run on the thread that completed the job"
+        )
+    }
+
+    @Test
+    fun asyncJobMultipleContinuesAsynchronously() = runBlocking {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> true }
+
+        var continuationThread: Thread? = null
+
+        // UNDISPATCHED runs up to await() on this thread, so the continuation is registered before we complete
+        val continuation = launch(Dispatchers.Default, start = CoroutineStart.UNDISPATCHED) {
+            asyncJob.await()
+            continuationThread = Thread.currentThread()
+        }
+
+        val completionThread = Thread.currentThread()
+        asyncJob.addResult(Callback().apply { jobID = JobID(123) })
+
+        continuation.join()
+
+        Assertions.assertNotNull(continuationThread, "Continuation should have run")
+        Assertions.assertNotSame(
+            completionThread,
+            continuationThread,
+            "Continuation should not run on the thread that completed the job"
+        )
+    }
+
+    @Test
+    fun asyncJobToFutureReturnsSameInstance() {
+        val client = ConnectedSteamClient.get()
+
+        val single = AsyncJobSingle<Callback>(client, JobID(123))
+        val multiple = AsyncJobMultiple<Callback>(client, JobID(124)) { _ -> true }
+
+        Assertions.assertSame(single.toFuture(), single.toFuture())
+        Assertions.assertSame(multiple.toFuture(), multiple.toFuture())
+    }
+
+    @Test
+    fun asyncJobHeartbeatExtendsTimeout() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+
+        Assertions.assertEquals(10_000L, asyncJob.timeout)
+        Assertions.assertFalse(asyncJob.isTimedOut)
+
+        asyncJob.heartbeat()
+        Assertions.assertEquals(20_000L, asyncJob.timeout)
+
+        asyncJob.timeout = 0
+        Assertions.assertTrue(asyncJob.isTimedOut)
+    }
+
+    //region Blocking and CompletableFuture paths, as a Java caller would use them (no coroutines)
+
+    @Test
+    fun asyncJobRunBlockReturnsCallbackPostedFromAnotherThread() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+        val ourCallback = Callback().apply { jobID = JobID(123) }
+
+        val poster = thread(name = "job-poster") {
+            Thread.sleep(100)
+            client.postCallback(ourCallback)
+        }
+
+        val result = Assertions.assertTimeoutPreemptively(TEST_TIMEOUT, ThrowingSupplier { asyncJob.runBlock() })
+        poster.join()
+
+        Assertions.assertSame(ourCallback, result)
+    }
+
+    @Test
+    fun asyncJobMultipleRunBlockReturnsResultSetPostedFromAnotherThread() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { call -> call.isFinished }
+
+        val first = Callback().apply {
+            jobID = JobID(123)
+            isFinished = false
+        }
+        val second = Callback().apply {
+            jobID = JobID(123)
+            isFinished = true
+        }
+
+        val poster = thread(name = "job-poster") {
+            Thread.sleep(100)
+            client.postCallback(first)
+            client.postCallback(second)
+        }
+
+        val result = Assertions.assertTimeoutPreemptively(TEST_TIMEOUT, ThrowingSupplier { asyncJob.runBlock() })
+        poster.join()
+
+        Assertions.assertTrue(result.complete, "ResultSet should be complete")
+        Assertions.assertFalse(result.failed, "ResultSet should not be failed")
+        Assertions.assertEquals(listOf(first, second), result.results)
+    }
+
+    @Test
+    fun asyncJobRunBlockThrowsExecutionExceptionOnFailure() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+
+        asyncJob.setFailed(true)
+
+        val exception = Assertions.assertThrows(ExecutionException::class.java) { asyncJob.runBlock() }
+        Assertions.assertInstanceOf(AsyncJobFailedException::class.java, exception.cause)
+    }
+
+    @Test
+    fun asyncJobRunBlockThrowsCancellationExceptionOnTimeout() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+
+        asyncJob.setFailed(false)
+
+        Assertions.assertThrows(CancellationException::class.java) { asyncJob.runBlock() }
+    }
+
+    @Test
+    fun asyncJobMultipleRunBlockThrowsExecutionExceptionOnFailure() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> false }
+
+        asyncJob.setFailed(true)
+
+        val exception = Assertions.assertThrows(ExecutionException::class.java) { asyncJob.runBlock() }
+        Assertions.assertInstanceOf(AsyncJobFailedException::class.java, exception.cause)
+    }
+
+    @Test
+    fun asyncJobMultipleRunBlockThrowsCancellationExceptionOnTimeout() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> false }
+
+        asyncJob.setFailed(false)
+
+        Assertions.assertThrows(CancellationException::class.java) { asyncJob.runBlock() }
+    }
+
+    @Test
+    fun asyncJobFutureGetTimesOutWhilePending() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+
+        Assertions.assertThrows(TimeoutException::class.java) {
+            asyncJob.toFuture().get(50, TimeUnit.MILLISECONDS)
+        }
+        Assertions.assertFalse(asyncJob.toFuture().isDone, "A get() timeout should not complete the job")
+    }
+
+    @Test
+    fun asyncJobFutureContinuationRunsOnCompletingThread() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+
+        val continuationThread = AtomicReference<Thread>()
+        asyncJob.toFuture().thenAccept { continuationThread.set(Thread.currentThread()) }
+
+        asyncJob.addResult(Callback().apply { jobID = JobID(123) })
+
+        // Documented behavior: a non-async continuation runs inline, before addResult returns
+        Assertions.assertSame(Thread.currentThread(), continuationThread.get())
+    }
+
+    @Test
+    fun asyncJobFutureAsyncContinuationRunsOffCompletingThread() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobSingle<Callback>(client, JobID(123))
+        val executor = Executors.newSingleThreadExecutor()
+
+        try {
+            val continuationThread = AtomicReference<Thread>()
+            val continuation = asyncJob.toFuture().thenAcceptAsync(
+                { continuationThread.set(Thread.currentThread()) },
+                executor
+            )
+
+            asyncJob.addResult(Callback().apply { jobID = JobID(123) })
+            continuation.get(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
+
+            Assertions.assertNotNull(continuationThread.get(), "Continuation should have run")
+            Assertions.assertNotSame(Thread.currentThread(), continuationThread.get())
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    @Test
+    fun asyncJobMultipleFutureAsyncContinuationRunsOffCompletingThread() {
+        val client = ConnectedSteamClient.get()
+        val asyncJob = AsyncJobMultiple<Callback>(client, JobID(123)) { _ -> true }
+        val executor = Executors.newSingleThreadExecutor()
+
+        try {
+            val continuationThread = AtomicReference<Thread>()
+            val continuation = asyncJob.toFuture().thenAcceptAsync(
+                { continuationThread.set(Thread.currentThread()) },
+                executor
+            )
+
+            asyncJob.addResult(Callback().apply { jobID = JobID(123) })
+            continuation.get(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
+
+            Assertions.assertNotNull(continuationThread.get(), "Continuation should have run")
+            Assertions.assertNotSame(Thread.currentThread(), continuationThread.get())
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    //endregion
+
+    private companion object {
+        val TEST_TIMEOUT: java.time.Duration = java.time.Duration.ofSeconds(5)
+    }
 }

@@ -16,15 +16,26 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
 
     private val deferred = CompletableDeferred<T>()
 
+    // One view of the deferred, so every toFuture() call hands back the same instance
+    private val future: CompletableFuture<T> = deferred.asCompletableFuture()
+
     init {
         registerJob(client)
     }
 
-    // Kotlin
+    /**
+     * Suspends until this job completes. The caller resumes on its own dispatcher,
+     * not on the network thread that completed the job.
+     */
     suspend fun await(): T = deferred.await()
 
-    // Java interop
-    fun toFuture(): CompletableFuture<T> = deferred.asCompletableFuture()
+    /**
+     * Java interop. Always returns the same future.
+     *
+     * Non-async continuations (`thenAccept`, `thenApply`, ...) run on the thread that completes the job,
+     * which is normally the network thread. Use the `*Async` variants for anything slow or blocking.
+     */
+    fun toFuture(): CompletableFuture<T> = future
 
     @Suppress("unused")
     @Throws(ExecutionException::class, InterruptedException::class)
