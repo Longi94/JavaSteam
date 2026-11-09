@@ -112,11 +112,13 @@ public abstract class CMClient {
             return;
         }
 
-        if (currentConnection.getCurrentEndPoint() == null) {
-            logger.debug("No connection endpoint after connecting - cannot update server list");
-        }
+        var endPoint = currentConnection.getCurrentEndPoint();
 
-        getServers().tryMark(currentConnection.getCurrentEndPoint(), currentConnection.getProtocolTypes(), ServerQuality.GOOD);
+        if (endPoint == null) {
+            logger.debug("No connection endpoint after connecting - cannot update server list");
+        } else {
+            getServers().tryMark(endPoint, currentConnection.getProtocolTypes(), ServerQuality.GOOD);
+        }
 
         isConnected = true;
 

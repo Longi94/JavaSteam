@@ -26,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -300,8 +301,10 @@ public class WebSocketConnectionTest {
         // The close frame is answered
         assertEquals(1000, cm.awaitClosed());
 
-        // CMClient reads the endpoint after a disconnect to mark the server bad
-        assertEquals(endpoint(), connection.getCurrentEndPoint());
+        // CMClient reads the endpoint inside the Disconnected handler to mark the server bad,
+        // and it is cleared once the handler has run
+        assertEquals(endpoint(), events.endpointOnDisconnect.get());
+        assertNull(connection.getCurrentEndPoint());
     }
 
     @Test
@@ -630,10 +633,14 @@ public class WebSocketConnectionTest {
 
         final AtomicInteger disconnects = new AtomicInteger();
 
+        // The endpoint as seen from inside the last Disconnected handler
+        final AtomicReference<InetSocketAddress> endpointOnDisconnect = new AtomicReference<>();
+
         Events(Connection connection) {
             connection.getConnected().addEventHandler((sender, e) -> log.add("connected"));
             connection.getDisconnected().addEventHandler((sender, e) -> {
                 disconnects.incrementAndGet();
+                endpointOnDisconnect.set(connection.getCurrentEndPoint());
                 log.add("disconnected:" + e.isUserInitiated());
             });
             connection.getNetMsgReceived().addEventHandler((sender, e) -> messages.add(e.getData()));

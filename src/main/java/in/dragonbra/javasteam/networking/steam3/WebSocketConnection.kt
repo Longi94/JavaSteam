@@ -111,6 +111,7 @@ class WebSocketConnection @JvmOverloads constructor(
 
         oldContext.release(sendClose)
         onDisconnected(userInitiated)
+        endpoint = null
     }
 
     override fun send(data: ByteArray) {
@@ -155,6 +156,9 @@ class WebSocketConnection @JvmOverloads constructor(
         }
 
         override fun onOpen(webSocket: WebSocket, response: Response) {
+            // OkHttp can open on its own thread before connect() has stored the socket it returned
+            socket = webSocket
+
             if (!isCurrent) {
                 webSocket.cancel()
                 return

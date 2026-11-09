@@ -15,7 +15,7 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.withContext
 import java.util.concurrent.CompletableFuture
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Represents an authentication session which can be used to finish the authentication and get access tokens.
@@ -173,7 +173,7 @@ open class AuthSession(
     @Throws(AuthenticationException::class)
     private suspend fun pollDeviceConfirmation(parentScope: CoroutineScope): AuthPollResult {
         while (true) {
-            delay(pollingInterval.toLong().milliseconds)
+            delay(pollingInterval.toLong().seconds)
             pollAuthSessionStatus(parentScope).await()?.let { return it }
         }
     }

@@ -119,7 +119,11 @@ class EnvelopeEncryptedConnection(
             return
         }
 
-        debugNetworkListener?.onIncomingNetworkMessage(packetMsg.msgType, packetMsg.data)
+        try {
+            debugNetworkListener?.onIncomingNetworkMessage(packetMsg.msgType, packetMsg.data)
+        } catch (e: Exception) {
+            logger.debug("DebugNetworkListener threw an exception", e)
+        }
 
         if (!isExpectedEMsg(packetMsg.msgType)) {
             logger.debug("Rejected EMsg: ${packetMsg.msgType} during channel setup")
@@ -200,7 +204,11 @@ class EnvelopeEncryptedConnection(
 
         val serialized = response.serialize()
 
-        debugNetworkListener?.onOutgoingNetworkMessage(response.msgType, serialized)
+        try {
+            debugNetworkListener?.onOutgoingNetworkMessage(response.msgType, serialized)
+        } catch (e: Exception) {
+            logger.debug("DebugNetworkListener threw an exception", e)
+        }
 
         state = EncryptionState.Challenged
         send(serialized)
