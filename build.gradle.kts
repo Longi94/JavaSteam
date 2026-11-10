@@ -29,8 +29,6 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     withSourcesJar()
 }
 
@@ -38,6 +36,13 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.java.get()))
     }
+    jvmToolchain(17)
+}
+
+// The JDK 17 toolchain makes javac run in a forked worker (512 MB heap by default),
+// which is too small for the huge generated protobuf sources.
+tasks.withType<JavaCompile>().configureEach {
+    options.forkOptions.memoryMaximumSize = "2g"
 }
 
 /* Protobufs */
@@ -70,6 +75,10 @@ tasks.jacocoTestReport {
 /* Java-Kotlin Docs */
 dokka {
     moduleName.set("JavaSteam")
+    // Dokka's analysis skips Java sources over 2.5 MB by default, raise the limit in KB.
+    dokkaGeneratorIsolation = ProcessIsolation {
+        systemProperties.put("idea.max.intellisense.filesize", "65536")
+    }
     dokkaSourceSets.main {
         suppressGeneratedFiles.set(false) // Allow generated files to be documented.
         perPackageOption {
