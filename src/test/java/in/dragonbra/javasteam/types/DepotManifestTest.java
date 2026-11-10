@@ -55,6 +55,20 @@ public class DepotManifestTest extends TestBase {
     }
 
     @Test
+    public void throwsWhenVersion4FileMappingExceedsDeclaredSize() throws IOException {
+        try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934_v4.manifest")) {
+            Assertions.assertNotNull(stream);
+
+            var manifestData = stream.readAllBytes();
+
+            // Shrink the declared file mapping size (int at offset 52) so the first mapping overruns it.
+            ByteBuffer.wrap(manifestData).order(ByteOrder.LITTLE_ENDIAN).putInt(52, 1);
+
+            Assertions.assertThrows(IOException.class, () -> DepotManifest.deserialize(manifestData));
+        }
+    }
+
+    @Test
     public void parsesAndDecryptsManifest() throws IOException, NoSuchAlgorithmException {
         try (var stream = getClass().getResourceAsStream("/depot/depot_440_1118032470228587934.manifest");
              var ms = new MemoryStream()
