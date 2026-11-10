@@ -201,7 +201,6 @@ internal constructor(
         }
 
         var bConditionalStart = false
-        val count = 0
         sb.clear()
         while (!endOfStream) {
             next = peek.toChar()
@@ -222,13 +221,7 @@ internal constructor(
                 break
             }
 
-            // count isn't used anymore, but still defined in SK.
-            @Suppress("KotlinConstantConditions")
-            if (count < 1023) {
-                sb.append(next)
-            } else {
-                throw IOException("ReadToken overflow")
-            }
+            sb.append(next)
 
             read()
         }
