@@ -320,16 +320,19 @@ public class CryptoHelper {
                 mac.init(new SecretKeySpec(hmacSecret, "HmacSHA1"));
                 hmacBytes = mac.doFinal(ms.toByteArray());
 
-                for (int i = 0; i < iv.getValue().length - 3; i++) {
-                    if (hmacBytes[i] != iv.getValue()[i]) {
-                        throw new CryptoException("NetFilterEncryption was unable to decrypt packet: HMAC from server did not match computed HMAC.");
-                    }
+                // Compare in constant time
+                int hashLength = iv.getValue().length - 3;
+                if (!MessageDigest.isEqual(Arrays.copyOf(hmacBytes, hashLength), Arrays.copyOf(iv.getValue(), hashLength))) {
+                    throw new CryptoException("NetFilterEncryption was unable to decrypt packet: HMAC from server did not match computed HMAC.");
                 }
             } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                 throw new CryptoException("NetFilterEncryption was unable to decrypt packet", e);
             }
 
             return plaintextData;
+        } catch (CryptoException e) {
+            // Let the HMAC mismatch reach the caller instead of being reported as a stream failure
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("MemoryStream closed");
         }

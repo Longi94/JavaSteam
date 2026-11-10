@@ -3,7 +3,11 @@ package in.dragonbra.javasteam.util.crypto;
 import in.dragonbra.javasteam.TestBase;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CryptoHelperTest extends TestBase {
 
@@ -78,5 +82,25 @@ public class CryptoHelperTest extends TestBase {
         byte[] result = CryptoHelper.symmetricDecryptHMACIV(data, key, secret);
 
         assertArrayEquals(expected, result);
+    }
+
+    @Test
+    public void symmetricDecryptHMACIVThrowsOnHmacMismatch() throws CryptoException {
+        byte[] key = new byte[32];
+        for (int i = 0; i < key.length; i++) {
+            key[i] = (byte) i;
+        }
+
+        byte[] secret = Arrays.copyOf(key, 16);
+        byte[] plaintext = "javasteam".getBytes(StandardCharsets.UTF_8);
+
+        byte[] encrypted = CryptoHelper.symmetricEncryptWithHMACIV(plaintext, key, secret);
+        assertArrayEquals(plaintext, CryptoHelper.symmetricDecryptHMACIV(encrypted, key, secret));
+
+        // The same packet checked with a different HMAC secret must fail validation.
+        byte[] wrongSecret = secret.clone();
+        wrongSecret[wrongSecret.length - 1] ^= 0x01;
+
+        assertThrows(CryptoException.class, () -> CryptoHelper.symmetricDecryptHMACIV(encrypted, key, wrongSecret));
     }
 }
