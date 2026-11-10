@@ -20,6 +20,23 @@ class PICSProductInfo : CallbackMsg {
 
     companion object {
         private val logger = LogManager.getLogger<PICSProductInfo>()
+
+        /**
+         * Reads a [KeyValue] from a non-empty text buffer, which may end with a null byte.
+         * @return the parsed [KeyValue]. If the buffer cannot be read, [onError] is called and an empty one is returned.
+         */
+        internal fun readTextBuffer(buffer: ByteArray, onError: (Exception) -> Unit): KeyValue {
+            val textLength = if (buffer.last() == 0.toByte()) buffer.size - 1 else buffer.size
+
+            return try {
+                KeyValue().apply {
+                    MemoryStream(buffer, 0, textLength).use { ms -> readAsText(ms) }
+                }
+            } catch (e: Exception) {
+                onError(e)
+                KeyValue()
+            }
+        }
     }
 
     /**
@@ -89,25 +106,30 @@ class PICSProductInfo : CallbackMsg {
         isMissingToken = appInfo.missingToken
         shaHash = appInfo.sha.toByteArray()
 
-        keyValues = KeyValue()
-
-        if (appInfo.hasBuffer() && !appInfo.buffer.isEmpty) {
-            try {
-                // we don't want to read the trailing null byte
-                MemoryStream(appInfo.buffer.toByteArray(), 0, appInfo.buffer.size() - 1).use { ms ->
-                    keyValues.readAsText(ms)
-                }
-            } catch (e: IOException) {
-                logger.error("failed to read buffer", e)
+        keyValues = if (appInfo.hasBuffer() && !appInfo.buffer.isEmpty) {
+            readTextBuffer(appInfo.buffer.toByteArray()) { error ->
+                logger.error("Failed to load text buffer for app $id, change number $changeNumber", error)
             }
+        } else {
+            if (!parentResponse.metaDataOnly && !appInfo.missingToken) {
+                logger.debug("Empty buffer for app $id, change number $changeNumber")
+            }
+            KeyValue()
         }
 
         isOnlyPublic = appInfo.onlyPublic
         httpHost = parentResponse.httpHost
-        isUseHttp = httpUri != null && appInfo.size >= parentResponse.httpMinSize
+
+        // a minimum size of zero means HTTP is not available for this response
+        val httpMinSize = parentResponse.httpMinSize
+        val httpAvailable = parentResponse.metaDataOnly && httpMinSize > 0
+        isUseHttp = httpAvailable && hasValidHttpUri && appInfo.size >= httpMinSize
     }
 
-    constructor(packageInfo: CMsgClientPICSProductInfoResponse.PackageInfo) {
+    constructor(
+        parentResponse: CMsgClientPICSProductInfoResponse.Builder,
+        packageInfo: CMsgClientPICSProductInfoResponse.PackageInfo,
+    ) {
         id = packageInfo.packageid
         changeNumber = packageInfo.changeNumber
         isMissingToken = packageInfo.missingToken
@@ -115,20 +137,26 @@ class PICSProductInfo : CallbackMsg {
 
         keyValues = KeyValue()
 
-        if (packageInfo.hasBuffer()) {
-            // we don't want to read the trailing null byte
+        if (packageInfo.hasBuffer() && packageInfo.buffer.size() >= Int.SIZE_BYTES) {
             try {
-                // TODO memory stream like SK?
                 BinaryReader(ByteArrayInputStream(packageInfo.buffer.toByteArray())).use { br ->
                     // steamclient checks this value == 1 before it attempts to read the KV from the buffer
                     // see: CPackageInfo::UpdateFromBuffer(CSHA const&,uint,CUtlBuffer &)
-                    // todo: (SK) we've apparently ignored this with zero ill effects, but perhaps we want to respect it?
-                    br.readInt()
-                    keyValues.tryReadAsBinary(br)
+                    val format = br.readInt()
+
+                    if (format != 1) {
+                        logger.debug(
+                            "Unknown package info format $format for package $id, size ${packageInfo.buffer.size()}"
+                        )
+                    } else if (!keyValues.tryReadAsBinary(br)) {
+                        logger.debug("Failed to parse binary buffer for package $id, change number $changeNumber")
+                    }
                 }
             } catch (e: IOException) {
-                logger.error("failed to read buffer", e)
+                logger.error("Failed to parse binary buffer for package $id, change number $changeNumber", e)
             }
+        } else if (!parentResponse.metaDataOnly && !packageInfo.missingToken) {
+            logger.debug("Empty or truncated buffer for package $id, change number $changeNumber")
         }
     }
 }

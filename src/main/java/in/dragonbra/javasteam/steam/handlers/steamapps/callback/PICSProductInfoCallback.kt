@@ -58,6 +58,6 @@ class PICSProductInfoCallback(packetMsg: IPacketMsg) : CallbackMsg() {
         unknownApps = msg.unknownAppidsList
 
         apps = msg.appsList.associate { it.appid to PICSProductInfo(msg, it) }
-        packages = msg.packagesList.associate { it.packageid to PICSProductInfo(it) }
+        packages = msg.packagesList.associate { it.packageid to PICSProductInfo(msg, it) }
     }
 }

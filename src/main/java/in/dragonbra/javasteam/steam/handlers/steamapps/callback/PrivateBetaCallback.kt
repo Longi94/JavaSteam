@@ -4,9 +4,10 @@ import `in`.dragonbra.javasteam.base.ClientMsgProtobuf
 import `in`.dragonbra.javasteam.base.IPacketMsg
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverAppinfo.CMsgClientPICSPrivateBetaResponse
+import `in`.dragonbra.javasteam.steam.handlers.steamapps.PICSProductInfo
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.KeyValue
-import `in`.dragonbra.javasteam.util.stream.MemoryStream
+import `in`.dragonbra.javasteam.util.log.LogManager
 
 /**
  * This callback is received when a private beta request has been completed
@@ -34,13 +35,16 @@ class PrivateBetaCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
         result = EResult.from(msg.eresult)
 
-        depotSection = KeyValue()
-
-        if (msg.depotSection != null && msg.depotSection.size() > 0) {
-            // we don't want to read the trailing null byte
-            MemoryStream(msg.depotSection.toByteArray(), 0, msg.depotSection.size() - 1).use { ms ->
-                depotSection.readAsText(ms)
+        depotSection = if (msg.depotSection.isEmpty) {
+            KeyValue()
+        } else {
+            PICSProductInfo.readTextBuffer(msg.depotSection.toByteArray()) { error ->
+                logger.error("Failed to load text buffer for depot section", error)
             }
         }
+    }
+
+    companion object {
+        private val logger = LogManager.getLogger<PrivateBetaCallback>()
     }
 }
