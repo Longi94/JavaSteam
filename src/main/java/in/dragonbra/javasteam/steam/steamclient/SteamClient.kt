@@ -33,6 +33,7 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.future.future
 import java.io.Closeable
 import java.util.*
 import java.util.concurrent.*
@@ -208,17 +209,13 @@ class SteamClient @JvmOverloads constructor(
      * [CompletableFuture.get] to block.
      * @return A future that resolves to the next callback in the queue.
      */
-    fun waitForCallbackFuture(): CompletableFuture<CallbackMsg> {
-        val future = CompletableFuture<CallbackMsg>()
-        defaultScope.launch {
-            try {
-                future.complete(callbackQueue.receive())
-            } catch (e: Exception) {
-                future.completeExceptionally(e)
-            }
+    fun waitForCallbackFuture(): CompletableFuture<CallbackMsg> =
+        // Undispatched, so the receiver is registered before the future is returned. Otherwise a future
+        // that is canceled right away could still take (and lose) a callback posted in the meantime.
+        defaultScope.future(start = CoroutineStart.UNDISPATCHED) {
+            ensureActive() // An undispatched start runs even after close(), so fail here instead.
+            callbackQueue.receive()
         }
-        return future
-    }
 
     /**
      * Returns a [CompletableFuture] that completes with the next callback posted to the queue,
@@ -230,15 +227,10 @@ class SteamClient @JvmOverloads constructor(
         if (timeout <= 0L) {
             return CompletableFuture.completedFuture(callbackQueue.tryReceive().getOrNull())
         }
-        val future = CompletableFuture<CallbackMsg?>()
-        defaultScope.launch {
-            try {
-                future.complete(withTimeoutOrNull(timeout.milliseconds) { callbackQueue.receive() })
-            } catch (e: Exception) {
-                future.completeExceptionally(e)
-            }
+        return defaultScope.future(start = CoroutineStart.UNDISPATCHED) {
+            ensureActive()
+            withTimeoutOrNull(timeout.milliseconds) { callbackQueue.receive() }
         }
-        return future
     }
 
     /**

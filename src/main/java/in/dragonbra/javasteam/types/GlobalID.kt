@@ -28,7 +28,7 @@ open class GlobalID @JvmOverloads constructor(gid: Long = Long.MAX_VALUE) {
     var startTime: Date
         get() {
             val startTimeS = gidBits.getMask(20, 0x3FFFFFFFL)
-            return Date(startTimeS * 1000L)
+            return Date(1104537600000L + startTimeS * 1000L)
         }
         set(startTime) {
             val startTimeS: Long = (startTime.time - 1104537600000L) / 1000L
