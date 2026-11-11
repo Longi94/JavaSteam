@@ -22,6 +22,10 @@ abstract class VersionGenTask : DefaultTask {
     @Input
     abstract fun getPackage(): Property<String>
 
+    // Tracked as an input so a version bump regenerates the class
+    @Input
+    abstract fun getVersion(): Property<String>
+
     @OutputDirectory
     abstract fun getOutputDir(): DirectoryProperty
 
@@ -29,9 +33,11 @@ abstract class VersionGenTask : DefaultTask {
     constructor() {
         getClassName().convention(CLASS_NAME)
         getPackage().convention(PACKAGE)
+        getVersion().convention(project.provider { project.version.toString() })
+        // Kept apart from the RPC generator's output, overlapping outputs can't be cached
         getOutputDir().convention(
             project.layout.buildDirectory.dir(
-                "generated/source/javasteam/main/java/in/dragonbra/javasteam/util"
+                "generated/source/version/main/java/in/dragonbra/javasteam/util"
             )
         )
     }
@@ -40,7 +46,7 @@ abstract class VersionGenTask : DefaultTask {
     fun generate() {
         println("Generating version class")
         JavaGen(getPackage().get(), getOutputDir().get().asFile).run {
-            emit(getClassName().get(), project.version.toString())
+            emit(getClassName().get(), getVersion().get())
             flush()
             close()
         }

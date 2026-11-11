@@ -89,14 +89,12 @@ dokka {
     }
 }
 
-// Make sure Maven Publishing gets javadoc
+// Make sure Maven Publishing gets javadoc.
+// Not part of `build`, dokka is slow. Publishing still builds it, or run `javadocJar` directly.
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaGenerate)
     archiveClassifier.set("javadoc")
     from(layout.buildDirectory.dir("dokka/html"))
-}
-artifacts {
-    archives(javadocJar)
 }
 
 /* Configuration */
@@ -113,7 +111,8 @@ sourceSets.main {
     java.srcDirs(
         // builtBy() fixes gradle warning "Execution optimizations have been disabled for task"
         files("build/generated/source/steamd/main/java").builtBy("generateSteamLanguage"),
-        files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion", "generateRpcMethods")
+        files("build/generated/source/javasteam/main/java").builtBy("generateRpcMethods"),
+        files("build/generated/source/version/main/java").builtBy("generateProjectVersion")
     )
 }
 

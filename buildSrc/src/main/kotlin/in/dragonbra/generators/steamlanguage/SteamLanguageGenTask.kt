@@ -12,6 +12,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -31,6 +32,10 @@ abstract class SteamLanguageGenTask : DefaultTask {
     @InputFile
     abstract fun getInputFile(): RegularFileProperty
 
+    // The input file imports its sibling .steamd files, so all of them have to be tracked
+    @InputDirectory
+    abstract fun getInputDir(): DirectoryProperty
+
     @OutputDirectory
     abstract fun getOutputDir(): DirectoryProperty
 
@@ -40,6 +45,9 @@ abstract class SteamLanguageGenTask : DefaultTask {
         getInputFile().convention {
             project.file("src/main/steamd/in/dragonbra/javasteam/steammsg.steamd")
         }
+        getInputDir().convention(
+            project.layout.projectDirectory.dir("src/main/steamd/in/dragonbra/javasteam")
+        )
         getOutputDir().convention(
             project.layout.buildDirectory.dir(
                 "generated/source/steamd/main/java/in/dragonbra/javasteam"
