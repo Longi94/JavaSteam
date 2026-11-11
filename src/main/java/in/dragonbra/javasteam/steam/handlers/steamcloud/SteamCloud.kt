@@ -557,7 +557,7 @@ class SteamCloud : ClientMsgHandler() {
      *  Its type is read from its header.
      * @param fileName The file name, or null to make one up.
      * @param spoiler Whether the media is hidden until clicked.
-     * @return The UGC ID Steam assigned to the media.
+     * @return Where Steam stored the media, with the URL it can be reached at.
      */
     @JavaSteamAddition
     @JvmOverloads
@@ -568,7 +568,7 @@ class SteamCloud : ClientMsgHandler() {
         fileName: String? = null,
         spoiler: Boolean = false,
         parentScope: CoroutineScope = client.defaultScope,
-    ): CompletableFuture<Long> = parentScope.future {
+    ): CompletableFuture<ChatMediaUploadResult> = parentScope.future {
         uploadChatMediaToUser(accessToken, friendSteamId, media, fileName, spoiler)
     }
 
@@ -584,9 +584,9 @@ class SteamCloud : ClientMsgHandler() {
      *  Its type is read from its header.
      * @param fileName The file name, or null to make one up.
      * @param spoiler Whether the media is hidden until clicked.
-     * @return The UGC ID Steam assigned to the media.
+     * @return Where Steam stored the media, with the URL it can be reached at.
      * @throws IllegalArgumentException if the media is too large or not a supported format.
-     * @throws IOException if a request fails, for one when the access token is rejected.
+     * @throws IOException if a request fails or Steam turns it down, for one when the access token is rejected.
      */
     @JavaSteamAddition
     suspend fun uploadChatMediaToUser(
@@ -595,7 +595,7 @@ class SteamCloud : ClientMsgHandler() {
         media: ByteArray,
         fileName: String? = null,
         spoiler: Boolean = false,
-    ): Long = uploadChatMedia(
+    ): ChatMediaUploadResult = uploadChatMedia(
         accessToken = accessToken,
         media = media,
         fileName = fileName,
@@ -616,7 +616,7 @@ class SteamCloud : ClientMsgHandler() {
      *  Its type is read from its header.
      * @param fileName The file name, or null to make one up.
      * @param spoiler Whether the media is hidden until clicked.
-     * @return The UGC ID Steam assigned to the media.
+     * @return Where Steam stored the media, with the URL it can be reached at.
      */
     @JavaSteamAddition
     @JvmOverloads
@@ -628,7 +628,7 @@ class SteamCloud : ClientMsgHandler() {
         fileName: String? = null,
         spoiler: Boolean = false,
         parentScope: CoroutineScope = client.defaultScope,
-    ): CompletableFuture<Long> = parentScope.future {
+    ): CompletableFuture<ChatMediaUploadResult> = parentScope.future {
         uploadChatMediaToChatRoom(accessToken, chatGroupId, chatId, media, fileName, spoiler)
     }
 
@@ -645,9 +645,9 @@ class SteamCloud : ClientMsgHandler() {
      *  Its type is read from its header.
      * @param fileName The file name, or null to make one up.
      * @param spoiler Whether the media is hidden until clicked.
-     * @return The UGC ID Steam assigned to the media.
+     * @return Where Steam stored the media, with the URL it can be reached at.
      * @throws IllegalArgumentException if the media is too large or not a supported format.
-     * @throws IOException if a request fails, for one when the access token is rejected.
+     * @throws IOException if a request fails or Steam turns it down, for one when the access token is rejected.
      */
     @JavaSteamAddition
     suspend fun uploadChatMediaToChatRoom(
@@ -657,7 +657,7 @@ class SteamCloud : ClientMsgHandler() {
         media: ByteArray,
         fileName: String? = null,
         spoiler: Boolean = false,
-    ): Long = uploadChatMedia(
+    ): ChatMediaUploadResult = uploadChatMedia(
         accessToken = accessToken,
         media = media,
         fileName = fileName,
@@ -674,7 +674,7 @@ class SteamCloud : ClientMsgHandler() {
         fileName: String?,
         spoiler: Boolean,
         destination: Map<String, String>,
-    ): Long {
+    ): ChatMediaUploadResult {
         val steamId = requireNotNull(client.steamID) { "No SteamID, the client is not logged on" }
 
         return ChatMediaUploader(client.configuration.httpClient).upload(

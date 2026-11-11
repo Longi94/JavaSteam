@@ -1,5 +1,7 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
+
 /**
  * The type and pixel size of an image or video, read from its header.
  * Steam wants both when media is uploaded to a chat.
@@ -8,6 +10,7 @@ package `in`.dragonbra.javasteam.steam.handlers.steamcloud
  * @param width The width in pixels, zero for a video.
  * @param height The height in pixels, zero for a video.
  */
+@JavaSteamAddition
 internal data class ChatMediaInfo(val mimeType: String, val width: Int, val height: Int) {
 
     /**

@@ -1,8 +1,11 @@
 package `in`.dragonbra.javasteam.steam.handlers.steamcloud
 
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.Versions
+import `in`.dragonbra.javasteam.util.log.LogManager
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
@@ -30,6 +33,7 @@ import java.security.SecureRandom
  * @param httpClient The client to make the requests with.
  * @param communityUrl The base address of the community website.
  */
+@JavaSteamAddition
 internal class ChatMediaUploader(
     private val httpClient: OkHttpClient,
     private val communityUrl: HttpUrl = COMMUNITY_URL,
@@ -42,9 +46,9 @@ internal class ChatMediaUploader(
      * @param fileName The file name, or null to make one up.
      * @param spoiler Whether the media is hidden until clicked.
      * @param destination The form fields that pick the chat to post to.
-     * @return The UGC ID Steam assigned to the media.
+     * @return Where Steam stored the media.
      * @throws IllegalArgumentException if the media is too large or not a supported format.
-     * @throws IOException if a request fails or Steam's reply can't be understood.
+     * @throws IOException if a request fails, Steam turns it down, or its reply can't be understood.
      */
     suspend fun upload(
         steamId: Long,
@@ -53,7 +57,7 @@ internal class ChatMediaUploader(
         fileName: String?,
         spoiler: Boolean,
         destination: Map<String, String>,
-    ): Long {
+    ): ChatMediaUploadResult {
         require(media.isNotEmpty()) { "The media is empty" }
         require(media.size <= MAX_SIZE) { "The media is too large to upload, the limit is 10 MiB" }
 
@@ -87,7 +91,11 @@ internal class ChatMediaUploader(
             .put(media.toRequestBody())
             .build()
 
+        logger.debug("Uploading ${media.size} bytes to ${putRequest.url.host}")
+
         httpClient.newCall(putRequest).executeAsync().use { response ->
+            logger.debug("Upload answered HTTP ${response.code}")
+
             if (!response.isSuccessful) {
                 throw IOException("Uploading the media failed: HTTP ${response.code}")
             }
@@ -102,10 +110,20 @@ internal class ChatMediaUploader(
             "spoiler" to if (spoiler) "1" else "0",
         ) + destination
 
-        post("chat/commitfileupload", cookies, commitFields)
+        val commit = parseObject("commitfileupload", post("chat/commitfileupload", cookies, commitFields))
 
-        return target.ugcId.toULongOrNull()?.toLong()
-            ?: throw IOException("beginfileupload returned an invalid ugcid: ${target.ugcId}")
+        // The reply repeats what was stored and adds the address it ended up at.
+        // Its own ugcid is null, so the one from the first request is the one to keep.
+        val details = (commit["result"] as? JsonObject)?.get("details") as? JsonObject
+
+        return ChatMediaUploadResult(
+            ugcID = target.ugcId.toULongOrNull()?.toLong()
+                ?: throw IOException("beginfileupload returned an invalid ugcid: ${target.ugcId}"),
+            url = details?.stringOrNull("url").orEmpty(),
+            fileName = details?.stringOrNull("filename") ?: name,
+            fileSize = media.size,
+            fileSHA = fileFields.getValue("file_sha"),
+        )
     }
 
     private suspend fun post(path: String, cookies: String, fields: Map<String, String>): String {
@@ -121,6 +139,8 @@ internal class ChatMediaUploader(
             .build()
 
         return httpClient.newCall(request).executeAsync().use { response ->
+            logger.debug("$path answered HTTP ${response.code}")
+
             if (!response.isSuccessful) {
                 throw IOException("${path.substringAfterLast('/')} failed: HTTP ${response.code}")
             }
@@ -137,10 +157,10 @@ internal class ChatMediaUploader(
         val hmac: String,
     )
 
-    // Read field by field, Steam is loose about whether numbers and booleans are quoted
     private fun parseBeginResponse(json: String): UploadTarget {
+        val root = parseObject("beginfileupload", json)
+
         try {
-            val root = Json.parseToJsonElement(json).jsonObject
             val result = root["result"]?.jsonObject
                 ?: throw IOException("beginfileupload returned no upload target, is the access token valid?")
 
@@ -158,15 +178,39 @@ internal class ChatMediaUploader(
                 hmac = root.string("hmac"),
             )
         } catch (e: IllegalArgumentException) {
-            // Not JSON, or not the shape expected. A login page comes back when the token is rejected.
             throw IOException("beginfileupload returned an unexpected response", e)
         }
     }
 
-    private fun JsonObject.string(key: String): String = (this[key] as? JsonPrimitive)?.content
+    /**
+     * Parses a reply of the website, which has to be a JSON object that doesn't report a failure.
+     */
+    private fun parseObject(name: String, json: String): JsonObject {
+        val root = try {
+            Json.parseToJsonElement(json).jsonObject
+        } catch (e: IllegalArgumentException) {
+            // Not JSON. A login page comes back when the token is rejected.
+            throw IOException("$name returned an unexpected response, is the access token valid?", e)
+        }
+
+        // 1 when all is well, anything else is the reason it isn't
+        val success = root.stringOrNull("success")
+        if (success != null && success !in TRUTHY) {
+            throw IOException("$name was turned down by Steam: success=$success")
+        }
+
+        return root
+    }
+
+    private fun JsonObject.stringOrNull(key: String): String? =
+        (this[key] as? JsonPrimitive)?.takeUnless { it is JsonNull }?.content
+
+    private fun JsonObject.string(key: String): String = stringOrNull(key)
         ?: throw IOException("beginfileupload response is missing '$key'")
 
     companion object {
+        private val logger = LogManager.getLogger(ChatMediaUploader::class.java)
+
         val COMMUNITY_URL: HttpUrl = "https://steamcommunity.com/".toHttpUrl()
 
         const val MAX_SIZE: Int = 10 * 1024 * 1024

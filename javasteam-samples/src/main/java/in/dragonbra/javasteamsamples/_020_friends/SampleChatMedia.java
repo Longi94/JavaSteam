@@ -7,8 +7,8 @@ import in.dragonbra.javasteam.steam.authentication.AuthenticationException;
 import in.dragonbra.javasteam.steam.authentication.CredentialsAuthSession;
 import in.dragonbra.javasteam.steam.authentication.SteamAuthentication;
 import in.dragonbra.javasteam.steam.authentication.UserConsoleAuthenticator;
+import in.dragonbra.javasteam.steam.handlers.steamcloud.ChatMediaUploadResult;
 import in.dragonbra.javasteam.steam.handlers.steamcloud.SteamCloud;
-import in.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback;
 import in.dragonbra.javasteam.steam.handlers.steamuser.LogOnDetails;
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuser.callback.LoggedOffCallback;
@@ -18,7 +18,6 @@ import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackManager;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.ConnectedCallback;
 import in.dragonbra.javasteam.steam.steamclient.callbacks.DisconnectedCallback;
 import in.dragonbra.javasteam.types.SteamID;
-import in.dragonbra.javasteam.types.UGCHandle;
 import in.dragonbra.javasteam.util.log.DefaultLogListener;
 import in.dragonbra.javasteam.util.log.LogManager;
 
@@ -37,8 +36,8 @@ import java.util.concurrent.ExecutionException;
 // to the community website, and Steam then posts it to the chat for us. The website wants
 // the access token of the logged-in user, so we log on with an auth session to get one.
 //
-// once it is sent, the sample asks Steam for the details of the upload and prints
-// the address the file is stored at.
+// once it is sent, the sample prints where Steam stored the file, the address
+// the chat message links to among it.
 //
 // usage: <username> <password> <friend steamid64> <path to a file> [spoiler]
 // supported files are: png, jpg, gif, webm, mpg and ogv, up to 10 MiB.
@@ -213,32 +212,22 @@ public class SampleChatMedia implements Runnable {
 
         // at this point, we'd be able to perform actions on Steam
 
-        try {
-            UGCHandle ugcHandle = sendMedia();
-
-            if (ugcHandle != null) {
-                printDetails(ugcHandle);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        sendMedia();
 
         // for this sample we'll just log off
         // steamUser.logOff();
     }
 
     /**
-     * Uploads the file to the chat with the friend.
-     *
-     * @return the handle of the uploaded file, or null if it could not be sent.
+     * Uploads the file to the chat with the friend, and prints where Steam stored it.
      */
-    private UGCHandle sendMedia() throws InterruptedException {
+    private void sendMedia() {
         byte[] media;
         try {
             media = Files.readAllBytes(file);
         } catch (IOException e) {
             System.err.println("Unable to read " + file + ": " + e.getMessage());
-            return null;
+            return;
         }
 
         System.out.println("Sending " + file.getFileName() + " (" + media.length + " bytes) to " + friend.convertToUInt64() + "...");
@@ -247,7 +236,7 @@ public class SampleChatMedia implements Runnable {
             // the type of the file, and the size of an image, are worked out from the file itself.
             // the upload takes a few requests, so we get a future back and wait for it here.
             // to send to a group chat instead, use uploadChatMediaToChatRoom with the IDs of the group and channel.
-            long ugcId = steamCloud.uploadChatMediaToUser(
+            ChatMediaUploadResult result = steamCloud.uploadChatMediaToUser(
                     accessToken,
                     friend,
                     media,
@@ -255,40 +244,21 @@ public class SampleChatMedia implements Runnable {
                     spoiler
             ).get();
 
-            // nothing else to do to get it delivered, Steam has posted the media to the chat
-            System.out.println("Sent! Steam stored it with UGC ID " + Long.toUnsignedString(ugcId));
-
-            return new UGCHandle(ugcId);
+            // nothing else to do to get it delivered, Steam has posted the media to the chat.
+            // the result tells where it is stored. The URL is the one the chat message links to.
+            // the UGC ID is unsigned, and can be used with steamCloud.requestUGCDetails to look the file up again later.
+            System.out.println("Sent!");
+            System.out.println("  UGC ID: " + Long.toUnsignedString(result.getUgcID()));
+            System.out.println("  URL:    " + result.getUrl());
+            System.out.println("  Name:   " + result.getFileName());
+            System.out.println("  Size:   " + result.getFileSize() + " bytes");
+            System.out.println("  SHA-1:  " + result.getFileSHA());
         } catch (ExecutionException e) {
             // an IllegalArgumentException means the file is too large or not a supported format,
-            // an IOException that a request failed, the access token being rejected for one.
+            // an IOException that a request failed or that Steam turned it down, the access token being rejected for one.
             System.err.println("Unable to send the media: " + e.getCause().getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Asks Steam where the uploaded file ended up.
-     */
-    private void printDetails(UGCHandle ugcHandle) throws InterruptedException {
-        try {
-            // the upload only hands back an ID. The details of what is stored behind it, the address
-            // it can be downloaded from among them, can be asked for over the connection to Steam.
-            UGCDetailsCallback details = steamCloud.requestUGCDetails(ugcHandle).get();
-
-            if (details.getResult() != EResult.OK) {
-                System.out.println("Unable to get the details of the upload: " + details.getResult());
-                return;
-            }
-
-            System.out.println("  URL:      " + details.getUrl());
-            System.out.println("  Name:     " + details.getFileName());
-            System.out.println("  Size:     " + details.getFileSize() + " bytes");
-            System.out.println("  SHA-1:    " + details.getFileSHA());
-            System.out.println("  Uploaded: " + details.getTimestamp());
-        } catch (ExecutionException e) {
-            // the media was still sent, we just couldn't look it up
-            System.err.println("Unable to get the details of the upload: " + e.getCause().getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
