@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.kotlin.dokka)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.kotlinter)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.protobuf.gradle)
     id("jacoco")
