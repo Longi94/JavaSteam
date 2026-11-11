@@ -302,20 +302,11 @@ public class MemoryStream extends InputStream implements Closeable {
      * reference point and the offset.
      */
     public long seek(long offset, SeekOrigin loc) {
-        int reference;
-        switch (loc) {
-            case BEGIN:
-                reference = origin;
-                break;
-            case CURRENT:
-                reference = position;
-                break;
-            case END:
-                reference = length;
-                break;
-            default:
-                throw new IllegalArgumentException("loc");
-        }
+        int reference = switch (loc) {
+            case BEGIN -> origin;
+            case CURRENT -> position;
+            case END -> length;
+        };
 
         if (offset < Integer.MIN_VALUE || offset > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("offset out of range: " + offset);

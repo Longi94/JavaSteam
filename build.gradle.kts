@@ -29,8 +29,6 @@ repositories {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     withSourcesJar()
 }
 
@@ -38,6 +36,13 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.java.get()))
     }
+    jvmToolchain(17)
+}
+
+// The JDK 17 toolchain makes javac run in a forked worker (512 MB heap by default),
+// which is too small for the huge generated protobuf sources.
+tasks.withType<JavaCompile>().configureEach {
+    options.forkOptions.memoryMaximumSize = "2g"
 }
 
 /* Protobufs */
@@ -70,6 +75,10 @@ tasks.jacocoTestReport {
 /* Java-Kotlin Docs */
 dokka {
     moduleName.set("JavaSteam")
+    // Dokka's analysis skips Java sources over 2.5 MB by default, raise the limit in KB.
+    dokkaGeneratorIsolation = ProcessIsolation {
+        systemProperties.put("idea.max.intellisense.filesize", "65536")
+    }
     dokkaSourceSets.main {
         suppressGeneratedFiles.set(false) // Allow generated files to be documented.
         perPackageOption {
@@ -80,14 +89,12 @@ dokka {
     }
 }
 
-// Make sure Maven Publishing gets javadoc
+// Make sure Maven Publishing gets javadoc.
+// Not part of `build`, dokka is slow. Publishing still builds it, or run `javadocJar` directly.
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaGenerate)
     archiveClassifier.set("javadoc")
     from(layout.buildDirectory.dir("dokka/html"))
-}
-artifacts {
-    archives(javadocJar)
 }
 
 /* Configuration */
@@ -104,7 +111,8 @@ sourceSets.main {
     java.srcDirs(
         // builtBy() fixes gradle warning "Execution optimizations have been disabled for task"
         files("build/generated/source/steamd/main/java").builtBy("generateSteamLanguage"),
-        files("build/generated/source/javasteam/main/java").builtBy("generateProjectVersion", "generateRpcMethods")
+        files("build/generated/source/javasteam/main/java").builtBy("generateRpcMethods"),
+        files("build/generated/source/version/main/java").builtBy("generateProjectVersion")
     )
 }
 
@@ -151,7 +159,6 @@ tasks.withType<Test> {
 dependencies {
     mockitoAgent(libs.test.mock.core) { isTransitive = false }
 
-    implementation(libs.bundles.ktor)
     implementation(libs.bundles.okHttp)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)

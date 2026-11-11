@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * This base client handles the underlying connection to a CM server. This class should not be use directly, but through
@@ -42,6 +43,9 @@ import java.util.EnumSet;
 public abstract class CMClient {
 
     private static final Logger logger = LogManager.getLogger(CMClient.class);
+
+    private static final AtomicReferenceFieldUpdater<CMClient, Connection> CONNECTION =
+            AtomicReferenceFieldUpdater.newUpdater(CMClient.class, Connection.class, "connection");
 
     private final SteamConfiguration configuration;
 
@@ -79,12 +83,42 @@ public abstract class CMClient {
 
     private final ScheduledFunction heartBeatFunc;
 
-    private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> onClientMsgReceived(getPacketMsg(e.getData()));
+    // Steam can stop sending during maintenance without closing the connection or logging off, and sends
+    // still succeed, so silence is the only signal. Heartbeats ask for a reply, so once logged on, a healthy
+    // connection always has incoming traffic.
+    @JavaSteamAddition
+    private final ScheduledFunction watchdogFunc;
+
+    @JavaSteamAddition
+    private volatile long lastMessageTime;
+
+    private final EventHandler<NetMsgEventArgs> netMsgReceived = (sender, e) -> {
+        // A released connection can still raise events from its network thread after Disconnected
+        if (sender != connection) {
+            return;
+        }
+
+        lastMessageTime = System.currentTimeMillis();
+
+        onClientMsgReceived(getPacketMsg(e.getData()));
+    };
 
     private final EventHandler<EventArgs> connected = (sender, e) -> {
         logger.debug("EventHandler `connected` called");
 
-        getServers().tryMark(connection.getCurrentEndPoint(), connection.getProtocolTypes(), ServerQuality.GOOD);
+        var currentConnection = connection;
+
+        if (currentConnection != sender) {
+            return;
+        }
+
+        var endPoint = currentConnection.getCurrentEndPoint();
+
+        if (endPoint == null) {
+            logger.debug("No connection endpoint after connecting - cannot update server list");
+        } else {
+            getServers().tryMark(endPoint, currentConnection.getProtocolTypes(), ServerQuality.GOOD);
+        }
 
         isConnected = true;
 
@@ -102,24 +136,32 @@ public abstract class CMClient {
             logger.debug("EventHandler `disconnected` called. User Initiated: " + e.isUserInitiated() +
                     ", Expected Disconnection: " + expectDisconnection);
 
+            if (!(sender instanceof Connection conn)) {
+                return;
+            }
+
+            // Always unsubscribe from the connection that raised this, even if it has already been released
+            conn.getNetMsgReceived().removeEventHandler(netMsgReceived);
+            conn.getConnected().removeEventHandler(connected);
+            conn.getDisconnected().removeEventHandler(this);
+
+            // Connection teardown is asynchronous, so a released connection can report its disconnect
+            // after a new connection was created. Only release the connection that raised this event.
+            if (!CONNECTION.compareAndSet(CMClient.this, conn, null)) {
+                return;
+            }
+
             isConnected = false;
 
-            var conn = connection;
-            if (conn != null) {
-                if (!e.isUserInitiated() && !expectDisconnection) {
-                    getServers().tryMark(conn.getCurrentEndPoint(), conn.getProtocolTypes(), ServerQuality.BAD);
-                }
-
-                conn.getNetMsgReceived().removeEventHandler(netMsgReceived);
-                conn.getConnected().removeEventHandler(connected);
-                conn.getDisconnected().removeEventHandler(this);
+            if (!e.isUserInitiated() && !expectDisconnection) {
+                getServers().tryMark(conn.getCurrentEndPoint(), conn.getProtocolTypes(), ServerQuality.BAD);
             }
 
             sessionID = null;
             steamID = null;
-            connection = null;
 
             heartBeatFunc.stop();
+            watchdogFunc.stop();
 
             onClientDisconnected(e.isUserInitiated() || expectDisconnection);
         }
@@ -138,6 +180,41 @@ public abstract class CMClient {
             heartbeat.getBody().setSendReply(true); // Ping Pong
             send(heartbeat);
         }, 5000);
+
+        watchdogFunc = new ScheduledFunction(this::checkWatchdog, watchdogPollInterval(configuration.getWatchdogTimeout()));
+    }
+
+    /**
+     * Starts the watchdog, if enabled. Silence before now doesn't count.
+     */
+    @JavaSteamAddition
+    private void startWatchdog() {
+        if (configuration.getWatchdogTimeout() <= 0) {
+            return;
+        }
+
+        lastMessageTime = System.currentTimeMillis();
+        watchdogFunc.start();
+    }
+
+    @JavaSteamAddition
+    private void checkWatchdog() {
+        var timeout = configuration.getWatchdogTimeout();
+        var elapsed = System.currentTimeMillis() - lastMessageTime;
+
+        if (elapsed > timeout) {
+            logger.error("Watchdog: Nothing received for " + elapsed + " ms, disconnecting");
+            watchdogFunc.stop();
+            disconnect(false);
+        } else if (elapsed > timeout / 2) {
+            logger.debug("Watchdog: Nothing received for " + elapsed + " ms");
+        }
+    }
+
+    // Poll often enough to act close to the deadline, without spinning on short (test) timeouts
+    @JavaSteamAddition
+    private static long watchdogPollInterval(long timeout) {
+        return Math.max(50L, Math.min(timeout / 6, 5_000L));
     }
 
     /**
@@ -181,8 +258,6 @@ public abstract class CMClient {
             try {
                 disconnect(true);
 
-                assert connection == null;
-
                 expectDisconnection = false;
 
                 if (cmServer == null) {
@@ -195,13 +270,25 @@ public abstract class CMClient {
                     return;
                 }
 
-                connection = createConnection(cmServer.getProtocolTypes());
-                connection.getNetMsgReceived().addEventHandler(netMsgReceived);
-                connection.getConnected().addEventHandler(connected);
-                connection.getDisconnected().addEventHandler(disconnected);
+                // Only use protocols that both the server and the configuration allow
+                var protocolTypes = EnumSet.copyOf(cmServer.getProtocolTypes());
+                protocolTypes.retainAll(configuration.getProtocolTypes());
+
+                var newConnection = createConnection(protocolTypes);
+
+                // Connection teardown is asynchronous, so the previous connection may not have reported its disconnect yet.
+                // Its late Disconnected event is ignored by the sender check in the disconnected handler.
+                var connectionRelease = CONNECTION.getAndSet(this, newConnection);
+                if (connectionRelease != null) {
+                    logger.debug("Previous connection was not released before connecting");
+                }
+
+                newConnection.getNetMsgReceived().addEventHandler(netMsgReceived);
+                newConnection.getConnected().addEventHandler(connected);
+                newConnection.getDisconnected().addEventHandler(disconnected);
                 logger.debug(String.format("Connecting to %s with protocol %s, and with connection impl %s",
-                        cmServer.getEndpoint(), cmServer.getProtocolTypes(), connection.getClass().getSimpleName()));
-                connection.connect(cmServer.getEndpoint());
+                        cmServer.getEndpoint(), protocolTypes, newConnection.getClass().getSimpleName()));
+                newConnection.connect(cmServer.getEndpoint(), (int) configuration.getConnectionTimeout());
             } catch (Exception e) {
                 logger.debug("Failed to connect to Steam network", e);
                 onClientDisconnected(false);
@@ -219,6 +306,7 @@ public abstract class CMClient {
     private void disconnect(boolean userInitiated) {
         synchronized (connectionLock) {
             heartBeatFunc.stop();
+            watchdogFunc.stop();
 
             if (connection != null) {
                 connection.disconnect(userInitiated);
@@ -328,7 +416,7 @@ public abstract class CMClient {
 
     private Connection createConnection(EnumSet<ProtocolTypes> protocol) {
         IConnectionFactory connectionFactory = configuration.getConnectionFactory();
-        Connection connection = connectionFactory.createConnection(configuration, protocol);
+        Connection connection = connectionFactory.createConnection(configuration, protocol, debugNetworkListener);
         if (connection == null) {
             logger.error(String.format("Connection factory returned null connection for protocols %s", protocol));
             throw new IllegalArgumentException("Connection factory returned null connection.");
@@ -344,7 +432,7 @@ public abstract class CMClient {
 
         int rawEMsg = 0;
         try (var buffer = new Buffer().write(data)) {
-             rawEMsg = buffer.readIntLe();
+            rawEMsg = buffer.readIntLe();
         } catch (IOException e) {
             logger.debug("Exception while getting EMsg code", e);
         }
@@ -437,6 +525,9 @@ public abstract class CMClient {
             heartBeatFunc.stop();
             heartBeatFunc.setDelay(logonResp.getBody().getLegacyOutOfGameHeartbeatSeconds() * 1000L);
             heartBeatFunc.start();
+
+            // Heartbeat replies now guarantee traffic, so silence means the connection is dead
+            startWatchdog();
         } else if (logonResponse == EResult.TryAnotherCM || logonResponse == EResult.ServiceUnavailable) {
             var connection = this.connection;
             if (connection != null) {
@@ -457,6 +548,7 @@ public abstract class CMClient {
         userCountryCode = null;
 
         heartBeatFunc.stop();
+        watchdogFunc.stop();
 
         if (packetMsg.isProto()) {
             ClientMsgProtobuf<CMsgClientLoggedOff.Builder> logoffMsg = new ClientMsgProtobuf<>(CMsgClientLoggedOff.class, packetMsg);

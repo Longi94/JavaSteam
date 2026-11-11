@@ -358,7 +358,11 @@ public class UdpConnection extends Connection {
 
         logger.debug("Dispatching message: " + data.length + " bytes");
 
-        onNetMsgReceived(new NetMsgEventArgs(data, currentEndPoint));
+        try {
+            onNetMsgReceived(new NetMsgEventArgs(data, currentEndPoint));
+        } catch (Exception e) {
+            logger.error("Unexpected exception propagated back to NetLoop", e);
+        }
 
         return true;
     }

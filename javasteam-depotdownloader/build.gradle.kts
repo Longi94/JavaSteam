@@ -47,14 +47,12 @@ dokka {
     }
 }
 
-// Make sure Maven Publishing gets javadoc
+// Make sure Maven Publishing gets javadoc.
+// Not part of `build`, dokka is slow. Publishing still builds it, or run `javadocJar` directly.
 val javadocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaGenerate)
     archiveClassifier.set("javadoc")
     from(layout.buildDirectory.dir("dokka/html"))
-}
-artifacts {
-    archives(javadocJar)
 }
 
 /* Kotlinter */

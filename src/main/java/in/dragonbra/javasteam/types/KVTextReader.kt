@@ -21,7 +21,7 @@ internal constructor(
 
     companion object {
         @JvmField
-        val ESCAPED_MAPPING = mapOf<Char, Char>(
+        val ESCAPED_MAPPING = mapOf(
             '\\' to '\\',
             'n' to '\n',
             'r' to '\r',
@@ -57,9 +57,11 @@ internal constructor(
         val wasQuoted = Passable(false)
         val wasConditional = Passable(false)
 
+        @Suppress("CanBeVal")
         var currentKey: KeyValue? = kv
 
         do {
+            @Suppress("CanBeVal")
             var s = readToken(wasQuoted, wasConditional)
 
             if (s.isNullOrEmpty()) {
@@ -201,7 +203,6 @@ internal constructor(
         }
 
         var bConditionalStart = false
-        val count = 0
         sb.clear()
         while (!endOfStream) {
             next = peek.toChar()
@@ -222,13 +223,7 @@ internal constructor(
                 break
             }
 
-            // count isn't used anymore, but still defined in SK.
-            @Suppress("KotlinConstantConditions")
-            if (count < 1023) {
-                sb.append(next)
-            } else {
-                throw IOException("ReadToken overflow")
-            }
+            sb.append(next)
 
             read()
         }

@@ -1,7 +1,6 @@
 package `in`.dragonbra.javasteam.steam.steamclient.callbackmgr
 
 import `in`.dragonbra.javasteam.types.JobID
-import `in`.dragonbra.javasteam.util.compat.Consumer
 import java.io.Closeable
 
 @Suppress("unused")

@@ -2,7 +2,9 @@ package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
-import java.time.Instant
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * The base class for awaitable versions of a [JobID].
@@ -13,12 +15,22 @@ import java.time.Instant
  */
 abstract class AsyncJob(val client: SteamClient, val jobID: JobID) {
 
-    @Volatile private var jobStart = Instant.now()
+    // Monotonic, so a wall clock adjustment can neither expire a job early nor keep it alive
+    private val jobStart = TimeSource.Monotonic.markNow()
 
-    @Volatile var timeout: Long = 10000 // 10 Seconds
+    // Heartbeats arrive on the network thread while callers may set the timeout from any other
+    private val timeoutMillis = AtomicLong(DEFAULT_TIMEOUT_MS)
+
+    /**
+     * The period of time, in milliseconds, before this job is considered timed out and is canceled.
+     * By default this is 10 seconds.
+     */
+    var timeout: Long
+        get() = timeoutMillis.get()
+        set(value) = timeoutMillis.set(value)
 
     val isTimedOut: Boolean
-        get() = Instant.now() >= jobStart.plusMillis(timeout)
+        get() = jobStart.elapsedNow() >= timeout.milliseconds
 
     protected fun registerJob(client: SteamClient) {
         client.startJob(this)
@@ -29,6 +41,10 @@ abstract class AsyncJob(val client: SteamClient, val jobID: JobID) {
     abstract fun setFailed(dueToRemoteFailure: Boolean)
 
     fun heartbeat() {
-        timeout += 10000
+        timeoutMillis.addAndGet(DEFAULT_TIMEOUT_MS)
+    }
+
+    private companion object {
+        const val DEFAULT_TIMEOUT_MS = 10_000L
     }
 }

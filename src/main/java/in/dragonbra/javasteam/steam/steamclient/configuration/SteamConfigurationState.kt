@@ -5,6 +5,7 @@ import `in`.dragonbra.javasteam.enums.EUniverse
 import `in`.dragonbra.javasteam.networking.steam3.IConnectionFactory
 import `in`.dragonbra.javasteam.networking.steam3.ProtocolTypes
 import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import okhttp3.OkHttpClient
 import java.util.*
 
@@ -24,4 +25,6 @@ data class SteamConfigurationState(
     var universe: EUniverse,
     var webAPIBaseAddress: String,
     var webAPIKey: String?,
+    @JavaSteamAddition
+    var watchdogTimeout: Long = SteamConfigurationBuilder.DEFAULT_WATCHDOG_TIMEOUT,
 )

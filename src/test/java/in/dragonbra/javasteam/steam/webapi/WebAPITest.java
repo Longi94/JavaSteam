@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -76,14 +75,14 @@ public class WebAPITest extends TestBase {
     @Test
     public void steamConfigWebApiInterface() {
         SteamConfiguration config = SteamConfiguration.create(b ->
-                b.withWebAPIBaseAddress("http://example.com/").withWebAPIKey("hello")
+                b.withWebAPIBaseAddress("https://example.com/").withWebAPIKey("hello")
         );
 
         WebAPI api = config.getWebAPI("TestInterface");
 
-        assertEquals(api.getInterface(), "TestInterface");
-        assertEquals(api.getWebAPIKey(), "hello");
-        assertEquals(api.getBaseAddress().toString(), "http://example.com/");
+        assertEquals("TestInterface", api.getInterface());
+        assertEquals("hello", api.getWebAPIKey());
+        assertEquals("https://example.com/", api.getBaseAddress().toString());
     }
 
     @Test

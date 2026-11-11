@@ -18,11 +18,16 @@ import in.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMe
 import in.dragonbra.javasteam.steam.handlers.steamuser.SteamUser;
 import in.dragonbra.javasteam.steam.handlers.steamuserstats.SteamUserStats;
 import in.dragonbra.javasteam.steam.handlers.steamworkshop.SteamWorkshop;
+import in.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.concurrent.CancellationException;
 
 class SteamClientTest {
 
@@ -105,35 +110,37 @@ class SteamClientTest {
 
     @Test
     public void addHandlerThrowsOnDuplicateHandler() {
-        var steamClient = new SteamClient();
-        steamClient.addHandler(new TestMsgHandler());
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.addHandler(new TestMsgHandler()));
+        try (var steamClient = new SteamClient()) {
+            steamClient.addHandler(new TestMsgHandler());
+            Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.addHandler(new TestMsgHandler()));
+        }
     }
 
     @Test
     public void removeHandlerByTypeDoesNothingWhenNotRegistered() {
-        var steamClient = new SteamClient();
-        Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+        try (var steamClient = new SteamClient()) {
+            Assertions.assertNull(client.getHandler(TestMsgHandler.class));
 
-        steamClient.removeHandler(TestMsgHandler.class);
-        Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+            steamClient.removeHandler(TestMsgHandler.class);
+            Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+        }
     }
 
     @Test
     public void getRequiredHandlerReturnsHandler() {
-        var steamClient = new SteamClient();
-        var handler = steamClient.getRequiredHandler(SteamUser.class);
+        try (var steamClient = new SteamClient()) {
+            var handler = steamClient.getRequiredHandler(SteamUser.class);
 
-        Assertions.assertNotNull(handler);
-        Assertions.assertEquals(SteamUser.class, handler.getClass());
+            Assertions.assertNotNull(handler);
+            Assertions.assertEquals(SteamUser.class, handler.getClass());
+        }
     }
 
     @Test
     public void getRequiredHandlerThrowsWhenNotRegistered() {
-        var steamClient = new SteamClient();
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.getRequiredHandler(TestMsgHandler.class));
+        try (var steamClient = new SteamClient()) {
+            Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.getRequiredHandler(TestMsgHandler.class));
+        }
     }
 
     @Test
@@ -143,21 +150,55 @@ class SteamClientTest {
         Assertions.assertEquals(0, jobID.getProcessID());
     }
 
-//    @Test
-//    public void getNextJobIDFillsProcessStartTime() {
-//        var jobID = client.getNextJobID();
-//
-//        var dateNow = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-//        var processStartTime = Date.from(dateNow.toInstant(ZoneOffset.UTC));
-//
-//        Assertions.assertEquals(processStartTime, jobID.getStartTime());
-//    }
+    @Test
+    public void getNextJobIDFillsProcessStartTime() {
+        // JavaSteam uses the time the client was created, with second precision, instead of the process start time.
+        var before = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        try (var steamClient = new SteamClient()) {
+            var after = Instant.now();
+
+            var startTime = steamClient.getNextJobID().getStartTime().toInstant();
+
+            Assertions.assertFalse(startTime.isBefore(before), "Start time should not be before the client was created");
+            Assertions.assertFalse(startTime.isAfter(after), "Start time should not be after the client was created");
+        }
+    }
 
     @Test
     public void getNextJobIDSetsBoxIDToZero() {
         var jobID = client.getNextJobID();
 
         Assertions.assertEquals(0, jobID.getBoxID());
+    }
+
+    @Test
+    public void waitForCallbackAfterCloseThrowsInsteadOfHanging() {
+        client.close();
+
+        Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            Assertions.assertThrows(CancellationException.class, () -> client.waitForCallback());
+        });
+    }
+
+    @Test
+    public void waitForCallbackWithTimeoutAfterCloseThrowsInsteadOfHanging() {
+        client.close();
+
+        Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            Assertions.assertThrows(CancellationException.class, () -> client.waitForCallback(100));
+        });
+    }
+
+    @Test
+    public void cancelledWaitForCallbackFutureDoesNotConsumeCallback() {
+        var abandoned = client.waitForCallbackFuture();
+        abandoned.cancel(true);
+
+        var callback = new CallbackMsg() {
+        };
+        client.postCallback(callback);
+
+        Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> Assertions.assertSame(callback, client.waitForCallback(1000)));
     }
 
     static class TestMsgHandler extends ClientMsgHandler {

@@ -266,7 +266,7 @@ public class SteamIDTests extends TestBase {
 
         assertEquals(sid, sid2);
 
-        assertNotEquals(sid, new Object());
+        assertNotEquals(new Object(), sid);
         SteamID sid3 = new SteamID(12345L);
 
         assertNotEquals(sid, sid3);

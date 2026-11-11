@@ -4,7 +4,8 @@ import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.future.asCompletableFuture
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -24,7 +25,10 @@ class AsyncJobMultiple<T : CallbackMsg>(
         var results: List<T> = listOf(),
     )
 
-    private val future = CompletableFuture<ResultSet<T>>()
+    private val deferred = CompletableDeferred<ResultSet<T>>()
+
+    // One view of the deferred, so every toFuture() call hands back the same instance
+    private val future: CompletableFuture<ResultSet<T>> = deferred.asCompletableFuture()
 
     private val results = mutableListOf<T>()
 
@@ -35,9 +39,19 @@ class AsyncJobMultiple<T : CallbackMsg>(
     @Deprecated("Use toFuture() instead", ReplaceWith("toFuture()"))
     fun toDeferred(): CompletableFuture<ResultSet<T>> = toFuture()
 
+    /**
+     * Java interop. Always returns the same future.
+     *
+     * Non-async continuations (`thenAccept`, `thenApply`, ...) run on the thread that completes the job,
+     * which is normally the network thread. Use the `*Async` variants for anything slow or blocking.
+     */
     fun toFuture(): CompletableFuture<ResultSet<T>> = future
 
-    suspend fun await(): ResultSet<T> = future.await()
+    /**
+     * Suspends until this job completes. The caller resumes on its own dispatcher,
+     * not on the network thread that completed the job.
+     */
+    suspend fun await(): ResultSet<T> = deferred.await()
 
     @Suppress("unused")
     @Throws(CancellationException::class)
@@ -51,7 +65,7 @@ class AsyncJobMultiple<T : CallbackMsg>(
         results.add(callbackMsg)
 
         return if (finishCondition(callbackMsg) == true) {
-            future.complete(
+            deferred.complete(
                 ResultSet(
                     complete = true,
                     failed = false,
@@ -71,13 +85,13 @@ class AsyncJobMultiple<T : CallbackMsg>(
             // if we have zero callbacks in our result set, we cancel this task
             if (dueToRemoteFailure) {
                 // if we're canceling with a remote failure, post a job failure exception
-                future.completeExceptionally(AsyncJobFailedException())
+                deferred.completeExceptionally(AsyncJobFailedException())
             } else {
                 // otherwise, normal task cancellation for timeouts
-                future.cancel(true)
+                deferred.cancel()
             }
         } else {
-            future.complete(ResultSet(false, dueToRemoteFailure, Collections.unmodifiableList(results.toList())))
+            deferred.complete(ResultSet(false, dueToRemoteFailure, Collections.unmodifiableList(results.toList())))
         }
     }
 }

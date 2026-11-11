@@ -72,7 +72,7 @@ data class FileData(
         result = 31 * result + chunks.hashCode()
         result = 31 * result + flags.hashCode()
         result = 31 * result + fileHash.contentHashCode()
-        result = 31 * result + (linkTarget?.hashCode() ?: 0)
+        result = 31 * result + linkTarget.hashCode()
         return result
     }
 }

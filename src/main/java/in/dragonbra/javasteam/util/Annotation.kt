@@ -10,7 +10,8 @@ package `in`.dragonbra.javasteam.util
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.PROPERTY,
-    AnnotationTarget.CONSTRUCTOR
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.FIELD,
 )
 @Retention(AnnotationRetention.SOURCE) // Only in source
 @MustBeDocumented

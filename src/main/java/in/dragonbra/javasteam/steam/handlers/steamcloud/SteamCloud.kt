@@ -6,18 +6,10 @@ import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EPlatformType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.ESteamRealm
-import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.EBluetoothDeviceType
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.CClientMetrics_CloudAppSyncStats_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppExitSyncDone_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppLaunchIntent_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_BeginAppUploadBatch_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientBeginFileUpload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientCommitFileUpload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientFileDownload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_CompleteAppUploadBatch_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ExternalStorageTransferReport_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetAppFileChangelist_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.ClientMetrics
 import `in`.dragonbra.javasteam.rpc.service.Cloud
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
@@ -29,12 +21,10 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.future.future
-import java.util.Date
-import java.util.concurrent.CompletableFuture
+import kotlinx.coroutines.*
+import kotlinx.coroutines.future.*
+import java.util.*
+import java.util.concurrent.*
 
 /**
  * This handler is used for interacting with remote storage and user generated content.
@@ -64,7 +54,7 @@ class SteamCloud : ClientMsgHandler() {
     @JvmOverloads
     fun requestUGCDetails(
         ugcId: UGCHandle,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<UGCDetailsCallback> = parentScope.future { requestUGCDetails(ugcId) }
 
     /**
@@ -97,7 +87,7 @@ class SteamCloud : ClientMsgHandler() {
     fun getSingleFileInfo(
         appId: Int,
         filename: String,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<SingleFileInfoCallback> = parentScope.future { getSingleFileInfo(appId, filename) }
 
     /**
@@ -132,7 +122,7 @@ class SteamCloud : ClientMsgHandler() {
     fun shareFile(
         appId: Int,
         filename: String,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<ShareFileCallback> = parentScope.future { shareFile(appId, filename) }
 
     /**
@@ -167,7 +157,7 @@ class SteamCloud : ClientMsgHandler() {
     fun getAppFileListChange(
         appId: Int,
         syncedChangeNumber: Long = 0,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<AppFileChangeList> = parentScope.future {
         val request = CCloud_GetAppFileChangelist_Request.newBuilder().apply {
             this.appid = appId
@@ -195,7 +185,7 @@ class SteamCloud : ClientMsgHandler() {
         fileName: String,
         realm: ESteamRealm = ESteamRealm.SteamGlobal,
         forceProxy: Boolean = false,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<FileDownloadInfo> = parentScope.future {
         val request = CCloud_ClientFileDownload_Request.newBuilder().apply {
             this.appid = appId
@@ -229,7 +219,7 @@ class SteamCloud : ClientMsgHandler() {
         filesToDelete: List<String> = emptyList(),
         clientId: Long,
         appBuildId: Long,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<AppUploadBatchResponse> = parentScope.future {
         val request = CCloud_BeginAppUploadBatch_Request.newBuilder().apply {
             this.appid = appId
@@ -270,7 +260,7 @@ class SteamCloud : ClientMsgHandler() {
         isSharedFile: Boolean = false,
         deprecatedRealm: Int? = null,
         uploadBatchId: Long,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<FileUploadInfo> = parentScope.future {
         val request = CCloud_ClientBeginFileUpload_Request.newBuilder().apply {
             this.appid = appId
@@ -308,7 +298,7 @@ class SteamCloud : ClientMsgHandler() {
         appId: Int,
         fileSha: ByteArray,
         filename: String,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<Boolean> = parentScope.future {
         val request = CCloud_ClientCommitFileUpload_Request.newBuilder().apply {
             this.transferSucceeded = transferSucceeded
@@ -335,7 +325,7 @@ class SteamCloud : ClientMsgHandler() {
         appId: Int,
         batchId: Long,
         batchEResult: EResult = EResult.OK,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<Unit> = parentScope.future {
         val request = CCloud_CompleteAppUploadBatch_Request.newBuilder().apply {
             this.appid = appId
@@ -455,7 +445,7 @@ class SteamCloud : ClientMsgHandler() {
         osType: EOSType,
         // I doubt this is EBluetoothDeviceType, but it's the only enum I can find that has to do with device type
         deviceType: EBluetoothDeviceType = EBluetoothDeviceType.k_BluetoothDeviceType_Unknown,
-        parentScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+        parentScope: CoroutineScope = client.defaultScope,
     ): CompletableFuture<List<PendingRemoteOperation>> = parentScope.future {
         val request = CCloud_AppLaunchIntent_Request.newBuilder().apply {
             this.appid = appId

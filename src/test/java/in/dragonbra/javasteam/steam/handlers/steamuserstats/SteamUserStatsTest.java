@@ -27,8 +27,6 @@ import in.dragonbra.javasteam.steam.handlers.steamuserstats.callback.UserStatsCa
 import in.dragonbra.javasteam.types.KeyValue;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit tests for SteamUserStats handler, specifically testing achievement
@@ -39,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected SteamUserStats createHandler() {
@@ -322,6 +320,7 @@ public class SteamUserStatsTest extends HandlerTestBase<SteamUserStats> {
      * Helper method to create a mock UserStatsResponse packet with achievement
      * data.
      */
+    @SuppressWarnings("SameParameterValue")
     private IPacketMsg createUserStatsResponseMessage(boolean includeSchema) throws IOException {
         ClientMsgProtobuf<CMsgClientGetUserStatsResponse.Builder> msg = new ClientMsgProtobuf<>(
                 CMsgClientGetUserStatsResponse.class, EMsg.ClientGetUserStatsResponse);

@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.enums.EDepotFileFlag
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
+import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.Date
 import java.util.EnumSet
@@ -106,13 +107,19 @@ class Steam3Manifest {
 
         var i = fileMappingSize
         while (i > 0) {
-            val start = ds.position.toLong()
+            val start = ds.position
 
             val fileMapping = FileMapping()
             fileMapping.deserialize(ds)
             mapping.add(fileMapping)
 
-            i -= (ds.position - start.toInt())
+            val consumed = ds.position - start
+
+            if (consumed > i) {
+                throw IOException("data is not a valid steam3 manifest: file mapping exceeds the declared size.")
+            }
+
+            i -= consumed
         }
     }
 }

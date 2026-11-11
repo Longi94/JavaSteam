@@ -48,6 +48,8 @@ abstract class RpcGenTask : DefaultTask {
         val outputDir = getOutputDir().get().asFile
         val protoDirectory = getProtoDirectory().get().asFile
 
+        // Drop interfaces of services that no longer exist
+        outputDir.deleteRecursively()
         outputDir.mkdirs()
 
         val protoParser = ProtoParser(outputDir)

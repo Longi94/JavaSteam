@@ -28,55 +28,41 @@ import java.util.stream.Stream;
  */
 public class PacketTests {
 
-    private static final class TestPacket {
-        private final EMsg eMsg;
-        private final byte[] data;
-
-        public TestPacket(EMsg eMsg, byte[] data) {
-            this.eMsg = eMsg;
-            this.data = data;
-        }
-
+    private record TestPacket(EMsg eMsg, byte[] data) {
         public EMsg getEMsg() {
             return eMsg;
-        }
-
-        public byte[] getData() {
-            return data;
         }
     }
 
     @SuppressWarnings({"EnumSwitchStatementWhichMissesCases", "SwitchStatementWithTooFewBranches"})
     private static Class<?> getCallback(EMsg msg) {
-        switch (msg) {
-            case ClientPICSProductInfoResponse:
-                return PICSProductInfoCallback.class;
-            default:
-                return null;
-        }
+        return switch (msg) {
+            case ClientPICSProductInfoResponse -> PICSProductInfoCallback.class;
+            default -> null;
+        };
     }
 
     @SuppressWarnings("DataFlowIssue")
     @Test
     public void postsExpectedCallbacks() {
-        var steamClient = new SteamClient();
+        try (var steamClient = new SteamClient()) {
+            getPackets("in").forEach(packet -> {
+                var expectedCallback = getCallback(packet.getEMsg());
+                Assertions.assertNotNull(expectedCallback);
 
-        getPackets("in").forEach(packet -> {
-            var expectedCallback = getCallback(packet.getEMsg());
-            Assertions.assertNotNull(expectedCallback);
+                var packetMsg = CMClient.getPacketMsg(packet.data());
+                Assertions.assertNotNull(packetMsg);
 
-            var packetMsg = CMClient.getPacketMsg(packet.getData());
-            Assertions.assertNotNull(packetMsg);
+                Assertions.assertInstanceOf(PacketClientMsgProtobuf.class, packetMsg);
 
-            Assertions.assertInstanceOf(PacketClientMsgProtobuf.class, packetMsg);
+                Assertions.assertNull(steamClient.getCallback());
+                steamClient.receiveTestPacketMsg(packetMsg);
 
-            Assertions.assertNull(steamClient.getCallback());
-            steamClient.receiveTestPacketMsg(packetMsg);
-
-            var callback = steamClient.getCallback();
-            Assertions.assertNotNull(callback);
-            Assertions.assertEquals(expectedCallback, callback.getClass());
-        });
+                var callback = steamClient.getCallback();
+                Assertions.assertNotNull(callback);
+                Assertions.assertEquals(expectedCallback, callback.getClass());
+            });
+        }
     }
 
     @SuppressWarnings("SameParameterValue")

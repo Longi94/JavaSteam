@@ -106,7 +106,7 @@ class SteamMatchmaking : ClientMsgHandler() {
             sourceJobID = client.getNextJobID()
         }
 
-        createLobby.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
+        createLobby.body.addAllMetadata(Lobby.encodeMetadata(metadata))
 
         send(msg = createLobby, appId = appId)
 
@@ -149,7 +149,7 @@ class SteamMatchmaking : ClientMsgHandler() {
             sourceJobID = client.getNextJobID()
         }
 
-        setLobbyData.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
+        setLobbyData.body.addAllMetadata(Lobby.encodeMetadata(metadata))
 
         send(msg = setLobbyData, appId = appId)
 
@@ -186,7 +186,7 @@ class SteamMatchmaking : ClientMsgHandler() {
             sourceJobID = client.getNextJobID()
         }
 
-        setLobbyData.body.metadataList.addAll(Lobby.encodeMetadata(metadata))
+        setLobbyData.body.addAllMetadata(Lobby.encodeMetadata(metadata))
 
         send(msg = setLobbyData, appId = appId)
 

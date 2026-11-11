@@ -65,7 +65,7 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         ClientMsgProtobuf<CMsgClientFriendMsg.Builder> msg = verifySend(EMsg.ClientFriendMsg);
 
         assertEquals(123456789L, msg.getBody().getSteamid());
-        assertEquals("testmessage", msg.getBody().getMessage().toString("UTF-8"));
+        assertEquals("testmessage", msg.getBody().getMessage().toStringUtf8());
         assertEquals(EChatEntryType.ChatMsg.code(), msg.getBody().getChatEntryType());
     }
 

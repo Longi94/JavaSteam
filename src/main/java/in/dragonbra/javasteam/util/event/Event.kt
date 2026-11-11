@@ -13,6 +13,12 @@ class Event<T : EventArgs> {
         handlers.remove(handler)
     }
 
+    operator fun plusAssign(handler: EventHandler<T>) = addEventHandler(handler)
+
+    operator fun minusAssign(handler: EventHandler<T>) = removeEventHandler(handler)
+
+    operator fun invoke(sender: Any, e: T) = handleEvent(sender, e)
+
     fun handleEvent(sender: Any, e: T) {
         handlers.forEach { it.handleEvent(sender, e) }
     }

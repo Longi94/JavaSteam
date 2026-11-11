@@ -255,7 +255,7 @@ public class KeyValueTest extends TestBase {
         kv.saveToFile(tempFile.toFile(), true);
 
         byte[] binaryValue = Files.readAllBytes(Paths.get(tempFile.toFile().getPath()));
-        String hexValue = Hex.encodeHexString(binaryValue, false).replaceAll("-", "");
+        String hexValue = Hex.encodeHexString(binaryValue, false).replace("-", "");
 
         Assertions.assertEquals(expectedHexValue, hexValue);
     }
@@ -275,7 +275,7 @@ public class KeyValueTest extends TestBase {
         try (MemoryStream ms = new MemoryStream()) {
             kv.saveToStream(ms.asOutputStream(), true);
 
-            String hexValue = Hex.encodeHexString(ms.toByteArray(), false).replaceAll("-", "");
+            String hexValue = Hex.encodeHexString(ms.toByteArray(), false).replace("-", "");
 
             Assertions.assertEquals(expectedHexValue, hexValue);
         } catch (Exception e) {
@@ -329,7 +329,7 @@ public class KeyValueTest extends TestBase {
 
     @Test
     public void keyValuesReadsBinaryWithLeftoverData() throws IOException, DecoderException {
-        byte[] binary = Hex.decodeHex(TEST_OBJECT_HEX + UUID.randomUUID().toString().replaceAll("-", ""));
+        byte[] binary = Hex.decodeHex(TEST_OBJECT_HEX + UUID.randomUUID().toString().replace("-", ""));
         KeyValue kv = new KeyValue();
         boolean success;
 
@@ -498,10 +498,13 @@ public class KeyValueTest extends TestBase {
         kv.getChildren().add(new KeyValue("def", "ghi\njkl"));
 
         String text = saveToText(kv);
-        String expected = ("\n" +
-                "\"abc\"\n" +
-                "{\n" + "\t" + "\"def\"\t\t\"ghi\\njkl\"\n" +
-                "}\n").trim().replace("\r\n", "\n") + "\n";
+        String expected = ("""
+
+                "abc"
+                {
+                \t"def"\t\t"ghi\\njkl"
+                }
+                """).trim().replace("\r\n", "\n") + "\n";
 
         Assertions.assertEquals(expected, text);
     }

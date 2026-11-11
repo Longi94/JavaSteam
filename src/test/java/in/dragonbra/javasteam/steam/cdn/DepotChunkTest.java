@@ -16,13 +16,14 @@ public class DepotChunkTest extends TestBase {
 
     @Test
     public void decryptsAndDecompressesDepotChunkPKZip() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getClassLoader()
-                .getResourceAsStream("depot/depot_440_chunk_bac8e2657470b2eb70d6ddcd6c07004be8738697.bin");
+        var resource = "depot/depot_440_chunk_bac8e2657470b2eb70d6ddcd6c07004be8738697.bin";
 
-        var ms = new MemoryStream();
-        IOUtils.copy(stream, ms.asOutputStream());
-
-        var chunkData = ms.toByteArray();
+        byte[] chunkData;
+        try (var stream = getClass().getClassLoader().getResourceAsStream(resource);
+             var ms = new MemoryStream()) {
+            IOUtils.copy(stream, ms.asOutputStream());
+            chunkData = ms.toByteArray();
+        }
 
         var chunk = new ChunkData(
                 new byte[0], // id is not needed here
@@ -55,13 +56,14 @@ public class DepotChunkTest extends TestBase {
 
     @Test
     public void decryptsAndDecompressesDepotChunkVZip() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getClassLoader()
-                .getResourceAsStream("depot/depot_232250_chunk_7b8567d9b3c09295cdbf4978c32b348d8e76c750.bin");
+        var resource = "depot/depot_232250_chunk_7b8567d9b3c09295cdbf4978c32b348d8e76c750.bin";
 
-        var ms = new MemoryStream();
-        IOUtils.copy(stream, ms.asOutputStream());
-
-        var chunkData = ms.toByteArray();
+        byte[] chunkData;
+        try (var stream = getClass().getClassLoader().getResourceAsStream(resource);
+             var ms = new MemoryStream()) {
+            IOUtils.copy(stream, ms.asOutputStream());
+            chunkData = ms.toByteArray();
+        }
 
         var chunk = new ChunkData(
                 new byte[0], // id is not needed here
@@ -94,13 +96,14 @@ public class DepotChunkTest extends TestBase {
 
     @Test
     public void decryptsAndDecompressesDepotChunkZStd() throws IOException, NoSuchAlgorithmException {
-        var stream = getClass().getClassLoader()
-                .getResourceAsStream("depot/depot_3441461_chunk_9e72678e305540630a665b93e1463bc3983eb55a.bin");
+        var resource = "depot/depot_3441461_chunk_9e72678e305540630a665b93e1463bc3983eb55a.bin";
 
-        var ms = new MemoryStream();
-        IOUtils.copy(stream, ms.asOutputStream());
-
-        var chunkData = ms.toByteArray();
+        byte[] chunkData;
+        try (var stream = getClass().getClassLoader().getResourceAsStream(resource);
+             var ms = new MemoryStream()) {
+            IOUtils.copy(stream, ms.asOutputStream());
+            chunkData = ms.toByteArray();
+        }
 
         var chunk = new ChunkData(
                 new byte[0], // id is not needed here

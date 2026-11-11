@@ -8,6 +8,7 @@ import `in`.dragonbra.javasteam.steam.discovery.IServerListProvider
 import `in`.dragonbra.javasteam.steam.discovery.SmartCMServerList
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.webapi.WebAPI
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.compat.Consumer
 import okhttp3.OkHttpClient
 import java.util.*
@@ -53,6 +54,14 @@ class SteamConfiguration internal constructor(private val state: SteamConfigurat
      */
     val connectionTimeout: Long
         get() = state.connectionTimeout
+
+    /**
+     * How long a logged on connection may go without receiving anything before it is disconnected,
+     * in milliseconds. 0 disables the watchdog.
+     */
+    @JavaSteamAddition
+    val watchdogTimeout: Long
+        get() = state.watchdogTimeout
 
     /**
      * The http client

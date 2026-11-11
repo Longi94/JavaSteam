@@ -6,7 +6,6 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import `in`.dragonbra.javasteam.util.stream.SeekOrigin
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.lang.reflect.InvocationTargetException
 

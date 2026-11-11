@@ -1,182 +1,227 @@
 package `in`.dragonbra.javasteam.networking.steam3
 
 import `in`.dragonbra.javasteam.util.log.LogManager
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.pingInterval
-import io.ktor.client.plugins.websocket.webSocketSession
-import io.ktor.http.URLProtocol
-import io.ktor.http.path
-import io.ktor.websocket.Frame
-import io.ktor.websocket.WebSocketSession
-import io.ktor.websocket.close
-import io.ktor.websocket.readBytes
-import io.ktor.websocket.readText
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
-class WebSocketConnection : Connection() {
+/**
+ * A [Connection] to a Steam CM over a secure WebSocket, backed by OkHttp.
+ *
+ * @param httpClient The base client to derive the WebSocket client from. It shares the base client's
+ * connection pool, dispatcher, proxy and interceptors; only the timeouts are overridden.
+ */
+class WebSocketConnection @JvmOverloads constructor(
+    private val httpClient: OkHttpClient = OkHttpClient(),
+) : Connection() {
 
     companion object {
         private val logger = LogManager.getLogger<WebSocketConnection>()
-        private const val WATCHDOG_TIMEOUT_MS = 30_000L
-        private val PING_INTERVAL = 30.toDuration(DurationUnit.SECONDS)
-        private val WATCHDOG_POLL = 5.toDuration(DurationUnit.SECONDS)
+
+        private const val NORMAL_CLOSURE = 1000
     }
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val disconnecting = AtomicBoolean(false)
-    private val lastFrameTime = AtomicLong(0L)
+    // The live connection attempt. Every teardown swaps it out, so callbacks from any other context are stale.
+    private val currentContext = AtomicReference<WebSocketContext?>(null)
 
-    @Volatile private var client: HttpClient? = null
+    @Volatile
+    private var endpoint: InetSocketAddress? = null
 
-    @Volatile private var session: WebSocketSession? = null
+    override val localIP: InetAddress
+        get() = runCatching { InetAddress.getLocalHost() }.getOrElse { InetAddress.getByAddress(ByteArray(4)) }
 
-    @Volatile private var connectionJob: Job? = null
+    override val currentEndPoint: InetSocketAddress?
+        get() = endpoint
 
-    @Volatile private var endpoint: InetSocketAddress? = null
+    override val protocolTypes: ProtocolTypes
+        get() = ProtocolTypes.WEB_SOCKET
 
     override fun connect(endPoint: InetSocketAddress, timeout: Int) {
-        disconnecting.set(false)
-        connectionJob?.cancel()
+        val newContext = WebSocketContext()
+        val oldContext = currentContext.getAndSet(newContext)
 
-        connectionJob = scope.launch {
-            logger.debug("Trying connection to ${endPoint.hostName}:${endPoint.port}")
-            endpoint = endPoint
-            lastFrameTime.set(System.currentTimeMillis())
-
-            try {
-                val newClient = HttpClient(CIO) {
-                    install(WebSockets) {
-                        pingInterval = PING_INTERVAL
-                    }
-                }
-                client = newClient
-
-                val newSession = newClient.webSocketSession {
-                    url {
-                        host = endPoint.hostName
-                        port = endPoint.port
-                        protocol = URLProtocol.WSS
-                        path("cmsocket/")
-                    }
-                }
-                session = newSession
-
-                logger.debug("Connected to ${endPoint.hostName}:${endPoint.port}")
-                onConnected()
-
-                launch { runWatchdog() }
-
-                newSession.incoming.consumeEach { frame ->
-                    when (frame) {
-                        is Frame.Binary -> {
-                            lastFrameTime.set(System.currentTimeMillis())
-                            onNetMsgReceived(NetMsgEventArgs(frame.readBytes(), currentEndPoint))
-                        }
-
-                        is Frame.Close -> doDisconnect(false)
-
-                        is Frame.Ping -> logger.debug("Received ping")
-
-                        is Frame.Pong -> logger.debug("Received pong")
-
-                        is Frame.Text -> logger.debug("Received text: ${frame.readText()}")
-                    }
-                }
-
-                // Session ended without a Close frame
-                doDisconnect(false)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.error("An error occurred with the WebSocket connection", e)
-                doDisconnect(false)
-            }
+        if (oldContext != null) {
+            logger.debug("Attempted to connect while already connected. Closing old connection...")
+            oldContext.release(sendClose = true)
+            onDisconnected(false)
         }
+
+        logger.debug("Trying connection to ${endPoint.hostString}:${endPoint.port}")
+        endpoint = endPoint
+
+        val client = httpClient.newBuilder()
+            // Max time to open the TCP socket, before TLS and the WebSocket upgrade
+            .connectTimeout(timeout.toLong(), TimeUnit.MILLISECONDS)
+            // Max time for the whole handshake; CMs in maintenance may accept TCP and never finish it
+            .callTimeout(timeout.toLong(), TimeUnit.MILLISECONDS)
+            // Idle is healthy before logon; CMClient's watchdog decides when silence means dead
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            // CMs never answer WebSocket pings, and OkHttp fails the socket on a missing pong
+            .pingInterval(0, TimeUnit.MILLISECONDS)
+            .build()
+
+        // HttpUrl brackets IPv6 literals; OkHttp treats https as wss for WebSockets
+        val url = HttpUrl.Builder()
+            .scheme("https")
+            .host(endPoint.hostString)
+            .port(endPoint.port)
+            .addPathSegment("cmsocket")
+            .addPathSegment("")
+            .build()
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        newContext.socket = client.newWebSocket(request, newContext)
     }
 
     override fun disconnect(userInitiated: Boolean) {
-        doDisconnect(userInitiated)
+        disconnectCore(userInitiated, specificContext = null, sendClose = true)
     }
 
-    private fun doDisconnect(userInitiated: Boolean) {
-        if (!disconnecting.compareAndSet(false, true)) return
-
-        scope.launch {
-            val currentJob = connectionJob
-            val currentSession = session
-            val currentClient = client
-            connectionJob = null
-            session = null
-            client = null
-
-            try {
-                currentSession?.close()
-            } catch (e: Exception) {
-                logger.debug("Error closing WebSocket session: ${e.message}")
-            }
-            try {
-                currentClient?.close()
-            } catch (e: Exception) {
-                logger.debug("Error closing HTTP client: ${e.message}")
-            }
-
-            currentJob?.cancel()
-            currentJob?.join()
-
-            onDisconnected(userInitiated)
+    /**
+     * Retires [specificContext], or whichever context is live when it is null, and raises Disconnected for it.
+     * A context can only be retired once, so racing teardowns (server close, send failure, user disconnect)
+     * raise Disconnected exactly once, and a stale context can never tear down a newer one.
+     *
+     * Disconnected is raised before this returns, like TcpConnection.
+     */
+    private fun disconnectCore(userInitiated: Boolean, specificContext: WebSocketContext?, sendClose: Boolean) {
+        val oldContext = if (specificContext == null) {
+            currentContext.getAndSet(null)
+        } else if (currentContext.compareAndSet(specificContext, null)) {
+            specificContext
+        } else {
+            null
         }
-    }
 
-    private suspend fun runWatchdog() {
-        while (true) {
-            delay(WATCHDOG_POLL)
-
-            val elapsed = System.currentTimeMillis() - lastFrameTime.get()
-            when {
-                elapsed > WATCHDOG_TIMEOUT_MS -> {
-                    logger.error("Watchdog: No response for ${WATCHDOG_TIMEOUT_MS / 1000} seconds, disconnecting")
-                    doDisconnect(false)
-                    return
-                }
-
-                elapsed > 25_000 -> logger.debug("Watchdog: No response for 25 seconds")
-
-                elapsed > 20_000 -> logger.debug("Watchdog: No response for 20 seconds")
-
-                elapsed > 15_000 -> logger.debug("Watchdog: No response for 15 seconds")
-            }
+        if (oldContext == null) {
+            return
         }
+
+        oldContext.release(sendClose)
+        onDisconnected(userInitiated)
+        endpoint = null
     }
 
     override fun send(data: ByteArray) {
-        scope.launch {
-            try {
-                session?.send(Frame.Binary(true, data))
-            } catch (e: Exception) {
-                logger.error("An error occurred while sending data", e)
-                doDisconnect(false)
-            }
+        val context = currentContext.get()
+        val socket = context?.socket
+
+        if (socket == null) {
+            logger.debug("Attempted to send ${data.size} bytes while not connected")
+            return
+        }
+
+        // OkHttp queues sends in order; false means the socket is closing or the 16 MiB outgoing queue is full
+        if (!socket.send(data.toByteString())) {
+            logger.debug("Failed to queue ${data.size} bytes for sending, disconnecting")
+            disconnectCore(userInitiated = false, specificContext = context, sendClose = false)
         }
     }
 
-    override fun getLocalIP(): InetAddress = InetAddress.getLocalHost()
+    /**
+     * A single connection attempt and its socket. OkHttp delivers its callbacks on the socket's
+     * reader thread, one at a time and in order.
+     */
+    private inner class WebSocketContext : WebSocketListener() {
 
-    override fun getCurrentEndPoint(): InetSocketAddress? = endpoint
+        @Volatile
+        var socket: WebSocket? = null
 
-    override fun getProtocolTypes(): ProtocolTypes = ProtocolTypes.WEB_SOCKET
+        // False until the WebSocket upgrade completes
+        @Volatile
+        private var opened = false
+
+        private val isCurrent: Boolean
+            get() = currentContext.get() === this
+
+        fun release(sendClose: Boolean) {
+            if (sendClose && opened) {
+                socket?.close(NORMAL_CLOSURE, null)
+            } else {
+                // A failed, stalled or half-open socket may never answer a close handshake, so drop it outright
+                socket?.cancel()
+            }
+        }
+
+        override fun onOpen(webSocket: WebSocket, response: Response) {
+            // OkHttp can open on its own thread before connect() has stored the socket it returned
+            socket = webSocket
+
+            if (!isCurrent) {
+                webSocket.cancel()
+                return
+            }
+
+            val ep = endpoint
+            logger.debug("Connected to ${ep?.hostString}:${ep?.port} using ${response.handshake?.tlsVersion}")
+
+            opened = true
+
+            try {
+                onConnected()
+            } catch (e: Exception) {
+                logger.error("Exception while setting up connection to ${ep?.hostString}:${ep?.port}", e)
+                disconnectCore(userInitiated = false, specificContext = this, sendClose = true)
+            }
+        }
+
+        override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+            if (!isCurrent || bytes.size == 0) {
+                return
+            }
+
+            // A throwing handler must not take the socket down with it
+            try {
+                onNetMsgReceived(NetMsgEventArgs(bytes.toByteArray(), endpoint))
+            } catch (e: Exception) {
+                logger.error("Unexpected exception propagated back to the read loop", e)
+            }
+        }
+
+        override fun onMessage(webSocket: WebSocket, text: String) {
+            if (!isCurrent) {
+                return
+            }
+
+            // Steam only ever sends binary messages
+            logger.debug("Received websocket text message, disconnecting")
+            disconnectCore(userInitiated = false, specificContext = this, sendClose = true)
+        }
+
+        override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+            if (!isCurrent) {
+                return
+            }
+
+            logger.debug("Server is closing the connection: $code $reason")
+
+            // Answer the close frame, then report the disconnect
+            disconnectCore(userInitiated = false, specificContext = this, sendClose = true)
+        }
+
+        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            disconnectCore(userInitiated = false, specificContext = this, sendClose = false)
+        }
+
+        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            if (!isCurrent) {
+                return
+            }
+
+            logger.error("An error occurred with the WebSocket connection", t)
+            disconnectCore(userInitiated = false, specificContext = this, sendClose = false)
+        }
+    }
 }
