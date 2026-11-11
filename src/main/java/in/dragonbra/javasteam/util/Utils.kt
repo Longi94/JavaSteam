@@ -12,7 +12,7 @@ object Utils {
 
     private val javaRuntime: String? = getSystemProperty("java.runtime.name")
 
-    private val winOsMap: Map<Boolean, EOSType> = linkedMapOf(
+    private val winOsTypes: List<Pair<Boolean, EOSType>> = listOf(
         SystemUtils.IS_OS_WINDOWS_95 to EOSType.Win95,
         SystemUtils.IS_OS_WINDOWS_98 to EOSType.Win98,
         SystemUtils.IS_OS_WINDOWS_ME to EOSType.WinME,
@@ -32,7 +32,10 @@ object Utils {
         checkOS("Windows Server 2022", "10.0") to EOSType.Win2022,
     )
 
-    private val osxOsMap: Map<Boolean, EOSType> = linkedMapOf(
+    // Big Sur point releases (11.1 and later) have their own EOSType
+    private val isMacOS111: Boolean = checkOS("Mac OS X", "11.") && !checkOS("Mac OS X", "11.0")
+
+    private val osxOsTypes: List<Pair<Boolean, EOSType>> = listOf(
         SystemUtils.IS_OS_MAC_OSX_TIGER to EOSType.MacOS104,
         SystemUtils.IS_OS_MAC_OSX_LEOPARD to EOSType.MacOS105,
         SystemUtils.IS_OS_MAC_OSX_SNOW_LEOPARD to EOSType.MacOS106,
@@ -45,11 +48,24 @@ object Utils {
         SystemUtils.IS_OS_MAC_OSX_HIGH_SIERRA to EOSType.Macos1013,
         SystemUtils.IS_OS_MAC_OSX_MOJAVE to EOSType.Macos1014,
         SystemUtils.IS_OS_MAC_OSX_CATALINA to EOSType.Macos1015,
-        SystemUtils.IS_OS_MAC_OSX_BIG_SUR to EOSType.MacOS11,
+        // 10.16 and later are what macOS reports to apps linked against an older SDK
+        checkOS("Mac OS X", "10.16") to EOSType.MacOS1016,
+        checkOS("Mac OS X", "10.17") to EOSType.MacOS1017,
+        checkOS("Mac OS X", "10.18") to EOSType.MacOS1018,
+        checkOS("Mac OS X", "10.19") to EOSType.MacOS1019,
+        checkOS("Mac OS X", "10.20") to EOSType.MacOS1020,
+        checkOS("Mac OS X", "10.21") to EOSType.MacOS1021,
+        checkOS("Mac OS X", "10.22") to EOSType.MacOS1022,
+        checkOS("Mac OS X", "10.23") to EOSType.MacOS1023,
+        (SystemUtils.IS_OS_MAC_OSX_BIG_SUR && !isMacOS111) to EOSType.MacOS11,
+        isMacOS111 to EOSType.MacOS111,
         SystemUtils.IS_OS_MAC_OSX_MONTEREY to EOSType.MacOS12,
         SystemUtils.IS_OS_MAC_OSX_VENTURA to EOSType.MacOS13,
         SystemUtils.IS_OS_MAC_OSX_SONOMA to EOSType.MacOS14,
         SystemUtils.IS_OS_MAC_OSX_SEQUOIA to EOSType.MacOS15,
+        checkOS("Mac OS X", "26") to EOSType.MacOS26, // Tahoe
+        checkOS("Mac OS X", "27") to EOSType.MacOS27, // Golden Gate
+        checkOS("Mac OS X", "28") to EOSType.MacOS28, // Codename: Poppy
     )
 
     private val linuxOsMap: Map<String, EOSType> = linkedMapOf(
@@ -80,61 +96,30 @@ object Utils {
     )
 
     // Sorted in history order by each OS release.
+    // Android also reports itself as Linux, so it has to be checked before Linux.
     @JvmStatic
-    fun getOSType(): EOSType {
-        // Windows
-        if (SystemUtils.IS_OS_WINDOWS) {
-            for ((matched, type) in winOsMap) {
-                if (matched) {
-                    return type
-                }
-            }
+    fun getOSType(): EOSType = when {
+        SystemUtils.IS_OS_WINDOWS -> winOsTypes.firstMatch() ?: EOSType.WinUnknown
+        SystemUtils.IS_OS_MAC -> osxOsTypes.firstMatch() ?: EOSType.MacOSUnknown
+        javaRuntime?.startsWith("Android") == true -> EOSType.AndroidUnknown
+        SystemUtils.IS_OS_LINUX -> getLinuxOSType()
+        else -> EOSType.Unknown
+    }
 
-            return EOSType.WinUnknown
-        }
-
-        // Mac OS
-        if (SystemUtils.IS_OS_MAC) {
-            for ((matched, type) in osxOsMap) {
-                if (matched) {
-                    return type
-                }
-            }
-
-            return EOSType.MacOSUnknown
-        }
-
-        // Android
-        if (javaRuntime?.startsWith("Android") == true) {
-            return EOSType.AndroidUnknown
-        }
-
-        // Linux
-        if (SystemUtils.IS_OS_LINUX) {
-            val linuxOsVersion = getSystemProperty("os.version") ?: return EOSType.LinuxUnknown
-
-            val osVersion = linuxOsVersion.split(".")
-            if (osVersion.size < 2) {
-                return EOSType.LinuxUnknown
-            }
-
-            val version = "${osVersion[0]}.${osVersion[1]}"
-
-            // Found Major/Minor version
-            linuxOsMap[version]?.let { return it }
-
-            // Found generic Linux version
-            val majorVersion = "${osVersion[0]}x"
-            genericLinuxOsMap[majorVersion]?.let { return it }
-
+    private fun getLinuxOSType(): EOSType {
+        val osVersion = getSystemProperty("os.version")?.split(".") ?: return EOSType.LinuxUnknown
+        if (osVersion.size < 2) {
             return EOSType.LinuxUnknown
         }
 
-        // Unknown OS
-        return EOSType.Unknown
+        // Exact major.minor version first, then the generic major version
+        return linuxOsMap["${osVersion[0]}.${osVersion[1]}"]
+            ?: genericLinuxOsMap["${osVersion[0]}x"]
+            ?: EOSType.LinuxUnknown
     }
 
-    @Suppress("SameParameterValue")
+    private fun List<Pair<Boolean, EOSType>>.firstMatch(): EOSType? = firstOrNull { it.first }?.second
+
     private fun checkOS(namePrefix: String, versionPrefix: String): Boolean =
         SystemUtils.OS_NAME.startsWith(namePrefix) && SystemUtils.OS_VERSION.startsWith(versionPrefix)
 
