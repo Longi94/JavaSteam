@@ -6,18 +6,10 @@ import `in`.dragonbra.javasteam.enums.EOSType
 import `in`.dragonbra.javasteam.enums.EPlatformType
 import `in`.dragonbra.javasteam.enums.EResult
 import `in`.dragonbra.javasteam.enums.ESteamRealm
-import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.EBluetoothDeviceType
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.CClientMetrics_CloudAppSyncStats_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppExitSyncDone_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_AppLaunchIntent_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_BeginAppUploadBatch_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientBeginFileUpload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientCommitFileUpload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ClientFileDownload_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_CompleteAppUploadBatch_Request
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_ExternalStorageTransferReport_Notification
-import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.CCloud_GetAppFileChangelist_Request
+import `in`.dragonbra.javasteam.protobufs.steamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.Enums.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetricsSteamclient.*
+import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.ClientMetrics
 import `in`.dragonbra.javasteam.rpc.service.Cloud
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
@@ -29,11 +21,10 @@ import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnified
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.future.future
-import java.util.Date
-import java.util.concurrent.CompletableFuture
+import kotlinx.coroutines.*
+import kotlinx.coroutines.future.*
+import java.util.*
+import java.util.concurrent.*
 
 /**
  * This handler is used for interacting with remote storage and user generated content.

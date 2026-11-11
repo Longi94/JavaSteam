@@ -21,7 +21,7 @@ internal constructor(
 
     companion object {
         @JvmField
-        val ESCAPED_MAPPING = mapOf<Char, Char>(
+        val ESCAPED_MAPPING = mapOf(
             '\\' to '\\',
             'n' to '\n',
             'r' to '\r',
@@ -57,9 +57,11 @@ internal constructor(
         val wasQuoted = Passable(false)
         val wasConditional = Passable(false)
 
+        @Suppress("CanBeVal")
         var currentKey: KeyValue? = kv
 
         do {
+            @Suppress("CanBeVal")
             var s = readToken(wasQuoted, wasConditional)
 
             if (s.isNullOrEmpty()) {

@@ -201,14 +201,14 @@ public class WebSocketConnectionTest {
         var loopback = InetAddress.getByName("::1");
 
         var ipv6Server = new MockWebServer();
-        ipv6Server.useHttps(serverCertificates.sslSocketFactory());
-        try {
-            ipv6Server.start(loopback, 0);
-        } catch (IOException e) {
-            Assumptions.abort("IPv6 loopback unavailable: " + e.getMessage());
-        }
 
-        try {
+        try (ipv6Server) {
+            ipv6Server.useHttps(serverCertificates.sslSocketFactory());
+            try {
+                ipv6Server.start(loopback, 0);
+            } catch (IOException e) {
+                Assumptions.abort("IPv6 loopback unavailable: " + e.getMessage());
+            }
             ipv6Server.enqueue(upgrade(new FakeCm()));
 
             var connection = newConnection();
@@ -220,8 +220,6 @@ public class WebSocketConnectionTest {
             assertEquals("/cmsocket/", ipv6Server.takeRequest().getUrl().encodedPath());
 
             connection.disconnect(true);
-        } finally {
-            ipv6Server.close();
         }
     }
 

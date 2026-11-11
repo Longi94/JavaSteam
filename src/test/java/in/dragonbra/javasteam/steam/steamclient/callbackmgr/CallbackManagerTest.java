@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class CallbackManagerTest extends TestBase {
 
-    Logger logger = LogManager.getLogger(CallbackManagerTest.class);
+    final Logger logger = LogManager.getLogger(CallbackManagerTest.class);
     private SteamClient client;
     private CallbackManager mgr;
 
@@ -119,9 +119,7 @@ public class CallbackManagerTest extends TestBase {
         callback.setUniqueID(UUID.randomUUID());
 
         var didCall = new AtomicBoolean(false);
-        try (var ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), cb -> {
-            didCall.set(true);
-        })) {
+        try (var ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), cb -> didCall.set(true))) {
             postAndRunCallback(callback);
         } catch (IOException e) {
             logger.error(e);
@@ -327,9 +325,7 @@ public class CallbackManagerTest extends TestBase {
 
         var didCall = new AtomicBoolean(false);
 
-        try (var ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), cb -> {
-            didCall.set(true);
-        })) {
+        try (var ignored = mgr.subscribe(CallbackForTest.class, new JobID(123), cb -> didCall.set(true))) {
             postAndRunCallback(callback);
         }
 

@@ -25,92 +25,50 @@ import java.io.UnsupportedEncodingException;
 public abstract class TestPackets {
 
     public static byte[] getPacket(EMsg msgType, boolean isProto) {
-        switch (msgType) {
-            case ClientLogOnResponse:
-                return clientLogOnResponse(isProto);
-            case ClientLoggedOff:
-                return clientLoggedOff(isProto);
-            case ClientNewLoginKey:
-                return clientNewLoginKey();
-            case ClientSessionToken:
-                return clientSessionToken();
-            case ClientUpdateMachineAuth:
-                return clientUpdateMachineAuth();
-            case ClientAccountInfo:
-                return clientAccountInfo();
-            case ClientWalletInfoUpdate:
-                return clientWalletInfoUpdate();
-            case ClientRequestWebAPIAuthenticateUserNonceResponse:
-                return clientRequestWebAPIAuthenticateUserNonceResponse();
-            case ClientMarketingMessageUpdate2:
-                return clientMarketingMessageUpdate2();
-            case ClientFriendMsgIncoming:
-                return clientFriendMsgIncoming();
-            case ClientFriendMsgEchoToSender:
-                return clientFriendMsgEchoToSender();
-            case ClientChatGetFriendMessageHistoryResponse:
-                return clientChatGetFriendMessageHistoryResponse();
-            case ClientFriendsList:
-                return clientFriendsList();
-            case ClientPersonaState:
-                return clientPersonaState();
-            case ClientClanState:
-                return clientClanState();
-            case ClientAddFriendResponse:
-                return clientAddFriendResponse();
-            case ClientChatEnter:
-                return clientChatEnter();
-            case ClientChatMsg:
-                return clientChatMsg();
-            case ClientChatMemberInfo:
-                return clientChatMemberInfo();
-            case ClientChatRoomInfo:
-                return clientChatRoomInfo();
-            case ClientChatActionResult:
-                return clientChatActionResult();
-            case ClientChatInvite:
-                return clientChatInvite();
-            case ClientSetIgnoreFriendResponse:
-                return clientSetIgnoreFriendResponse();
-            case ClientFriendProfileInfoResponse:
-                return clientFriendProfileInfoResponse();
-            case ClientPersonaChangeResponse:
-                return clientPersonaChangeResponse();
-            case ClientPlayerNicknameList:
-                return clientPlayerNicknameList();
-            case AMClientSetPlayerNicknameResponse:
-                return aMClientSetPlayerNicknameResponse();
-            case ClientAMGetPersonaNameHistoryResponse:
-                return clientAMGetPersonaNameHistoryResponse();
-            case ClientPICSProductInfoResponse:
-                return clientPICSProductInfoResponse();
-            case ClientUpdateGuestPassesList:
-                return clientUpdateGuestPassesList();
-            case ClientPICSChangesSinceResponse:
-                return clientPICSChangesSinceResponse();
-            case ClientPICSAccessTokenResponse:
-                return clientPICSAccessTokenResponse();
-            case ClientLicenseList:
-                return clientLicenseList();
-            case ClientGameConnectTokens:
-                return clientGameConnectTokens();
-            case ClientVACBanStatus:
-                return clientVACBanStatus();
-            case ClientRequestFreeLicenseResponse:
-                return clientRequestFreeLicenseResponse();
-            case ClientGetAppOwnershipTicketResponse:
-                return clientGetAppOwnershipTicketResponse();
-            case ClientGetDepotDecryptionKeyResponse:
-                return clientGetDepotDecryptionKeyResponse();
-            // case ClientGetCDNAuthTokenResponse:
-            //     return clientGetCDNAuthTokenResponse();
-            case ClientCheckAppBetaPasswordResponse:
-                return clientCheckAppBetaPasswordResponse();
-            case ClientGetUserStatsResponse:
-                return clientGetUserStatsResponse();
-            default:
-                throw new NullPointerException();
-        }
+        return switch (msgType) {
+            case ClientLogOnResponse -> clientLogOnResponse(isProto);
+            case ClientLoggedOff -> clientLoggedOff(isProto);
+            case ClientNewLoginKey -> clientNewLoginKey();
+            case ClientSessionToken -> clientSessionToken();
+            case ClientUpdateMachineAuth -> clientUpdateMachineAuth();
+            case ClientAccountInfo -> clientAccountInfo();
+            case ClientWalletInfoUpdate -> clientWalletInfoUpdate();
+            case ClientRequestWebAPIAuthenticateUserNonceResponse -> clientRequestWebAPIAuthenticateUserNonceResponse();
+            case ClientMarketingMessageUpdate2 -> clientMarketingMessageUpdate2();
+            case ClientFriendMsgIncoming -> clientFriendMsgIncoming();
+            case ClientFriendMsgEchoToSender -> clientFriendMsgEchoToSender();
+            case ClientChatGetFriendMessageHistoryResponse -> clientChatGetFriendMessageHistoryResponse();
+            case ClientFriendsList -> clientFriendsList();
+            case ClientPersonaState -> clientPersonaState();
+            case ClientClanState -> clientClanState();
+            case ClientAddFriendResponse -> clientAddFriendResponse();
+            case ClientChatEnter -> clientChatEnter();
+            case ClientChatMsg -> clientChatMsg();
+            case ClientChatMemberInfo -> clientChatMemberInfo();
+            case ClientChatRoomInfo -> clientChatRoomInfo();
+            case ClientChatActionResult -> clientChatActionResult();
+            case ClientChatInvite -> clientChatInvite();
+            case ClientSetIgnoreFriendResponse -> clientSetIgnoreFriendResponse();
+            case ClientFriendProfileInfoResponse -> clientFriendProfileInfoResponse();
+            case ClientPersonaChangeResponse -> clientPersonaChangeResponse();
+            case ClientPlayerNicknameList -> clientPlayerNicknameList();
+            case AMClientSetPlayerNicknameResponse -> aMClientSetPlayerNicknameResponse();
+            case ClientAMGetPersonaNameHistoryResponse -> clientAMGetPersonaNameHistoryResponse();
+            case ClientPICSProductInfoResponse -> clientPICSProductInfoResponse();
+            case ClientUpdateGuestPassesList -> clientUpdateGuestPassesList();
+            case ClientPICSChangesSinceResponse -> clientPICSChangesSinceResponse();
+            case ClientPICSAccessTokenResponse -> clientPICSAccessTokenResponse();
+            case ClientLicenseList -> clientLicenseList();
+            case ClientGameConnectTokens -> clientGameConnectTokens();
+            case ClientVACBanStatus -> clientVACBanStatus();
+            case ClientRequestFreeLicenseResponse -> clientRequestFreeLicenseResponse();
+            case ClientGetAppOwnershipTicketResponse -> clientGetAppOwnershipTicketResponse();
+            case ClientGetDepotDecryptionKeyResponse -> clientGetDepotDecryptionKeyResponse();
+            // case ClientGetCDNAuthTokenResponse -> clientGetCDNAuthTokenResponse();
+            case ClientCheckAppBetaPasswordResponse -> clientCheckAppBetaPasswordResponse();
+            case ClientGetUserStatsResponse -> clientGetUserStatsResponse();
+            default -> throw new NullPointerException();
+        };
     }
 
     private static byte[] loadFile(String name) {
@@ -215,10 +173,7 @@ public abstract class TestPackets {
         ClientMsgProtobuf<CMsgClientFriendMsgIncoming.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientFriendMsgIncoming.class, EMsg.ClientFriendMsgIncoming);
 
-        try {
-            msg.getBody().setMessage(ByteString.copyFrom("testmessage", "utf-8"));
-        } catch (UnsupportedEncodingException ignored) {
-        }
+        msg.getBody().setMessage(ByteString.copyFromUtf8("testmessage"));
 
         msg.getBody().setSteamidFrom(123);
         return msg.serialize();
@@ -228,10 +183,7 @@ public abstract class TestPackets {
         ClientMsgProtobuf<CMsgClientFriendMsgIncoming.Builder> msg =
                 new ClientMsgProtobuf<>(CMsgClientFriendMsgIncoming.class, EMsg.ClientFriendMsgEchoToSender);
 
-        try {
-            msg.getBody().setMessage(ByteString.copyFrom("testmessage", "utf-8"));
-        } catch (UnsupportedEncodingException ignored) {
-        }
+        msg.getBody().setMessage(ByteString.copyFromUtf8("testmessage"));
 
         msg.getBody().setSteamidFrom(123);
         return msg.serialize();

@@ -100,6 +100,8 @@ object ClientLancache {
      * @return OkHttp Request object configured for Lancache
      */
     fun buildLancacheRequest(server: Server, command: String, query: String? = null): Request {
+        // SK ClientLancache.cs has 'http'.
+        @Suppress("HttpUrlsUsage")
         val urlBuilder = "http://lancache.steamcontent.com:80".toHttpUrl().newBuilder()
             .addPathSegments(command.trimStart('/'))
 

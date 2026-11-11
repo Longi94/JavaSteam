@@ -420,7 +420,6 @@ class AsyncJobTest {
         Assertions.assertThrows(CancellationException::class.java) { runBlocking { asyncTask.await() } }
     }
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     @Test
     fun asyncJobMultipleCompletesOnIncompleteResult() {
         val client = ConnectedSteamClient.get().apply {

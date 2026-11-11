@@ -110,35 +110,37 @@ class SteamClientTest {
 
     @Test
     public void addHandlerThrowsOnDuplicateHandler() {
-        var steamClient = new SteamClient();
-        steamClient.addHandler(new TestMsgHandler());
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.addHandler(new TestMsgHandler()));
+        try (var steamClient = new SteamClient()) {
+            steamClient.addHandler(new TestMsgHandler());
+            Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.addHandler(new TestMsgHandler()));
+        }
     }
 
     @Test
     public void removeHandlerByTypeDoesNothingWhenNotRegistered() {
-        var steamClient = new SteamClient();
-        Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+        try (var steamClient = new SteamClient()) {
+            Assertions.assertNull(client.getHandler(TestMsgHandler.class));
 
-        steamClient.removeHandler(TestMsgHandler.class);
-        Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+            steamClient.removeHandler(TestMsgHandler.class);
+            Assertions.assertNull(client.getHandler(TestMsgHandler.class));
+        }
     }
 
     @Test
     public void getRequiredHandlerReturnsHandler() {
-        var steamClient = new SteamClient();
-        var handler = steamClient.getRequiredHandler(SteamUser.class);
+        try (var steamClient = new SteamClient()) {
+            var handler = steamClient.getRequiredHandler(SteamUser.class);
 
-        Assertions.assertNotNull(handler);
-        Assertions.assertEquals(SteamUser.class, handler.getClass());
+            Assertions.assertNotNull(handler);
+            Assertions.assertEquals(SteamUser.class, handler.getClass());
+        }
     }
 
     @Test
     public void getRequiredHandlerThrowsWhenNotRegistered() {
-        var steamClient = new SteamClient();
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.getRequiredHandler(TestMsgHandler.class));
+        try (var steamClient = new SteamClient()) {
+            Assertions.assertThrows(IllegalArgumentException.class, () -> steamClient.getRequiredHandler(TestMsgHandler.class));
+        }
     }
 
     @Test
@@ -152,13 +154,14 @@ class SteamClientTest {
     public void getNextJobIDFillsProcessStartTime() {
         // JavaSteam uses the time the client was created, with second precision, instead of the process start time.
         var before = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-        var steamClient = new SteamClient();
-        var after = Instant.now();
+        try (var steamClient = new SteamClient()) {
+            var after = Instant.now();
 
-        var startTime = steamClient.getNextJobID().getStartTime().toInstant();
+            var startTime = steamClient.getNextJobID().getStartTime().toInstant();
 
-        Assertions.assertFalse(startTime.isBefore(before), "Start time should not be before the client was created");
-        Assertions.assertFalse(startTime.isAfter(after), "Start time should not be after the client was created");
+            Assertions.assertFalse(startTime.isBefore(before), "Start time should not be before the client was created");
+            Assertions.assertFalse(startTime.isAfter(after), "Start time should not be after the client was created");
+        }
     }
 
     @Test
@@ -195,9 +198,7 @@ class SteamClientTest {
         };
         client.postCallback(callback);
 
-        Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
-            Assertions.assertSame(callback, client.waitForCallback(1000));
-        });
+        Assertions.assertTimeoutPreemptively(Duration.ofSeconds(5), () -> Assertions.assertSame(callback, client.waitForCallback(1000)));
     }
 
     static class TestMsgHandler extends ClientMsgHandler {

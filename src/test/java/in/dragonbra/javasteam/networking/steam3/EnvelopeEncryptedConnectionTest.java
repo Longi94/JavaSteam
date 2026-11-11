@@ -81,7 +81,7 @@ public class EnvelopeEncryptedConnectionTest extends TestBase {
     }
 
     private static byte[] serializeEncryptRequest() throws IOException {
-        var request = new Msg<MsgChannelEncryptRequest>(MsgChannelEncryptRequest.class);
+        var request = new Msg<>(MsgChannelEncryptRequest.class);
         request.getBody().setUniverse(EUniverse.Public);
         request.getBody().setProtocolVersion(1);
         request.writeBytes(randomBytes(16));
@@ -90,7 +90,7 @@ public class EnvelopeEncryptedConnectionTest extends TestBase {
     }
 
     private static byte[] serializeEncryptResult() {
-        var result = new Msg<MsgChannelEncryptResult>(MsgChannelEncryptResult.class);
+        var result = new Msg<>(MsgChannelEncryptResult.class);
         result.getBody().setResult(EResult.OK);
 
         return result.serialize();

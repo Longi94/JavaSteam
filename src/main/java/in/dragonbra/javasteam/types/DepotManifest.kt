@@ -249,7 +249,6 @@ class DepotManifest {
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private fun internalDeserialize(stream: InputStream) {
         var payload: ContentManifestPayload? = null
         var metadata: ContentManifestMetadata? = null
