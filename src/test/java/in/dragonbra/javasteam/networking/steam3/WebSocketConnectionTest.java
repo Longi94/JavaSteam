@@ -157,7 +157,24 @@ public class WebSocketConnectionTest {
     }
 
     @Test
-    void textAndEmptyMessagesAreIgnored() throws Exception {
+    void textMessageRaisesDisconnected() throws Exception {
+        var cm = new FakeCm();
+        server.enqueue(upgrade(cm));
+
+        var connection = newConnection();
+        var events = new Events(connection);
+        connection.connect(endpoint(), CONNECT_TIMEOUT_MS);
+        events.expect("connected");
+
+        cm.awaitOpen().send("hello");
+
+        // Not user initiated, so apps reconnect
+        events.expect("disconnected:false");
+        events.expectQuiet();
+    }
+
+    @Test
+    void emptyMessagesAreIgnored() throws Exception {
         var cm = new FakeCm();
         server.enqueue(upgrade(cm));
 
@@ -167,7 +184,6 @@ public class WebSocketConnectionTest {
         events.expect("connected");
 
         var serverSocket = cm.awaitOpen();
-        serverSocket.send("hello");
         serverSocket.send(ByteString.EMPTY);
         serverSocket.send(ByteString.of((byte) 1));
 

@@ -195,7 +195,9 @@ class WebSocketConnection @JvmOverloads constructor(
                 return
             }
 
-            logger.debug("Received websocket text message: \"$text\"")
+            // Steam only ever sends binary messages
+            logger.debug("Received websocket text message, disconnecting")
+            disconnectCore(userInitiated = false, specificContext = this, sendClose = true)
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
