@@ -162,6 +162,7 @@ dependencies {
     implementation(libs.bundles.okHttp)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)
+    implementation(libs.kotlin.serialization.json)
     implementation(libs.kotlin.stdib)
     implementation(libs.protobuf.java)
     compileOnly(libs.xz)

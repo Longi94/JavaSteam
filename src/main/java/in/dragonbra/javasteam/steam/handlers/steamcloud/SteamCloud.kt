@@ -12,17 +12,21 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientmetrics
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesCloudSteamclient.*
 import `in`.dragonbra.javasteam.rpc.service.ClientMetrics
 import `in`.dragonbra.javasteam.rpc.service.Cloud
+import `in`.dragonbra.javasteam.steam.authentication.AuthPollResult
 import `in`.dragonbra.javasteam.steam.authentication.AuthSession
+import `in`.dragonbra.javasteam.steam.authentication.SteamAuthentication
 import `in`.dragonbra.javasteam.steam.handlers.ClientMsgHandler
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.ShareFileCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.SingleFileInfoCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamcloud.callback.UGCDetailsCallback
 import `in`.dragonbra.javasteam.steam.handlers.steamunifiedmessages.SteamUnifiedMessages
+import `in`.dragonbra.javasteam.types.SteamID
 import `in`.dragonbra.javasteam.types.UGCHandle
 import `in`.dragonbra.javasteam.util.HardwareUtils
 import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.*
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.*
 
@@ -538,6 +542,149 @@ class SteamCloud : ClientMsgHandler() {
         }
 
         cloudService.externalStorageTransferReport(request.build())
+    }
+
+    /**
+     * Uploads an image or video to the chat with a friend. Steam posts it to the chat once it is uploaded.
+     *
+     * This goes through the community website and not the CM connection,
+     * so it needs the access token of the logged-in user.
+     *
+     * @param accessToken The access token, from [AuthPollResult.accessToken] or
+     *  [SteamAuthentication.generateAccessTokenForApp].
+     * @param friendSteamId The friend to send the media to.
+     * @param media The file, of at most 10 MiB: a PNG, JPEG or GIF image, or a WebM, MPEG or OGV video.
+     *  Its type is read from its header.
+     * @param fileName The file name, or null to make one up.
+     * @param spoiler Whether the media is hidden until clicked.
+     * @return Where Steam stored the media, with the URL it can be reached at.
+     */
+    @JavaSteamAddition
+    @JvmOverloads
+    fun uploadChatMediaToUser(
+        accessToken: String,
+        friendSteamId: SteamID,
+        media: ByteArray,
+        fileName: String? = null,
+        spoiler: Boolean = false,
+        parentScope: CoroutineScope = client.defaultScope,
+    ): CompletableFuture<ChatMediaUploadResult> = parentScope.future {
+        uploadChatMediaToUser(accessToken, friendSteamId, media, fileName, spoiler)
+    }
+
+    /**
+     * Uploads an image or video to the chat with a friend. Steam posts it to the chat once it is uploaded.
+     *
+     * This goes through the community website and not the CM connection,
+     * so it needs the access token of the logged-in user.
+     *
+     * @param accessToken The access token, from [AuthPollResult.accessToken] or [SteamAuthentication.generateAccessTokenForApp].
+     * @param friendSteamId The friend to send the media to.
+     * @param media The file, of at most 10 MiB: a PNG, JPEG or GIF image, or a WebM, MPEG or OGV video.
+     *  Its type is read from its header.
+     * @param fileName The file name, or null to make one up.
+     * @param spoiler Whether the media is hidden until clicked.
+     * @return Where Steam stored the media, with the URL it can be reached at.
+     * @throws IllegalArgumentException if the media is too large or not a supported format.
+     * @throws IOException if a request fails or Steam turns it down, for one when the access token is rejected.
+     */
+    @JavaSteamAddition
+    suspend fun uploadChatMediaToUser(
+        accessToken: String,
+        friendSteamId: SteamID,
+        media: ByteArray,
+        fileName: String? = null,
+        spoiler: Boolean = false,
+    ): ChatMediaUploadResult = uploadChatMedia(
+        accessToken = accessToken,
+        media = media,
+        fileName = fileName,
+        spoiler = spoiler,
+        destination = mapOf("friend_steamid" to friendSteamId.convertToUInt64().toULong().toString()),
+    )
+
+    /**
+     * Uploads an image or video to a channel of a chat room group. Steam posts it to the channel once it is uploaded.
+     *
+     * This goes through the community website and not the CM connection,
+     * so it needs the access token of the logged-in user.
+     *
+     * @param accessToken The access token, from [AuthPollResult.accessToken] or [SteamAuthentication.generateAccessTokenForApp].
+     * @param chatGroupId The ID of the chat room group.
+     * @param chatId The ID of the channel within the group.
+     * @param media The file, of at most 10 MiB: a PNG, JPEG or GIF image, or a WebM, MPEG or OGV video.
+     *  Its type is read from its header.
+     * @param fileName The file name, or null to make one up.
+     * @param spoiler Whether the media is hidden until clicked.
+     * @return Where Steam stored the media, with the URL it can be reached at.
+     */
+    @JavaSteamAddition
+    @JvmOverloads
+    fun uploadChatMediaToChatRoom(
+        accessToken: String,
+        chatGroupId: Long,
+        chatId: Long,
+        media: ByteArray,
+        fileName: String? = null,
+        spoiler: Boolean = false,
+        parentScope: CoroutineScope = client.defaultScope,
+    ): CompletableFuture<ChatMediaUploadResult> = parentScope.future {
+        uploadChatMediaToChatRoom(accessToken, chatGroupId, chatId, media, fileName, spoiler)
+    }
+
+    /**
+     * Uploads an image or video to a channel of a chat room group. Steam posts it to the channel once it is uploaded.
+     *
+     * This goes through the community website and not the CM connection,
+     * so it needs the access token of the logged-in user.
+     *
+     * @param accessToken The access token, from [AuthPollResult.accessToken] or [SteamAuthentication.generateAccessTokenForApp].
+     * @param chatGroupId The ID of the chat room group.
+     * @param chatId The ID of the channel within the group.
+     * @param media The file, of at most 10 MiB: a PNG, JPEG or GIF image, or a WebM, MPEG or OGV video.
+     *  Its type is read from its header.
+     * @param fileName The file name, or null to make one up.
+     * @param spoiler Whether the media is hidden until clicked.
+     * @return Where Steam stored the media, with the URL it can be reached at.
+     * @throws IllegalArgumentException if the media is too large or not a supported format.
+     * @throws IOException if a request fails or Steam turns it down, for one when the access token is rejected.
+     */
+    @JavaSteamAddition
+    suspend fun uploadChatMediaToChatRoom(
+        accessToken: String,
+        chatGroupId: Long,
+        chatId: Long,
+        media: ByteArray,
+        fileName: String? = null,
+        spoiler: Boolean = false,
+    ): ChatMediaUploadResult = uploadChatMedia(
+        accessToken = accessToken,
+        media = media,
+        fileName = fileName,
+        spoiler = spoiler,
+        destination = mapOf(
+            "chat_group_id" to chatGroupId.toULong().toString(),
+            "chat_id" to chatId.toULong().toString(),
+        ),
+    )
+
+    private suspend fun uploadChatMedia(
+        accessToken: String,
+        media: ByteArray,
+        fileName: String?,
+        spoiler: Boolean,
+        destination: Map<String, String>,
+    ): ChatMediaUploadResult {
+        val steamId = requireNotNull(client.steamID) { "No SteamID, the client is not logged on" }
+
+        return ChatMediaUploader(client.configuration.httpClient).upload(
+            steamId = steamId.convertToUInt64(),
+            accessToken = accessToken,
+            media = media,
+            fileName = fileName,
+            spoiler = spoiler,
+            destination = destination,
+        )
     }
 
     /**
