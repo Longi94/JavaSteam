@@ -79,6 +79,32 @@ public class CDNClientTest {
     }
 
     @Test
+    public void closingOneClientLeavesTheSharedHttpClientUsable() {
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .addInterceptor(new TeapotInterceptor())
+                .build();
+
+        var configuration = SteamConfiguration.create(x -> x.withHttpClient(httpClient));
+        var steam = new SteamClient(configuration);
+        var server = Server.fromHostAndPort("localhost", 80);
+
+        // The HTTP client belongs to the configuration, closing a CDN client must not shut it down.
+        new Client(steam).close();
+
+        Assertions.assertFalse(httpClient.dispatcher().executorService().isShutdown());
+
+        try (var client = new Client(steam)) {
+            Exception exception = Assertions.assertThrows(ExecutionException.class, () ->
+                    client.downloadManifestFuture(0, 0, 0, server).get()
+            );
+
+            // The request still reaches the server (the interceptor), it is not rejected by a dead executor.
+            Assertions.assertInstanceOf(SteamKitWebRequestException.class, exception.getCause());
+            Assertions.assertTrue(exception.getMessage().contains("418"));
+        }
+    }
+
+    @Test
     public void throwsWhenNoChunkIDIsSet() {
         OkHttpClient httpClient = new OkHttpClient.Builder()
                 .addInterceptor(new TeapotInterceptor())

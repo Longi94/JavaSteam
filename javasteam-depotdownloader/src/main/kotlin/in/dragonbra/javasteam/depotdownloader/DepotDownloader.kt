@@ -18,20 +18,16 @@ import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.HttpHeaders
-import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.*
+import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
-import okio.buffer
 import org.apache.commons.lang3.SystemUtils
 import java.io.Closeable
 import java.io.IOException
@@ -63,7 +59,9 @@ import java.util.concurrent.atomic.*
  * @param licenses User's license list from [LicenseListCallback]. Required to determine which depots the account has access to.
  * @param debug Enables detailed logging of all operations via [LogManager]
  * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
- * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8. Higher is better
+ * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8.
+ * Higher is faster on a good connection, lower is easier on memory, the network and the CDN servers. All of them may go to
+ * one server, which is what a LAN cache needs.
  * @param maxFileWrites Number of concurrent files being written. Default: 1
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
@@ -103,6 +101,8 @@ class DepotDownloader @JvmOverloads constructor(
         private fun fraction(done: Long, total: Long): Float = if (total <= 0L) 1f else done.toFloat() / total
 
         private val SupportedWorkshopFileTypes: Set<EWorkshopFileType> = setOf(
+            // First and Community share the value 0, and EWorkshopFileType.from(0) returns First.
+            EWorkshopFileType.First,
             EWorkshopFileType.Community,
             EWorkshopFileType.Art,
             EWorkshopFileType.Screenshot,
@@ -115,8 +115,6 @@ class DepotDownloader @JvmOverloads constructor(
     private val completionFuture = CompletableFuture<Void>()
 
     private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
-
-    private val httpClient: HttpClient by lazy { HttpClient(maxConnections = maxDownloads) }
 
     private val listeners = CopyOnWriteArrayList<IDownloadListener>()
 
@@ -135,6 +133,19 @@ class DepotDownloader @JvmOverloads constructor(
     )
 
     private var cdnClientPool: CDNClientPool? = null
+
+    // Derived from the SteamClient's HTTP client on first use, see [HttpClient]. Built late on
+    // purpose: a detected LAN cache raises maxDownloads before the first item is processed.
+    private var ownHttpClient: OkHttpClient? = null
+
+    private val httpClientLock = Any()
+
+    private fun httpClient(): OkHttpClient = synchronized(httpClientLock) {
+        ownHttpClient ?: HttpClient.create(
+            base = steamClient.configuration.httpClient,
+            maxDownloads = maxDownloads,
+        ).also { ownHttpClient = it }
+    }
 
     private var config: Config = Config(androidEmulation = androidEmulation)
 
@@ -344,13 +355,21 @@ class DepotDownloader @JvmOverloads constructor(
         publishedFileId: Long,
         fileUrls: MutableList<Pair<String, String>>,
         contentFileIds: MutableList<Long>,
+        skipReasons: MutableList<String>,
     ) {
         val details = steam3!!.getPublishedFileDetails(appId, PublishedFileID(publishedFileId))
-        val fileType = EWorkshopFileType.from(details!!.fileType)
+        if (details == null) {
+            val reason = "Unable to get the details of published file $publishedFileId"
+            log.error(reason)
+            skipReasons.add(reason)
+            return
+        }
+
+        val fileType = EWorkshopFileType.from(details.fileType)
 
         if (fileType == EWorkshopFileType.Collection) {
             details.childrenList.forEach { child ->
-                processPublishedFile(appId, child.publishedfileid, fileUrls, contentFileIds)
+                processPublishedFile(appId, child.publishedfileid, fileUrls, contentFileIds, skipReasons)
             }
         } else if (SupportedWorkshopFileTypes.contains(fileType)) {
             if (details.fileUrl.isNotEmpty()) {
@@ -358,10 +377,14 @@ class DepotDownloader @JvmOverloads constructor(
             } else if (details.hcontentFile > 0) {
                 contentFileIds.add(details.hcontentFile)
             } else {
-                log.error("Unable to locate manifest ID for published file $publishedFileId")
+                val reason = "Unable to locate manifest ID for published file $publishedFileId"
+                log.error(reason)
+                skipReasons.add(reason)
             }
         } else {
-            log.error("Published file $publishedFileId has unsupported file type $fileType. Skipping file")
+            val reason = "Published file $publishedFileId has unsupported file type $fileType"
+            log.error("$reason. Skipping file")
+            skipReasons.add(reason)
         }
     }
 
@@ -369,14 +392,25 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
         val fileUrls = mutableListOf<Pair<String, String>>()
         val contentFileIds = mutableListOf<Long>()
+        val skipReasons = mutableListOf<String>()
 
-        processPublishedFile(appId, publishedFileId, fileUrls, contentFileIds)
+        processPublishedFile(appId, publishedFileId, fileUrls, contentFileIds, skipReasons)
+
+        // Without this an item with nothing to download would end without any callback.
+        if (fileUrls.isEmpty() && contentFileIds.isEmpty()) {
+            throw DepotDownloaderException(
+                "Nothing to download for published file $publishedFileId: ${skipReasons.joinToString("; ")}"
+            )
+        }
 
         fileUrls.forEach { item ->
             downloadWebFile(appId, item.first, item.second)
         }
 
-        if (contentFileIds.isNotEmpty()) {
+        if (contentFileIds.isEmpty()) {
+            // Only web files: downloadApp, which reports the completion otherwise, is not reached.
+            finishDepotDownload(appId)
+        } else {
             val depotManifestIds = contentFileIds.map { id -> appId to id }
             downloadApp(
                 appId = appId,
@@ -409,6 +443,8 @@ class DepotDownloader @JvmOverloads constructor(
 
         if (!details?.url.isNullOrBlank()) {
             downloadWebFile(appId = appId, fileName = details.fileName, url = details.url)
+            // downloadApp, which reports the completion otherwise, is not reached.
+            finishDepotDownload(appId)
         } else {
             downloadApp(
                 appId = appId,
@@ -427,9 +463,9 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun downloadWebFile(appId: Int, fileName: String, url: String) {
         val (success, installDir) = createDirectories(appId, 0, appId)
 
+        // Failures are thrown so the item ends in onDownloadFailed instead of ending silently.
         if (!success) {
-            log.error("Error: Unable to create install directories!")
-            return
+            throw DepotDownloaderException("Unable to create install directories for $fileName")
         }
 
         val stagingDir = installDir!! / "staging"
@@ -439,29 +475,17 @@ class DepotDownloader @JvmOverloads constructor(
         filesystem.createDirectories(fileFinalPath.parent!!)
         filesystem.createDirectories(fileStagingPath.parent!!)
 
-        httpClient.getClient().use { client ->
-            logger?.debug("Starting download of $fileName...")
+        logger?.debug("Starting download of $fileName...")
 
-            val response = client.get(url)
-            val channel = response.bodyAsChannel()
+        // The same HTTP client chunks and manifests use.
+        val bytesWritten = HttpClient.downloadFile(
+            httpClient = httpClient(),
+            url = url,
+            destination = fileStagingPath,
+            filesystem = filesystem,
+        )
 
-            val totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-
-            logger?.debug("File size: ${totalBytes?.let { Util.formatBytes(it) } ?: "Unknown"}")
-
-            filesystem.sink(fileStagingPath).buffer().use { sink ->
-                val tempArray = ByteArray(DEFAULT_BUFFER_SIZE)
-
-                while (!channel.isClosedForRead) {
-                    val bytesRead = channel.readAvailable(tempArray, 0, tempArray.size)
-                    if (bytesRead > 0) {
-                        sink.write(tempArray, 0, bytesRead)
-                    }
-                }
-            }
-
-            logger?.debug("Download completed.")
-        }
+        logger?.debug("Download completed, ${Util.formatBytes(bytesWritten)}.")
 
         if (filesystem.exists(fileFinalPath)) {
             logger?.debug("Deleting $fileFinalPath")
@@ -492,7 +516,7 @@ class DepotDownloader @JvmOverloads constructor(
         var depotManifestIds = depotManifestIds.toMutableList()
 
         val steamUser = requireNotNull(steam3!!.steamUser)
-        cdnClientPool = CDNClientPool(steam3!!, appId, scope, debug)
+        cdnClientPool = CDNClientPool(steam3!!, appId, scope, debug, httpClient())
 
         // Load our configuration data containing the depots currently installed
         var configPath = config.installPath
@@ -1948,8 +1972,6 @@ class DepotDownloader @JvmOverloads constructor(
 
         scope.cancel("DepotDownloader Closing")
 
-        httpClient.close()
-
         listeners.clear()
 
         steam3?.close()
@@ -1957,5 +1979,11 @@ class DepotDownloader @JvmOverloads constructor(
 
         cdnClientPool?.close()
         cdnClientPool = null
+
+        // Ours, derived from the SteamClient's HTTP client, which is left untouched.
+        synchronized(httpClientLock) {
+            ownHttpClient?.let { HttpClient.shutdown(it) }
+            ownHttpClient = null
+        }
     }
 }

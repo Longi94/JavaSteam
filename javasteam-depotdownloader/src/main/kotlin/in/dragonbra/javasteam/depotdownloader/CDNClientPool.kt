@@ -7,6 +7,7 @@ import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.OkHttpClient
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference
  * @param appId The application ID to download - used to filter compatible CDN servers
  * @param scope The coroutine scope for async operations
  * @param debug If true, enables debug logging
+ * @param httpClient The HTTP client to download with. Defaults to the one of the SteamClient configuration.
  *
  * @author Oxters
  * @author Lossy
@@ -30,6 +32,7 @@ class CDNClientPool(
     private val appId: Int,
     private val scope: CoroutineScope,
     debug: Boolean = false,
+    httpClient: OkHttpClient? = null,
 ) : AutoCloseable {
 
     // Errors are always logged.
@@ -50,7 +53,7 @@ class CDNClientPool(
         private set
 
     init {
-        cdnClient = Client(steamSession.steamClient)
+        cdnClient = Client(steamSession.steamClient, httpClient ?: steamSession.steamClient.configuration.httpClient)
     }
 
     /**

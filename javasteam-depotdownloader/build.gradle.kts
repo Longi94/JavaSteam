@@ -66,13 +66,23 @@ tasks.withType<FormatTask> {
 dependencies {
     implementation(rootProject)
 
-    implementation(libs.bundles.ktor)
+    implementation(libs.bundles.okHttp)
     implementation(libs.commons.lang3)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serialization.json)
     implementation(libs.kotlin.stdib)
     implementation(libs.okio)
     implementation(libs.protobuf.java)
+
+    testImplementation(platform(libs.tests.junit.bom))
+    testImplementation(libs.tests.junit.jupiter)
+    testImplementation(libs.test.mock.webserver3)
+    testRuntimeOnly(libs.tests.junit.platform)
+}
+
+/* Testing */
+tasks.test {
+    useJUnitPlatform()
 }
 
 /* Artifact publishing */

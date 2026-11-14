@@ -13,7 +13,6 @@ jacoco = "0.8.16" # https://www.eclemma.org/jacoco
 # Standard Library versions
 commons-lang3 = "3.21.0" # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
 kotlin-coroutines = "1.11.0" # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-ktor = "3.6.1" # https://mvnrepository.com/artifact/io.ktor/ktor-client-cio
 okHttp = "5.5.1" # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
 protobuf = "4.36.2" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
 protobuf-gradle = "0.10.1" # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
@@ -42,9 +41,6 @@ qrCode = "1.0.1" # https://mvnrepository.com/artifact/pro.leaco.qrcode/console-q
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 kotlin-stdib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
-ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-websocket = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okHttp" }
 okHttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okHttp" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
@@ -94,12 +90,6 @@ testing = [
     "tests-junit-jupiter",
     "xz",
     "zstd",
-]
-
-ktor = [
-    "ktor-client-core",
-    "ktor-client-cio",
-    "ktor-client-websocket",
 ]
 
 okHttp = [

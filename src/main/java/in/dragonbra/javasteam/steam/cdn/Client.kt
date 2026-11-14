@@ -31,8 +31,13 @@ import java.util.zip.ZipInputStream
  * @constructor Initializes a new instance of the [Client] class.
  * @param steamClient The [SteamClient] this instance will be associated with.
  * The SteamClient instance must be connected and logged onto Steam.
+ * @param httpClient The HTTP client to download with. Defaults to the one of the [steamClient] configuration.
+ * It is never closed by this class; whoever created it owns it.
  */
-class Client(steamClient: SteamClient) : Closeable {
+class Client @JvmOverloads constructor(
+    steamClient: SteamClient,
+    private val httpClient: OkHttpClient = steamClient.configuration.httpClient,
+) : Closeable {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -86,15 +91,15 @@ class Client(steamClient: SteamClient) : Closeable {
         }
     }
 
-    private val httpClient: OkHttpClient = steamClient.configuration.httpClient
-
     /**
-     * Disposes of this object.
+     * Disposes of this object. Cancels the downloads started with the `Future` methods.
+     *
+     * The HTTP client is left alone: it belongs to the [SteamClient] configuration or to the caller, and may be shared with
+     * other [Client] instances and the rest of the library, so shutting it down here would make
+     * their later requests fail.
      */
     override fun close() {
         scope.cancel()
-        httpClient.connectionPool.evictAll()
-        httpClient.dispatcher.executorService.shutdown()
     }
 
     /**
