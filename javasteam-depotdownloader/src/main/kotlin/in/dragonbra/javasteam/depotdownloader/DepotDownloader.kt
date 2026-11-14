@@ -63,6 +63,10 @@ import java.util.concurrent.atomic.*
  * Higher is faster on a good connection, lower is easier on memory, the network and the CDN servers. All of them may go to
  * one server, which is what a LAN cache needs.
  * @param maxFileWrites Number of concurrent files being written. Default: 1
+ * @param maxDecompress Number of chunks decrypted and decompressed at the same time, each on a thread of its own.
+ * Default: half of the available processors, which leaves the rest to the OS and the app. Kept between 1 and the
+ * number of available processors. Higher is faster where the CPU, not the network, limits the download.
+ * This is the last constructor parameter, after [parentJob].
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
  *
@@ -81,6 +85,7 @@ class DepotDownloader @JvmOverloads constructor(
     private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
     private val parentJob: Job? = null,
+    maxDecompress: Int = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1),
 ) : Closeable {
 
     companion object {
@@ -154,8 +159,19 @@ class DepotDownloader @JvmOverloads constructor(
     // Bounded channel — send() suspends producers when full, creating backpressure through the pipeline.
     private val networkChunkChannel = Channel<NetworkChunkItem>(64)
 
-    // Half of available processors, clamped to at least 1. Leaves remaining cores for the OS and app.
-    private val maxDecompress: Int = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    // The decompress stage runs on Dispatchers.Default, which has no more threads than there are processors.
+    private val maxDecompress: Int = maxDecompress.coerceIn(1, Runtime.getRuntime().availableProcessors().coerceAtLeast(1))
+
+    // The downloaded and the decompressed bytes of every chunk live in arrays rented from here.
+    // Lazy because a detected LAN cache raises maxDownloads before the first chunk is downloaded.
+    //
+    // The idle cap is one array per array a stage can hold at once: one per download, two per
+    // decompress (input and output), one per file write. The chunks buffered between the stages
+    // are left out on purpose: while a download runs they are in use, not idle, and reuse works
+    // without slots for them. Counting them would only let ~150 MB sit idle after a burst.
+    private val bufferPool: ChunkBufferPool by lazy {
+        ChunkBufferPool(maxIdle = maxDownloads + 2 * this.maxDecompress + maxFileWrites)
+    }
 
     private var chunkProcessingJob: Job? = null
 
@@ -238,6 +254,8 @@ class DepotDownloader @JvmOverloads constructor(
         val file: FileData,
         val fileStreamData: FileStreamData,
         val chunk: ChunkData,
+        // Rented from bufferPool: longer than the chunk. Only the first [downloaded] bytes are valid.
+        val downloaded: Int,
         val chunkBuffer: ByteArray,
     )
 
@@ -250,6 +268,7 @@ class DepotDownloader @JvmOverloads constructor(
         val file: FileData,
         val fileStreamData: FileStreamData,
         val chunk: ChunkData,
+        // Rented from bufferPool: longer than the chunk. Only the first [decompressed] bytes are valid.
         val decompressed: Int,
         val decompressedBuffer: ByteArray,
     )
@@ -1532,7 +1551,9 @@ class DepotDownloader @JvmOverloads constructor(
         val chunkID = Strings.toHex(chunkIdBytes)
 
         var downloaded = 0
-        val chunkBuffer = ByteArray(chunk.compressedLength)
+        // Given back by processFileDecompress. If this chunk fails or is dropped before that,
+        // the array is simply left to the garbage collector.
+        val chunkBuffer = bufferPool.rent(chunk.compressedLength)
 
         var failures = 0
         var lastError: Throwable? = null
@@ -1644,6 +1665,7 @@ class DepotDownloader @JvmOverloads constructor(
             file = file,
             fileStreamData = fileStreamData,
             chunk = chunk,
+            downloaded = downloaded,
             chunkBuffer = chunkBuffer,
         )
     }
@@ -1850,8 +1872,15 @@ class DepotDownloader @JvmOverloads constructor(
         val chunk = item.chunk
         val chunkBuffer = item.chunkBuffer
 
-        val decompressedBuffer = ByteArray(chunk.uncompressedLength)
-        val written = DepotChunk.process(chunk, chunkBuffer, decompressedBuffer, depot.depotKey)
+        // Given back by processFileWrites; left to the garbage collector if the chunk fails before that.
+        val decompressedBuffer = bufferPool.rent(chunk.uncompressedLength)
+
+        val written = try {
+            DepotChunk.process(chunk, chunkBuffer, item.downloaded, decompressedBuffer, depot.depotKey)
+        } finally {
+            // Nothing reads the downloaded bytes after this point.
+            bufferPool.giveBack(chunkBuffer)
+        }
 
         return@withContext FileWriteItem(
             tracker = item.tracker,
@@ -1880,16 +1909,21 @@ class DepotDownloader @JvmOverloads constructor(
         val decompressedBuffer = item.decompressedBuffer
 
         try {
-            fileStreamData.fileLock.lock()
+            try {
+                fileStreamData.fileLock.lock()
 
-            if (fileStreamData.fileHandle == null) {
-                val fileFinalPath = depot.installDir / file.fileName
-                fileStreamData.fileHandle = filesystem.openReadWrite(fileFinalPath)
+                if (fileStreamData.fileHandle == null) {
+                    val fileFinalPath = depot.installDir / file.fileName
+                    fileStreamData.fileHandle = filesystem.openReadWrite(fileFinalPath)
+                }
+
+                fileStreamData.fileHandle!!.write(chunk.offset, decompressedBuffer, 0, written)
+            } finally {
+                fileStreamData.fileLock.unlock()
             }
-
-            fileStreamData.fileHandle!!.write(chunk.offset, decompressedBuffer, 0, written)
         } finally {
-            fileStreamData.fileLock.unlock()
+            // The write was the last reader of the array; everything below uses lengths only.
+            bufferPool.giveBack(decompressedBuffer)
         }
 
         val remainingChunks = fileStreamData.chunksToDownload.decrementAndGet()
@@ -1979,6 +2013,8 @@ class DepotDownloader @JvmOverloads constructor(
 
         cdnClientPool?.close()
         cdnClientPool = null
+
+        bufferPool.clear()
 
         // Ours, derived from the SteamClient's HTTP client, which is left untouched.
         synchronized(httpClientLock) {
