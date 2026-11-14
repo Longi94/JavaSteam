@@ -21,7 +21,6 @@ import okhttp3.Request
 import okhttp3.coroutines.executeAsync
 import java.io.ByteArrayInputStream
 import java.io.Closeable
-import java.io.EOFException
 import java.io.IOException
 import java.util.concurrent.CompletableFuture
 import java.util.zip.ZipInputStream
@@ -192,10 +191,11 @@ class Client @JvmOverloads constructor(
      * @param chunk A [ChunkData] instance that represents the chunk to download.
      * This value should come from a manifest downloaded with [downloadManifest].
      * @param server The content server to connect to.
-     * @param destination The buffer to receive the chunk data. If [depotKey] is provided, this will be the decompressed buffer.
-     * Allocate or rent a buffer that is equal or longer than [ChunkData.uncompressedLength]
+     * @param destination The buffer to receive the downloaded chunk data, still encrypted and compressed, starting at index 0.
+     * Allocate or rent a buffer that is equal or longer than [ChunkData.compressedLength]. A longer one is only filled
+     * up to the returned length; pass that length on to [DepotChunk.process].
      * @param depotKey The depot decryption key for the depot that will be downloaded.
-     * This is used to process the chunk data.
+     * Not used here yet: the chunk is not processed by this method.
      * @param proxyServer Optional content server marked as UseAsProxy which transforms the request.
      * @param cdnAuthToken CDN auth token for CDN content server endpoints if necessary. Get one with [SteamContent.getCDNAuthToken].
      * @return The total number of bytes written to [destination].
@@ -214,8 +214,11 @@ class Client @JvmOverloads constructor(
     ): Int = withContext(Dispatchers.IO) {
         val chunkIdBytes = requireNotNull(chunk.chunkID) { "Chunk must have a ChunkID." }
 
-        if (destination.size != chunk.compressedLength) {
-            throw IllegalArgumentException("The destination buffer must be the same size as the chunk CompressedLength (Since we take out decompression step from download")
+        if (destination.size < chunk.compressedLength) {
+            throw IllegalArgumentException(
+                "The destination buffer must be at least as long as the chunk CompressedLength " +
+                    "(is ${destination.size}, needs ${chunk.compressedLength})."
+            )
         }
 
         val chunkID = Strings.toHex(chunkIdBytes)
@@ -260,22 +263,26 @@ class Client @JvmOverloads constructor(
                 )
             }
 
-            // destination is exactly chunk.compressedLength long (checked above), so the body is
-            // read straight into it instead of into a second array that is then copied.
-            if (contentLength != destination.size) {
+            // Only possible when the chunk has no length assigned; otherwise both were checked above.
+            if (contentLength > destination.size) {
                 throw SteamKitWebRequestException(
-                    "Length mismatch for depot chunk! (was $contentLength, but should be ${destination.size})"
+                    "Depot chunk does not fit the destination buffer! (is $contentLength bytes, buffer is ${destination.size})"
                 )
             }
 
             val source = resp.body.source()
 
-            try {
-                source.readFully(destination)
-            } catch (_: EOFException) {
-                throw SteamKitWebRequestException(
-                    "Length mismatch after downloading depot chunk! (body ended before $contentLength bytes)"
-                )
+            // The body is read straight into destination, which may be longer than the chunk
+            // (a pooled buffer), instead of into a second array that is then copied.
+            var read = 0
+            while (read < contentLength) {
+                val count = source.read(destination, read, contentLength - read)
+                if (count == -1) {
+                    throw SteamKitWebRequestException(
+                        "Length mismatch after downloading depot chunk! (body ended after $read of $contentLength bytes)"
+                    )
+                }
+                read += count
             }
 
             if (!source.exhausted()) {
