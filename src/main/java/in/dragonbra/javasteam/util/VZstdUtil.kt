@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.util
 
+import com.github.luben.zstd.RecyclingBufferPool
 import com.github.luben.zstd.ZstdInputStream
 import `in`.dragonbra.javasteam.util.log.LogManager
 import java.io.ByteArrayInputStream
@@ -77,7 +78,10 @@ object VZstdUtil {
             // Use direct ByteArrayInputStream with offset to avoid copying compressed data
             // The third argument is a length from the offset, not an end position.
             ByteArrayInputStream(buffer, HEADER_SIZE, length - HEADER_SIZE - FOOTER_SIZE).use { byteStream ->
-                ZstdInputStream(byteStream).use { zstdStream ->
+                // The pool hands the ~128KB source buffer back on close(), so chunks reuse it instead of
+                // allocating one each. It is thread-safe. Keep this reference inside the try block:
+                // zstd is 'compileOnly', and the pool class must not load before the catch below can see it.
+                ZstdInputStream(byteStream, RecyclingBufferPool.INSTANCE).use { zstdStream ->
                     var bytesRead: Int
                     var offset = 0
 
