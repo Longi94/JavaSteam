@@ -52,7 +52,7 @@ abstract class RpcGenTask : DefaultTask {
         outputDir.deleteRecursively()
         outputDir.mkdirs()
 
-        val protoParser = ProtoParser(outputDir)
+        val protoParser = ProtoParser(outputDir, protoDirectory)
 
         protoDirectory.walkTopDown()
             .filter { it.isFile && it.extension == "proto" }

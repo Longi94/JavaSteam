@@ -5,7 +5,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import java.io.File
 import java.util.*
 
-class ProtoParser(private val outputDir: File) {
+class ProtoParser(private val outputDir: File, private val protoRoot: File) {
 
     private companion object {
         private const val RPC_PACKAGE = "in.dragonbra.javasteam.rpc"
@@ -19,6 +19,60 @@ class ProtoParser(private val outputDir: File) {
             .addMember("%S", "RedundantVisibilityModifier") // KotlinPoet is an explicit API generator
             .addMember("%S", "unused") // All methods could be used.
             .build()
+
+        private val topLevelMessageRegex = Regex("""(?m)^message\s+(\w+)""")
+        private val importRegex = Regex("""(?m)^import\s+(?:public\s+)?"([^"]+)"\s*;""")
+    }
+
+    // Top-level message names declared by each .proto file.
+    private val messagesByFile = mutableMapOf<File, Set<String>>()
+
+    // Files imported by each .proto file, limited to the ones that live under [protoRoot].
+    private val importsByFile = mutableMapOf<File, List<File>>()
+
+    private fun messagesOf(file: File): Set<String> = messagesByFile.getOrPut(file) {
+        topLevelMessageRegex.findAll(file.readText()).map { it.groupValues[1] }.toSet()
+    }
+
+    private fun importsOf(file: File): List<File> = importsByFile.getOrPut(file) {
+        importRegex.findAll(file.readText())
+            .map { File(protoRoot, it.groupValues[1]).canonicalFile }
+            .filter { it.isFile }
+            .toList()
+    }
+
+    /**
+     * Find the .proto file that declares [type], starting at [file] and then walking its imports breadth first.
+     * A service can use messages declared in an imported file (e.g. webui services and common.proto),
+     * and the generated Java class is nested in the outer class of the declaring file.
+     * Falls back to [file] if no declaration is found.
+     */
+    private fun findDeclaringFile(file: File, type: String): File {
+        val start = file.canonicalFile
+        val visited = mutableSetOf(start)
+        val queue = ArrayDeque<File>().apply { add(start) }
+
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            if (type in messagesOf(current)) {
+                return current
+            }
+            importsOf(current).filter(visited::add).forEach(queue::add)
+        }
+
+        return start
+    }
+
+    /**
+     * The generated protobuf class of [type], as referenced from [file].
+     */
+    private fun messageClassName(file: File, type: String): ClassName {
+        val declaringFile = findDeclaringFile(file, type)
+        return ClassName(
+            packageName = "in.dragonbra.javasteam.protobufs." +
+                "${declaringFile.parentFile.name}.${transformProtoFileName(declaringFile.name)}",
+            type
+        )
     }
 
     /**
@@ -85,8 +139,6 @@ class ProtoParser(private val outputDir: File) {
      * Build the [Service] to a class with all known RPC methods.
      */
     private fun buildClass(file: File, service: Service) {
-        val protoFileName = transformProtoFileName(file.name)
-
         val parentPathName = file.parentFile.name
 
         // Class Builder
@@ -132,10 +184,7 @@ class ProtoParser(private val outputDir: File) {
             if (method.responseType != "NoResponse") {
                 // HAS Response
                 numResponse++
-                val className = ClassName(
-                    packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
-                    method.responseType
-                )
+                val className = messageClassName(file, method.responseType)
                 responseBlock.addStatement(
                     "\"${method.methodName}\" -> postResponseMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
                     className,
@@ -144,10 +193,7 @@ class ProtoParser(private val outputDir: File) {
             } else {
                 // NO Response
                 numNotification++
-                val className = ClassName(
-                    packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
-                    method.requestType
-                )
+                val className = messageClassName(file, method.requestType)
                 notificationBlock.addStatement(
                     "\"${method.methodName}\" -> postNotificationMsg<%T.Builder>(\n%T::class.java,\npacketMsg\n)",
                     className,
@@ -201,10 +247,7 @@ class ProtoParser(private val outputDir: File) {
                     .addModifiers(KModifier.PUBLIC)
                     .addParameter(
                         "request",
-                        ClassName(
-                            packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
-                            method.requestType
-                        )
+                        messageClassName(file, method.requestType)
                     )
 
             if (method.responseType != "NoResponse") {
@@ -217,16 +260,13 @@ class ProtoParser(private val outputDir: File) {
                 funcBuilder.returns(
                     asyncJobSingleClass.parameterizedBy(
                         serviceMethodResponseClass.parameterizedBy(
-                            ClassName.bestGuess("in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName.${method.responseType}.Builder")
+                            messageClassName(file, method.responseType).nestedClass("Builder")
                         )
                     )
                 )
                 funcBuilder.addStatement(
                     format = "return unifiedMessages!!.sendMessage(\n%T.Builder::class.java,\n%S,\nrequest\n)",
-                    ClassName(
-                        packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
-                        method.responseType
-                    ),
+                    messageClassName(file, method.responseType),
                     "${service.name}.${method.methodName}#1"
                 )
             } else {
@@ -238,10 +278,7 @@ class ProtoParser(private val outputDir: File) {
                 )
                 funcBuilder.addStatement(
                     format = "unifiedMessages!!.sendNotification<%T.Builder>(\n%S,\nrequest\n)",
-                    ClassName(
-                        packageName = "in.dragonbra.javasteam.protobufs.$parentPathName.$protoFileName",
-                        method.requestType
-                    ),
+                    messageClassName(file, method.requestType),
                     "${service.name}.${method.methodName}#1"
                 )
             }
