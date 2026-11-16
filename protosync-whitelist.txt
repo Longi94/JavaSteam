@@ -67,6 +67,7 @@ service_store.proto
 service_remote.proto
 service_remoteclientsteam.proto
 service_friendslist.proto
+service_wishlist.proto
 
 [cs]
 base_gcmessages.proto

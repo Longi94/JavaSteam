@@ -29,6 +29,7 @@ public class WebUiUnifiedInterfaceTest {
             "RemoteClientSteamClient.kt",
             "Store.kt",
             "StoreClient.kt",
+            "Wishlist.kt",
     };
 
     @Test
