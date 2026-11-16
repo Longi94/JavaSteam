@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
  * @param clientID Unique identifier of requestor, also used for routing, portion of QR code.
  * @param requestID Unique request ID to be presented by requestor at poll time.
  * @param allowedConfirmations Confirmation types that will be able to confirm the request.
- * @param pollingInterval Refresh interval with which requestor should call PollAuthSessionStatus.
+ * @param pollingInterval Refresh interval, in seconds, with which requestor should call PollAuthSessionStatus.
  * @param defaultScope Default coroutine scope used for authentication operations and polling.
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")

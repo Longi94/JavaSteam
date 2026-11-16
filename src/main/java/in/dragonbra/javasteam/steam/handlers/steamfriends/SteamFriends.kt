@@ -657,7 +657,7 @@ class SteamFriends : ClientMsgHandler() {
      * @return The Job ID of the request. This can be used to find the appropriate [NicknameCallback].
      */
     @JavaSteamAddition
-    fun setFriendNickname(friendID: SteamID, nickname: String): JobID {
+    fun setFriendNickname(friendID: SteamID, nickname: String): AsyncJobSingle<NicknameCallback> {
         val jobID: JobID = client.getNextJobID()
         val request = ClientMsgProtobuf<CMsgClientSetPlayerNickname.Builder>(
             CMsgClientSetPlayerNickname::class.java,
@@ -671,7 +671,7 @@ class SteamFriends : ClientMsgHandler() {
 
         client.send(request)
 
-        return jobID
+        return AsyncJobSingle(client, jobID)
     }
 
     /**

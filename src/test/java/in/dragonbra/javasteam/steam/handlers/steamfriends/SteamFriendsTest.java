@@ -510,6 +510,8 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
 
         NicknameListCallback callback = verifyCallback();
 
+        assertTrue(callback.isIncremental());
+        assertFalse(callback.isRemoval());
         assertEquals(1, callback.getNicknames().size());
         assertEquals("testnickname", callback.getNicknames().get(0).getNickname());
     }

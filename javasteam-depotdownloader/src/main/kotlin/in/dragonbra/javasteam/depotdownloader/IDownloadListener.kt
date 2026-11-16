@@ -49,7 +49,7 @@ interface IDownloadListener {
     fun onStatusUpdate(message: String) {}
 
     /**
-     * Called when a file completes downloading.
+     * Called when a file completes downloading, after the [onChunkCompleted] of its last chunk.
      * Use this for printing progress like "20.42% depots\441\maps\ctf_haarp.bsp"
      *
      * @param depotId The depot being downloaded
@@ -59,8 +59,8 @@ interface IDownloadListener {
     fun onFileCompleted(depotId: Int, fileName: String, depotPercentComplete: Float) {}
 
     /**
-     * Called when a chunk completes downloading.
-     * Provides more frequent progress updates than onFileCompleted.
+     * Called when a chunk completes downloading, for every chunk including the last one of a file.
+     * Provides more frequent progress updates than onFileCompleted, and is the one to count bytes in.
      *
      * @param depotId The depot being downloaded
      * @param depotPercentComplete Overall depot completion percentage (0f to 1f)

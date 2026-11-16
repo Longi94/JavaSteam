@@ -2,6 +2,7 @@ package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.ConnectedSteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
+import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobTimeoutException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CancellationException
@@ -669,7 +670,9 @@ class AsyncJobTest {
 
         asyncJob.setFailed(false)
 
-        Assertions.assertThrows(CancellationException::class.java) { asyncJob.runBlock() }
+        Assertions.assertThrows(AsyncJobTimeoutException::class.java) { asyncJob.runBlock() }
+        Assertions.assertTrue(asyncJob.toFuture().isCancelled, "A timed out job should still be canceled")
+        Assertions.assertThrows(AsyncJobTimeoutException::class.java) { runBlocking { asyncJob.await() } }
     }
 
     @Test
@@ -690,7 +693,9 @@ class AsyncJobTest {
 
         asyncJob.setFailed(false)
 
-        Assertions.assertThrows(CancellationException::class.java) { asyncJob.runBlock() }
+        Assertions.assertThrows(AsyncJobTimeoutException::class.java) { asyncJob.runBlock() }
+        Assertions.assertTrue(asyncJob.toFuture().isCancelled, "A timed out job should still be canceled")
+        Assertions.assertThrows(AsyncJobTimeoutException::class.java) { runBlocking { asyncJob.await() } }
     }
 
     @Test

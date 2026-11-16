@@ -1010,6 +1010,12 @@ class DepotDownloader @JvmOverloads constructor(
             allFileNamesAllDepots.addAll(depotFileData.allFileNames)
         }
 
+        // Depots can still be skipped while fetching manifests. Without this an item whose depots
+        // were all skipped there would be reported as completed.
+        if (depotsToDownload.isEmpty() && depots.isNotEmpty() && !config.downloadManifestOnly) {
+            throw DepotDownloaderException("None of the depots of app $mainAppId could be downloaded.")
+        }
+
         // If we're about to write all the files to the same directory, we will need to first de-duplicate any files by path
         // This is in last-depot-wins order, from Steam or the list of depots supplied by the user
         if (config.installPath != null && depotsToDownload.isNotEmpty()) {
@@ -1929,20 +1935,38 @@ class DepotDownloader @JvmOverloads constructor(
         val remainingChunks = fileStreamData.chunksToDownload.decrementAndGet()
         if (remainingChunks == 0) {
             fileStreamData.fileHandle?.close()
+        }
 
-            // File completed - notify with percentage
-            val sizeDownloaded = synchronized(depotDownloadCounter) {
-                depotDownloadCounter.sizeDownloaded += written.toLong()
-                depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
-                depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
-                depotDownloadCounter.sizeDownloaded
-            }
+        // Update counters and notify on chunk completion. Every chunk is reported, the last one of a
+        // file included, so the byte counts also move for depots made of single-chunk files.
+        val depotPercentage: Float
+        val compressedBytes: Long
+        val uncompressedBytes: Long
 
-            downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
-            downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
+        synchronized(depotDownloadCounter) {
+            depotDownloadCounter.sizeDownloaded += written.toLong()
+            depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
+            depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
 
+            compressedBytes = depotDownloadCounter.depotBytesCompressed
+            uncompressedBytes = depotDownloadCounter.depotBytesUncompressed
+            depotPercentage = fraction(depotDownloadCounter.sizeDownloaded, depotDownloadCounter.completeDownloadSize)
+        }
+
+        downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
+        downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
+
+        notifyListeners { listener ->
+            listener.onChunkCompleted(
+                depotId = depot.depotId,
+                depotPercentComplete = depotPercentage,
+                compressedBytes = compressedBytes,
+                uncompressedBytes = uncompressedBytes
+            )
+        }
+
+        if (remainingChunks == 0) {
             val fileFinalPath = depot.installDir / file.fileName
-            val depotPercentage = fraction(sizeDownloaded, depotDownloadCounter.completeDownloadSize)
 
             notifyListeners { listener ->
                 listener.onFileCompleted(
@@ -1953,35 +1977,6 @@ class DepotDownloader @JvmOverloads constructor(
             }
 
             logger?.debug("%.2f%% %s".format(depotPercentage, fileFinalPath))
-        } else {
-            // Update counters and notify on chunk completion
-            val sizeDownloaded: Long
-            val depotPercentage: Float
-            val compressedBytes: Long
-            val uncompressedBytes: Long
-
-            synchronized(depotDownloadCounter) {
-                depotDownloadCounter.sizeDownloaded += written.toLong()
-                depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
-                depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
-
-                sizeDownloaded = depotDownloadCounter.sizeDownloaded
-                compressedBytes = depotDownloadCounter.depotBytesCompressed
-                uncompressedBytes = depotDownloadCounter.depotBytesUncompressed
-                depotPercentage = fraction(sizeDownloaded, depotDownloadCounter.completeDownloadSize)
-            }
-
-            downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
-            downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
-
-            notifyListeners { listener ->
-                listener.onChunkCompleted(
-                    depotId = depot.depotId,
-                    depotPercentComplete = depotPercentage,
-                    compressedBytes = compressedBytes,
-                    uncompressedBytes = uncompressedBytes
-                )
-            }
         }
     }
 

@@ -69,8 +69,9 @@ class SteamAuthentication(private val steamClient: SteamClient) {
      * @param refreshToken the refresh token.
      * @param allowRenewal If true, allow renewing the token.
      * @return A [AccessTokenGenerateResult] containing the new token
+     *  The future fails with an [AuthenticationException] if Steam did not generate the token;
+     *  see [AuthenticationException.result].
      */
-    @Throws(IllegalArgumentException::class, IllegalArgumentException::class)
     @JvmOverloads
     fun generateAccessTokenForApp(
         steamID: SteamID,
@@ -90,7 +91,7 @@ class SteamAuthentication(private val steamClient: SteamClient) {
         val response = authenticationService.generateAccessTokenForApp(request.build()).await()
 
         if (response.result != EResult.OK) {
-            throw IllegalArgumentException("Failed to generate token ${response.result}")
+            throw AuthenticationException("Failed to generate token", response.result)
         }
 
         return@future AccessTokenGenerateResult(response.body)
