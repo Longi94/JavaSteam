@@ -1,0 +1,32 @@
+import "in/dragonbra/javasteam/protobufs/webui/common.proto";
+import "in/dragonbra/javasteam/protobufs/webui/common_base.proto";
+
+package webui;
+
+option java_package = "in.dragonbra.javasteam.protobufs.webui";
+
+option optimize_for = SPEED;
+option java_generic_services = false;
+
+message CRemoteClient_DisableSteamBroadcast_Notification {
+}
+
+message CRemoteClient_EnableSteamBroadcast_Notification {
+}
+
+message CRemoteClient_TaskList_Notification {
+  optional fixed64 remote_client_id = 1;
+  repeated CRemoteClient_Task tasklist = 2;
+}
+
+service RemoteClientSteamClient {
+  rpc NotifyDisableSteamBroadcast (CRemoteClient_DisableSteamBroadcast_Notification) returns (NoResponse);
+  rpc NotifyEnableSteamBroadcast (CRemoteClient_EnableSteamBroadcast_Notification) returns (NoResponse);
+  rpc NotifyRegisterStatusUpdate (CRemoteClient_RegisterStatusUpdate_Notification) returns (NoResponse);
+  rpc NotifyRemotePacket (CRemoteClient_RemotePacket_Notification) returns (NoResponse);
+  rpc NotifyRemotePlayTogetherPacket (CRemotePlayTogether_Notification) returns (NoResponse);
+  rpc NotifySteamBroadcastPacket (CRemoteClient_SteamBroadcast_Notification) returns (NoResponse);
+  rpc NotifySteamToSteamPacket (CRemoteClient_SteamToSteam_Notification) returns (NoResponse);
+  rpc NotifyTaskList (CRemoteClient_TaskList_Notification) returns (NoResponse);
+  rpc NotifyUnregisterStatusUpdate (CRemoteClient_UnregisterStatusUpdate_Notification) returns (NoResponse);
+}

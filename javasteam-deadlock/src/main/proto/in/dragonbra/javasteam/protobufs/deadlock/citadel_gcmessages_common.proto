@@ -157,6 +157,7 @@ enum ECitadelGameMode {
   k_ECitadelGameMode_StreetBrawl = 4;
   k_ECitadelGameMode_ExploreNYC = 5;
   k_ECitadelGameMode_Internal = 6;
+  k_ECitadelGameMode_Internal02 = 7;
 }
 
 enum ELobbyServerState {
@@ -263,6 +264,7 @@ message CSOCitadelHideoutLobby {
     optional uint32 account_id = 1;
     optional bool hideout_holiday_award_2024 = 30;
     optional bool hideout_holiday_award_2025 = 32;
+    optional uint32 ranked_season_1_season_rank = 33;
   }
 
   enum EServerStatus {
@@ -380,6 +382,7 @@ message CSOCitadelParty {
     optional uint32 rank_display_badge = 3;
     repeated uint32 unlocked_heroes = 5;
     optional bool in_calibration = 6;
+    optional uint32 max_rank_display_badge = 7;
   }
 
   message Member {
