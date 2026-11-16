@@ -7,9 +7,11 @@ import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverF
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.ClanData
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.KV
 import `in`.dragonbra.javasteam.steam.handlers.steamfriends.OtherGameData
+import `in`.dragonbra.javasteam.steam.handlers.steamfriends.SteamFriends
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import `in`.dragonbra.javasteam.types.GameID
 import `in`.dragonbra.javasteam.types.SteamID
+import `in`.dragonbra.javasteam.util.JavaSteamAddition
 import `in`.dragonbra.javasteam.util.NetHelpers
 import java.net.InetAddress
 import java.util.*
@@ -38,6 +40,23 @@ class PersonaStateCallback(
      */
     @get:JvmName("getState")
     val personaState: EPersonaState = EPersonaState.from(friend.personaState) ?: EPersonaState.Offline
+
+    /**
+     * Gets whether the message included a persona state at all.
+     *
+     * Replies to [SteamFriends.requestFriendInfo] carry
+     * profile data only and omit `persona_state`; [personaState] is then [EPersonaState.Offline] by default and
+     * must not be treated as the friend going offline. Genuine presence updates always set this to `true`.
+     */
+    @JavaSteamAddition
+    val hasPersonaState: Boolean = friend.hasPersonaState()
+
+    /**
+     * Gets whether the message included game information (`game_played_app_id`).
+     * Profile-only replies omit it; see [hasPersonaState].
+     */
+    @JavaSteamAddition
+    val hasGamePlayedAppId: Boolean = friend.hasGamePlayedAppId()
 
     /**
      * Gets the game app ID being played.

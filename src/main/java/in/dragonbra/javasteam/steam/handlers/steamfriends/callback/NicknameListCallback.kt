@@ -12,6 +12,17 @@ import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 class NicknameListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
 
     /**
+     * Gets a value indicating whether this [NicknameListCallback] is an incremental update.
+     * If **false**, [nicknames] is the whole list and replaces any nicknames known before.
+     */
+    val isIncremental: Boolean
+
+    /**
+     * Gets a value indicating whether the [nicknames] of this update were removed.
+     */
+    val isRemoval: Boolean
+
+    /**
      * Gets the list of nicknames
      */
     val nicknames: List<PlayerNickname>
@@ -22,6 +33,8 @@ class NicknameListCallback(packetMsg: IPacketMsg) : CallbackMsg() {
             packetMsg
         )
 
+        isIncremental = response.body.incremental
+        isRemoval = response.body.removal
         nicknames = response.body.nicknamesList.map { PlayerNickname(it) }
     }
 }

@@ -8,4 +8,7 @@ package `in`.dragonbra.javasteam.depotdownloader
  * @author Lossy
  * @since Oct 1, 2025
  */
-class DepotDownloaderException(value: String) : Exception(value)
+class DepotDownloaderException @JvmOverloads constructor(
+    value: String,
+    cause: Throwable? = null,
+) : Exception(value, cause)

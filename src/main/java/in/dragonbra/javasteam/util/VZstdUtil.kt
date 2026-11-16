@@ -1,5 +1,6 @@
 package `in`.dragonbra.javasteam.util
 
+import com.github.luben.zstd.RecyclingBufferPool
 import com.github.luben.zstd.ZstdInputStream
 import `in`.dragonbra.javasteam.util.log.LogManager
 import java.io.ByteArrayInputStream
@@ -16,11 +17,26 @@ object VZstdUtil {
 
     private val logger = LogManager.getLogger<VZstdUtil>()
 
+    /**
+     * Decompresses VZstd data.
+     * @param buffer The compressed data, starting at index 0.
+     * @param destination The buffer to receive the decompressed data.
+     * @param verifyChecksum Whether to verify the CRC32 of the decompressed data.
+     * @param length Number of bytes of [buffer] that hold the compressed data. Defaults to all of it.
+     * @return The number of bytes written to [destination].
+     */
     @Throws(IOException::class, IllegalArgumentException::class)
     @JvmStatic
     @JvmOverloads
-    fun decompress(buffer: ByteArray, destination: ByteArray, verifyChecksum: Boolean = false): Int {
-        if (buffer.size < HEADER_SIZE + FOOTER_SIZE) {
+    fun decompress(
+        buffer: ByteArray,
+        destination: ByteArray,
+        verifyChecksum: Boolean = false,
+        length: Int = buffer.size,
+    ): Int {
+        require(length in 0..buffer.size) { "length ($length) is outside the buffer (size ${buffer.size})." }
+
+        if (length < HEADER_SIZE + FOOTER_SIZE) {
             throw IOException("Buffer too small to contain VZstd header and footer")
         }
 
@@ -34,7 +50,7 @@ object VZstdUtil {
         // val crc32 = byteBuffer.getInt(4)
 
         // Read footer
-        val footerOffset = buffer.size - FOOTER_SIZE
+        val footerOffset = length - FOOTER_SIZE
         val crc32Footer = byteBuffer.getInt(footerOffset)
         val sizeDecompressed = byteBuffer.getInt(footerOffset + 4)
 
@@ -44,9 +60,9 @@ object VZstdUtil {
         //     logger.debug("CRC32 appears to be written twice in the data")
         // }
 
-        if (buffer[buffer.size - 3] != 'z'.code.toByte() ||
-            buffer[buffer.size - 2] != 's'.code.toByte() ||
-            buffer[buffer.size - 1] != 'v'.code.toByte()
+        if (buffer[length - 3] != 'z'.code.toByte() ||
+            buffer[length - 2] != 's'.code.toByte() ||
+            buffer[length - 1] != 'v'.code.toByte()
         ) {
             throw IOException("Expecting VZstdFooter at end of stream")
         }
@@ -60,8 +76,12 @@ object VZstdUtil {
             var totalDecompressed = 0
 
             // Use direct ByteArrayInputStream with offset to avoid copying compressed data
-            ByteArrayInputStream(buffer, HEADER_SIZE, buffer.size - FOOTER_SIZE).use { byteStream ->
-                ZstdInputStream(byteStream).use { zstdStream ->
+            // The third argument is a length from the offset, not an end position.
+            ByteArrayInputStream(buffer, HEADER_SIZE, length - HEADER_SIZE - FOOTER_SIZE).use { byteStream ->
+                // The pool hands the ~128KB source buffer back on close(), so chunks reuse it instead of
+                // allocating one each. It is thread-safe. Keep this reference inside the try block:
+                // zstd is 'compileOnly', and the pool class must not load before the catch below can see it.
+                ZstdInputStream(byteStream, RecyclingBufferPool.INSTANCE).use { zstdStream ->
                     var bytesRead: Int
                     var offset = 0
 

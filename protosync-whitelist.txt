@@ -54,6 +54,9 @@ steammessages_useraccount.steamclient.proto
 steammessages_seasonpass_types.proto
 steammessages_steamawards_types.proto
 steammessages_appratings_types.proto
+steammessages_remoteclient_discovery.proto
+steammessages_remoteclient.proto
+steammessages_remoteplay.proto
 
 [webui]
 common.proto
@@ -61,6 +64,10 @@ common_base.proto
 service_clientcomm.proto
 service_cloudconfigstore.proto
 service_store.proto
+service_remote.proto
+service_remoteclientsteam.proto
+service_friendslist.proto
+service_wishlist.proto
 
 [cs]
 base_gcmessages.proto

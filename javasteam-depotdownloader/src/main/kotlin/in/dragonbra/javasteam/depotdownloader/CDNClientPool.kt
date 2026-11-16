@@ -7,6 +7,7 @@ import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.OkHttpClient
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference
  * @param appId The application ID to download - used to filter compatible CDN servers
  * @param scope The coroutine scope for async operations
  * @param debug If true, enables debug logging
+ * @param httpClient The HTTP client to download with. Defaults to the one of the SteamClient configuration.
  *
  * @author Oxters
  * @author Lossy
@@ -30,9 +32,13 @@ class CDNClientPool(
     private val appId: Int,
     private val scope: CoroutineScope,
     debug: Boolean = false,
+    httpClient: OkHttpClient? = null,
 ) : AutoCloseable {
 
-    private var logger: Logger? = null
+    // Errors are always logged.
+    private val log: Logger = LogManager.getLogger(CDNClientPool::class.java)
+
+    private val logger: Logger? = if (debug) log else null
 
     private val servers = AtomicReference<List<Server>>(emptyList())
 
@@ -47,11 +53,7 @@ class CDNClientPool(
         private set
 
     init {
-        cdnClient = Client(steamSession.steamClient)
-
-        if (debug) {
-            logger = LogManager.getLogger(CDNClientPool::class.java)
-        }
+        cdnClient = Client(steamSession.steamClient, httpClient ?: steamSession.steamClient.configuration.httpClient)
     }
 
     /**
@@ -65,8 +67,6 @@ class CDNClientPool(
 
         cdnClient = null
         proxyServer = null
-
-        logger = null
     }
 
     /**
@@ -133,7 +133,7 @@ class CDNClientPool(
      */
     fun returnConnection(server: Server?) {
         if (server == null) {
-            logger?.error("null server returned to cdn pool.")
+            log.error("null server returned to cdn pool.")
             return
         }
 
@@ -160,7 +160,7 @@ class CDNClientPool(
      */
     fun returnBrokenConnection(server: Server?) {
         if (server == null) {
-            logger?.error("null broken server returned to pool")
+            log.error("null broken server returned to pool")
             return
         }
 
@@ -168,7 +168,7 @@ class CDNClientPool(
 
         val updated = servers.updateAndGet { it.filter { s -> s != server } }
         if (updated.isEmpty()) {
-            logger?.error("No CDN servers remaining after removing broken connection: $server")
+            log.error("No CDN servers remaining after removing broken connection: $server")
         }
 
         // TODO: (SK) Add server to ContentServerPenalty

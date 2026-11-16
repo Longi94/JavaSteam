@@ -2,15 +2,34 @@ package in.dragonbra.javasteam.steam.cdn;
 
 import in.dragonbra.javasteam.TestBase;
 import in.dragonbra.javasteam.types.ChunkData;
+import in.dragonbra.javasteam.util.Adler32;
 import in.dragonbra.javasteam.util.stream.MemoryStream;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Random;
+import java.util.zip.CRC32;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Stream;
 
 public class DepotChunkTest extends TestBase {
 
@@ -133,4 +152,215 @@ public class DepotChunkTest extends TestBase {
 
         Assertions.assertEquals("9E72678E305540630A665B93E1463BC3983EB55A", hash);
     }
+
+    // region In-place decryption and oversized (pooled) buffers
+
+    /** A chunk from the test resources. The SHA-1 of its content is its chunk id, which is in the file name. */
+    private static final class Fixture {
+        final String name;
+        final String resource;
+        final ChunkData chunk;
+        final byte[] depotKey;
+        final String sha1;
+
+        Fixture(String name, String resource, int checksum, int compressedLength, int uncompressedLength, String depotKey, String sha1) {
+            this.name = name;
+            this.resource = resource;
+            this.chunk = new ChunkData(new byte[0], checksum, 0, compressedLength, uncompressedLength);
+            this.depotKey = unhex(depotKey);
+            this.sha1 = sha1;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
+    private static byte[] unhex(String hex) {
+        try {
+            return Hex.decodeHex(hex);
+        } catch (DecoderException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    private static final List<Fixture> FIXTURES = List.of(
+            new Fixture(
+                    "PKZip",
+                    "depot/depot_440_chunk_bac8e2657470b2eb70d6ddcd6c07004be8738697.bin",
+                    2130218374, 320, 544,
+                    "44CE5C5297A415A1A6F69C856037A5A2FDD82CD474FA659EDFB4D59B2ABC55FC",
+                    "BAC8E2657470B2EB70D6DDCD6C07004BE8738697"
+            ),
+            new Fixture(
+                    "LZMA",
+                    "depot/depot_232250_chunk_7b8567d9b3c09295cdbf4978c32b348d8e76c750.bin",
+                    Integer.parseUnsignedInt("2894626744"), 304, 798,
+                    "E5F6AED55E9ECE429E56B813FBF6BFE924F3CF72972FDBD0571FFCAD9F2F7DAA",
+                    "7B8567D9B3C09295CDBF4978C32B348D8E76C750"
+            ),
+            new Fixture(
+                    "Zstd",
+                    "depot/depot_3441461_chunk_9e72678e305540630a665b93e1463bc3983eb55a.bin",
+                    Integer.parseUnsignedInt("3753325726"), 176, 156,
+                    "0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20",
+                    "9E72678E305540630A665B93E1463BC3983EB55A"
+            )
+    );
+
+    /** Every chunk kind, on the platform provider and on the Bouncy Castle fallback. */
+    static Stream<Arguments> chunksAndProviders() {
+        var platform = Security.getProvider("SunJCE");
+        Assertions.assertNotNull(platform, "This test expects to run on a JVM with the SunJCE provider.");
+
+        var providers = List.of(platform, new BouncyCastleProvider());
+
+        return FIXTURES.stream().flatMap(fixture ->
+                providers.stream().map(provider -> Arguments.of(fixture, provider))
+        );
+    }
+
+    private byte[] load(Fixture fixture) throws IOException {
+        try (var stream = getClass().getClassLoader().getResourceAsStream(fixture.resource)) {
+            Assertions.assertNotNull(stream, fixture.resource);
+            var data = IOUtils.toByteArray(stream);
+            Assertions.assertEquals(fixture.chunk.getCompressedLength(), data.length);
+            return data;
+        }
+    }
+
+    private static String sha1(byte[] data, int length) throws NoSuchAlgorithmException {
+        var digest = MessageDigest.getInstance("SHA-1");
+        digest.update(data, 0, length);
+        return Hex.encodeHexString(digest.digest(), false);
+    }
+
+    @ParameterizedTest(name = "{0} with {1}")
+    @MethodSource("chunksAndProviders")
+    public void decryptsInPlace(Fixture fixture, Provider provider) throws IOException, NoSuchAlgorithmException {
+        var data = load(fixture);
+        var destination = new byte[fixture.chunk.getUncompressedLength()];
+
+        var written = DepotChunk.processWithProvider(fixture.chunk, data, data.length, destination, fixture.depotKey, provider);
+
+        Assertions.assertEquals(fixture.chunk.getUncompressedLength(), written);
+        Assertions.assertEquals(fixture.sha1, sha1(destination, written));
+    }
+
+    @ParameterizedTest(name = "{0} with {1}")
+    @MethodSource("chunksAndProviders")
+    public void processesChunkInBuffersLongerThanTheData(Fixture fixture, Provider provider) throws IOException, NoSuchAlgorithmException {
+        var chunkData = load(fixture);
+
+        // What pooled buffers look like: longer than the data, with old content after (and under) it.
+        var data = new byte[chunkData.length + 1000];
+        Arrays.fill(data, (byte) 0x5A);
+        System.arraycopy(chunkData, 0, data, 0, chunkData.length);
+
+        var destination = new byte[fixture.chunk.getUncompressedLength() + 1000];
+        Arrays.fill(destination, (byte) 0x5A);
+
+        var written = DepotChunk.processWithProvider(fixture.chunk, data, chunkData.length, destination, fixture.depotKey, provider);
+
+        Assertions.assertEquals(fixture.chunk.getUncompressedLength(), written);
+        Assertions.assertEquals(fixture.sha1, sha1(destination, written));
+
+        // Nothing is written past the data, in either buffer.
+        for (int i = chunkData.length; i < data.length; i++) {
+            Assertions.assertEquals((byte) 0x5A, data[i], "data[" + i + "]");
+        }
+        for (int i = written; i < destination.length; i++) {
+            Assertions.assertEquals((byte) 0x5A, destination[i], "destination[" + i + "]");
+        }
+    }
+
+    @Test
+    public void lengthOverloadUsesOnlyTheGivenLength() throws IOException, NoSuchAlgorithmException {
+        // The public overload, with whichever provider the library picks.
+        for (var fixture : FIXTURES) {
+            var chunkData = load(fixture);
+            var data = Arrays.copyOf(chunkData, chunkData.length + 333);
+            var destination = new byte[fixture.chunk.getUncompressedLength() + 333];
+
+            var written = DepotChunk.process(fixture.chunk, data, chunkData.length, destination, fixture.depotKey);
+
+            Assertions.assertEquals(fixture.sha1, sha1(destination, written), fixture.name);
+        }
+    }
+
+    static Stream<Provider> providers() {
+        return Stream.of(Security.getProvider("SunJCE"), new BouncyCastleProvider());
+    }
+
+    /**
+     * The fixtures are a few hundred bytes. Real chunks are up to 1 MiB, which a provider decrypts in
+     * several pieces, so this is where an in-place decryption that is not copy-safe would show.
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("providers")
+    public void decryptsAFullSizeChunkInPlace(Provider provider) throws Exception {
+        var content = new byte[1024 * 1024];
+        new Random(1234).nextBytes(content);
+
+        // A PKZip chunk, stored, so the decrypted data is as long as a chunk can be.
+        var zipped = new ByteArrayOutputStream();
+        try (var zip = new ZipOutputStream(zipped)) {
+            var crc = new CRC32();
+            crc.update(content);
+
+            var entry = new ZipEntry("z");
+            entry.setMethod(ZipEntry.STORED);
+            entry.setSize(content.length);
+            entry.setCompressedSize(content.length);
+            entry.setCrc(crc.getValue());
+
+            zip.putNextEntry(entry);
+            zip.write(content);
+            zip.closeEntry();
+        }
+
+        var depotKey = FIXTURES.get(0).depotKey;
+        var keySpec = new SecretKeySpec(depotKey, "AES");
+
+        var iv = new byte[16];
+        new Random(5678).nextBytes(iv);
+
+        var ecb = Cipher.getInstance("AES/ECB/NoPadding");
+        ecb.init(Cipher.ENCRYPT_MODE, keySpec);
+
+        var cbc = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cbc.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv));
+
+        var encrypted = new ByteArrayOutputStream();
+        encrypted.write(ecb.doFinal(iv));
+        encrypted.write(cbc.doFinal(zipped.toByteArray()));
+
+        var chunkData = encrypted.toByteArray();
+        var chunk = new ChunkData(new byte[0], Adler32.calculate(content), 0, chunkData.length, content.length);
+
+        // Exactly sized, and in a longer buffer.
+        for (int extra : new int[]{0, 4096}) {
+            var data = Arrays.copyOf(chunkData, chunkData.length + extra);
+            var destination = new byte[content.length + extra];
+
+            var written = DepotChunk.processWithProvider(chunk, data, chunkData.length, destination, depotKey, provider);
+
+            Assertions.assertEquals(content.length, written);
+            Assertions.assertArrayEquals(content, Arrays.copyOf(destination, written));
+        }
+    }
+
+    @Test
+    public void rejectsALengthOutsideTheData() {
+        var fixture = FIXTURES.get(0);
+        var destination = new byte[fixture.chunk.getUncompressedLength()];
+
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+                DepotChunk.process(fixture.chunk, new byte[320], 321, destination, fixture.depotKey));
+        Assertions.assertThrows(IllegalArgumentException.class, () ->
+                DepotChunk.process(fixture.chunk, new byte[320], 15, destination, fixture.depotKey));
+    }
+
+    // endregion
 }

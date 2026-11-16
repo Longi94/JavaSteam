@@ -34,6 +34,28 @@ public class Adler32Test {
     }
 
     @ParameterizedTest
+    @ValueSource(ints = {0, 1, 15, 16, 17, 1024, 5552 - 1, 5552, 5552 + 1, 5552 * 2 + 3})
+    void rangeMatchesCopyOfRange(int length) {
+        final var seed = 0;
+        final var offset = 7;
+        var data = new byte[offset + length + 11];
+        new Random().nextBytes(data);
+
+        var expected = referenceImplementation(seed, Arrays.copyOfRange(data, offset, offset + length));
+        var actual = Adler32.calculate(seed, data, offset, length);
+
+        Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    void rangeOutsideBufferThrows() {
+        var data = new byte[16];
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> Adler32.calculate(0, data, 8, 9));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> Adler32.calculate(0, data, -1, 4));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"a", "Wikipedia", "123456789", "SteamKit is good software, you should use it. :)"})
     void matchesKnownVectors(String input) {
         final int seed = 1;
@@ -65,6 +87,81 @@ public class Adler32Test {
         var actual = Adler32.calculate(1, data);
 
         Assertions.assertEquals(expected, actual);
+    }
+
+    /** Byte by byte, with both halves of the seed, the way the checksum is defined. */
+    private static int seededReference(int seed, byte[] input, int offset, int length) {
+        long a = seed & 0xFFFF;
+        long b = (seed >>> 16) & 0xFFFF;
+
+        for (int i = offset; i < offset + length; i++) {
+            a = (a + (input[i] & 0xFF)) % 65521;
+            b = (b + a) % 65521;
+        }
+
+        return (int) ((b << 16) | a);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {
+            0,                  // what Steam uses
+            1,                  // standard Adler-32
+            0x00010000,         // high half only
+            0x12345678,         // both halves
+            0xFFF0FFF0,         // 65520, the largest reduced value, in both halves
+            0xFFFFFFFF,         // halves that are not reduced
+            0xFFF10000,         // 65521 in the high half
+    })
+    void matchesReferenceForAnySeed(int seed) {
+        // Lengths around the modulus, and a chunk-sized one that is several times above it.
+        for (int length : new int[]{1, 2, 255, 65520, 65521, 65522, 2 * 65521, 1024 * 1024, 1024 * 1024 + 13}) {
+            var data = new byte[length + 5];
+            new Random(length).nextBytes(data);
+
+            Assertions.assertEquals(
+                    seededReference(seed, data, 5, length),
+                    Adler32.calculate(seed, data, 5, length),
+                    "seed " + Integer.toHexString(seed) + ", length " + length
+            );
+        }
+    }
+
+    @Test
+    void matchesReferenceForWorstCaseData() {
+        // All 0xFF gives the largest sums.
+        var data = new byte[1024 * 1024];
+        Arrays.fill(data, (byte) 0xFF);
+
+        for (int seed : new int[]{0, 1, 0xFFF0FFF0, 0xFFFFFFFF}) {
+            Assertions.assertEquals(seededReference(seed, data, 0, data.length), Adler32.calculate(seed, data));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void continuingAChecksumMatchesOnePass(int seed) {
+        var data = new byte[300_000];
+        new Random(99).nextBytes(data);
+
+        var expected = Adler32.calculate(seed, data);
+
+        for (int split : new int[]{0, 1, 16, 5552, 65521, 150_000, data.length - 1, data.length}) {
+            var first = Adler32.calculate(seed, data, 0, split);
+            var actual = Adler32.calculate(first, data, split, data.length - split);
+
+            Assertions.assertEquals(expected, actual, "split at " + split);
+        }
+    }
+
+    @Test
+    void seedOneMatchesZlib() {
+        var data = new byte[70_000];
+        new Random(7).nextBytes(data);
+
+        var zlib = new java.util.zip.Adler32();
+        zlib.update(data, 3, 60_000);
+
+        Assertions.assertEquals((int) zlib.getValue(), Adler32.calculate(1, data, 3, 60_000));
     }
 
     // Additional benchmarking
@@ -171,7 +268,7 @@ public class Adler32Test {
             int iterations = Math.max(1000, baseIterations / (size / 16));
 
             // Warmup
-            for (int i = 0; i < Math.min(100, iterations / 10); i++) {
+            for (int i = 0; i < 100; i++) {
                 referenceImplementation(data);
                 Adler32.calculate(data);
             }

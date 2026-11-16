@@ -16,6 +16,7 @@ object HardwareUtils {
 
     private val serialNumber: String by lazy {
         when {
+            SystemUtils.IS_OS_ANDROID -> null
             SystemUtils.IS_OS_WINDOWS -> getSerialNumberWin()
             SystemUtils.IS_OS_MAC -> getSerialNumberMac()
             SystemUtils.IS_OS_LINUX -> getSerialNumberUnix()

@@ -18,19 +18,16 @@ import `in`.dragonbra.javasteam.util.SteamKitWebRequestException
 import `in`.dragonbra.javasteam.util.Strings
 import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.http.HttpHeaders
-import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.*
+import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
-import okio.buffer
 import org.apache.commons.lang3.SystemUtils
 import java.io.Closeable
 import java.io.IOException
@@ -62,8 +59,14 @@ import java.util.concurrent.atomic.*
  * @param licenses User's license list from [LicenseListCallback]. Required to determine which depots the account has access to.
  * @param debug Enables detailed logging of all operations via [LogManager]
  * @param useLanCache Attempts to detect and use local Steam cache servers (e.g., LANCache) for faster downloads on local networks
- * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8. Higher is better
+ * @param maxDownloads Number of concurrent chunk downloads. Automatically increased to 25 when a LAN cache is detected. Default: 8.
+ * Higher is faster on a good connection, lower is easier on memory, the network and the CDN servers. All of them may go to
+ * one server, which is what a LAN cache needs.
  * @param maxFileWrites Number of concurrent files being written. Default: 1
+ * @param maxDecompress Number of chunks decrypted and decompressed at the same time, each on a thread of its own.
+ * Default: half of the available processors, which leaves the rest to the OS and the app. Kept between 1 and the
+ * number of available processors. Higher is faster where the CPU, not the network, limits the download.
+ * This is the last constructor parameter, after [parentJob].
  * @param androidEmulation Forces "Windows" as the default OS filter. Used when running Android games in PC emulators that expect Windows builds.
  * @param parentJob Parent job for the downloader. If provided, the downloader will be cancelled when the parent job is cancelled.
  *
@@ -82,6 +85,7 @@ class DepotDownloader @JvmOverloads constructor(
     private var maxFileWrites: Int = 1,
     private val androidEmulation: Boolean = false,
     private val parentJob: Job? = null,
+    maxDecompress: Int = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1),
 ) : Closeable {
 
     companion object {
@@ -95,7 +99,15 @@ class DepotDownloader @JvmOverloads constructor(
 
         val STAGING_DIR: Path = CONFIG_DIR.toPath() / "staging"
 
+        private const val MAX_DOWNLOAD_ATTEMPTS: Int = 10
+
+        private fun retryDelayMillis(failures: Int): Long = (500L * failures).coerceAtMost(5_000L)
+
+        private fun fraction(done: Long, total: Long): Float = if (total <= 0L) 1f else done.toFloat() / total
+
         private val SupportedWorkshopFileTypes: Set<EWorkshopFileType> = setOf(
+            // First and Community share the value 0, and EWorkshopFileType.from(0) returns First.
+            EWorkshopFileType.First,
             EWorkshopFileType.Community,
             EWorkshopFileType.Art,
             EWorkshopFileType.Screenshot,
@@ -109,34 +121,57 @@ class DepotDownloader @JvmOverloads constructor(
 
     private val filesystem: FileSystem by lazy { FileSystem.SYSTEM }
 
-    private val httpClient: HttpClient by lazy { HttpClient(maxConnections = maxDownloads) }
-
     private val listeners = CopyOnWriteArrayList<IDownloadListener>()
 
     private val progressUpdateInterval = 500L // ms
 
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob(parentJob))
+    // Errors are always logged. Everything else goes through [logger], which is only set with [debug].
+    private val log: Logger = LogManager.getLogger(DepotDownloader::class.java)
+
+    private val logger: Logger? = if (debug) log else null
+
+    // Last line of defence: a failure inside the downloader must never take the host process down.
+    private val scope: CoroutineScope = CoroutineScope(
+        Dispatchers.IO +
+            SupervisorJob(parentJob) +
+            CoroutineExceptionHandler { _, e -> log.error("Uncaught error in DepotDownloader: ${e.message}", e) }
+    )
 
     private var cdnClientPool: CDNClientPool? = null
 
-    private var config: Config = Config(androidEmulation = androidEmulation)
+    // Derived from the SteamClient's HTTP client on first use, see [HttpClient]. Built late on
+    // purpose: a detected LAN cache raises maxDownloads before the first item is processed.
+    private var ownHttpClient: OkHttpClient? = null
 
-    private var logger: Logger? = null
+    private val httpClientLock = Any()
+
+    private fun httpClient(): OkHttpClient = synchronized(httpClientLock) {
+        ownHttpClient ?: HttpClient.create(
+            base = steamClient.configuration.httpClient,
+            maxDownloads = maxDownloads,
+        ).also { ownHttpClient = it }
+    }
+
+    private var config: Config = Config(androidEmulation = androidEmulation)
 
     private var processingChannel = Channel<DownloadItem>(Channel.UNLIMITED)
 
     // Bounded channel — send() suspends producers when full, creating backpressure through the pipeline.
     private val networkChunkChannel = Channel<NetworkChunkItem>(64)
 
-    // Half of available processors, clamped to at least 1. Leaves remaining cores for the OS and app.
-    private val maxDecompress: Int = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+    // The decompress stage runs on Dispatchers.Default, which has no more threads than there are processors.
+    private val maxDecompress: Int = maxDecompress.coerceIn(1, Runtime.getRuntime().availableProcessors().coerceAtLeast(1))
 
-    private val pendingChunks = AtomicInteger(0)
-
-    // Completed by processFileWrites when all pending chunks drain, or by the sentinel release in
-    // downloadSteam3DepotFiles. Replaces the 100ms polling loop.
-    @Volatile
-    private var downloadCompletion: CompletableDeferred<Unit>? = null
+    // The downloaded and the decompressed bytes of every chunk live in arrays rented from here.
+    // Lazy because a detected LAN cache raises maxDownloads before the first chunk is downloaded.
+    //
+    // The idle cap is one array per array a stage can hold at once: one per download, two per
+    // decompress (input and output), one per file write. The chunks buffered between the stages
+    // are left out on purpose: while a download runs they are in use, not idle, and reuse works
+    // without slots for them. Counting them would only let ~150 MB sit idle after a burst.
+    private val bufferPool: ChunkBufferPool by lazy {
+        ChunkBufferPool(maxIdle = maxDownloads + 2 * this.maxDecompress + maxFileWrites)
+    }
 
     private var chunkProcessingJob: Job? = null
 
@@ -149,7 +184,59 @@ class DepotDownloader @JvmOverloads constructor(
 
     // region [REGION] Private data classes.
 
+    /**
+     * Failure state of one queued item. The chunk pipeline outlives items, so every chunk carries
+     * the session it belongs to: once a session has failed its remaining chunks are dropped instead
+     * of downloaded, and whoever waits on the item is woken with the error.
+     */
+    private class DownloadSession {
+        private val error = AtomicReference<Throwable?>(null)
+        private val failure = CompletableDeferred<Nothing>()
+
+        val isFailed: Boolean get() = error.get() != null
+
+        fun fail(cause: Throwable) {
+            if (error.compareAndSet(null, cause)) {
+                failure.completeExceptionally(cause)
+            }
+        }
+
+        fun throwIfFailed() {
+            error.get()?.let { throw it }
+        }
+
+        /** Suspends until every chunk of [tracker] went through the pipeline, or throws once the session fails. */
+        suspend fun awaitDrained(tracker: DepotChunkTracker) {
+            select {
+                tracker.drained.onAwait { }
+                failure.onAwait { }
+            }
+            throwIfFailed()
+        }
+    }
+
+    /** Counts the chunks of one depot that are still somewhere in the pipeline. */
+    private class DepotChunkTracker(val session: DownloadSession) {
+        // Starts at 1: a sentinel held while files are still being enumerated, so the count
+        // cannot reach zero before every chunk has been queued.
+        private val pending = AtomicInteger(1)
+
+        val drained = CompletableDeferred<Unit>()
+
+        fun chunkQueued() {
+            pending.incrementAndGet()
+        }
+
+        /** Must be called exactly once per queued chunk (done, failed or dropped), and once for the sentinel. */
+        fun chunkDone() {
+            if (pending.decrementAndGet() == 0) {
+                drained.complete(Unit)
+            }
+        }
+    }
+
     private data class NetworkChunkItem(
+        val tracker: DepotChunkTracker,
         val downloadCounter: GlobalDownloadCounter,
         val depotFilesData: DepotFilesData,
         val fileStreamData: FileStreamData,
@@ -160,23 +247,28 @@ class DepotDownloader @JvmOverloads constructor(
 
     @Suppress("ArrayInDataClass")
     private data class DecompressItem(
+        val tracker: DepotChunkTracker,
         val depot: DepotDownloadInfo,
         val depotDownloadCounter: DepotDownloadCounter,
         val downloadCounter: GlobalDownloadCounter,
         val file: FileData,
         val fileStreamData: FileStreamData,
         val chunk: ChunkData,
+        // Rented from bufferPool: longer than the chunk. Only the first [downloaded] bytes are valid.
+        val downloaded: Int,
         val chunkBuffer: ByteArray,
     )
 
     @Suppress("ArrayInDataClass")
     private data class FileWriteItem(
+        val tracker: DepotChunkTracker,
         val depot: DepotDownloadInfo,
         val depotDownloadCounter: DepotDownloadCounter,
         val downloadCounter: GlobalDownloadCounter,
         val file: FileData,
         val fileStreamData: FileStreamData,
         val chunk: ChunkData,
+        // Rented from bufferPool: longer than the chunk. Only the first [decompressed] bytes are valid.
         val decompressed: Int,
         val decompressedBuffer: ByteArray,
     )
@@ -203,10 +295,6 @@ class DepotDownloader @JvmOverloads constructor(
     // endregion
 
     init {
-        if (debug) {
-            logger = LogManager.getLogger(DepotDownloader::class.java)
-        }
-
         steam3 = Steam3Session(steamClient, debug)
 
         logger?.debug("DepotDownloader launched with ${licenses.size} for account")
@@ -225,51 +313,59 @@ class DepotDownloader @JvmOverloads constructor(
     private fun createChunkProcessingFlow() = networkChunkChannel.receiveAsFlow()
         .flatMapMerge(concurrency = maxDownloads) { item ->
             flow {
-                try {
-                    emit(
-                        downloadSteam3DepotFileChunk(
-                            downloadCounter = item.downloadCounter,
-                            depotFilesData = item.depotFilesData,
-                            file = item.fileData,
-                            fileStreamData = item.fileStreamData,
-                            chunk = item.chunk
-                        )
+                val downloaded = runChunkStage(item.tracker, "downloading") {
+                    downloadSteam3DepotFileChunk(
+                        tracker = item.tracker,
+                        downloadCounter = item.downloadCounter,
+                        depotFilesData = item.depotFilesData,
+                        file = item.fileData,
+                        fileStreamData = item.fileStreamData,
+                        chunk = item.chunk
                     )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger?.error("Error downloading chunk: ${e.message}", e)
                 }
+                if (downloaded != null) emit(downloaded)
             }.flowOn(Dispatchers.IO)
         }
         .flatMapMerge(concurrency = maxDecompress) { item ->
             flow {
-                try {
-                    emit(processFileDecompress(item))
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger?.error("Error decompressing chunk: ${e.message}", e)
-                }
+                val decompressed = runChunkStage(item.tracker, "decompressing") { processFileDecompress(item) }
+                if (decompressed != null) emit(decompressed)
             }.flowOn(Dispatchers.Default)
         }
         .flatMapMerge(concurrency = maxFileWrites) { item ->
             flow {
-                var rethrow: CancellationException? = null
-                try {
-                    processFileWrites(item)
-                } catch (e: CancellationException) {
-                    rethrow = e
-                } catch (e: Exception) {
-                    logger?.error("Error writing file: ${e.message}", e)
-                }
-                if (pendingChunks.decrementAndGet() == 0) {
-                    downloadCompletion?.complete(Unit)
-                }
-                rethrow?.let { throw it }
+                val written = runChunkStage(item.tracker, "writing") { processFileWrites(item) }
+                if (written != null) item.tracker.chunkDone()
                 emit(Unit)
             }.flowOn(Dispatchers.IO)
         }
+
+    /**
+     * Runs one pipeline stage for a chunk. Returns null when the chunk left the pipeline here: either
+     * its item had already failed (the chunk is dropped), or [block] threw, which fails the item.
+     * Catches [Throwable] on purpose: a missing optional dependency surfaces as [NoClassDefFoundError]
+     * and must fail one download, not the pipeline or the process.
+     */
+    private suspend inline fun <T : Any> runChunkStage(tracker: DepotChunkTracker, stage: String, block: () -> T): T? {
+        if (tracker.session.isFailed) {
+            tracker.chunkDone()
+            return null
+        }
+
+        try {
+            return block()
+        } catch (e: Throwable) {
+            // Only a cancellation of the downloader itself may stop the pipeline.
+            if (e is CancellationException) currentCoroutineContext().ensureActive()
+
+            log.error("Error $stage chunk: ${e.message}", e)
+
+            val cause = if (e is CancellationException) DepotDownloaderException("Timed out $stage chunk", e) else e
+            tracker.session.fail(cause)
+            tracker.chunkDone()
+            return null
+        }
+    }
 
     // region [REGION] Downloading Operations
 
@@ -278,13 +374,21 @@ class DepotDownloader @JvmOverloads constructor(
         publishedFileId: Long,
         fileUrls: MutableList<Pair<String, String>>,
         contentFileIds: MutableList<Long>,
+        skipReasons: MutableList<String>,
     ) {
         val details = steam3!!.getPublishedFileDetails(appId, PublishedFileID(publishedFileId))
-        val fileType = EWorkshopFileType.from(details!!.fileType)
+        if (details == null) {
+            val reason = "Unable to get the details of published file $publishedFileId"
+            log.error(reason)
+            skipReasons.add(reason)
+            return
+        }
+
+        val fileType = EWorkshopFileType.from(details.fileType)
 
         if (fileType == EWorkshopFileType.Collection) {
             details.childrenList.forEach { child ->
-                processPublishedFile(appId, child.publishedfileid, fileUrls, contentFileIds)
+                processPublishedFile(appId, child.publishedfileid, fileUrls, contentFileIds, skipReasons)
             }
         } else if (SupportedWorkshopFileTypes.contains(fileType)) {
             if (details.fileUrl.isNotEmpty()) {
@@ -292,10 +396,14 @@ class DepotDownloader @JvmOverloads constructor(
             } else if (details.hcontentFile > 0) {
                 contentFileIds.add(details.hcontentFile)
             } else {
-                logger?.error("Unable to locate manifest ID for published file $publishedFileId")
+                val reason = "Unable to locate manifest ID for published file $publishedFileId"
+                log.error(reason)
+                skipReasons.add(reason)
             }
         } else {
-            logger?.error("Published file $publishedFileId has unsupported file type $fileType. Skipping file")
+            val reason = "Published file $publishedFileId has unsupported file type $fileType"
+            log.error("$reason. Skipping file")
+            skipReasons.add(reason)
         }
     }
 
@@ -303,14 +411,25 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun downloadPubFile(appId: Int, publishedFileId: Long) {
         val fileUrls = mutableListOf<Pair<String, String>>()
         val contentFileIds = mutableListOf<Long>()
+        val skipReasons = mutableListOf<String>()
 
-        processPublishedFile(appId, publishedFileId, fileUrls, contentFileIds)
+        processPublishedFile(appId, publishedFileId, fileUrls, contentFileIds, skipReasons)
+
+        // Without this an item with nothing to download would end without any callback.
+        if (fileUrls.isEmpty() && contentFileIds.isEmpty()) {
+            throw DepotDownloaderException(
+                "Nothing to download for published file $publishedFileId: ${skipReasons.joinToString("; ")}"
+            )
+        }
 
         fileUrls.forEach { item ->
             downloadWebFile(appId, item.first, item.second)
         }
 
-        if (contentFileIds.isNotEmpty()) {
+        if (contentFileIds.isEmpty()) {
+            // Only web files: downloadApp, which reports the completion otherwise, is not reached.
+            finishDepotDownload(appId)
+        } else {
             val depotManifestIds = contentFileIds.map { id -> appId to id }
             downloadApp(
                 appId = appId,
@@ -338,11 +457,13 @@ class DepotDownloader @JvmOverloads constructor(
             val ugcHandle = UGCHandle(ugcId)
             details = steam3!!.getUGCDetails(ugcHandle)
         } else {
-            logger?.error("Unable to query UGC details for $ugcId from an anonymous account")
+            log.error("Unable to query UGC details for $ugcId from an anonymous account")
         }
 
         if (!details?.url.isNullOrBlank()) {
             downloadWebFile(appId = appId, fileName = details.fileName, url = details.url)
+            // downloadApp, which reports the completion otherwise, is not reached.
+            finishDepotDownload(appId)
         } else {
             downloadApp(
                 appId = appId,
@@ -361,9 +482,9 @@ class DepotDownloader @JvmOverloads constructor(
     private suspend fun downloadWebFile(appId: Int, fileName: String, url: String) {
         val (success, installDir) = createDirectories(appId, 0, appId)
 
+        // Failures are thrown so the item ends in onDownloadFailed instead of ending silently.
         if (!success) {
-            logger?.error("Error: Unable to create install directories!")
-            return
+            throw DepotDownloaderException("Unable to create install directories for $fileName")
         }
 
         val stagingDir = installDir!! / "staging"
@@ -373,29 +494,17 @@ class DepotDownloader @JvmOverloads constructor(
         filesystem.createDirectories(fileFinalPath.parent!!)
         filesystem.createDirectories(fileStagingPath.parent!!)
 
-        httpClient.getClient().use { client ->
-            logger?.debug("Starting download of $fileName...")
+        logger?.debug("Starting download of $fileName...")
 
-            val response = client.get(url)
-            val channel = response.bodyAsChannel()
+        // The same HTTP client chunks and manifests use.
+        val bytesWritten = HttpClient.downloadFile(
+            httpClient = httpClient(),
+            url = url,
+            destination = fileStagingPath,
+            filesystem = filesystem,
+        )
 
-            val totalBytes = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
-
-            logger?.debug("File size: ${totalBytes?.let { Util.formatBytes(it) } ?: "Unknown"}")
-
-            filesystem.sink(fileStagingPath).buffer().use { sink ->
-                val tempArray = ByteArray(DEFAULT_BUFFER_SIZE)
-
-                while (!channel.isClosedForRead) {
-                    val bytesRead = channel.readAvailable(tempArray, 0, tempArray.size)
-                    if (bytesRead > 0) {
-                        sink.write(tempArray, 0, bytesRead)
-                    }
-                }
-            }
-
-            logger?.debug("Download completed.")
-        }
+        logger?.debug("Download completed, ${Util.formatBytes(bytesWritten)}.")
 
         if (filesystem.exists(fileFinalPath)) {
             logger?.debug("Deleting $fileFinalPath")
@@ -406,7 +515,7 @@ class DepotDownloader @JvmOverloads constructor(
             filesystem.atomicMove(fileStagingPath, fileFinalPath)
             logger?.debug("File '$fileStagingPath' moved to final location: $fileFinalPath")
         } catch (e: IOException) {
-            logger?.error("Failed to move files", e)
+            log.error("Failed to move files", e)
             throw e
         }
     }
@@ -426,7 +535,7 @@ class DepotDownloader @JvmOverloads constructor(
         var depotManifestIds = depotManifestIds.toMutableList()
 
         val steamUser = requireNotNull(steam3!!.steamUser)
-        cdnClientPool = CDNClientPool(steam3!!, appId, scope, debug)
+        cdnClientPool = CDNClientPool(steam3!!, appId, scope, debug, httpClient())
 
         // Load our configuration data containing the depots currently installed
         var configPath = config.installPath
@@ -538,12 +647,20 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         val infos = mutableListOf<DepotDownloadInfo>()
+        val skipReasons = mutableListOf<String>()
 
         depotManifestIds.forEach { (depotId, manifestId) ->
-            val info = getDepotInfo(depotId, appId, manifestId, branch)
+            val info = getDepotInfo(depotId, appId, manifestId, branch, skipReasons)
             if (info != null) {
                 infos.add(info)
             }
+        }
+
+        // Without this an item whose depots were all skipped would be reported as completed.
+        if (infos.isEmpty()) {
+            throw DepotDownloaderException(
+                "None of the depots of app $appId could be downloaded: ${skipReasons.joinToString("; ")}"
+            )
         }
 
         downloadSteam3(appId, infos)
@@ -555,48 +672,49 @@ class DepotDownloader @JvmOverloads constructor(
         appId: Int,
         manifestId: Long,
         branch: String,
+        skipReasons: MutableList<String>,
     ): DepotDownloadInfo? {
         var manifestId = manifestId
         var branch = branch
+
+        fun skip(reason: String): DepotDownloadInfo? {
+            skipReasons.add(reason)
+            skipDepot(depotId, reason)
+            return null
+        }
 
         if (appId != INVALID_APP_ID) {
             steam3!!.requestAppInfo(appId)
         }
 
         if (!accountHasAccess(appId, depotId)) {
-            logger?.error("Depot $depotId is not available from this account.")
-            return null
+            return skip("Depot $depotId is not available from this account.")
         }
 
         if (manifestId == INVALID_MANIFEST_ID) {
             manifestId = getSteam3DepotManifest(depotId, appId, branch)
 
             if (manifestId == INVALID_MANIFEST_ID && !branch.equals(DEFAULT_BRANCH, true)) {
-                logger?.error("Warning: Depot $depotId does not have branch named \"$branch\". Trying $DEFAULT_BRANCH branch.")
+                log.error("Warning: Depot $depotId does not have branch named \"$branch\". Trying $DEFAULT_BRANCH branch.")
                 branch = DEFAULT_BRANCH
                 manifestId = getSteam3DepotManifest(depotId, appId, branch)
             }
 
             if (manifestId == INVALID_MANIFEST_ID) {
-                logger?.error("Depot $depotId missing public subsection or manifest section.")
-                return null
+                return skip("Depot $depotId missing public subsection or manifest section.")
             }
         }
 
         steam3!!.requestDepotKey(depotId, appId)
 
         val depotKey = steam3!!.depotKeys[depotId]
-        if (depotKey == null) {
-            logger?.error("No valid depot key for $depotId, unable to download.")
-            return null
-        }
+            ?: return skip("No valid depot key for $depotId, unable to download.")
 
         val uVersion = getSteam3AppBuildNumber(appId, branch)
 
         val (success, installDir) = createDirectories(depotId, uVersion, appId)
         if (!success) {
-            logger?.error("Error: Unable to create install directories!")
-            return null
+            return skip("Unable to create install directories for depot $depotId.")
         }
 
         // For depots that are proxied through depotfromapp, we still need to resolve the proxy app id, unless the app is freetodownload
@@ -619,6 +737,12 @@ class DepotDownloader @JvmOverloads constructor(
         )
     }
 
+    /** A depot is left out of the download. Always logged, and reported to listeners. */
+    private fun skipDepot(depotId: Int, reason: String) {
+        log.error(reason)
+        notifyListeners { it.onDepotSkipped(depotId, reason) }
+    }
+
     private suspend fun getSteam3DepotManifest(
         depotId: Int,
         appId: Int,
@@ -638,7 +762,7 @@ class DepotDownloader @JvmOverloads constructor(
             val otherAppId = depotChild["depotfromapp"].asInteger()
             if (otherAppId == appId) {
                 // This shouldn't ever happen, but ya never know with Valve. Don't infinite loop.
-                logger?.error("App $appId, Depot $depotId has depotfromapp of $otherAppId!")
+                log.error("App $appId, Depot $depotId has depotfromapp of $otherAppId!")
                 return INVALID_MANIFEST_ID
             }
 
@@ -667,7 +791,7 @@ class DepotDownloader @JvmOverloads constructor(
 
         // Either the branch just doesn't exist, or it has a password
         if (config.betaPassword.isNullOrBlank()) {
-            logger?.error("Branch $branch for depot $depotId was not found, either it does not exist or it has a password.")
+            log.error("Branch $branch for depot $depotId was not found, either it does not exist or it has a password.")
             return INVALID_MANIFEST_ID
         }
 
@@ -676,7 +800,7 @@ class DepotDownloader @JvmOverloads constructor(
             steam3!!.checkAppBetaPassword(appId, config.betaPassword!!)
 
             if (!steam3!!.appBetaPasswords.containsKey(branch)) {
-                logger?.error("Error: Password was invalid for branch $branch (or the branch does not exist)")
+                log.error("Error: Password was invalid for branch $branch (or the branch does not exist)")
                 return INVALID_MANIFEST_ID
             }
         }
@@ -800,7 +924,7 @@ class DepotDownloader @JvmOverloads constructor(
                 filesystem.createDirectories(installDir / STAGING_DIR)
             }
         } catch (e: IOException) {
-            logger?.error("Failed to create directory for depot $depotId, app $appId", e)
+            log.error("Failed to create directory for depot $depotId, app $appId", e)
             return DirectoryResult(false, null)
         }
 
@@ -886,6 +1010,12 @@ class DepotDownloader @JvmOverloads constructor(
             allFileNamesAllDepots.addAll(depotFileData.allFileNames)
         }
 
+        // Depots can still be skipped while fetching manifests. Without this an item whose depots
+        // were all skipped there would be reported as completed.
+        if (depotsToDownload.isEmpty() && depots.isNotEmpty() && !config.downloadManifestOnly) {
+            throw DepotDownloaderException("None of the depots of app $mainAppId could be downloaded.")
+        }
+
         // If we're about to write all the files to the same directory, we will need to first de-duplicate any files by path
         // This is in last-depot-wins order, from Steam or the list of depots supplied by the user
         if (config.installPath != null && depotsToDownload.isNotEmpty()) {
@@ -897,28 +1027,23 @@ class DepotDownloader @JvmOverloads constructor(
             }
         }
 
-        if (depotsToDownload.isEmpty()) {
-            finishDepotDownload(mainAppId)
-        } else {
-            // Sentinel: keeps pendingChunks ≥ 1 while files are still being enumerated,
-            // preventing a premature zero signal before all chunks have been submitted.
-            pendingChunks.set(1)
-            downloadCompletion = CompletableDeferred()
-            depotsToDownload.forEachIndexed { index, depotFileData ->
-                downloadSteam3DepotFiles(
-                    mainAppId,
-                    downloadCounter,
-                    depotFileData,
-                    allFileNamesAllDepots,
-                    index == depotsToDownload.size - 1
-                )
+        val session = DownloadSession()
+        try {
+            depotsToDownload.forEach { depotFileData ->
+                downloadSteam3DepotFiles(session, downloadCounter, depotFileData, allFileNamesAllDepots)
             }
+        } catch (e: Throwable) {
+            // Drops the chunks of this item that are still in the pipeline.
+            session.fail(e)
+            throw e
         }
 
         logger?.debug(
             "Total downloaded: ${downloadCounter.totalBytesCompressed.get()} bytes " +
                 "(${downloadCounter.totalBytesUncompressed.get()} bytes uncompressed) from ${depots.size} depots"
         )
+
+        finishDepotDownload(mainAppId)
     }
 
     private suspend fun processDepotManifestAndFiles(
@@ -965,8 +1090,14 @@ class DepotDownloader @JvmOverloads constructor(
                 var manifestRequestCode: ULong = 0U
                 var manifestRequestCodeExpiration = Instant.MIN
 
+                var failures = 0
+                var lastError: Throwable? = null
+
                 do {
                     ensureActive()
+
+                    if (failures >= MAX_DOWNLOAD_ATTEMPTS) break
+                    if (failures > 0) delay(retryDelayMillis(failures))
 
                     var connection: Server? = null
 
@@ -981,7 +1112,8 @@ class DepotDownloader @JvmOverloads constructor(
                                 val result = authTokenCallbackPromise.await()
                                 cdnToken = result.token
                             } catch (e: Exception) {
-                                logger?.error("Failed to get CDN auth token: ${e.message}")
+                                ensureActive()
+                                log.error("Failed to get CDN auth token: ${e.message}")
                             }
                         }
 
@@ -1002,10 +1134,8 @@ class DepotDownloader @JvmOverloads constructor(
 
                             // If we could not get the manifest code, this is a fatal error
                             if (manifestRequestCode == 0UL) {
-                                // TODO this should be a fatal error and bail out. But I guess we can continue.
-                                logger?.error("Manifest request code is 0. Skipping depot ${depot.depotId}")
+                                skipDepot(depot.depotId, "No manifest request code for depot ${depot.depotId}, manifest ${depot.manifestId}.")
                                 return@withContext null
-                                // cancel("manifestRequestCode is 0UL")
                             }
                         }
 
@@ -1022,10 +1152,6 @@ class DepotDownloader @JvmOverloads constructor(
                         )
 
                         cdnClientPool!!.returnConnection(connection)
-                    } catch (e: CancellationException) {
-                        // logger?.error("Connection timeout downloading depot manifest ${depot.depotId} ${depot.manifestId}. Retrying.")
-                        logger?.error("Cancellation Exception thrown in process manifest", e)
-                        break
                     } catch (e: SteamKitWebRequestException) {
                         // If the CDN returned 403, attempt to get a cdn auth if we didn't yet
                         if (e.statusCode == 403 && !steam3!!.cdnAuthTokens.containsKey(depot.depotId to connection!!.host)) {
@@ -1038,39 +1164,48 @@ class DepotDownloader @JvmOverloads constructor(
 
                         cdnClientPool!!.skipConnection(connection)
 
+                        failures++
+                        lastError = e
+
                         // Unauthorized || Forbidden
                         if (e.statusCode == 401 || e.statusCode == 403) {
-                            logger?.error("Encountered ${depot.depotId} for depot manifest ${depot.manifestId} ${e.statusCode}. Aborting.")
+                            log.error("Encountered ${depot.depotId} for depot manifest ${depot.manifestId} ${e.statusCode}. Aborting.")
                             break
                         }
 
                         // NotFound
                         if (e.statusCode == 404) {
-                            logger?.error("Encountered 404 for depot manifest ${depot.depotId} ${depot.manifestId}. Aborting.")
+                            log.error("Encountered 404 for depot manifest ${depot.depotId} ${depot.manifestId}. Aborting.")
                             break
                         }
 
-                        logger?.error("Encountered error downloading depot manifest ${depot.depotId} ${depot.manifestId}: ${e.statusCode}")
+                        log.error("Encountered error downloading depot manifest ${depot.depotId} ${depot.manifestId}: ${e.statusCode}")
                     } catch (e: Exception) {
+                        // A real cancellation stops here; a timeout reported as one is retried like any error.
+                        if (e is CancellationException) ensureActive()
+
                         if (e is java.net.UnknownHostException || e.cause is java.net.UnknownHostException) {
                             cdnClientPool!!.returnBrokenConnection(connection)
                         } else {
                             cdnClientPool!!.skipConnection(connection)
                         }
-                        logger?.error("Encountered error downloading manifest for depot ${depot.depotId} ${depot.manifestId}: ${e.message}")
+
+                        failures++
+                        lastError = e
+
+                        log.error("Encountered error downloading manifest for depot ${depot.depotId} ${depot.manifestId}: ${e.message}")
                         if (!cdnClientPool!!.hasServers()) break
                     }
                 } while (newManifest == null)
 
                 if (newManifest == null) {
-                    logger?.error("\nUnable to download manifest ${depot.manifestId} for depot ${depot.depotId}")
-                    cancel()
+                    throw DepotDownloaderException(
+                        "Unable to download manifest ${depot.manifestId} for depot ${depot.depotId}",
+                        lastError
+                    )
                 }
 
-                // Throw the cancellation exception if requested so that this task is marked failed
-                ensureActive()
-
-                Util.saveManifestToFile(configDir, newManifest!!)
+                Util.saveManifestToFile(configDir, newManifest)
             }
         }
 
@@ -1122,13 +1257,11 @@ class DepotDownloader @JvmOverloads constructor(
         )
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     private suspend fun downloadSteam3DepotFiles(
-        mainAppId: Int,
+        session: DownloadSession,
         downloadCounter: GlobalDownloadCounter,
         depotFilesData: DepotFilesData,
         allFileNamesAllDepots: HashSet<String>,
-        isLastDepot: Boolean,
     ) = withContext(Dispatchers.IO) {
         val depot = depotFilesData.depotDownloadInfo
         val depotCounter = depotFilesData.depotCounter
@@ -1137,33 +1270,28 @@ class DepotDownloader @JvmOverloads constructor(
 
         val files = depotFilesData.filteredFiles.filter { !it.flags.contains(EDepotFileFlag.Directory) }
 
-        try {
-            coroutineScope {
-                files.map { file ->
-                    async {
-                        downloadSteam3DepotFile(
-                            downloadCounter = downloadCounter,
-                            depotFilesData = depotFilesData,
-                            file = file,
-                        )
-                    }
-                }.awaitAll()
-            }
-        } finally {
-            if (isLastDepot) {
-                logger?.debug("Waiting for ${pendingChunks.get()} pending chunks to complete for depot ${depot.depotId}")
+        val tracker = DepotChunkTracker(session)
 
-                // Release the sentinel. If no chunks are still in flight, signal immediately;
-                // otherwise suspend until the last processFileWrites call signals us.
-                if (pendingChunks.decrementAndGet() == 0) {
-                    downloadCompletion?.complete(Unit)
+        coroutineScope {
+            files.map { file ->
+                async {
+                    downloadSteam3DepotFile(
+                        tracker = tracker,
+                        downloadCounter = downloadCounter,
+                        depotFilesData = depotFilesData,
+                        file = file,
+                    )
                 }
-                downloadCompletion?.await()
-                downloadCompletion = null
-
-                logger?.debug("All chunks completed for depot ${depot.depotId}")
-            }
+            }.awaitAll()
         }
+
+        // Every chunk is queued: release the sentinel and wait until the last one is on disk.
+        // The depot must not be recorded as installed (below) before that, or an interrupted
+        // download would be trusted on the next run without its missing chunks being noticed.
+        tracker.chunkDone()
+        session.awaitDrained(tracker)
+
+        logger?.debug("All chunks completed for depot ${depot.depotId}")
 
         // Check for deleted files if updating the depot.
         if (depotFilesData.previousManifest != null) {
@@ -1206,18 +1334,16 @@ class DepotDownloader @JvmOverloads constructor(
         }
 
         logger?.debug("Depot ${depot.depotId} - Downloaded ${depotCounter.depotBytesCompressed} bytes (${depotCounter.depotBytesUncompressed} bytes uncompressed)")
-
-        if (isLastDepot) {
-            finishDepotDownload(mainAppId)
-        }
     }
 
     private suspend fun downloadSteam3DepotFile(
+        tracker: DepotChunkTracker,
         downloadCounter: GlobalDownloadCounter,
         depotFilesData: DepotFilesData,
         file: FileData,
     ) = withContext(Dispatchers.IO) {
         ensureActive()
+        tracker.session.throwIfFailed()
 
         val depot = depotFilesData.depotDownloadInfo
         val stagingDir = depotFilesData.stagingDir
@@ -1396,9 +1522,13 @@ class DepotDownloader @JvmOverloads constructor(
         )
 
         neededChunks!!.forEach { chunk ->
-            pendingChunks.incrementAndGet()
+            // Stop feeding the pipeline once the download has failed.
+            tracker.session.throwIfFailed()
+
+            tracker.chunkQueued()
             networkChunkChannel.send(
                 NetworkChunkItem(
+                    tracker = tracker,
                     downloadCounter = downloadCounter,
                     depotFilesData = depotFilesData,
                     fileStreamData = fileStreamData,
@@ -1411,6 +1541,7 @@ class DepotDownloader @JvmOverloads constructor(
     }
 
     private suspend fun downloadSteam3DepotFileChunk(
+        tracker: DepotChunkTracker,
         downloadCounter: GlobalDownloadCounter,
         depotFilesData: DepotFilesData,
         file: FileData,
@@ -1426,10 +1557,21 @@ class DepotDownloader @JvmOverloads constructor(
         val chunkID = Strings.toHex(chunkIdBytes)
 
         var downloaded = 0
-        val chunkBuffer = ByteArray(chunk.compressedLength)
+        // Given back by processFileDecompress. If this chunk fails or is dropped before that,
+        // the array is simply left to the garbage collector.
+        val chunkBuffer = bufferPool.rent(chunk.compressedLength)
+
+        var failures = 0
+        var lastError: Throwable? = null
 
         do {
             ensureActive()
+
+            // Another chunk already failed this download; no point in fetching this one.
+            tracker.session.throwIfFailed()
+
+            if (failures >= MAX_DOWNLOAD_ATTEMPTS) break
+            if (failures > 0) delay(retryDelayMillis(failures))
 
             var connection: Server? = null
 
@@ -1445,7 +1587,8 @@ class DepotDownloader @JvmOverloads constructor(
                         val result = authTokenCallbackPromise.await()
                         cdnToken = result.token
                     } catch (e: Exception) {
-                        logger?.error("Failed to get CDN auth token: ${e.message}")
+                        ensureActive()
+                        log.error("Failed to get CDN auth token: ${e.message}")
                     }
                 }
 
@@ -1464,8 +1607,6 @@ class DepotDownloader @JvmOverloads constructor(
                 cdnClientPool!!.returnConnection(connection)
 
                 break
-            } catch (e: CancellationException) {
-                throw e
             } catch (e: SteamKitWebRequestException) {
                 // If the CDN returned 403, attempt to get a cdn auth if we didn't yet,
                 // if auth task already exists, make sure it didn't complete yet, so that it gets awaited above
@@ -1484,40 +1625,53 @@ class DepotDownloader @JvmOverloads constructor(
 
                 cdnClientPool!!.skipConnection(connection)
 
+                failures++
+                lastError = e
+
                 // Unauthorized || Forbidden
                 if (e.statusCode == 401 || e.statusCode == 403) {
-                    logger?.error("Encountered ${e.statusCode} for chunk $chunkID. Aborting.")
+                    log.error("Encountered ${e.statusCode} for chunk $chunkID. Aborting.")
                     break
                 }
 
-                logger?.error("Encountered error downloading chunk $chunkID: ${e.statusCode}")
+                log.error("Encountered error downloading chunk $chunkID from $connection: ${e.statusCode} (${e.message})")
             } catch (e: Exception) {
+                // A real cancellation stops here; a timeout reported as one is retried like any error.
+                if (e is CancellationException) ensureActive()
+
                 if (e is java.net.UnknownHostException || e.cause is java.net.UnknownHostException) {
                     cdnClientPool!!.returnBrokenConnection(connection)
                 } else {
                     cdnClientPool!!.skipConnection(connection)
                 }
-                logger?.error("Encountered unexpected error downloading chunk $chunkID", e)
+
+                failures++
+                lastError = e
+
+                log.error("Encountered unexpected error downloading chunk $chunkID", e)
                 if (!cdnClientPool!!.hasServers()) break
             }
         } while (downloaded == 0)
 
+        // Giving up on one chunk fails the whole item: the pipeline reports it through the session,
+        // which wakes downloadSteam3DepotFiles and ends in onDownloadFailed.
         if (downloaded == 0) {
-            logger?.error("Failed to find any server with chunk ${chunk.chunkID} for depot ${depot.depotId}. Aborting.")
-            cancel()
+            throw DepotDownloaderException(
+                "Failed to download chunk $chunkID for depot ${depot.depotId} after $failures failed attempts",
+                lastError
+            )
         }
-
-        // Throw the cancellation exception if requested so that this task is marked failed
-        ensureActive()
 
         // Return the decompress item for the next stage in the pipeline
         return@withContext DecompressItem(
+            tracker = tracker,
             depot = depot,
             depotDownloadCounter = depotDownloadCounter,
             downloadCounter = downloadCounter,
             file = file,
             fileStreamData = fileStreamData,
             chunk = chunk,
+            downloaded = downloaded,
             chunkBuffer = chunkBuffer,
         )
     }
@@ -1573,14 +1727,13 @@ class DepotDownloader @JvmOverloads constructor(
      * Add a singular item of either [AppItem], [PubFileItem], or [UgcItem]
      */
     fun add(item: DownloadItem) {
-        runBlocking {
-            try {
-                processingChannel.send(item)
-                notifyListeners { it.onItemAdded(item) }
-            } catch (e: Exception) {
-                logger?.error("Could not add item ${item.appId}", e)
-                throw e
-            }
+        try {
+            // The queue is unlimited, so this only fails once it has been closed.
+            processingChannel.trySend(item).getOrThrow()
+            notifyListeners { it.onItemAdded(item) }
+        } catch (e: Exception) {
+            log.error("Could not add item ${item.appId}", e)
+            throw e
         }
     }
 
@@ -1588,17 +1741,7 @@ class DepotDownloader @JvmOverloads constructor(
      * Add a list items of either [AppItem], [PubFileItem], or [UgcItem]
      */
     fun addAll(items: List<DownloadItem>) {
-        runBlocking {
-            try {
-                items.forEach { item ->
-                    processingChannel.send(item)
-                    notifyListeners { it.onItemAdded(item) }
-                }
-            } catch (e: Exception) {
-                logger?.error("Could not add all files", e)
-                throw e
-            }
-        }
+        items.forEach { add(it) }
     }
 
     /**
@@ -1663,33 +1806,30 @@ class DepotDownloader @JvmOverloads constructor(
                             val branch = item.branch ?: DEFAULT_BRANCH
                             config = config.copy(betaPassword = item.branchPassword)
 
+                            // Invalid arguments are thrown so they reach onDownloadFailed below.
                             if (!config.betaPassword.isNullOrBlank() && branch.isBlank()) {
-                                logger?.error("Error: Cannot specify 'branchpassword' when 'branch' is not specified.")
-                                continue
+                                throw IllegalArgumentException("Cannot specify 'branchPassword' when 'branch' is not specified.")
                             }
 
                             config = config.copy(downloadAllPlatforms = item.downloadAllPlatforms)
                             val os = item.os
 
                             if (config.downloadAllPlatforms && !os.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `os` when `all-platforms` is specified.")
-                                continue
+                                throw IllegalArgumentException("Cannot specify 'os' when 'downloadAllPlatforms' is set.")
                             }
 
                             config = config.copy(downloadAllArchs = item.downloadAllArchs)
                             val arch = item.osArch
 
                             if (config.downloadAllArchs && !arch.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `osarch` when `all-archs` is specified.")
-                                continue
+                                throw IllegalArgumentException("Cannot specify 'osArch' when 'downloadAllArchs' is set.")
                             }
 
                             config = config.copy(downloadAllLanguages = item.downloadAllLanguages)
                             val language = item.language
 
                             if (config.downloadAllLanguages && !language.isNullOrBlank()) {
-                                logger?.error("Error: Cannot specify `language` when `all-languages` is specified.")
-                                continue
+                                throw IllegalArgumentException("Cannot specify 'language' when 'downloadAllLanguages' is set.")
                             }
 
                             val depotManifestIds = mutableListOf<Pair<Int, Long>>()
@@ -1698,8 +1838,7 @@ class DepotDownloader @JvmOverloads constructor(
 
                             if (manifestIdList.isNotEmpty()) {
                                 if (depotIdList.size != manifestIdList.size) {
-                                    logger?.error("Error: `manifest` requires one id for every `depot` specified")
-                                    continue
+                                    throw IllegalArgumentException("'manifest' requires one id for every 'depot' specified.")
                                 }
                                 depotManifestIds.addAll(depotIdList.zip(manifestIdList))
                             } else {
@@ -1720,8 +1859,9 @@ class DepotDownloader @JvmOverloads constructor(
                             )
                         }
                     }
-                } catch (e: Exception) {
-                    logger?.error("Error downloading item ${item.appId}: ${e.message}", e)
+                } catch (e: Throwable) {
+                    // Throwable, not Exception: e.g. a missing zstd/xz dependency is a NoClassDefFoundError.
+                    log.error("Error downloading item ${item.appId}: ${e.message}", e)
                     notifyListeners { it.onDownloadFailed(item, e) }
                 }
             }
@@ -1738,10 +1878,18 @@ class DepotDownloader @JvmOverloads constructor(
         val chunk = item.chunk
         val chunkBuffer = item.chunkBuffer
 
-        val decompressedBuffer = ByteArray(chunk.uncompressedLength)
-        val written = DepotChunk.process(chunk, chunkBuffer, decompressedBuffer, depot.depotKey)
+        // Given back by processFileWrites; left to the garbage collector if the chunk fails before that.
+        val decompressedBuffer = bufferPool.rent(chunk.uncompressedLength)
+
+        val written = try {
+            DepotChunk.process(chunk, chunkBuffer, item.downloaded, decompressedBuffer, depot.depotKey)
+        } finally {
+            // Nothing reads the downloaded bytes after this point.
+            bufferPool.giveBack(chunkBuffer)
+        }
 
         return@withContext FileWriteItem(
+            tracker = item.tracker,
             depot = depot,
             depotDownloadCounter = item.depotDownloadCounter,
             downloadCounter = item.downloadCounter,
@@ -1767,35 +1915,58 @@ class DepotDownloader @JvmOverloads constructor(
         val decompressedBuffer = item.decompressedBuffer
 
         try {
-            fileStreamData.fileLock.lock()
+            try {
+                fileStreamData.fileLock.lock()
 
-            if (fileStreamData.fileHandle == null) {
-                val fileFinalPath = depot.installDir / file.fileName
-                fileStreamData.fileHandle = filesystem.openReadWrite(fileFinalPath)
+                if (fileStreamData.fileHandle == null) {
+                    val fileFinalPath = depot.installDir / file.fileName
+                    fileStreamData.fileHandle = filesystem.openReadWrite(fileFinalPath)
+                }
+
+                fileStreamData.fileHandle!!.write(chunk.offset, decompressedBuffer, 0, written)
+            } finally {
+                fileStreamData.fileLock.unlock()
             }
-
-            fileStreamData.fileHandle!!.write(chunk.offset, decompressedBuffer, 0, written)
         } finally {
-            fileStreamData.fileLock.unlock()
+            // The write was the last reader of the array; everything below uses lengths only.
+            bufferPool.giveBack(decompressedBuffer)
         }
 
         val remainingChunks = fileStreamData.chunksToDownload.decrementAndGet()
         if (remainingChunks == 0) {
             fileStreamData.fileHandle?.close()
+        }
 
-            // File completed - notify with percentage
-            val sizeDownloaded = synchronized(depotDownloadCounter) {
-                depotDownloadCounter.sizeDownloaded += written.toLong()
-                depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
-                depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
-                depotDownloadCounter.sizeDownloaded
-            }
+        // Update counters and notify on chunk completion. Every chunk is reported, the last one of a
+        // file included, so the byte counts also move for depots made of single-chunk files.
+        val depotPercentage: Float
+        val compressedBytes: Long
+        val uncompressedBytes: Long
 
-            downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
-            downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
+        synchronized(depotDownloadCounter) {
+            depotDownloadCounter.sizeDownloaded += written.toLong()
+            depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
+            depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
 
+            compressedBytes = depotDownloadCounter.depotBytesCompressed
+            uncompressedBytes = depotDownloadCounter.depotBytesUncompressed
+            depotPercentage = fraction(depotDownloadCounter.sizeDownloaded, depotDownloadCounter.completeDownloadSize)
+        }
+
+        downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
+        downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
+
+        notifyListeners { listener ->
+            listener.onChunkCompleted(
+                depotId = depot.depotId,
+                depotPercentComplete = depotPercentage,
+                compressedBytes = compressedBytes,
+                uncompressedBytes = uncompressedBytes
+            )
+        }
+
+        if (remainingChunks == 0) {
             val fileFinalPath = depot.installDir / file.fileName
-            val depotPercentage = (sizeDownloaded.toFloat() / depotDownloadCounter.completeDownloadSize)
 
             notifyListeners { listener ->
                 listener.onFileCompleted(
@@ -1806,35 +1977,6 @@ class DepotDownloader @JvmOverloads constructor(
             }
 
             logger?.debug("%.2f%% %s".format(depotPercentage, fileFinalPath))
-        } else {
-            // Update counters and notify on chunk completion
-            val sizeDownloaded: Long
-            val depotPercentage: Float
-            val compressedBytes: Long
-            val uncompressedBytes: Long
-
-            synchronized(depotDownloadCounter) {
-                depotDownloadCounter.sizeDownloaded += written.toLong()
-                depotDownloadCounter.depotBytesCompressed += chunk.compressedLength
-                depotDownloadCounter.depotBytesUncompressed += chunk.uncompressedLength
-
-                sizeDownloaded = depotDownloadCounter.sizeDownloaded
-                compressedBytes = depotDownloadCounter.depotBytesCompressed
-                uncompressedBytes = depotDownloadCounter.depotBytesUncompressed
-                depotPercentage = (sizeDownloaded.toFloat() / depotDownloadCounter.completeDownloadSize)
-            }
-
-            downloadCounter.totalBytesCompressed.addAndGet(chunk.compressedLength.toLong())
-            downloadCounter.totalBytesUncompressed.addAndGet(chunk.uncompressedLength.toLong())
-
-            notifyListeners { listener ->
-                listener.onChunkCompleted(
-                    depotId = depot.depotId,
-                    depotPercentComplete = depotPercentage,
-                    compressedBytes = compressedBytes,
-                    uncompressedBytes = uncompressedBytes
-                )
-            }
         }
     }
 
@@ -1859,8 +2001,6 @@ class DepotDownloader @JvmOverloads constructor(
 
         scope.cancel("DepotDownloader Closing")
 
-        httpClient.close()
-
         listeners.clear()
 
         steam3?.close()
@@ -1869,6 +2009,12 @@ class DepotDownloader @JvmOverloads constructor(
         cdnClientPool?.close()
         cdnClientPool = null
 
-        logger = null
+        bufferPool.clear()
+
+        // Ours, derived from the SteamClient's HTTP client, which is left untouched.
+        synchronized(httpClientLock) {
+            ownHttpClient?.let { HttpClient.shutdown(it) }
+            ownHttpClient = null
+        }
     }
 }

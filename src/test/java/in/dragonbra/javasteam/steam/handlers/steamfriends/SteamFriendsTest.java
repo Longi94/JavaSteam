@@ -10,6 +10,7 @@ import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver.CM
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistory;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserver2.CMsgClientChatGetFriendMessageHistoryForOfflineMessages;
 import in.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientserverFriends.*;
+import in.dragonbra.javasteam.steam.CMClient;
 import in.dragonbra.javasteam.steam.handlers.HandlerTestBase;
 import in.dragonbra.javasteam.steam.handlers.steamfriends.callback.*;
 import in.dragonbra.javasteam.types.SteamID;
@@ -334,6 +335,51 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
         assertEquals("klay", callback.getName());
     }
 
+    private static IPacketMsg personaStatePacket(SteamID friendId, EnumSet<EClientPersonaStateFlag> flags, Integer personaState) {
+        ClientMsgProtobuf<CMsgClientPersonaState.Builder> msg =
+                new ClientMsgProtobuf<>(CMsgClientPersonaState.class, EMsg.ClientPersonaState);
+
+        msg.getBody().setStatusFlags(EClientPersonaStateFlag.code(flags));
+
+        CMsgClientPersonaState.Friend.Builder friend = CMsgClientPersonaState.Friend.newBuilder()
+                .setFriendid(friendId.convertToUInt64())
+                .setPlayerName("testfriend");
+        if (personaState != null) {
+            friend.setPersonaState(personaState);
+        }
+        msg.getBody().addFriends(friend);
+
+        return CMClient.getPacketMsg(msg.serialize());
+    }
+
+    @Test
+    public void personaStateWithoutStateDoesNotResetCachedState() {
+        SteamID friendId = new SteamID(76561197960287930L);
+        EnumSet<EClientPersonaStateFlag> flags = EnumSet.of(
+                EClientPersonaStateFlag.Status,
+                EClientPersonaStateFlag.PlayerName,
+                EClientPersonaStateFlag.Presence,
+                EClientPersonaStateFlag.GameDataBlob
+        );
+
+        // A genuine presence push: persona_state is present and Online.
+        handler.handleMsg(personaStatePacket(friendId, flags, EPersonaState.Online.code()));
+
+        PersonaStateCallback online = verifyCallback();
+        assertTrue(online.getHasPersonaState());
+        assertEquals(EPersonaState.Online, online.getState());
+        assertEquals(EPersonaState.Online, handler.getFriendPersonaState(friendId));
+
+        // A reply to ClientRequestFriendData: same flags, but persona_state absent on the wire.
+        handler.handleMsg(personaStatePacket(friendId, flags, null));
+
+        PersonaStateCallback profileOnly = verifyCallback();
+        assertFalse(profileOnly.getHasPersonaState());
+        assertEquals(EPersonaState.Offline, profileOnly.getState()); // unchanged default, kept for compatibility
+        assertEquals("testfriend", profileOnly.getName());
+        assertEquals(EPersonaState.Online, handler.getFriendPersonaState(friendId)); // cache must keep Online
+    }
+
     @Test
     public void handleClanState() {
         IPacketMsg msg = getPacket(EMsg.ClientClanState, true);
@@ -464,6 +510,8 @@ public class SteamFriendsTest extends HandlerTestBase<SteamFriends> {
 
         NicknameListCallback callback = verifyCallback();
 
+        assertTrue(callback.isIncremental());
+        assertFalse(callback.isRemoval());
         assertEquals(1, callback.getNicknames().size());
         assertEquals("testnickname", callback.getNicknames().get(0).getNickname());
     }

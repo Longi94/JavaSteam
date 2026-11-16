@@ -41,7 +41,10 @@ public class CryptoHelper {
                 } catch (Exception e) {
                     // Try BouncyCastle as fallback
                     var provider = (Class<? extends Provider>) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider");
-                    Security.insertProviderAt(provider.getDeclaredConstructor().newInstance(), 1);
+                    var bouncyCastle = provider.getDeclaredConstructor().newInstance();
+                    // Android's built-in "BC" must be removed first, or the insert is ignored.
+                    Security.removeProvider(bouncyCastle.getName());
+                    Security.insertProviderAt(bouncyCastle, 1);
                     androidSecProv = "BC";
                 }
 

@@ -1,6 +1,7 @@
 package `in`.dragonbra.javasteam.types
 
 import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobFailedException
+import `in`.dragonbra.javasteam.steam.steamclient.AsyncJobTimeoutException
 import `in`.dragonbra.javasteam.steam.steamclient.SteamClient
 import `in`.dragonbra.javasteam.steam.steamclient.callbackmgr.CallbackMsg
 import kotlinx.coroutines.CompletableDeferred
@@ -26,6 +27,10 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
     /**
      * Suspends until this job completes. The caller resumes on its own dispatcher,
      * not on the network thread that completed the job.
+     *
+     * @throws AsyncJobFailedException Steam reported a remote failure.
+     * @throws AsyncJobTimeoutException The job timed out. This is a `CancellationException`: left uncaught
+     *  it ends the calling coroutine as if it had been cancelled.
      */
     suspend fun await(): T = deferred.await()
 
@@ -57,7 +62,7 @@ class AsyncJobSingle<T : CallbackMsg>(client: SteamClient, jobId: JobID) : Async
             deferred.completeExceptionally(AsyncJobFailedException())
         } else {
             // if we time out, we cancel the future
-            deferred.cancel()
+            deferred.cancel(AsyncJobTimeoutException())
         }
     }
 }

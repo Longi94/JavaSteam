@@ -28,6 +28,10 @@ object Util {
     @JvmOverloads
     @JvmStatic
     fun getSteamOS(androidEmulation: Boolean = false): String {
+        // Hack for PC emulation on android. Most of them use Windows.
+        if (androidEmulation && SystemUtils.IS_OS_ANDROID) {
+            return "windows"
+        }
         if (SystemUtils.IS_OS_WINDOWS) {
             return "windows"
         }
@@ -40,11 +44,6 @@ object Util {
         if (SystemUtils.IS_OS_FREE_BSD) {
             // Return linux as freebsd steam client doesn't exist yet
             return "linux"
-        }
-
-        // Hack for PC emulation on android. (Pluvia, GameNative, GameHub)
-        if (androidEmulation && SystemUtils.IS_OS_ANDROID) {
-            return "windows"
         }
 
         return "unknown"

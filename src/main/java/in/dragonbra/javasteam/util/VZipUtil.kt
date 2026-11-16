@@ -5,11 +5,11 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.stream.BinaryReader
 import `in`.dragonbra.javasteam.util.stream.MemoryStream
 import `in`.dragonbra.javasteam.util.stream.SeekOrigin
+import org.tukaani.xz.BasicArrayCache
 import org.tukaani.xz.LZMAInputStream
 import java.util.zip.DataFormatException
-import kotlin.math.max
 
-@Suppress("SpellCheckingInspection", "unused")
+@Suppress("unused")
 object VZipUtil {
 
     private val logger = LogManager.getLogger<VZipUtil>()
@@ -60,15 +60,15 @@ object VZipUtil {
                 // jump back to the beginning of the compressed data
                 ms.position = compressedBytesOffset
 
-                // If the value of dictionary size in properties is smaller than (1 << 12),
-                // the LZMA decoder must set the dictionary size variable to (1 << 12).
-                val windowBuffer = ByteArray(max(1 shl 12, dictionarySize))
+                // No preset dictionary. The cache hands the decoder's own dictionary array
+                // back for the next chunk once the stream is closed.
                 val bytesRead = LZMAInputStream(
                     ms,
                     sizeDecompressed.toLong(),
                     propertyBits,
                     dictionarySize,
-                    windowBuffer
+                    null,
+                    BasicArrayCache.getInstance()
                 ).use { lzmaInput ->
                     lzmaInput.readNBytesCompat(destination, 0, sizeDecompressed)
                 }

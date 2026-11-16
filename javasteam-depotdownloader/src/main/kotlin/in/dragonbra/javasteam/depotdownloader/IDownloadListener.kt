@@ -33,13 +33,23 @@ interface IDownloadListener {
     fun onDownloadFailed(item: DownloadItem, error: Throwable) {}
 
     /**
+     * Called when a depot that was part of a download is left out, for example because the account
+     * has no access to it, no depot key could be obtained, or it has no manifest for the branch.
+     * The rest of the download continues; if every depot is skipped, [onDownloadFailed] is called.
+     *
+     * @param depotId The depot that will not be downloaded
+     * @param reason An explanation
+     */
+    fun onDepotSkipped(depotId: Int, reason: String) {}
+
+    /**
      * Called during file preparation with informational messages.
      * Examples: "Pre-allocating depots\441\file.txt", "Validating file.cab"
      */
     fun onStatusUpdate(message: String) {}
 
     /**
-     * Called when a file completes downloading.
+     * Called when a file completes downloading, after the [onChunkCompleted] of its last chunk.
      * Use this for printing progress like "20.42% depots\441\maps\ctf_haarp.bsp"
      *
      * @param depotId The depot being downloaded
@@ -49,8 +59,8 @@ interface IDownloadListener {
     fun onFileCompleted(depotId: Int, fileName: String, depotPercentComplete: Float) {}
 
     /**
-     * Called when a chunk completes downloading.
-     * Provides more frequent progress updates than onFileCompleted.
+     * Called when a chunk completes downloading, for every chunk including the last one of a file.
+     * Provides more frequent progress updates than onFileCompleted, and is the one to count bytes in.
      *
      * @param depotId The depot being downloaded
      * @param depotPercentComplete Overall depot completion percentage (0f to 1f)

@@ -71,9 +71,10 @@ Maven
       to add the [protobuf-java](https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java) dependency.
     * Note: To eliminate any errors or warnings, you should try and match the same version JavaSteam uses.
       <br><br>
-* Content Downloading:
-    * Add the following dependencies to your project: [XZ For Java](https://mvnrepository.com/artifact/org.tukaani/xz) and [ZSTD JNI](https://mvnrepository.com/artifact/com.github.luben/zstd-jni).
-    * ZSTD for android uses `aar` for the libray type.
+* Content Downloading (required if you download depots, otherwise optional):
+    * Add [XZ For Java](https://mvnrepository.com/artifact/org.tukaani/xz) and [ZSTD JNI](https://mvnrepository.com/artifact/com.github.luben/zstd-jni) to your project.
+      Without them, downloads fail with a `NoClassDefFoundError`.
+    * On Android, ZSTD must be the `aar` artifact: `implementation("com.github.luben:zstd-jni:<version>@aar")`
 
 You can find the latest version of these dependencies JavaSteam
 supports [here](https://github.com/Longi94/JavaSteam/blob/master/gradle/libs.versions.toml).

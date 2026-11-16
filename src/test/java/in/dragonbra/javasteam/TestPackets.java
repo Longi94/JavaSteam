@@ -304,6 +304,7 @@ public abstract class TestPackets {
     private static byte[] clientPlayerNicknameList() {
         ClientMsgProtobuf<CMsgClientPlayerNicknameList.Builder> msg = new ClientMsgProtobuf<>(CMsgClientPlayerNicknameList.class, EMsg.ClientPlayerNicknameList);
 
+        msg.getBody().setIncremental(true);
         msg.getBody().addNicknames(CMsgClientPlayerNicknameList.PlayerNickname.newBuilder().setNickname("testnickname"));
 
         return msg.serialize();

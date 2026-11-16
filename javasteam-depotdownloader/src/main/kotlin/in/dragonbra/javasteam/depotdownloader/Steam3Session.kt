@@ -21,6 +21,8 @@ import `in`.dragonbra.javasteam.util.log.LogManager
 import `in`.dragonbra.javasteam.util.log.Logger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -44,7 +46,10 @@ class Steam3Session(
     debug: Boolean,
 ) : Closeable {
 
-    private var logger: Logger? = null
+    // Errors are always logged. Everything else goes through [logger], which is only set with debug.
+    private val log: Logger = LogManager.getLogger(Steam3Session::class.java)
+
+    private val logger: Logger? = if (debug) log else null
 
     private var isAborted: Boolean = false // Stubbed, no way to set true/false yet.
 
@@ -67,10 +72,6 @@ class Steam3Session(
     internal data class Optional<T>(val value: T?)
 
     init {
-        if (debug) {
-            logger = LogManager.getLogger(Steam3Session::class.java)
-        }
-
         unifiedMessages = requireNotNull(steamClient.getHandler<SteamUnifiedMessages>())
         steamApps = requireNotNull(steamClient.getHandler<SteamApps>())
         steamCloud = requireNotNull(steamClient.getHandler<SteamCloud>())
@@ -101,8 +102,6 @@ class Steam3Session(
         packageTokens.clear()
         appInfo.clear()
         packageInfo.clear()
-
-        logger = null
     }
 
     suspend fun requestAppInfo(appId: Int, bForce: Boolean = false) {
@@ -114,7 +113,7 @@ class Steam3Session(
         val appTokens = steamApps!!.picsGetAccessTokens(appId).await()
 
         if (appTokens.appTokensDenied.contains(appId)) {
-            logger?.error("Insufficient privileges to get access token for app $appId")
+            log.error("Insufficient privileges to get access token for app $appId")
         }
 
         appTokens.appTokens.forEach { tokenDict ->
@@ -198,7 +197,8 @@ class Steam3Session(
 
             return resultInfo.grantedApps.contains(appId)
         } catch (e: Exception) {
-            logger?.error("Failed to request FreeOnDemand license for app $appId: ${e.message}")
+            currentCoroutineContext().ensureActive()
+            log.error("Failed to request FreeOnDemand license for app $appId: ${e.message}")
             return false
         }
     }
@@ -217,7 +217,7 @@ class Steam3Session(
         )
 
         if (depotKey.result != EResult.OK) {
-            logger?.error("requestDepotKey result was ${depotKey.result}")
+            log.error("requestDepotKey result was ${depotKey.result}")
             return
         }
 
@@ -245,7 +245,7 @@ class Steam3Session(
         ).await().toULong()
 
         if (requestCode == 0UL) {
-            logger?.error("No manifest request code was returned for depot $depotId from app $appId, manifest $manifestId")
+            log.error("No manifest request code was returned for depot $depotId from app $appId, manifest $manifestId")
 
             if (steamClient.isDisconnected) {
                 logger?.debug("Suggestion: Try logging in with a username as old manifests may not be available for anonymous accounts.")
@@ -284,7 +284,7 @@ class Steam3Session(
         logger?.debug("Got CDN auth token for ${server.host} result: ${cdnAuth.result} (expires ${cdnAuth.expiration})")
 
         if (cdnAuth.result != EResult.OK) {
-            logger?.error("requestCDNAuthToken result was ${cdnAuth.result}")
+            log.error("requestCDNAuthToken result was ${cdnAuth.result}")
             return@withContext
         }
 
@@ -349,7 +349,7 @@ class Steam3Session(
         if (callback.result == EResult.OK) {
             return callback
         } else if (callback.result == EResult.FileNotFound) {
-            logger?.error("getUGCDetails got FileNotFound for ${ugcHandle.value}")
+            log.error("getUGCDetails got FileNotFound for ${ugcHandle.value}")
             return null
         }
 
