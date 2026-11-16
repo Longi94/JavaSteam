@@ -23,6 +23,8 @@ public class WebUiUnifiedInterfaceTest {
             "ClientComm.kt",
             "CloudConfigStore.kt",
             "CloudConfigStoreClient.kt",
+            "FriendsList.kt",
+            "FriendsListClient.kt",
             "RemoteClient.kt",
             "RemoteClientSteamClient.kt",
             "Store.kt",

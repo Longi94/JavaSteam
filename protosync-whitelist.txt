@@ -66,6 +66,7 @@ service_cloudconfigstore.proto
 service_store.proto
 service_remote.proto
 service_remoteclientsteam.proto
+service_friendslist.proto
 
 [cs]
 base_gcmessages.proto
